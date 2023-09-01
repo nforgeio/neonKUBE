@@ -7,16 +7,14 @@ rules:
   - ""
   resources:
   - configmaps
-  - nodes
-  - secrets
   verbs:
-  - '*'
+  - get
 - apiGroups:
   - ""
   resources:
-  - configmaps
+  - nodes
   verbs:
-  - get
+  - '*'
 - apiGroups:
   - ""
   resources:

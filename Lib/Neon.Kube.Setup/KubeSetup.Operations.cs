@@ -1108,7 +1108,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controlNodes != null, nameof(controlNodes));
             Covenant.Requires<ArgumentException>(controlNodes.Count() > 0, nameof(controlNodes));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             // We need to generate a "--feature-gates=..." command line option and add it to the end
@@ -1257,6 +1257,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 break;
                             }
                         }
+
+                        // Configure the log level.
+
+                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServerLogVerbosity}");
 
                         // Set GOGC so that GC happens more frequently, reducing memory usage.
 
