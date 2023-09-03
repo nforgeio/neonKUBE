@@ -208,8 +208,6 @@ try
         SetVersion Neon.Kube.Hosting              $neonkubeVersion
         SetVersion Neon.Kube.HyperV               $neonkubeVersion
         SetVersion Neon.Kube.Models               $neonkubeVersion
-        SetVersion Neon.Kube.Operator             $neonkubeVersion
-        SetVersion Neon.Kube.Operator.Templates   $neonkubeVersion
         SetVersion Neon.Kube.Resources            $neonkubeVersion
         SetVersion Neon.Kube.Setup                $neonkubeVersion
         SetVersion Neon.Kube.XenServer            $neonkubeVersion
@@ -229,9 +227,6 @@ try
         Publish Neon.Kube.Hosting                 $neonkubeVersion
         Publish Neon.Kube.HyperV                  $neonkubeVersion
         Publish Neon.Kube.Models                  $neonkubeVersion
-        Publish Neon.Kube.Operator                $neonkubeVersion
-        Publish Neon.Kube.Operator.Templates      $neonkubeVersion
-        Publish Neon.Kube.Resources               $neonkubeVersion
         Publish Neon.Kube.Setup                   $neonkubeVersion
         Publish Neon.Kube.XenServer               $neonkubeVersion
         Publish Neon.Kube.Xunit                   $neonkubeVersion

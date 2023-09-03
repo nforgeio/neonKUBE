@@ -312,9 +312,6 @@ try
     Publish Neon.Kube.Hosting                   $neonkubeVersion
     Publish Neon.Kube.HyperV                    $neonkubeVersion
     Publish Neon.Kube.Models                    $neonkubeVersion
-    Publish Neon.Kube.Operator                  $neonkubeVersion
-    Publish Neon.Kube.Operator.MSBuild          $neonkubeVersion
-    Publish Neon.Kube.Operator.Templates        $neonkubeVersion
     Publish Neon.Kube.Resources                 $neonkubeVersion
     Publish Neon.Kube.Setup                     $neonkubeVersion
     Publish Neon.Kube.XenServer                 $neonkubeVersion
