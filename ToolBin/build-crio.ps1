@@ -32,8 +32,8 @@
 
 param 
 (
-    [parameter(Mandatory=$true,Position=1)][string]$version,
-    [parameter(Mandatory=$true,Position=2)][string]$outputFolder
+    [parameter(Mandatory=$true, Position=1)][string]$version,
+    [parameter(Mandatory=$true, Position=2)][string]$outputFolder
     [switch]$publish
 )
 

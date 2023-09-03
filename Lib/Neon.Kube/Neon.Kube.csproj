@@ -108,21 +108,6 @@
         </Otherwise>
     </Choose>
 
-    <!-- Figure out where the [neon-modelgen] tool is located -->
-
-    <Choose>
-        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
-            <PropertyGroup>
-                <ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
-            </PropertyGroup>
-        </When>
-        <Otherwise>
-            <PropertyGroup>
-                <ModelGeneratorPath>$(NF_ROOT)\Lib\Neon.ModelGenerator\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
-            </PropertyGroup>
-        </Otherwise>
-    </Choose>
-
     <!--- Generate the model source files -->
 
     <Target Name="ModelGen" Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\.buildComplete" Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" BeforeTargets="CoreCompile" DependsOnTargets="BeforeCompile">

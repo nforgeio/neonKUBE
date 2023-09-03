@@ -208,4 +208,19 @@
         <RuntimePath>linux-x64</RuntimePath>
     </PropertyGroup>
 
+    <!-- Figure out where the [neon-modelgen] tool is located -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <PropertyGroup>
+                <ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <ModelGeneratorPath>$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\net7.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
+
 </Project>
