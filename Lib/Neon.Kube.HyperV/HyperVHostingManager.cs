@@ -252,9 +252,9 @@ namespace Neon.Kube.Hosting.HyperV
                     hyperv.ListVms();
                 }
             }
-            catch
+            catch (Exception e)
             {
-                readiness.AddProblem(type: HostingReadinessProblem.HyperVType, "Hyper-V is not available locally.");
+                readiness.AddProblem(type: HostingReadinessProblem.HyperVType, $"Hyper-V is not available locally: {NeonHelper.ExceptionError(e)}");
             }
 
             readiness.ThrowIfNotReady();

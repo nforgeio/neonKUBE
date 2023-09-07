@@ -45,9 +45,9 @@
 
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-        <!-- $hack(jefflill): Looks like the Operator SDK anyalizers are holding DLLs open? -->
+        <!-- $hack(jefflill): Looks like the Operator SDK analyzers are holding DLLs open? -->
 
-        <CopyRetryCount>100</CopyRetryCount>
+        <CopyRetryCount>200</CopyRetryCount>
         <CopyRetryDelayMilliseconds>10</CopyRetryDelayMilliseconds>
 
     </PropertyGroup>
