@@ -332,10 +332,9 @@ namespace Neon.Kube.ClusterDef
         /// </item>
         /// </list>
         /// </remarks>
-        [JsonProperty(PropertyName = "ApiServerLogVerbosity", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "apiServerLogVerbosity", ApplyNamingConventions = false)]
-        [DefaultValue(2)]
-        public int ApiServerLogVerbosity { get; set; } = 2;
+        [JsonProperty(PropertyName = "ApiServer", Required = Required.AllowNull)]
+        [YamlMember(Alias = "apiServer", ApplyNamingConventions = false)]
+        public ApiServerOptions ApiServer { get; set; }
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -351,6 +350,8 @@ namespace Neon.Kube.ClusterDef
 
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
+
+            ApiServer ??= new ApiServerOptions();
 
             if (Version != defaultVersion)
             {
@@ -398,7 +399,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!EvictionHard.ContainsKey("memory.available"))
             {
-                EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI) .CanonicalizeString();
+                EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
             }
 
             SystemReserved = SystemReserved ?? new Dictionary<string, string>();
@@ -407,7 +408,7 @@ namespace Neon.Kube.ClusterDef
             {
                 var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
 
-                SystemReserved["memory"] = new ResourceQuantity((controlPlaneMemory * 0.05m) + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+                SystemReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
             }
 
             KubeReserved = KubeReserved ?? new Dictionary<string, string>();
@@ -434,7 +435,7 @@ namespace Neon.Kube.ClusterDef
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
 
-            if ((clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3) > podSubnetCidr.UsableAddressCount)
+            if (clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3 > podSubnetCidr.UsableAddressCount)
             {
                 var maxPods        = podSubnetCidr.UsableAddressCount / 2.3;
                 var clusterPods    = clusterDefinition.Nodes.Count() * MaxPodsPerNode;

@@ -1260,7 +1260,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         // Configure the log level.
 
-                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServerLogVerbosity}");
+                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServer.Verbosity}");
 
                         // Set GOGC so that GC happens more frequently, reducing memory usage.
 
