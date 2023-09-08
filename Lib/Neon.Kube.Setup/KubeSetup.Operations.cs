@@ -391,10 +391,6 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await UploadClusterManifestAsync(controller, controlNode);
-
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelled();
                     await SetClusterLockAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -4426,6 +4422,8 @@ $@"- name: StorageType
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            var grafanaPod      = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+
                             var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
                                 retryPolicy:        podExecRetry,
                                 name:               grafanaPod.Name(),
@@ -5193,7 +5191,7 @@ $@"- name: StorageType
                     var clusterDeployment       = new ClusterDeployment(cluster.SetupState.ClusterDefinition, cluster.SetupState.ClusterId, cluster.SetupState.ClusterDomain);
                     var clusterDeploymentSecret = new TypedSecret<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus, clusterDeployment);
 
-                    await k8s.CoreV1.CreateNamespacedTypedSecretAsync(clusterDeploymentSecret);
+                    await k8s.CoreV1.UpsertNamespacedTypedSecretAsync(clusterDeploymentSecret);
 
                     // Deploy: neon-cluster-operator
 
@@ -5307,7 +5305,7 @@ $@"- name: StorageType
                         };
                     }
 
-                    await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
                 });
         }
 

@@ -131,7 +131,6 @@
         <None Remove="Resources\Helm\neon-cluster-operator\templates\daemonset.yaml" />
         <None Remove="Resources\Helm\neon-cluster-operator\templates\grafana-dashboard.yaml" />
         <None Remove="Resources\Helm\neon-cluster-operator\templates\service.yaml" />
-        <None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
         <None Remove="Resources\Helm\neon-cluster-operator\templates\servicemonitor.yaml" />
         <None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
         <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
@@ -143,7 +142,6 @@
         <None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\service.yaml" />
-        <None Remove="Resources\Helm\neon-node-agent\templates\serviceaccount.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
         <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
