@@ -166,7 +166,7 @@ namespace Neon.Kube
         /// </remarks>
         public static async Task<TypedSecret<TSecretData>> ReplaceNamespacedTypedSecretAsync<TSecretData>(
             this ICoreV1Operations      k8sCoreV1,
-            TSecretData              data,
+            TSecretData                 data,
             string                      name,
             string                      namespaceParameter,
             CancellationToken           cancellationToken = default)
@@ -197,16 +197,57 @@ namespace Neon.Kube
         /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
         /// </remarks>
         public static async Task DeleteNamespacedTypedSecretAsync(
-            this ICoreV1Operations  k8sCoreV1,
-            string                  name,
-            string                  namespaceParameter,
-            CancellationToken       cancellationToken = default)
+            this ICoreV1Operations k8sCoreV1,
+            string                 name,
+            string                 namespaceParameter,
+            CancellationToken      cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
             await k8sCoreV1.DeleteNamespacedSecretAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Upserts a namespaced typed secret.
+        /// </summary>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="secret">Specifies the secret.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// Typed secrets are <see cref="V1Secret"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedSecret{TSecretData}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TypedSecret<TSecretData>> UpsertNamespacedTypedSecretAsync<TSecretData>(
+            this ICoreV1Operations   k8sCoreV1,
+            TypedSecret<TSecretData> secret,
+            CancellationToken        cancellationToken = default)
+            where TSecretData : class, new()
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
+
+            try
+            {
+                await k8sCoreV1.ReadNamespacedSecretAsync(secret.UntypedSecret.Name(), secret.UntypedSecret.Namespace(), cancellationToken: cancellationToken);
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return await k8sCoreV1.CreateNamespacedTypedSecretAsync(secret, cancellationToken);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return await k8sCoreV1.ReplaceNamespacedTypedSecretAsync(secret, cancellationToken);
         }
     }
 }
