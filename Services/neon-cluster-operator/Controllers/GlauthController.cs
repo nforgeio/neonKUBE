@@ -70,10 +70,9 @@ namespace NeonClusterOperator
         ManageCustomResourceDefinitions = false,
         LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller")]
     [RbacRule<V1Secret>(
-        Verbs         = RbacVerb.Get, 
-        Scope         = EntityScope.Namespaced,
-        Namespace     = KubeNamespace.NeonSystem,
-        ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
+        Verbs         = RbacVerb.All, 
+        Scope         = EntityScope.Cluster,
+        Namespace     = KubeNamespace.NeonSystem)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {

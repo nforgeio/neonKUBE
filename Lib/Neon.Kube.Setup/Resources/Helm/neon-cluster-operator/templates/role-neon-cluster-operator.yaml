@@ -27,16 +27,6 @@ rules:
 - apiGroups:
   - ""
   resourceNames:
-  - glauth-groups
-  - glauth-users
-  - neon-admin.neon-system-db.credentials.postgresql
-  resources:
-  - secrets
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resourceNames:
   - neon-cluster-operator-webhook-tls
   resources:
   - secrets

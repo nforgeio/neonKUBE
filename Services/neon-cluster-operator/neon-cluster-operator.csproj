@@ -25,6 +25,7 @@
         <NeonOperatorWebhookOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\templates</NeonOperatorWebhookOutputDir>
         <NeonOperatorAnalyzerLoggingEnabled>True</NeonOperatorAnalyzerLoggingEnabled>
         <NeonOperatorAnalyzerLoggingDir>C:\tmp</NeonOperatorAnalyzerLoggingDir>
+        <NeonOperatorAutoRegisterWebhooks>True</NeonOperatorAutoRegisterWebhooks>
     </PropertyGroup>
 
     <ItemGroup>

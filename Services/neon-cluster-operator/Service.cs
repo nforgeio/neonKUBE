@@ -347,14 +347,21 @@ namespace NeonClusterOperator
             }
             else
             {
-                var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
                 var localPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
-                
-                PortForwardManager.StartPodPortForward(
-                    name:       pod.Name(),
-                    @namespace: KubeNamespace.NeonSystem,
-                    localPort:  localPort, 
-                    remotePort: dexPort);
+
+                try
+                {
+                    var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+
+                    PortForwardManager.StartPodPortForward(
+                        name: pod.Name(),
+                        @namespace: KubeNamespace.NeonSystem,
+                        localPort: localPort,
+                        remotePort: dexPort);
+                }
+                catch
+                {
+                }
 
                 channel = GrpcChannel.ForAddress($"http://localhost:{localPort}");
             }

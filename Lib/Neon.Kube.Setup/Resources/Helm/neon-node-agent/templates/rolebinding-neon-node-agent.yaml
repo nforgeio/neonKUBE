@@ -9,3 +9,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: neon-node-agent
+  namespace: '{{ .Release.Namespace }}'
