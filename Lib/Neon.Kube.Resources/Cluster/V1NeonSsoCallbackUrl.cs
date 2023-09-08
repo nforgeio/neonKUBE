@@ -22,6 +22,9 @@ using System.Text;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.Attributes;
+
 using NJsonSchema.Annotations;
 
 namespace Neon.Kube.Resources.Cluster

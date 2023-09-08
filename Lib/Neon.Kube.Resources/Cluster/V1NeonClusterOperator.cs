@@ -21,6 +21,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 using Neon.JsonConverters;
+using Neon.Operator.Attributes;
 
 using k8s;
 using k8s.Models;
