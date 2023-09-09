@@ -66,7 +66,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [ResourceController(ManageCustomResourceDefinitions = false)]
+    [ResourceController]
     public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         /// <inheritdoc/>

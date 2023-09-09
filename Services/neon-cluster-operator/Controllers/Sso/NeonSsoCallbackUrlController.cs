@@ -46,7 +46,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonSsoCallbackUrl>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    [ResourceController(ManageCustomResourceDefinitions = true)]
+    [ResourceController]
     public class NeonSsoCallbackUrlController : ResourceControllerBase<V1NeonSsoCallbackUrl>
     {
         //---------------------------------------------------------------------

@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [ResourceController(ManageCustomResourceDefinitions = true)]
+    [ResourceController]
     public class CrioConfigController : ResourceControllerBase<V1CrioConfiguration>
     {
         /// <inheritdoc/>

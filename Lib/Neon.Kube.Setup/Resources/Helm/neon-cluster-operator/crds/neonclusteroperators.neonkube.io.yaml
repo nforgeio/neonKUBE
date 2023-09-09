@@ -1,0 +1,183 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neonclusteroperators.neonkube.io
+spec:
+  group: neonkube.io
+  names:
+    kind: NeonClusterOperator
+    plural: neonclusteroperators
+    shortNames: []
+    singular: neonclusteroperator
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Specifies the neon-cluster-operator settings.
+        properties:
+          spec:
+            description: The spec.
+            properties:
+              message:
+                description: A test string.
+                type: string
+              updates:
+                description: The cron schedule for updating node certificates.
+                properties:
+                  controlPlaneCertificates:
+                    description: Control plane certificate update spec.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                  nodeCaCertificates:
+                    description: Node CA certificate update spec.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                  securityPatches:
+                    description: Update spec for security spec.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                  containerImages:
+                    description: Update spec for container images.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                  telemetry:
+                    description: Update spec for telemetry.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                  clusterCertificate:
+                    description: When the cluster certificate should be updated.
+                    properties:
+                      enabled:
+                        description: Specifies whether this update is enabled.
+                        type: boolean
+                      schedule:
+                        description: |-
+                          The update schedule. This is a represented as a cron expression. Cron expressions are 
+                              made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+                              are:
+                              SecondsMinutesHoursDay-of-MonthMonthDay-of-WeekYear (optional)
+                              An example of a complete cron expression is 0 0 15 ? * MON which means
+                              every monday at 3pm.
+                        type: string
+                    type: object
+                type: object
+            type: object
+          status:
+            description: The status.
+            properties:
+              controlPlaneCertificates:
+                description: Control plane certificate update spec.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+              nodeCaCertificates:
+                description: Node CA certificate update spec.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+              securityPatches:
+                description: Update spec for security spec.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+              containerImages:
+                description: Update spec for container images.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+              telemetry:
+                description: Update spec for telemetry.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+              clusterCertificate:
+                description: When the Neon Desktop certificate should be updated.
+                properties:
+                  lastCompleted:
+                    description: The time that the task last completed.
+                    format: date-time
+                    type: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

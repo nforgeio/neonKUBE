@@ -97,7 +97,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [ResourceController(ManageCustomResourceDefinitions = true)]
+    [ResourceController]
     public class ContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {
         /// <inheritdoc/>

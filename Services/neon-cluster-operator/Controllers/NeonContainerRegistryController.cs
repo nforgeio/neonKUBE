@@ -49,7 +49,7 @@ namespace NeonClusterOperator
     /// </summary>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    [ResourceController(MaxConcurrentReconciles = 1, ManageCustomResourceDefinitions = true)]
+    [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------

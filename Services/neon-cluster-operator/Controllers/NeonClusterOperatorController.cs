@@ -57,7 +57,7 @@ namespace NeonClusterOperator
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get, Scope = EntityScope.Cluster)]
-    [ResourceController(ManageCustomResourceDefinitions = true)]
+    [ResourceController]
     public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------

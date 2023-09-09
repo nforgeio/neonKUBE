@@ -49,7 +49,7 @@ namespace NeonClusterOperator
     /// </summary>
     [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "neon-sso-oauth2-proxy")]
-    [ResourceController(ManageCustomResourceDefinitions = true)]
+    [ResourceController]
     public class NeonSsoClientController : ResourceControllerBase<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

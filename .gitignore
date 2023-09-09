@@ -89,16 +89,6 @@ GeneratedTypes.cs
 GeneratedUxTypes.cs
 /Test/**/TestResults/**
 
-###################
-# Neon.Kube.Setup #
-###################
-
-# All neonKUBE CRDs are defined in the [Neon.Kube] library and are generated
-# when [neon-cluster-operator] is built and copied into the [neon-cluster-operator]
-# Helm chart which will be used to install the CRDs as well as the operator.
-
-/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
-
 #############################
 ### Other generated files ###
 #############################

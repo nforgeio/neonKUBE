@@ -16,7 +16,7 @@
         <PackageTags>kubernetes</PackageTags>
         <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds</NeonOperatorCrdOutputDir>
         <NeonOperatorGenerateRbac>False</NeonOperatorGenerateRbac>
-        <NeonOperatorGenerateCrds>False</NeonOperatorGenerateCrds>
+        <NeonOperatorGenerateCrds>True</NeonOperatorGenerateCrds>
     </PropertyGroup>
 
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />

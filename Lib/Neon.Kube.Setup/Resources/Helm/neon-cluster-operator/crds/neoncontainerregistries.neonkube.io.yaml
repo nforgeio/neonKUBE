@@ -1,0 +1,60 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neoncontainerregistries.neonkube.io
+spec:
+  group: neonkube.io
+  names:
+    kind: NeonContainerRegistry
+    plural: neoncontainerregistries
+    shortNames: []
+    singular: neoncontainerregistry
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Describes an upstream container registry to be configured on each of the cluster nodes.
+        properties:
+          spec:
+            description: The spec.
+            properties:
+              prefix:
+                description: "The target registry's hostname and optional path.  This is required.\n    \n    The prefix may include a leading \"*\" wildcard character for subdomain matching."
+                type: string
+              searchOrder:
+                description: "Optionally indicates that the registry will be searched for image pulls that\n    don't specify a registry host/prefix.  This is often used to specify Docker Hub\n    docker.io as the default prefix since many tutotials and Helm charts \n    assume this default due to the popularity of Docker.\n    \n    Specify a non-negative number here to enable this.  Registries will be added to\n    the search list in ascending order by  and when two\n    registries have the same order value, in ascending order by \n    (lowercase)."
+                format: int32
+                type: integer
+              insecure:
+                description: |-
+                  Indicates that the registry may be accessed via HTTP.  This defaults
+                      to false.
+                type: boolean
+              blocked:
+                description: |-
+                  Indicates that access to the registry is to be blocked.  This defaults
+                      to false.
+                type: boolean
+              location:
+                description: |-
+                  Optionally enables registry redirection.  When specified, this indicates that images 
+                      specified to be pulled from  will actually be pulled from 
+                       instead.  This is a nice way to be able to reuse manifests
+                      and Helm charts such that they pull images from an alternate registry without
+                      modification.  This defaults to null.
+                type: string
+              username:
+                description: Optionally specifies the username to be used to authenticate against the upstream registry.
+                type: string
+              password:
+                description: Optionally specifies the password to be used to authenticate against the upstream registry.
+                type: string
+            required:
+            - prefix
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources: {}
