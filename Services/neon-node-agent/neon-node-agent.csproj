@@ -17,7 +17,7 @@
         <NeonOperatorRbacOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent\templates</NeonOperatorRbacOutputDir>
         <NeonOperatorWebhookOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent\templates</NeonOperatorWebhookOutputDir>
         <NeonOperatorAnalyzerLoggingEnabled>True</NeonOperatorAnalyzerLoggingEnabled>
-        <NeonOperatorAnalyzerLoggingDir>C:\tmp</NeonOperatorAnalyzerLoggingDir>
+        <NeonOperatorAnalyzerLoggingDir>$(NK_TEMP)</NeonOperatorAnalyzerLoggingDir>
     </PropertyGroup>
 
     <!-- Runtime settings -->
