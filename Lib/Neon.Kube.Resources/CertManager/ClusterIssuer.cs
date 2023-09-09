@@ -15,14 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.Attributes;
 
 using Newtonsoft.Json;
 
@@ -34,6 +32,7 @@ namespace Neon.Kube.Resources.CertManager
     /// in any namespace, not just the same namespace as the referent.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class ClusterIssuer : IKubernetesObject<V1ObjectMeta>, ISpec<V1IssuerSpec>, IValidate
     {
         /// <summary>

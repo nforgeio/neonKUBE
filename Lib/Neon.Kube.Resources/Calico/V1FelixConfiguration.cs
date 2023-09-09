@@ -15,22 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Common;
-using Neon.JsonConverters;
-
-using Newtonsoft.Json;
+using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Calico
 {
@@ -38,6 +28,7 @@ namespace Neon.Kube.Resources.Calico
     /// FelixConfiguration.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class V1FelixConfiguration : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>

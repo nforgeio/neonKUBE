@@ -16,16 +16,14 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-
-using Neon.JsonConverters;
 
 using k8s;
 using k8s.Models;
 
+using Neon.JsonConverters;
 using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Cluster
@@ -201,21 +199,25 @@ namespace Neon.Kube.Resources.Cluster
             /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
             /// to <see cref="Pending"/> when it sees the task for the first time.
             /// </summary>
+            [EnumMember(Value = "new")]
             New = 0,
 
             /// <summary>
             /// The task is waiting to be executed by the <b>neon-node-agent</b>.
             /// </summary>
+            [EnumMember(Value = "pending")]
             Pending,
 
             /// <summary>
             /// The task is currently running.
             /// </summary>
+            [EnumMember(Value = "running")]
             Running,
 
             /// <summary>
             /// The task timed out while executing.
             /// </summary>
+            [EnumMember(Value = "timeout")]
             Timeout,
 
             /// <summary>
@@ -223,22 +225,26 @@ namespace Neon.Kube.Resources.Cluster
             /// crashed or was otherwise terminated and a newly scheduled pod detected
             /// this sutuation.
             /// </summary>
+            [EnumMember(Value = "orphaned")]
             Orphaned,
 
             /// <summary>
             /// The task did not execute before its <see cref="V1NeonNodeTask.TaskSpec.StartBeforeTimestamp"/>
             /// property.
             /// </summary>
+            [EnumMember(Value = "tardy")]
             Tardy,
 
             /// <summary>
             /// The task executed but failed with a non-zero exit code.
             /// </summary>
+            [EnumMember(Value = "failed")]
             Failed,
 
             /// <summary>
             /// The task executed successfully with a zero exit code.
             /// </summary>
+            [EnumMember(Value = "success")]
             Success
         }
 

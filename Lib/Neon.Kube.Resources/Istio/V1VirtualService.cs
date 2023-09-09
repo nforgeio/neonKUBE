@@ -15,10 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel.DataAnnotations;
+
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.Attributes;
+
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
 namespace Neon.Kube.Resources.Istio
 {
@@ -26,6 +30,7 @@ namespace Neon.Kube.Resources.Istio
     /// 
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class V1VirtualService : IKubernetesObject<V1ObjectMeta>, ISpec<V1VirtualServiceSpec>, IValidate
     {
         /// <summary>

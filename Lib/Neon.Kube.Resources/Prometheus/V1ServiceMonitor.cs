@@ -15,20 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Common;
-using Neon.JsonConverters;
+using Neon.Operator.Attributes;
 
 using Newtonsoft.Json;
 
@@ -38,6 +31,7 @@ namespace Neon.Kube.Resources.Prometheus
     /// ServiceMonitor.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class V1ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<V1ServiceMonitorSpec>, IValidate
     {
         /// <summary>

@@ -16,15 +16,11 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 using k8s;
 using k8s.Models;
 
 using Neon.Operator.Attributes;
-
-using NJsonSchema.Annotations;
 
 namespace Neon.Kube.Resources.Cluster
 {
@@ -33,6 +29,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
+    [Ignore]
     public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<V1TestSpec>, IValidate
     {
         /// <summary>
