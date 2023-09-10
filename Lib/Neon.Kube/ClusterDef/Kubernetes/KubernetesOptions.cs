@@ -332,8 +332,9 @@ namespace Neon.Kube.ClusterDef
         /// </item>
         /// </list>
         /// </remarks>
-        [JsonProperty(PropertyName = "ApiServer", Required = Required.AllowNull)]
+        [JsonProperty(PropertyName = "ApiServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "apiServer", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public ApiServerOptions ApiServer { get; set; }
 
         /// <summary>
