@@ -23,13 +23,10 @@ spec:
               registries:
                 description: The list of .
                 items:
-                  description: Defines a key/value pair that can be set or retrieved.
                   properties:
                     key:
-                      description: Gets the key in the key/value pair.
                       type: string
                     value:
-                      description: Gets the value in the key/value pair.
                       properties:
                         prefix:
                           description: "The target registry's hostname and optional path.  This is required.\n    \n    The prefix may include a leading \"*\" wildcard character for subdomain matching."
