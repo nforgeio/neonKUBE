@@ -72,10 +72,6 @@ namespace NeonClusterOperator
         private static SendClusterTelemetry             sendClusterTelemetry;
         private static CheckClusterCertificate          checkClusterCert;
 
-        private HeadendClient headendClient;
-        private HarborClient  harborClient;
-        private ClusterInfo   clusterInfo;
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -92,8 +88,11 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                              k8s;
-        private readonly ILogger<NeonClusterOperatorController>   logger;
+        private readonly IKubernetes                                k8s;
+        private readonly ILogger<NeonClusterOperatorController>     logger;
+        private readonly HeadendClient                              headendClient;
+        private readonly HarborClient                               harborClient;
+        private readonly ClusterInfo                                clusterInfo;
 
         /// <summary>
         /// Constructor.
