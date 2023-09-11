@@ -16,7 +16,6 @@
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>kubernetes</PackageTags>
         <NoDefaultExcludes>true</NoDefaultExcludes>
-        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -110,7 +109,7 @@
 
     <!--- Generate the model source files -->
 
-    <Target Name="ModelGen" Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\.buildComplete" Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" BeforeTargets="CoreCompile" DependsOnTargets="BeforeCompile">
+    <Target Name="ModelGen" BeforeTargets="CoreCompile">
 
         <!-- Fail if we don't know the [neon-modelgen] location -->
         <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: [neon-modelgen] NeonBuildUseNugets: [$(NeonBuildUseNugets)]"/>
