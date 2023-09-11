@@ -10,6 +10,7 @@
         <AssemblyName>neon-cluster-operator</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <NoWarn>$(NoWarn);CS2002;CS8034</NoWarn>
+        <InitialTargets>NSwag</InitialTargets>
     </PropertyGroup>
 
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
@@ -43,7 +44,7 @@
         </None>
     </ItemGroup>
 
-    <Target Name="NSwag" BeforeTargets="BeforeBuild">
+    <Target Name="NSwag">
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
 
