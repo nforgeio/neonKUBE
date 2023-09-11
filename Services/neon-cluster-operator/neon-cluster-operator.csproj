@@ -43,7 +43,7 @@
         </None>
     </ItemGroup>
 
-    <Target Name="NSwag" AfterTargets="BeforeBuild">
+    <Target Name="NSwag" BeforeTargets="BeforeBuild">
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
 
