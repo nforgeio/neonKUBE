@@ -43,12 +43,6 @@
         </None>
     </ItemGroup>
 
-    <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-        <Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />
-        <Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
-        <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
-    </Target>
-
     <Target Name="NSwag" AfterTargets="BeforeBuild">
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
