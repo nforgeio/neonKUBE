@@ -15,26 +15,19 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Describes a Dashboard that will be accesible via the Neon Dashboard.
         properties:
           spec:
-            description: The spec.
             properties:
               url:
-                description: The target dashboard's Url. This is required.
                 type: string
               displayName:
-                description: The display name. This is what will show up in the Neon Dashboard.
                 type: string
               description:
-                description: Describes the dashboard.
                 type: string
               displayOrder:
-                description: Optionally indicates that the order in which the dashboard will be displayed.
                 format: int32
                 type: integer
               enabled:
-                description: Optionally indicates whether the dashboard is enabled or disabled.
                 type: boolean
             required:
             - url
