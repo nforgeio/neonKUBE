@@ -52,9 +52,9 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Tomlyn" Version="0.15.0" />
+        <PackageReference Include="Tomlyn" Version="0.16.2" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -77,7 +77,7 @@
         </When>
         <Otherwise>
             <ItemGroup>
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"/>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
                 <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />

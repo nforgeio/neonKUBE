@@ -162,10 +162,10 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Minio" Version="4.0.7" />
-        <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
-        <PackageReference Include="Tomlyn" Version="0.15.0" />
-        <PackageReference Include="Npgsql" Version="7.0.2" />
+        <PackageReference Include="Minio" Version="5.0.0" />
+        <PackageReference Include="Samboy063.Tomlet" Version="5.2.0" />
+        <PackageReference Include="Tomlyn" Version="0.16.2" />
+        <PackageReference Include="Npgsql" Version="7.0.6" />
     </ItemGroup>
 
     <!-- Local solution project references -->

@@ -50,15 +50,14 @@
     <ItemGroup>
         <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
         <PackageReference Include="DNS" Version="7.0.0" />
-        <PackageReference Include="KubernetesClient" Version="11.0.21" />
+        <PackageReference Include="KubernetesClient" Version="12.0.16" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.3" />
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.1" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.5" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="prometheus-net" Version="8.0.0" />
-        <PackageReference Include="SharpCompress" Version="0.32.2" />
+        <PackageReference Include="prometheus-net" Version="8.0.1" />
+        <PackageReference Include="SharpCompress" Version="0.33.0" />
         <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
         <PackageReference Include="SSH.NET" Version="2020.0.2" />
         <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
@@ -68,7 +67,7 @@
         <PackageReference Include="System.Net.Ping" Version="4.3.0" />
         <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
         <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-        <PackageReference Include="YamlDotNet" Version="13.1.0" />
+        <PackageReference Include="YamlDotNet" Version="13.3.1" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -112,7 +111,7 @@
     <Target Name="ModelGen" BeforeTargets="CoreCompile">
 
         <!-- Fail if we don't know the [neon-modelgen] location -->
-        <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: [neon-modelgen] NeonBuildUseNugets: [$(NeonBuildUseNugets)]"/>
+        <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: [neon-modelgen] NeonBuildUseNugets: [$(NeonBuildUseNugets)]" />
 
         <Message Importance="high" Text="neon-modelgen path: $(ModelGeneratorPath)" />
         <Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
