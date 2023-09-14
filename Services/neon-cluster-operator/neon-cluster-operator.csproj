@@ -50,10 +50,10 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="DnsClient" Version="1.6.1" />
+        <PackageReference Include="DnsClient" Version="1.7.0" />
         <PackageReference Include="Google.Protobuf" Version="3.22.3" />
         <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
-        <PackageReference Include="Grpc.Tools" Version="2.53.0">
+        <PackageReference Include="Grpc.Tools" Version="2.54.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -96,7 +96,7 @@
         </When>
         <Otherwise>
             <ItemGroup>
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"/>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
                 <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
                 <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
