@@ -16,6 +16,7 @@
         <Configurations>Debug;Release</Configurations>
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>xunit kubernetes operator sdk neonkube k8s</PackageTags>
+        <IsTestProject>false</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
