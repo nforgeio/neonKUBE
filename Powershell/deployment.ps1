@@ -454,14 +454,12 @@ function Save-ToS3
         [Parameter(Position=1, Mandatory=$true)]
         [string]$targetUri,
         [Parameter(Mandatory=$false)]
-        [bool]$gzip = $false,
-        [Parameter(Mandatory=$false)]
+        [switch]$gzip = $false,
         [string]$metadata = "",
-        [Parameter(Mandatory=$false)]
-        [bool]$publicReadAccess = $false
+        [switch]$publicReadAccess = $false
     )
 
-    [Neon.Deployment.AwsCli]::S3Upload($sourcePath, $targetUri, $gzip, $metedata, $publicReadAccess)
+    [Neon.Deployment.AwsCli]::S3Upload($sourcePath, $targetUri, $gzip, $metadata, $publicReadAccess)
 }
 
 #------------------------------------------------------------------------------
