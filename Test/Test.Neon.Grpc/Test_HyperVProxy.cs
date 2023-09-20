@@ -61,7 +61,7 @@ namespace TestGrpc
         private const string TestMachineName2 = "test-hypervproxy-2";
         private const string TestSwitchName   = "test-hypervproxy";
 
-        private static readonly string socketPath   = Path.Combine(Path.GetTempPath(), $"hypervproxy-test-{Guid.NewGuid().ToString("d")}.sock");
+        private static readonly string socketPath   = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $"hypervproxy-test.sock");
         private static readonly string templatePath = TestHelper.GetUbuntuTestVhdxPath();
 
         /// <summary>

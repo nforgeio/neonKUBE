@@ -481,7 +481,7 @@ namespace Neon.Kube
         /// the socket will be located within the Windows program data folder.
         /// </note>
         /// </summary>
-        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
+        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "service.sock");
 
         /// <summary>
         /// Returns the path to the <b>.ssh</b> folder within user's home folder.
@@ -882,7 +882,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Returns the path to the global NEONDESKTOP program data folder.  This is used for information
-        /// to be shared across all users as well as between the user programs and the Neon Desktop Service.
+        /// to be shared across all users as well as between the user programs and the neon-desktop-service.
         /// </para>
         /// <note>
         /// All users will have read/write access to files in this folder.
@@ -897,7 +897,7 @@ namespace Neon.Kube
                     return cachedDesktopCommonFolder;
                 }
 
-                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
+                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neon-desktop");
 
                 if (OperatingSystem.IsWindowsVersionAtLeast(10))
                 {
