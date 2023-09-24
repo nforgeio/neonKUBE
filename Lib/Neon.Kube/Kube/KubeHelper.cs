@@ -897,7 +897,7 @@ namespace Neon.Kube
                     return cachedDesktopCommonFolder;
                 }
 
-                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neon-desktop");
+                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NEONFORGE", "neon-desktop");
 
                 if (OperatingSystem.IsWindowsVersionAtLeast(10))
                 {
