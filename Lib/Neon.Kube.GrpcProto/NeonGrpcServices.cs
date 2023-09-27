@@ -69,8 +69,6 @@ namespace Neon.Kube.GrpcProto
             //
             // This is low risk, so we're not going to worry about it.
 
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
             var endPoint           = new UnixDomainSocketEndPoint(socketPath);
             var socketsHttpHandler = new SocketsHttpHandler()
             {

@@ -52,12 +52,14 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common.Extensions\Neon.Common.Extensions.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" />
             </ItemGroup>
         </Otherwise>

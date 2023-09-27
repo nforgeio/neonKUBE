@@ -29,9 +29,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-using ProtoBuf.Grpc.Server;
 using OpenTelemetry.Exporter;
 using OpenTelemetry;
+
+using ProtoBuf.Grpc.Server;
 
 namespace Neon.Kube.DesktopService
 {
@@ -169,6 +170,10 @@ namespace Neon.Kube.DesktopService
 
             cts  = new CancellationTokenSource();
             task = app.StartAsync(cts.Token);
+
+            // Ensure that everyone can read/write the unix domain socket.
+
+            NeonExtendedHelper.SetUnixDomainSocketEveryonePermissions(socketPath, read: true, write: true);
         }
 
         /// <inheritdoc/>
