@@ -127,7 +127,7 @@ OPTIONS:
                         }
                         else
                         {
-                            NeonHelper.OpenPlatformBrowser(dashboard.Spec.Url, newWindow: true);
+                            NeonHelper.OpenBrowser(dashboard.Spec.Url);
                         }
                     }
                     else
