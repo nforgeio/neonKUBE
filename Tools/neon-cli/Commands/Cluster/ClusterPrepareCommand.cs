@@ -131,6 +131,11 @@ OPTIONS:
                                   cluster setup issues.  Do not use for production
                                   clusters.
 
+    --use-preview               - Uses the preview VM image from the Azure Marketplace to
+                                  provision the cluster.  Note that a project maintainer
+                                  must specifically grant access to each user, generally
+                                  to work with users to solve NEONKUBE problems.
+
     --use-staged[=branch]       - MAINTAINER ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
@@ -143,10 +148,6 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
-
-    --use-preview               - MAINTAINER ONLY: Uses the preview VM image from the
-                                  Azure Marketplace to provision the cluster.  This is
-                                  ignored by other hosting environments.
 
 REMARKS:
 
@@ -215,8 +216,15 @@ stage process is typically used only by NEONKUBE maintainers.
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
-            var usePreview        = commandLine.HasOption("--use-preview");
             var unredacted        = commandLine.HasOption("--unredacted");
+            var usePreview        = commandLine.HasOption("--use-preview");
+
+            if (useStaged)
+            {
+                // [--use-staged] takes precedence.
+
+                usePreview = false;
+            }
 
             if (noTelemetry)
             {

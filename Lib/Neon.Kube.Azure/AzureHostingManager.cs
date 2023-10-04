@@ -1862,8 +1862,37 @@ namespace Neon.Kube.Hosting.Azure
             {
                 // Query the headend to locate the marketplace offer to use.
 
-                var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64);
+                var headendClient   = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                var usePreviewImage = controller.Get<bool>(KubeSetupProperty.UsePreviewImage, false);
+                var imageDetails    = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64, preview: usePreviewImage);
+
+                //###############################
+                // $debug(jefflill): DELETE THIS!
+
+                var preview     = false;
+                var fullVersion = SemanticVersion.Parse("0.10.0-beta.1");
+                var numericPart = fullVersion.Numeric;
+                var prerelease  = fullVersion.Prerelease;
+
+                string offer;
+
+                imageDetails  = new AzureImageDetails()
+                {
+                    ImageReference = new AzureImageReference()
+                    {
+                        Publisher = "neonforge",
+                        Sku       = "neonkube",
+                        Offer     = preview ? "neonkube-preview" : "neonkube",
+                        Version   = numericPart
+                    },
+                    ComputePlan = new AzureComputePlan()
+                    {
+                        Publisher = "neonforge",
+                        Name      = "neonkube",
+                        Product   = preview ? "neonkube-preview" : "neonkube"
+                    }
+                };
+                //###############################
 
                 nodeImageRef = new ImageReference()
                 {
@@ -1882,8 +1911,7 @@ namespace Neon.Kube.Hosting.Azure
             }
             else
             {
-                // This is currently hardcoded to locate the current node image from our
-                // private development image gallery.
+                // This is hardcoded to locate the current node image from our private development image gallery.
 
                 const string galleryResourceGroupName = "neonkube-images";
                 const string galleryName              = "neonkube.images";

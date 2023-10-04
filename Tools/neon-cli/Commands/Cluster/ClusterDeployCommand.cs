@@ -98,6 +98,11 @@ OPTIONS:
     --upload-charts             - Upload Helm charts from your workstation rather than using
                                   the charts baked into the node image.
 
+    --use-preview               - Uses the preview VM image from the Azure Marketplace to
+                                  provision the cluster.  Note that a project maintainer
+                                  must specifically grant access to each user, generally
+                                  to work with users to solve NEONKUBE problems.
+
     --use-staged[=branch]       - MAINTAINER ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
@@ -171,9 +176,9 @@ stage process is typically used only by NEONKUBE maintainers.
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
             var uploadCharts      = commandLine.HasOption("--upload-charts");
+            var usePreview        = commandLine.HasOption("--use-preview");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
-            var usePreview        = commandLine.HasOption("--use-preview");
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
@@ -213,7 +218,14 @@ stage process is typically used only by NEONKUBE maintainers.
 
             if (useStaged)
             {
-                args.Add($"--use-staged={stageBranch}");
+                if (string.IsNullOrEmpty(stageBranch))
+                {
+                    args.Add("--use-staged");
+                }
+                else
+                {
+                    args.Add($"--use-staged={stageBranch}");
+                }
             }
 
             if (usePreview)
@@ -260,7 +272,14 @@ stage process is typically used only by NEONKUBE maintainers.
 
             if (useStaged)
             {
-                args.Add($"--use-staged={stageBranch}");
+                if (string.IsNullOrEmpty(stageBranch))
+                {
+                    args.Add("--use-staged");
+                }
+                else
+                {
+                    args.Add($"--use-staged={stageBranch}");
+                }
             }
 
             args.Add($"--max-parallel={maxParallelOption}");
