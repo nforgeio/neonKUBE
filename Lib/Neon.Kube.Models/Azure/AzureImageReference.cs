@@ -61,5 +61,12 @@ namespace Neon.Kube.Models
         [JsonProperty(PropertyName = "Version", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Version { get; set; }
+
+        /// <summary>
+        /// Identifies the image reference as a URN.
+        /// </summary>
+        [JsonProperty(PropertyName = "Urn", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        string Urn { get; set; }
     }
 }

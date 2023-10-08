@@ -1870,26 +1870,26 @@ namespace Neon.Kube.Hosting.Azure
                 // $debug(jefflill): DELETE THIS!
 
                 var preview     = false;
-                var fullVersion = SemanticVersion.Parse("0.10.0-beta.1");
+                var fullVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
                 var numericPart = fullVersion.Numeric;
-                var prerelease  = fullVersion.Prerelease;
-
-                string offer;
+                var sku         = KubeVersions.NeonKube.Replace('.', '-');      // Azure doesn't allow dots in the SKU, so we'll convert these to dashes.
+                var offer       = preview ? "neonkube-preview" : "neonkube";
 
                 imageDetails  = new AzureImageDetails()
                 {
                     ImageReference = new AzureImageReference()
                     {
                         Publisher = "neonforge",
-                        Sku       = "neonkube",
-                        Offer     = preview ? "neonkube-preview" : "neonkube",
-                        Version   = numericPart
+                        Sku       = sku,
+                        Offer     = offer,
+                        Version   = numericPart,
+                        Urn       = $"neonforge:{offer}:{sku}:{numericPart}"
                     },
                     ComputePlan = new AzureComputePlan()
                     {
                         Publisher = "neonforge",
-                        Name      = "neonkube",
-                        Product   = preview ? "neonkube-preview" : "neonkube"
+                        Product   = offer,
+                        Name      = sku
                     }
                 };
                 //###############################
@@ -1899,14 +1899,14 @@ namespace Neon.Kube.Hosting.Azure
                     Publisher = imageDetails.ImageReference.Publisher,
                     Offer     = imageDetails.ImageReference.Offer,
                     Sku       = imageDetails.ImageReference.Sku,
-                    Version   = imageDetails.ImageReference.Version,
+                    Version   = imageDetails.ImageReference.Version
                 };
 
                 nodeImagePlan = new ComputePlan()
                 {
-                    Name      = imageDetails.ComputePlan.Name,
                     Publisher = imageDetails.ComputePlan.Publisher,
                     Product   = imageDetails.ComputePlan.Product,
+                    Name      = imageDetails.ComputePlan.Name
                 };
             }
             else
