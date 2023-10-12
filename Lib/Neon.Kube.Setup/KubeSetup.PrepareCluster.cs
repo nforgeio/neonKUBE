@@ -229,6 +229,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
             controller.Add(KubeSetupProperty.Insecure, options.Insecure);
+            controller.Add(KubeSetupProperty.UsePreviewImage, options.UsePreview);
 
             // Configure the cluster preparation steps.
 

@@ -1862,37 +1862,9 @@ namespace Neon.Kube.Hosting.Azure
             {
                 // Query the headend to locate the marketplace offer to use.
 
-                var headendClient   = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                var usePreviewImage = controller.Get<bool>(KubeSetupProperty.UsePreviewImage, false);
-                var imageDetails    = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64, preview: usePreviewImage);
-
-                //###############################
-                // $debug(jefflill): DELETE THIS!
-
-                var preview     = false;
-                var fullVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
-                var numericPart = fullVersion.Numeric;
-                var sku         = KubeVersions.NeonKube.Replace('.', '-');      // Azure doesn't allow dots in the SKU, so we'll convert these to dashes.
-                var offer       = preview ? "neonkube-preview" : "neonkube";
-
-                imageDetails  = new AzureImageDetails()
-                {
-                    ImageReference = new AzureImageReference()
-                    {
-                        Publisher = "neonforge",
-                        Sku       = sku,
-                        Offer     = offer,
-                        Version   = numericPart,
-                        Urn       = $"neonforge:{offer}:{sku}:{numericPart}"
-                    },
-                    ComputePlan = new AzureComputePlan()
-                    {
-                        Publisher = "neonforge",
-                        Product   = offer,
-                        Name      = sku
-                    }
-                };
-                //###############################
+                var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                var preview       = controller.Get<bool>(KubeSetupProperty.UsePreviewImage, false);
+                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64, preview: preview);
 
                 nodeImageRef = new ImageReference()
                 {
