@@ -159,18 +159,5 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const string Insecure = "insecure";
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies that the <b>preview</b> cloud marketplace node image should
-        /// be used the deploy the cluster rather than the public image.  This currently
-        /// applies only to Azure deployments and is ignored for other environments.
-        /// </para>
-        /// <note>
-        /// Project maintainers will need to grant permissions to specific users to grant
-        /// access to the preview offer and plan.
-        /// </note>
-        /// </summary>
-        public const string UsePreviewImage = "use-preview-image";
     }
 }

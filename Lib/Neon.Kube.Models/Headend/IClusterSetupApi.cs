@@ -94,14 +94,12 @@ namespace Neon.Kube.Models.Headend
         /// </summary>
         /// <param name="version">Specifies the NEONKUBE version.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
-        /// <param name="preview">Optionally specifies that returns details for the marketplace preview image.</param>
         /// <returns>The action result.</returns>
         [HttpGet]
         [Route("image/node/azure")]
         AzureImageDetails GetAzureImageDetailsAsync(
             [FromQuery] string version,
-            [FromQuery] CpuArchitecture architecture,
-            [FromQuery] bool preview = false);
+            [FromQuery] CpuArchitecture architecture);
 
         /// <summary>
         /// Ingests cluster setup log files.

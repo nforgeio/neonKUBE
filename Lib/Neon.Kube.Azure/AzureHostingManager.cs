@@ -1863,8 +1863,7 @@ namespace Neon.Kube.Hosting.Azure
                 // Query the headend to locate the marketplace offer to use.
 
                 var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                var preview       = controller.Get<bool>(KubeSetupProperty.UsePreviewImage, false);
-                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64, preview: preview);
+                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64);
 
                 nodeImageRef = new ImageReference()
                 {
