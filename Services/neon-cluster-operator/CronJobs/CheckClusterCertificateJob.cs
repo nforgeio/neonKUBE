@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckClusterCertificate.cs
+// FILE:        CheckClusterCertificateJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -51,17 +51,17 @@ namespace NeonClusterOperator
     /// Handles updating of the <b>desktop.neoncluster.io</b> certificate.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckClusterCertificate : CronJob, IJob
+    public class CheckClusterCertificateJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckClusterCertificate>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckClusterCertificateJob>();
 
         private static Random random   = new Random();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckClusterCertificate()
-            : base(typeof(CheckClusterCertificate))
+        public CheckClusterCertificateJob()
+            : base(typeof(CheckClusterCertificateJob))
         {
         }
         
@@ -74,7 +74,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckClusterCertificate)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckClusterCertificateJob)));
 
                 try
                 {

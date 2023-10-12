@@ -85,13 +85,13 @@ namespace NeonAcme.Controllers
         }
 
         /// <summary>
-        /// Handles challenge presentations from Cert Manager.
+        /// Handles challenge presentations from CertManager.
         /// </summary>
         /// <param name="challenge">Specifies the challenge.</param>
         /// <returns>The challenge response.</returns>
         [HttpPost("neoncluster_io")]
         [Produces("application/json")]
-        public async Task<ActionResult> PresentNeonclusterChallengeAsync([FromBody] ChallengePayload challenge)
+        public async Task<ActionResult> PresentNeonClusterChallengeAsync([FromBody] ChallengePayload challenge)
         {
             Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");

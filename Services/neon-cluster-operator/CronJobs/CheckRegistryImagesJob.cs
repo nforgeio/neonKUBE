@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckRegistryImages.cs
+// FILE:        CheckRegistryImagesJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -56,12 +56,12 @@ namespace NeonClusterOperator
     /// Harbor.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckRegistryImages : CronJob, IJob
+    public class CheckRegistryImagesJob : CronJob, IJob
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImages>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImagesJob>();
 
         //---------------------------------------------------------------------
         // Instance members
@@ -72,8 +72,8 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckRegistryImages()
-            : base(typeof(CheckRegistryImages))
+        public CheckRegistryImagesJob()
+            : base(typeof(CheckRegistryImagesJob))
         {
         }
 
@@ -84,7 +84,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
 
                 try
                 {
@@ -195,7 +195,7 @@ rm -rf {tempDir}
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
 
                 try
                 {

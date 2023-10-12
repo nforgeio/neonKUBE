@@ -2050,7 +2050,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Installs Cert Manager.
+        /// Installs CertManager.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>

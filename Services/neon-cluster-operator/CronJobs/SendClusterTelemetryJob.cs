@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        SendClusterTelemetry.cs
+// FILE:        SendClusterTelemetryJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -51,15 +51,15 @@ namespace NeonClusterOperator
     /// Handles checking for expired 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class SendClusterTelemetry : CronJob, IJob
+    public class SendClusterTelemetryJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetry>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetryJob>();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SendClusterTelemetry()
-            : base(typeof(SendClusterTelemetry))
+        public SendClusterTelemetryJob()
+            : base(typeof(SendClusterTelemetryJob))
         {
         }
 

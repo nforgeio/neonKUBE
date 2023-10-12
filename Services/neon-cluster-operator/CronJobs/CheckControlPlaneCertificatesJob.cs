@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        UpdateCaCertificates.cs
+// FILE:        CheckControlPlaneCertificatesJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -46,36 +45,36 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles updating of Linux CA certificates on cluster nodes.
+    /// Handles checking for expired 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class UpdateCaCertificates : CronJob, IJob
+    public class CheckControlPlaneCertificatesJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<UpdateCaCertificates>();
-     
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckControlPlaneCertificatesJob>();
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        public UpdateCaCertificates()
-            : base(typeof(UpdateCaCertificates))
+        public CheckControlPlaneCertificatesJob()
+            : base(typeof(CheckControlPlaneCertificatesJob))
         {
         }
         
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
-            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+            await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(UpdateCaCertificates)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckControlPlaneCertificatesJob)));
 
                 try
                 {
                     var dataMap   = context.MergedJobDataMap;
                     var k8s       = (IKubernetes)dataMap["Kubernetes"];
-                    var nodes     = await k8s.CoreV1.ListNodeAsync();
-                    var startTime = DateTime.UtcNow.AddSeconds(10);
+                    var nodes     = await k8s.CoreV1.ListNodeAsync(labelSelector: "neonkube.io/node.role=control-plane");
+                    var startTime = DateTime.UtcNow;
 
                     foreach (var node in nodes.Items)
                     {
@@ -83,30 +82,31 @@ namespace NeonClusterOperator
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name   = $"ca-certificate-update-{NeonHelper.CreateBase36Uuid()}",
+                                Name   = $"control-plane-cert-check-{NeonHelper.CreateBase36Uuid()}",
                                 Labels = new Dictionary<string, string>
                             {
                                 { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                                { NeonLabel.NodeTaskType, NeonNodeTaskType.NodeCaCertUpdate }
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertExpirationCheck }
                             }
                             },
                             Spec = new V1NeonNodeTask.TaskSpec()
                             {
                                 Node                = node.Name(),
                                 StartAfterTimestamp = startTime,
-                                BashScript          = @"/usr/sbin/update-ca-certificates",
+                                BashScript          = @"/usr/bin/kubeadm certs check-expiration",
+                                CaptureOutput       = true,
                                 RetentionSeconds    = (int)TimeSpan.FromHours(1).TotalSeconds
                             }
                         };
 
-                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.NodeCaCertUpdate}");
+                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertExpirationCheck}");
 
                         if (!tasks.Items.Any(task => task.Spec.Node == nodeTask.Spec.Node && (task.Status.Phase <= V1NeonNodeTask.Phase.Running || task.Status == null)))
                         {
                             await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
                         }
 
-                        startTime = startTime.AddMinutes(10);
+                        startTime = startTime.AddHours(1);
                     }
 
                     var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
@@ -117,13 +117,13 @@ namespace NeonClusterOperator
                         patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
                     }
 
-                    patch.Replace(path => path.Status.NodeCaCertificates, new V1NeonClusterOperator.UpdateStatus());
-                    patch.Replace(path => path.Status.NodeCaCertificates.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.ControlPlaneCertificates, new V1NeonClusterOperator.UpdateStatus());
+                    patch.Replace(path => path.Status.ControlPlaneCertificates.LastCompleted, DateTime.UtcNow);
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
                         name:  clusterOperator.Name());
-                } 
+                }
                 catch (Exception e)
                 {
                     logger?.LogErrorEx(e);

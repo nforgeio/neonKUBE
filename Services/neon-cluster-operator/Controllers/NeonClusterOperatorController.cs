@@ -66,23 +66,23 @@ namespace NeonClusterOperator
         private static IScheduler                       scheduler;
         private static StdSchedulerFactory              schedulerFactory;
         private static bool                             initialized;
-        private static UpdateCaCertificates             updateCaCertificates;
-        private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
-        private static CheckRegistryImages              checkRegistryImages;
-        private static SendClusterTelemetry             sendClusterTelemetry;
-        private static CheckClusterCertificate          checkClusterCert;
+        private static UpdateCaCertificatesJob          updateCaCertificatesJob;
+        private static CheckControlPlaneCertificatesJob checkControlPlaneCertificatesJob;
+        private static CheckRegistryImagesJob           checkRegistryImagesJob;
+        private static SendClusterTelemetryJob          sendClusterTelemetryJob;
+        private static CheckClusterCertificateJob       checkClusterCertJob;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
         static NeonClusterOperatorController() 
         {
-            schedulerFactory              = new StdSchedulerFactory();
-            updateCaCertificates          = new UpdateCaCertificates();
-            checkControlPlaneCertificates = new CheckControlPlaneCertificates();
-            checkRegistryImages           = new CheckRegistryImages();
-            sendClusterTelemetry          = new SendClusterTelemetry();
-            checkClusterCert              = new CheckClusterCertificate();
+            schedulerFactory                 = new StdSchedulerFactory();
+            updateCaCertificatesJob          = new UpdateCaCertificatesJob();
+            checkControlPlaneCertificatesJob = new CheckControlPlaneCertificatesJob();
+            checkRegistryImagesJob           = new CheckRegistryImagesJob();
+            sendClusterTelemetryJob          = new SendClusterTelemetryJob();
+            checkClusterCertJob              = new CheckClusterCertificateJob();
         }
 
         //---------------------------------------------------------------------
@@ -161,8 +161,8 @@ namespace NeonClusterOperator
 
                         CronExpression.ValidateExpression(nodeCaSchedule);
 
-                        await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
-                        await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                        await updateCaCertificatesJob.DeleteFromSchedulerAsync(scheduler);
+                        await updateCaCertificatesJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
                     }
                     catch (Exception e)
                     {
@@ -178,8 +178,8 @@ namespace NeonClusterOperator
 
                         CronExpression.ValidateExpression(controlPlaneCertSchedule);
 
-                        await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
-                        await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                        await checkControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
+                        await checkControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
                     }
                     catch (Exception e)
                     {
@@ -195,8 +195,8 @@ namespace NeonClusterOperator
 
                         CronExpression.ValidateExpression(containerImageSchedule);
 
-                        await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
-                        await checkRegistryImages.AddToSchedulerAsync(
+                        await checkRegistryImagesJob.DeleteFromSchedulerAsync(scheduler);
+                        await checkRegistryImagesJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             containerImageSchedule,
@@ -219,8 +219,8 @@ namespace NeonClusterOperator
 
                         CronExpression.ValidateExpression(clusterTelemetrySchedule);
 
-                        await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
-                        await sendClusterTelemetry.AddToSchedulerAsync(
+                        await sendClusterTelemetryJob.DeleteFromSchedulerAsync(scheduler);
+                        await sendClusterTelemetryJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             clusterTelemetrySchedule,
@@ -243,8 +243,8 @@ namespace NeonClusterOperator
 
                         CronExpression.ValidateExpression(neonDesktopCertSchedule);
 
-                        await checkClusterCert.DeleteFromSchedulerAsync(scheduler);
-                        await checkClusterCert.AddToSchedulerAsync(
+                        await checkClusterCertJob.DeleteFromSchedulerAsync(scheduler);
+                        await checkClusterCertJob.AddToSchedulerAsync(
                             scheduler, 
                             k8s, 
                             neonDesktopCertSchedule,

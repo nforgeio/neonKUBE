@@ -129,7 +129,7 @@ namespace Neon.Kube
         public static string Calico = "calico";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Cert Manager</b> service manager nodes.
+        /// Identifies the NEONKUBE cluster's <b>CertManager</b> service manager nodes.
         /// </summary>
         public static string CertManager = "cert-manager";
 
