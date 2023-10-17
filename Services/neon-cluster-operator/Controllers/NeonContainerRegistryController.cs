@@ -113,7 +113,7 @@ namespace NeonClusterOperator
 
                 await SyncContext.Clear;
 
-                logger?.LogInformationEx(() => $"Reconciling {typeof(V1NeonContainerRegistry)} [{resource.Namespace()}/{resource.Name()}].");
+                logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 

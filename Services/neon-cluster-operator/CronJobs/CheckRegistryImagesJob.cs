@@ -80,6 +80,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())

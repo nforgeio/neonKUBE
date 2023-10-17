@@ -103,7 +103,7 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
                 
-                logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Namespace()}/{resource.Name()}].");
+                logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 var patch = OperatorHelper.CreatePatch<V1MinioBucket>();
 
@@ -115,15 +115,16 @@ namespace NeonClusterOperator
                     name:               resource.Name(),
                     namespaceParameter: resource.Namespace());
 
+                // $debug(jefflill): RESTORE THIS!
+
+#if !TODO
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);
 
                     // Create bucket if it doesn't exist.
 
-                    bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
-
-                    if (exists)
+                    if (await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name())))
                     {
                         logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] already exists.");
                     }
@@ -160,6 +161,7 @@ namespace NeonClusterOperator
                     minioClient.Dispose();
                     portForwardCts?.Cancel();
                 }
+#endif
 
                 patch = OperatorHelper.CreatePatch<V1MinioBucket>();
 

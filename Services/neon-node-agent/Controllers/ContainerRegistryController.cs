@@ -389,7 +389,6 @@ rm $0
             using var activity = TelemetryHub.ActivitySource?.StartActivity();
 
             Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1NeonContainerRegistry)));
-
             log?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
             var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();

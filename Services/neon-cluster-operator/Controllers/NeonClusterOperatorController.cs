@@ -117,7 +117,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Called periodically to allow the operator to perform global events.
+        /// Called periodically to give the operator a chance to perform global activities.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task IdleAsync()
@@ -139,7 +139,7 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
-                logger?.LogInformationEx("[RECONCILING]");
+                logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 // Ignore all events when the controller hasn't been started.
 

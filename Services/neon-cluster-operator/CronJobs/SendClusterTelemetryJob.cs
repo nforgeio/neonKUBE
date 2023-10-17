@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Net.Http.Headers;
 using System.Linq;
 using System.Text;
@@ -31,6 +32,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
 using Neon.Operator.Util;
 using Neon.Net;
 using Neon.Kube.Resources.Cluster;
@@ -43,7 +45,6 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-using Neon.Kube.ClusterDef;
 
 namespace NeonClusterOperator
 {
@@ -67,6 +68,7 @@ namespace NeonClusterOperator
         public async Task Execute(IJobExecutionContext context)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {

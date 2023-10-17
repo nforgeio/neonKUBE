@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -64,6 +65,7 @@ namespace NeonClusterOperator
         public async Task Execute(IJobExecutionContext context)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {

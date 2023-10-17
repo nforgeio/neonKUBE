@@ -41,31 +41,31 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// 
+    /// Wrapper class for cron jobs.
     /// </summary>
     public class CronJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CronJob>();
 
         /// <summary>
-        /// The name of the cron job.
+        /// Identifies the job.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The group.
+        /// Specifiers the job group.
         /// </summary>
         public string Group { get; set; } = "ClusterSettingsCron";
 
         /// <summary>
-        /// The Job type.
+        /// Soecifies the job type.
         /// </summary>
         public Type Type { get; set; }   
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="type">The job type.</param>
+        /// <param name="type">Specifies the job type.</param>
         public CronJob(Type type)
         {
             Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
@@ -75,7 +75,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Adds the cron job to a specified scheduler.
+        /// Adds the job to a specified Quartz scheduler.
         /// </summary>
         /// <param name="scheduler">Specifies the scheduler.</param>
         /// <param name="k8s">Specifies the Kubernetes client.</param>
