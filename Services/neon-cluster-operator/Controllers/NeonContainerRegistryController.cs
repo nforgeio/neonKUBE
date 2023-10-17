@@ -81,26 +81,6 @@ namespace NeonClusterOperator
             this.logger = logger;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogDebugEx("[IDLE]");
-
-            try
-            {
-                await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e);
-                await CreateNeonLocalRegistryAsync();
-            }
-        }
 
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)

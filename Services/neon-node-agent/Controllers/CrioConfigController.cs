@@ -372,16 +372,6 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            log.LogInformationEx("IDLE");
-
-            return;
-        }
-
-        /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;

@@ -373,15 +373,6 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task IdleAsync()
-        {
-            log.LogInformationEx("IDLE");
-            await UpdateContainerRegistriesAsync();
-
-            return;
-        }
-
-        /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;

@@ -175,38 +175,6 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task IdleAsync()
-        {
-            logger.LogDebugEx("[IDLE]");
-
-            // Handle execution of scheduled tasks.
-
-            // $todo(jefflill):
-            //
-            // I'm implementing this here because even though this would be better
-            // implemented via requeued events.  Unfortunately, we haven't implemented
-            // that yet.
-
-            var utcNow = DateTime.UtcNow;
-
-            foreach (var scheduledTask in (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
-                .Where(task => NodeTaskFilter(task))
-                .Where(task => task.Status != null && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
-                .Where(task => !task.Spec.StartAfterTimestamp.HasValue || task.Spec.StartAfterTimestamp <= utcNow)
-                .Where(task => !task.Spec.StartBeforeTimestamp.HasValue || task.Spec.StartBeforeTimestamp < utcNow)
-                .OrderByDescending(task => task.Metadata.CreationTimestamp))
-            {
-                await ExecuteTaskAsync(scheduledTask);
-            }
-
-            // Manage tasks by deleting finished tasks after their retention period,
-            // detecting and deleting orphanded tasks, as well as detecting tardy tasks
-            // that have missed their scheduling window.
-
-            await CleanupTasksAsync();
-        }
-
-        /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
             var name = resource.Name();

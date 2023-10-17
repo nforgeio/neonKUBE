@@ -116,20 +116,6 @@ namespace NeonClusterOperator
             this.clusterInfo   = clusterInfo;
         }
 
-        /// <summary>
-        /// Called periodically to give the operator a chance to perform global activities.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            if (!initialized)
-            {
-                await InitializeSchedulerAsync();
-            }
-        }
-
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
