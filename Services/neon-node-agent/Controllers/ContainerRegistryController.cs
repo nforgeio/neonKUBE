@@ -390,7 +390,7 @@ rm $0
 
             Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1NeonContainerRegistry)));
 
-            log?.LogInformationEx(() => $"Reconciling {typeof(V1NeonContainerRegistry)} [{resource.Namespace()}/{resource.Name()}].");
+            log?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
             var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 
@@ -423,6 +423,7 @@ rm $0
                 log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
 
                 var addPatch = OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                 addPatch.Add(path => path.Spec.Registries, new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                 await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
@@ -443,6 +444,7 @@ rm $0
                     crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                     var patch =  OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                     patch.Replace(path => path.Spec.Registries, crioConfig.Spec.Registries);
 
                     await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
