@@ -19,8 +19,6 @@
 # Builds the neon-dashboard images and pushes them to Docker Hub.
 #
 # NOTE: You must be already logged into the target container registry.
-#
-# USAGE: pwsh -f publish.ps1 [-all]
 
 param 
 (
