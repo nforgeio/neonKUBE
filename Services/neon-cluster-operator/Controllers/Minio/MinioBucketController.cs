@@ -117,7 +117,6 @@ namespace NeonClusterOperator
 
                 // $debug(jefflill): RESTORE THIS!
 
-#if !TODO
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);
@@ -161,7 +160,6 @@ namespace NeonClusterOperator
                     minioClient.Dispose();
                     portForwardCts?.Cancel();
                 }
-#endif
 
                 patch = OperatorHelper.CreatePatch<V1MinioBucket>();
 
