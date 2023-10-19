@@ -262,7 +262,7 @@ namespace NeonNodeAgent
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
-        internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static string               configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
