@@ -298,6 +298,22 @@ namespace NeonNodeAgent
             }
         }
 
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private readonly IKubernetes k8s;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public CrioConfigController(
+            IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.k8s     = k8s;
+        }
+
         /// <summary>
         /// Starts the controller.
         /// </summary>
@@ -351,24 +367,8 @@ rm $0
                 reloginInterval = TimeSpan.FromHours(24);
             }
 
-            
+
             reloginMaxRandomInterval = reloginInterval.Divide(4);
-        }
-        
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes k8s;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public CrioConfigController(
-            IKubernetes k8s)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            this.k8s     = k8s;
         }
 
         /// <inheritdoc/>

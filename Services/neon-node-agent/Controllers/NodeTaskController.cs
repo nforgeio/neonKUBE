@@ -75,7 +75,7 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger                                     logger = TelemetryHub.CreateLogger<NodeTaskController>();
+        private static readonly ILogger     logger = TelemetryHub.CreateLogger<NodeTaskController>();
 
         // Paths to relevant folders in the host file system.
 
@@ -89,6 +89,42 @@ namespace NeonNodeAgent
         {
             hostNeonRunFolder   = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
             hostNeonTasksFolder = Path.Combine(hostNeonRunFolder, "node-tasks");
+        }
+
+        /// <summary>
+        /// Selects only tasks assigned to the current node to be handled by the resource manager.
+        /// </summary>
+        /// <param name="task">The task being filtered.</param>
+        /// <returns><b>true</b> if the task is assigned to the current node.</returns>
+        private static bool NodeTaskFilter(V1NeonNodeTask task)
+        {
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+
+            // Handle all tasks when debugging.
+
+            if (!NeonHelper.IsLinux)
+            {
+                return true;
+            }
+
+            // ...otherwise, just for the tasks assigned to the host node.
+
+            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private readonly IKubernetes k8s;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public NodeTaskController(IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.k8s = k8s;
         }
 
         /// <summary>
@@ -136,42 +172,6 @@ rm $0
                     NeonHelper.DeleteFile(scriptPath);
                 }
             }
-        }
-
-        /// <summary>
-        /// Selects only tasks assigned to the current node to be handled by the resource manager.
-        /// </summary>
-        /// <param name="task">The task being filtered.</param>
-        /// <returns><b>true</b> if the task is assigned to the current node.</returns>
-        private static bool NodeTaskFilter(V1NeonNodeTask task)
-        {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
-
-            // Handle all tasks when debugging.
-
-            if (!NeonHelper.IsLinux)
-            {
-                return true;
-            }
-
-            // ...otherwise, just for the tasks assigned to the host node.
-
-            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes k8s;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public NodeTaskController(IKubernetes k8s)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            this.k8s = k8s;
         }
 
         /// <inheritdoc/>

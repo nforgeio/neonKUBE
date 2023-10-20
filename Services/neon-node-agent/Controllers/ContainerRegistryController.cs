@@ -263,7 +263,7 @@ namespace NeonNodeAgent
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
-        internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static string               configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
@@ -297,6 +297,22 @@ namespace NeonNodeAgent
 
                 Directory.CreateDirectory(hostContainerRegistriesFolder);
             }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private readonly IKubernetes k8s;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public ContainerRegistryController(
+            IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.k8s     = k8s;
         }
 
         /// <summary>
@@ -352,24 +368,8 @@ rm $0
                 reloginInterval = TimeSpan.FromHours(24);
             }
 
-            
+
             reloginMaxRandomInterval = reloginInterval.Divide(4);
-        }
-        
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes k8s;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public ContainerRegistryController(
-            IKubernetes k8s)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            this.k8s     = k8s;
         }
 
         /// <inheritdoc/>

@@ -76,10 +76,26 @@ namespace NeonClusterOperator
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
-        //---------------------------------------------------------------------
-        // Static members
+        private readonly IKubernetes                k8s;
+        private readonly ILogger<GlauthController>  logger;
+        private readonly Service                    service;
+        private string                              connectionString;
 
-        private static string connectionString;
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public GlauthController(
+            IKubernetes k8s, 
+            ILogger<GlauthController> logger,
+            Service service)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+
+            this.k8s     = k8s;
+            this.logger  = logger;
+            this.service = service;
+        }
 
         /// <summary>
         /// Starts the controller.
@@ -109,37 +125,14 @@ namespace NeonClusterOperator
                     connectionString = $"Host=localhost;Port={localPort};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
                     service.PortForwardManager.StartPodPortForward(
-                        name:       pod.Name(), 
-                        @namespace: KubeNamespace.NeonSystem, 
-                        localPort:  localPort, 
+                        name: pod.Name(),
+                        @namespace: KubeNamespace.NeonSystem,
+                        localPort: localPort,
                         remotePort: 5432);
                 }
 
                 logger?.LogDebugEx(() => $"ConnectionString: [{connectionString}]");
             }
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes               k8s;
-        private readonly ILogger<GlauthController> logger;
-        private readonly Service                   service;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public GlauthController(
-            IKubernetes k8s, 
-            ILogger<GlauthController> logger,
-            Service service)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
-
-            this.k8s     = k8s;
-            this.logger  = logger;
-            this.service = service;
         }
 
         /// <inheritdoc/>
