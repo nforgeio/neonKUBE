@@ -71,7 +71,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Logs))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault() == true)
+                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var n in clusterDefinition.Nodes)
                     {

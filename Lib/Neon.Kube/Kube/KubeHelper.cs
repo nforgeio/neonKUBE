@@ -2884,12 +2884,9 @@ TCPKeepAlive yes
 
             if (config == null)
             {
-                if (config.SkipTlsVerify == false
-                    && config.SslCaCerts == null)
+                if (!config.SkipTlsVerify && config.SslCaCerts == null)
                 {
-                    var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                    var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
                     config.SslCaCerts = store.Certificates;
                 }
