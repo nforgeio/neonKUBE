@@ -11,15 +11,6 @@ spec:
     matchLabels:
       {{- include "neon-cluster-operator.selectorLabels" . | nindent 6 }}
   template:
-
-      # Remote VS debugging via the [dotnet-sshd] sidcar containter requires that
-      # the main container (or other) processes be visibly to the debugging ephemeral
-      # sidecar where VS will attach via SSH.
-      #
-      # NOTE: This may cause trouble for pods that assume that the process namespace
-      #       is not shared (which won't be command and is not the case here).
-      shareProcessNamespace: true
-
     metadata:
       labels:
         {{- include "neon-cluster-operator.selectorLabels" . | nindent 8 }}
