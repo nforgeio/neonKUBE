@@ -76,10 +76,11 @@ namespace NeonClusterOperator
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
+        private static string                       connectionString;
+
         private readonly IKubernetes                k8s;
         private readonly ILogger<GlauthController>  logger;
         private readonly Service                    service;
-        private string                              connectionString;
 
         /// <summary>
         /// Constructor.
