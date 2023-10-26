@@ -21,7 +21,10 @@ rules:
   - neonkube.io
   resources:
   - crioconfigurations
+  - crioconfigurations/status
   - neoncontainerregistries
+  - neoncontainerregistries/status
   - neonnodetasks
+  - neonnodetasks/status
   verbs:
   - '*'
