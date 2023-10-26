@@ -191,7 +191,7 @@ namespace Neon.Kube.Resources.Cluster
         public class UpdateSpec
         {
             /// <summary>
-            /// Specifies whether this update is enabled.
+            /// Indicates whether this job is enabled or disabled.
             /// </summary>
             public bool Enabled { get; set; } = true;
 

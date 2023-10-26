@@ -83,6 +83,7 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
@@ -97,6 +98,7 @@
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common.Extensions\Neon.Common.Extensions.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
