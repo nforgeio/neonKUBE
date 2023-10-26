@@ -66,6 +66,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [ResourceController(Ignore = true)]
     public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
