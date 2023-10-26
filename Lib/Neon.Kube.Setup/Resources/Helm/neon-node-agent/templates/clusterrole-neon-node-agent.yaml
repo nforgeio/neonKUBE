@@ -4,6 +4,13 @@ metadata:
   name: neon-node-agent
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - '*'
+- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
@@ -21,7 +28,10 @@ rules:
   - neonkube.io
   resources:
   - crioconfigurations
+  - crioconfigurations/status
   - neoncontainerregistries
+  - neoncontainerregistries/status
   - neonnodetasks
+  - neonnodetasks/status
   verbs:
   - '*'

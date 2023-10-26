@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [ResourceController]
     public class ContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {

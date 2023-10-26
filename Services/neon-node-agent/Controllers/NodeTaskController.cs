@@ -65,8 +65,9 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [ResourceController]
+    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [ResourceController(Ignore = true)]
     public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         /// <inheritdoc/>
@@ -179,7 +180,7 @@ rm $0
         {
             var name = resource.Name();
 
-            logger.LogInformationEx(() => $"RECONCILED: {name}");
+            logger.LogInformationEx(() => $"RECONCILING: {name}");
 
             // We have a new node task targeting the host node:
             //
@@ -215,38 +216,52 @@ rm $0
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
             {
-                var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
-
-                patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
-                patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
-
-                nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-
-                var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
-
-                if (nodeOwnerReference != null)
+                try
                 {
-                    if (nodeTask.Metadata.OwnerReferences == null)
+                    var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                    patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
+                    patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
+
+                    nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+
+                    var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
+
+                    if (nodeOwnerReference != null)
                     {
-                        nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
+                        if (nodeTask.Metadata.OwnerReferences == null)
+                        {
+                            nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
+                        }
+
+                        nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
                     }
 
-                    nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
+                    nodeTask = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
                 }
-
-                nodeTask = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
             }
 
             if (nodeTask.Status.FinishTimestamp.HasValue)
             {
-                var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
-
-                if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
+                try
                 {
-                    logger.LogInformationEx(() => $"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                    await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
+                    var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
 
-                    return null;
+                    if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
+                    {
+                        logger.LogInformationEx(() => $"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
+                        await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
+
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
                 }
             }
 
@@ -254,50 +269,53 @@ rm $0
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
             {
-                var utcNow = DateTime.UtcNow;
-
-                // Abort if we missed the end the scheduled window.
-
-                if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
+                try
                 {
-                    logger.LogWarningEx(() => $"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+                    var utcNow = DateTime.UtcNow;
 
-                    // Update the node task status to: TARDY
+                    // Abort if we missed the end the scheduled window.
 
-                    var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
-
-                    patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
-                    patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                    patch.Replace(path => path.Status.ExitCode, -1);
-
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-
-                    return null;
-                }
-
-                // Don't start before a scheduled time.
-
-                // $todo(jefflill):
-                //
-                // We should requeue the event for the remaining time here, instead of letting
-                // the IDLE handler execute the delayed task.
-
-                if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
-                {
-                    if (nodeTask.Spec.StartAfterTimestamp.HasValue && nodeTask.Spec.StartAfterTimestamp.Value <= utcNow)
+                    if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
                     {
-                        await ExecuteTaskAsync(nodeTask);
+                        logger.LogWarningEx(() => $"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+
+                        // Update the node task status to: TARDY
+
+                        var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                        patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
+                        patch.Replace(path => path.Status.FinishTimestamp, utcNow);
+                        patch.Replace(path => path.Status.ExitCode, -1);
+
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                         return null;
                     }
-                    else
-                    {
-                        return null;
-                    }
-                }
 
-                await ExecuteTaskAsync(nodeTask);
+                    // Don't start before a scheduled time.
+
+                    // $todo(jefflill):
+                    //
+                    // We should requeue the event for the remaining time here, instead of letting
+                    // the IDLE handler execute the delayed task.
+
+                    if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                    {
+                        if (nodeTask.Spec.StartAfterTimestamp.HasValue && nodeTask.Spec.StartAfterTimestamp.Value >= utcNow)
+                        {
+                            return null;
+                        }
+                    }
+
+                    await ExecuteTaskAsync(nodeTask);
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
             }
+
+            logger.LogInformationEx(() => $"RECONCILED: {name}");
 
             return ResourceControllerResult.Ok();
         }

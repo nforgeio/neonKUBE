@@ -210,17 +210,18 @@ namespace NeonNodeAgent
                .ConfigureOperator(settings =>
                {
                    settings.Port                    = KubePort.NeonNodeAgent;
-                   settings.AssemblyScanningEnabled = true;
+                   settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
+                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
                })
-               .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
+               .AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                .UseStartup<OperatorStartup>()
                .Build();
 
-            _ = operatorHost.RunAsync();
-
             Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{KubePort.NeonNodeAgent}");
+
+            _ = operatorHost.RunAsync();
 
             // Indicate that the service is running.
 

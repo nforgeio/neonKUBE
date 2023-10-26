@@ -170,7 +170,11 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.ContainerImages.Enabled)
+                var nodes = await k8s.CoreV1.ListNodeAsync();
+
+                if (resource.Spec.Updates.ContainerImages.Enabled
+                    && !clusterInfo.IsDesktop
+                    && nodes.Items.Count > 1)
                 {
                     try
                     {

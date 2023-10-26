@@ -189,6 +189,9 @@ namespace NeonClusterOperator
             if (NeonHelper.IsDevWorkstation)
             {
                 this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
+
+                var headendTokenSecret = await K8s.CoreV1.ReadNamespacedSecretAsync("neoncloud-headend-token", KubeNamespace.NeonSystem);
+                SetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN", Encoding.UTF8.GetString(headendTokenSecret.Data["token"]));
             }
 
             await WatchClusterInfoAsync();
