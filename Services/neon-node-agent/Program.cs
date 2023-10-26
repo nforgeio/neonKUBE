@@ -16,12 +16,14 @@
 // limitations under the License.
 
 using System;
+using System.Net;
 using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Net;
 using Neon.Service;
 
 using Prometheus.DotNetRuntime;
@@ -50,7 +52,7 @@ namespace NeonNodeAgent
                 Service = new Service(KubeService.NeonNodeAgent);
 
                 Service.MetricsOptions.Mode         = MetricsMode.Scrape;
-                Service.MetricsOptions.Port         = KubePort.NeonNodeAgent;
+                Service.MetricsOptions.Port         = NeonHelper.IsDevWorkstation ? NetHelper.GetUnusedTcpPort(IPAddress.Loopback) : 9762;
                 Service.MetricsOptions.GetCollector =
                     () =>
                     {
