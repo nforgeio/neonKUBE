@@ -26,6 +26,7 @@ using k8s.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
@@ -143,9 +144,7 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
-
-                        CronExpression.ValidateExpression(nodeCaSchedule);
+                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.NodeCaCertificates.Schedule);
 
                         await updateCaCertificatesJob.DeleteFromSchedulerAsync(scheduler);
                         await updateCaCertificatesJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
@@ -160,9 +159,7 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
-
-                        CronExpression.ValidateExpression(controlPlaneCertSchedule);
+                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ControlPlaneCertificates.Schedule);
 
                         await checkControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
                         await checkControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
@@ -177,9 +174,7 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
-
-                        CronExpression.ValidateExpression(containerImageSchedule);
+                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ContainerImages.Schedule);
 
                         await checkRegistryImagesJob.DeleteFromSchedulerAsync(scheduler);
                         await checkRegistryImagesJob.AddToSchedulerAsync(
@@ -201,9 +196,7 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var clusterTelemetrySchedule = resource.Spec.Updates.Telemetry.Schedule;
-
-                        CronExpression.ValidateExpression(clusterTelemetrySchedule);
+                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.Telemetry.Schedule);
 
                         await sendClusterTelemetryJob.DeleteFromSchedulerAsync(scheduler);
                         await sendClusterTelemetryJob.AddToSchedulerAsync(
@@ -225,9 +218,7 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var neonDesktopCertSchedule = resource.Spec.Updates.ClusterCertificate.Schedule;
-
-                        CronExpression.ValidateExpression(neonDesktopCertSchedule);
+                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ClusterCertificate.Schedule);
 
                         await checkClusterCertJob.DeleteFromSchedulerAsync(scheduler);
                         await checkClusterCertJob.AddToSchedulerAsync(

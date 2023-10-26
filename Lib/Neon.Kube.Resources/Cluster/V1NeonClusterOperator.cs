@@ -201,26 +201,41 @@ namespace Neon.Kube.Resources.Cluster
             /// made up of seven sub-expressions that describe the details of the schedule. The sub expressions
             /// are:
             /// </para>
-            /// 
             /// <list type="bullet">
-            ///     <item>Seconds</item>
-            ///     <item>Minutes</item>
-            ///     <item>Hours</item>
-            ///     <item>Day-of-Month</item>
-            ///     <item>Month</item>
-            ///     <item>Day-of-Week</item>
-            ///     <item>Year (optional)</item>
+            ///     <item>Seconds (0..59)</item>
+            ///     <item>Minutes (0..59)</item>
+            ///     <item>Hours (0..23)</item>
+            ///     <item>Day-of-Month (1..31)</item>
+            ///     <item>Month (1..12) or MON-DEC</item>
+            ///     <item>Day-of-Week (1..7) or SUN-SAT</item>
+            ///     <item>Year (optional) (1970..2099)</item>
             /// </list>
-            /// 
             /// <para>
             /// An example of a complete cron expression is <code>0 0 15 ? * MON</code> which means
-            /// every monday at 3pm.
+            /// every Monday at 3pm.
             /// </para>
-            /// 
             /// </summary>
             /// <remarks>
-            /// For the full documentation see: 
+            /// <para>
+            /// For the full documentation which describes special characters, see: 
             /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
+            /// </para>
+            /// <note>
+            /// <para>
+            /// In addition to the standard Quartz defined special characters, we also
+            /// support the <b>R</b> character which picks a random value within the
+            /// allow range for a field.  For example,
+            /// </para>
+            /// <para>
+            /// 0 0 R R * *
+            /// </para>
+            /// <para>
+            /// schedules the job for a random hour and minute during the day.  This is useful
+            /// for situations like uploading telemetry to a global service where you don't
+            /// want a potentially large number of clients being scheduled to hit the
+            /// service at the same time.
+            /// </para>
+            /// </note>
             /// </remarks>
             public string Schedule { get; set; } = "0 0 0 ? * 1";
         }
