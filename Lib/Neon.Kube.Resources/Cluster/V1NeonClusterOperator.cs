@@ -119,32 +119,32 @@ namespace Neon.Kube.Resources.Cluster
         public class OperatorStatus
         {
             /// <summary>
-            /// Control plane certificate update spec.
+            /// Control plane certificate update status.
             /// </summary>
             public UpdateStatus ControlPlaneCertificates { get; set; } = new UpdateStatus();
 
             /// <summary>
-            /// Node CA certificate update spec.
+            /// Node CA certificate update status.
             /// </summary>
             public UpdateStatus NodeCaCertificates { get; set; } = new UpdateStatus();
 
             /// <summary>
-            /// Update spec for security spec.
+            /// Update spec for security status.
             /// </summary>
             public UpdateStatus SecurityPatches { get; set; } = new UpdateStatus();
 
             /// <summary>
-            /// Update spec for container images.
+            /// Container images update status.
             /// </summary>
             public UpdateStatus ContainerImages { get; set; } = new UpdateStatus();
 
             /// <summary>
-            /// Update spec for telemetry.
+            /// Cluster telemetry update status.
             /// </summary>
             public UpdateStatus Telemetry { get; set; } = new UpdateStatus();
 
             /// <summary>
-            /// When the Neon Desktop certificate should be updated.
+            /// Neon Desktop certificate should update status.
             /// </summary>
             public UpdateStatus ClusterCertificate { get; set; } = new UpdateStatus();
         }
