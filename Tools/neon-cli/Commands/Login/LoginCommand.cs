@@ -16,31 +16,23 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using Newtonsoft;
-using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
-using Neon.Kube.Config;
-using Neon.Kube.Proxy;
-using Neon.Kube.Glauth;
-using System.Diagnostics.Contracts;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Deployment;
-using System.Diagnostics.Eventing.Reader;
-using Windows.AI.MachineLearning;
-using System.Configuration;
+using Neon.Kube.Glauth;
+using Neon.Kube.K8s;
+
+using Newtonsoft.Json;
 
 namespace NeonCli
 {

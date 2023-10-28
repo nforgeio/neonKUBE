@@ -37,6 +37,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
+using Neon.Kube.K8s;
 
 namespace Neon.Kube.Config
 {

@@ -32,7 +32,7 @@ using k8s.Autorest;
 
 using Neon.Retry;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// A <see cref="DelegatingHandler"/> optionally used to retry transient errors encountered

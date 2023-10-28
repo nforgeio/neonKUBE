@@ -45,6 +45,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.K8s;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;

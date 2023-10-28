@@ -56,6 +56,7 @@ using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.K8s;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;

@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// Describes a Kubernetes object by its basic properties, <see cref="ApiVersion"/>, <see cref="Kind"/>, and <see cref="Metadata"/>.

@@ -36,7 +36,7 @@ using Prometheus;
 using Neon.Common;
 using Neon.Retry;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// Configuration information for the <see cref="LeaderElector"/> class.

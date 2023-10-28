@@ -40,6 +40,7 @@ using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Deployment;
 using Neon.Kube.Hosting;
+using Neon.Kube.K8s;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Setup;

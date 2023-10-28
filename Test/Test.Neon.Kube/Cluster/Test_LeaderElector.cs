@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.K8s;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 

@@ -28,6 +28,7 @@ using k8s.KubeConfigModels;
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
+using Neon.Kube.K8s;
 
 namespace Neon.Kube.Config
 {

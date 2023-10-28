@@ -30,6 +30,8 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Xunit;
 using Neon.Kube.Resources.Cluster;
+using Neon.Kube;
+using Neon.Kube.K8s;
 using NeonNodeAgent;
 
 using k8s;
@@ -68,7 +70,7 @@ namespace TestNeonNodeAgent
             var tempFile = new TempFile();
 
             Mock.SetupStatic(typeof(CrioConfigController), Behavior.Loose);
-            Mock.Arrange(() => CrioConfigController.configMountPath).Returns(tempFile.Path);
+            Mock.Arrange(() => CrioConfigController.ConfigMountPath).Returns(tempFile.Path);
 
             var linux = NeonHelper.IsLinux;
 

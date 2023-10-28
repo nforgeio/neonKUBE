@@ -27,7 +27,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     public static partial class KubernetesExtensions
     {

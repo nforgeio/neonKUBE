@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.K8s;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Xunit;

@@ -34,7 +34,7 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     public static partial class KubernetesExtensions
     {

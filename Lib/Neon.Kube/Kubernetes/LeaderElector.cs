@@ -34,7 +34,7 @@ using StockLeaderElector        = k8s.LeaderElection.LeaderElector;
 using StockLeaderElectionConfig = k8s.LeaderElection.LeaderElectionConfig;
 using StockLeaseLock            = k8s.LeaderElection.ResourceLock.LeaseLock;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/>

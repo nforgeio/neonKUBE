@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// Holds a list of generic custom object instances returned by the API server.

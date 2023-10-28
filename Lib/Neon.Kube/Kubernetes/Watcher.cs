@@ -37,7 +37,7 @@ using k8s.Models;
 using k8s.Autorest;
 using System.Diagnostics.Contracts;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// A kubernetes watch event.
@@ -88,10 +88,10 @@ namespace Neon.Kube
         public WatchEvent(WatchEventType type, T value, int attempt = 0, bool force = false)
             : base()
         {
-            Type    = type;
-            Value   = value; 
+            Type = type;
+            Value = value;
             Attempt = attempt;
-            Force   = force;
+            Force = force;
         }
     }
 
@@ -114,8 +114,8 @@ namespace Neon.Kube
         /// <param name="logger">Optionally specifies the logger to use.</param>
         public Watcher(IKubernetes k8s, ILogger logger = null)
         {
-            this.k8s     = k8s;
-            this.logger  = logger;
+            this.k8s = k8s;
+            this.logger = logger;
             eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
         }
 
@@ -141,14 +141,14 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WatchAsync(
-            Func<WatchEvent<T>, Task>   actionAsync, 
-            string                      namespaceParameter   = null,
-            string                      fieldSelector        = null,
-            string                      labelSelector        = null,
-            string                      resourceVersion      = null,
-            string                      resourceVersionMatch = null,
-            int?                        timeoutSeconds       = null,
-            CancellationToken           cancellationToken    = default)
+            Func<WatchEvent<T>, Task> actionAsync,
+            string namespaceParameter = null,
+            string fieldSelector = null,
+            string labelSelector = null,
+            string resourceVersion = null,
+            string resourceVersionMatch = null,
+            int? timeoutSeconds = null,
+            CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -157,11 +157,11 @@ namespace Neon.Kube
             if (!string.IsNullOrEmpty(resourceVersion))
             {
                 await ValidateResourceVersionAsync(
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    resourceVersion:      resourceVersion,
+                    fieldSelector: fieldSelector,
+                    labelSelector: labelSelector,
+                    resourceVersion: resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds);
+                    timeoutSeconds: timeoutSeconds);
             }
 
             // Start the loop that handles the async action callbacks.
@@ -184,27 +184,27 @@ namespace Neon.Kube
                         if (string.IsNullOrEmpty(namespaceParameter))
                         {
                             listResponse = k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
-                                allowWatchBookmarks:  true,
-                                fieldSelector:        fieldSelector,
-                                labelSelector:        labelSelector,
-                                resourceVersion:      this.resourceVersion,
+                                allowWatchBookmarks: true,
+                                fieldSelector: fieldSelector,
+                                labelSelector: labelSelector,
+                                resourceVersion: this.resourceVersion,
                                 resourceVersionMatch: resourceVersionMatch,
-                                timeoutSeconds:       timeoutSeconds,
-                                watch:                true,
-                                cancellationToken:    cancellationToken);
+                                timeoutSeconds: timeoutSeconds,
+                                watch: true,
+                                cancellationToken: cancellationToken);
                         }
                         else
                         {
                             listResponse = k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
-                            namespaceParameter,
-                            allowWatchBookmarks:  true,
-                            fieldSelector:        fieldSelector,
-                            labelSelector:        labelSelector,
-                            resourceVersion:      this.resourceVersion,
-                            resourceVersionMatch: resourceVersionMatch,
-                            timeoutSeconds:       timeoutSeconds,
-                            cancellationToken:    cancellationToken,
-                            watch:                true);
+                                namespaceParameter,
+                                allowWatchBookmarks: true,
+                                fieldSelector: fieldSelector,
+                                labelSelector: labelSelector,
+                                resourceVersion: this.resourceVersion,
+                                resourceVersionMatch: resourceVersionMatch,
+                                timeoutSeconds: timeoutSeconds,
+                                cancellationToken: cancellationToken,
+                                watch: true);
                         }
 
                         await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
@@ -329,12 +329,12 @@ namespace Neon.Kube
         /// <param name="timeoutSeconds">Optional timeout.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ValidateResourceVersionAsync(
-            string  resourceVersion,
-            string  namespaceParameter   = null,
-            string  fieldSelector        = null,
-            string  labelSelector        = null,
-            string  resourceVersionMatch = null,
-            int?    timeoutSeconds       = null)
+            string resourceVersion,
+            string namespaceParameter = null,
+            string fieldSelector = null,
+            string labelSelector = null,
+            string resourceVersionMatch = null,
+            int? timeoutSeconds = null)
         {
             await SyncContext.Clear;
 
@@ -343,25 +343,25 @@ namespace Neon.Kube
                 if (string.IsNullOrEmpty(namespaceParameter))
                 {
                     await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    limit:                1,
-                    resourceVersion:      resourceVersion,
+                    fieldSelector: fieldSelector,
+                    labelSelector: labelSelector,
+                    limit: 1,
+                    resourceVersion: resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds,
-                    watch:                false);
+                    timeoutSeconds: timeoutSeconds,
+                    watch: false);
                 }
                 else
                 {
                     await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
                     namespaceParameter,
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    limit:                1,
-                    resourceVersion:      resourceVersion,
+                    fieldSelector: fieldSelector,
+                    labelSelector: labelSelector,
+                    limit: 1,
+                    resourceVersion: resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds,
-                    watch:                false);
+                    timeoutSeconds: timeoutSeconds,
+                    watch: false);
                 }
             }
             catch (KubernetesException kubernetesException)

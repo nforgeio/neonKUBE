@@ -16,36 +16,16 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using System.Threading;
-
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.Kube;
-using Neon.Retry;
-using Neon.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 using k8s;
-using k8s.Autorest;
-using k8s.KubeConfigModels;
 using k8s.Models;
 
-namespace Neon.Kube
+using Neon.Tasks;
+
+namespace Neon.Kube.K8s
 {
     public static partial class KubernetesExtensions
     {
