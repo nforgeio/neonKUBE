@@ -33,6 +33,7 @@ using Minio;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Resources.Minio;
 using Neon.Net;
@@ -53,7 +54,7 @@ namespace NeonClusterOperator
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
-    [ResourceController]
+    [ResourceController(MaxConcurrentReconciles = 1)]
     public class MinioBucketController : ResourceControllerBase<V1MinioBucket>
     {
         //---------------------------------------------------------------------

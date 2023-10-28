@@ -30,6 +30,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
 using Neon.Kube.Resources.Cluster;
@@ -49,7 +50,7 @@ namespace NeonClusterOperator
     /// </summary>
     [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "neon-sso-oauth2-proxy")]
-    [ResourceController]
+    [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonSsoClientController : ResourceControllerBase<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

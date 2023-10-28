@@ -43,7 +43,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonDashboard>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    [ResourceController]
+    [ResourceController(MaxConcurrentReconciles = 5)]
     public class NeonDashboardController : ResourceControllerBase<V1NeonDashboard>
     {
         //---------------------------------------------------------------------

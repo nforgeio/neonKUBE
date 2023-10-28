@@ -68,7 +68,8 @@ namespace NeonClusterOperator
     /// </summary>
     [ResourceController(
         ManageCustomResourceDefinitions = false,
-        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller")]
+        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
+        MaxConcurrentReconciles = 1)]
     [RbacRule<V1Secret>(
         Verbs         = RbacVerb.All, 
         Scope         = EntityScope.Cluster,

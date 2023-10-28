@@ -41,6 +41,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Operator;
 using Neon.Kube.Resources;
@@ -65,6 +66,9 @@ using OpenTelemetry.Trace;
 
 using YamlDotNet.RepresentationModel;
 using System.Net.Http;
+using KubeHelper = Neon.Kube.KubeHelper;
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -169,6 +173,7 @@ namespace NeonNodeAgent
     /// </item>
     /// </list>
     /// </remarks>
+    [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public partial class Service : NeonService
     {
         /// <summary>
@@ -297,13 +302,14 @@ namespace NeonNodeAgent
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
                 {
-                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = Neon.K8s.TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");
                     await Task.CompletedTask;
                 },
                 KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                logger: Logger);
         }
     }
 }

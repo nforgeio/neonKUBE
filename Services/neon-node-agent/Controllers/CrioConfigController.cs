@@ -32,6 +32,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Operator.Attributes;
 using Neon.Operator.ResourceManager;
@@ -259,10 +260,11 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
+        public static string               ConfigMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
-        private static string               configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
@@ -424,9 +426,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 
                 var currentConfigText = string.Empty;
 
-                if (File.Exists(configMountPath))
+                if (File.Exists(ConfigMountPath))
                 {
-                    currentConfigText = File.ReadAllText(configMountPath);
+                    currentConfigText = File.ReadAllText(ConfigMountPath);
 
                     var currentConfig = Toml.Parse(currentConfigText);
                     var existingLocations = new List<string>();
@@ -452,7 +454,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                 {
                     configUpdateCounter.Inc();
 
-                    File.WriteAllText(configMountPath, newConfigText);
+                    File.WriteAllText(ConfigMountPath, newConfigText);
                     (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                     // Wait a few seconds to give CRI-O a chance to reload its config.  This will

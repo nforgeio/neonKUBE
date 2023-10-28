@@ -36,6 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.PortForward;
 using Neon.Kube.Resources;
@@ -125,9 +126,9 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            KubeHelper.InitializeJson(); 
+            Neon.Kube.KubeHelper.InitializeJson(); 
             
-            k8s = KubeHelper.CreateKubernetesClient();
+            k8s = Neon.Kube.KubeHelper.CreateKubernetesClient();
 
             if (NeonHelper.IsDevWorkstation)
             {
@@ -190,7 +191,8 @@ namespace NeonSsoSessionProxy
 
                             break;
                     }
-                });
+                },
+                logger: Logger);
 
             int port = 80;
 

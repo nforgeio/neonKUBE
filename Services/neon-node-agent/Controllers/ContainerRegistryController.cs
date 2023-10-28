@@ -32,6 +32,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;

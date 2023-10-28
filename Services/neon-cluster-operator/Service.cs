@@ -37,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
@@ -62,6 +63,7 @@ using OpenTelemetry.Trace;
 
 using Quartz.Logging;
 
+using KubeHelper = Neon.Kube.KubeHelper;
 using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
@@ -218,6 +220,19 @@ namespace NeonClusterOperator
 
             _ = operatorHost.RunAsync();
 
+#if DEBUG
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(500);
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                }
+            });
+#endif
+
             // Indicate that the service is running.
 
             await StartedAsync();
@@ -322,12 +337,13 @@ namespace NeonClusterOperator
                 {
                     await SyncContext.Clear;
 
-                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = Neon.K8s.TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");
                 },
                 KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                logger: Logger);
 
             // Wait for the watcher to see the [ClusterInfo].
 
@@ -404,7 +420,8 @@ namespace NeonClusterOperator
                     await Task.CompletedTask;
                 },
                 KubeNamespace.NeonSystem,
-                fieldSelector: $"metadata.name=glauth-users");
+                fieldSelector: $"metadata.name=glauth-users",
+                logger: Logger);
         }
     }
 }

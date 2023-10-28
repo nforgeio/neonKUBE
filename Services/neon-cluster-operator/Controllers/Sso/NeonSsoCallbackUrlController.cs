@@ -29,6 +29,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;
@@ -46,7 +47,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonSsoCallbackUrl>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    [ResourceController]
+    [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonSsoCallbackUrlController : ResourceControllerBase<V1NeonSsoCallbackUrl>
     {
         //---------------------------------------------------------------------

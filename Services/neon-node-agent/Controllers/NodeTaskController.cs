@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Operator.Attributes;
 using Neon.Operator.ResourceManager;
@@ -67,6 +68,8 @@ namespace NeonNodeAgent
     /// </remarks>
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(Ignore = true)]
     public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {

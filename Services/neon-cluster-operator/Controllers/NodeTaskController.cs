@@ -31,6 +31,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;
@@ -60,7 +61,7 @@ namespace NeonClusterOperator
     /// </remarks>
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [ResourceController]
+    [ResourceController(MaxConcurrentReconciles = 1)]
     public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

@@ -32,6 +32,7 @@ using Microsoft.Extensions.Logging;
 using Minio;
 
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Operator.Finalizers;
 using Neon.Kube.Resources.Minio;

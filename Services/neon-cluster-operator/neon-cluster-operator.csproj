@@ -79,9 +79,16 @@
     <!-- Local solution project references -->
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\operator-sdk\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="runtimeconfig.template.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->
