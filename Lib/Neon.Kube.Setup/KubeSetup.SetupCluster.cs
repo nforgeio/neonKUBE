@@ -43,6 +43,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.K8s;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
