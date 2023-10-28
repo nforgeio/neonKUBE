@@ -32,10 +32,6 @@ spec:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
           env:
-            - name: DOTNET_GCConserveMemory
-              value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
-            - name: DOTNET_GCHighMemPercent
-              value: {{ .Values.dotnetGcHighMemPercent | default "5A" | quote }}
             - name: DOTNET_gcServer
               value: {{ .Values.dotnetGcServer | quote }}
             - name: GROUP_NAME

@@ -37,6 +37,7 @@ using Neon.Kube.Config;
 using Neon.Kube.Deployment;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
+using Neon.Kube.K8s;
 using Neon.Kube.Proxy;
 using Neon.Kube.Resources.Calico;
 using Neon.Kube.Resources.CertManager;
@@ -2226,9 +2227,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("isNeonDesktop", cluster.SetupState.ClusterDefinition.IsDesktop);
                     values.Add($"resources.requests.memory", ToSiString(acmeAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(acmeAdvice.PodMemoryLimit));
-                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     int i = 0;
 
@@ -5209,9 +5208,7 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -5493,9 +5490,7 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
                     values.Add("service.ports[0].name", "https-web");
                     values.Add("service.ports[0].protocol", "TCP");
                     values.Add("service.ports[0].port", 443);
@@ -5554,9 +5549,7 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -6050,9 +6043,7 @@ $@"- name: StorageType
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
             values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
             values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-            values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
             values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-            values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
