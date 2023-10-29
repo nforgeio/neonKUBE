@@ -1,9 +1,0 @@
-{
-  "configProperties": {
-    "System.GC.Concurrent": false,
-    "System.GC.Server": false,
-    "System.GC.HighMemoryPercent": 0.01,
-    "System.GC.ConserveMemory": 9,
-    "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false
-  }
-}
