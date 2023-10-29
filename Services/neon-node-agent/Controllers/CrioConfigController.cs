@@ -260,8 +260,6 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        public static string               ConfigMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
-
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
@@ -271,6 +269,7 @@ namespace NeonNodeAgent
 
         // Paths to relevant folders in the host file system.
 
+        private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      hostNeonRunFolder;
         private static readonly string      hostContainerRegistriesFolder;
 
@@ -426,9 +425,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 
                 var currentConfigText = string.Empty;
 
-                if (File.Exists(ConfigMountPath))
+                if (File.Exists(configMountPath))
                 {
-                    currentConfigText = File.ReadAllText(ConfigMountPath);
+                    currentConfigText = File.ReadAllText(configMountPath);
 
                     var currentConfig = Toml.Parse(currentConfigText);
                     var existingLocations = new List<string>();
@@ -454,7 +453,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                 {
                     configUpdateCounter.Inc();
 
-                    File.WriteAllText(ConfigMountPath, newConfigText);
+                    File.WriteAllText(configMountPath, newConfigText);
                     (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                     // Wait a few seconds to give CRI-O a chance to reload its config.  This will
