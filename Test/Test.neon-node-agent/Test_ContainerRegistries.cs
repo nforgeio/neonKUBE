@@ -70,7 +70,7 @@ namespace TestNeonNodeAgent
             var tempFile = new TempFile();
 
             Mock.SetupStatic(typeof(CrioConfigController), Behavior.Loose);
-            Mock.Arrange(() => CrioConfigController.ConfigMountPath).Returns(tempFile.Path);
+            Mock.Arrange(() => CrioConfigController.configMountPath).Returns(tempFile.Path);
 
             var linux = NeonHelper.IsLinux;
 
