@@ -269,7 +269,7 @@ namespace NeonNodeAgent
 
         // Paths to relevant folders in the host file system.
 
-        private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        internal static readonly string     configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      hostNeonRunFolder;
         private static readonly string      hostContainerRegistriesFolder;
 
