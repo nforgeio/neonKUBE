@@ -48,11 +48,6 @@ namespace Neon.Kube
         public const string Dex = "neon-sso-dex";
 
         /// <summary>
-        /// Neon Dashboard.
-        /// </summary>
-        public const string NeonDashboard = "neon-dashboard";
-
-        /// <summary>
         /// Neon cluster operator.  This implements several control loops that help
         /// manage the cluster.
         /// </summary>

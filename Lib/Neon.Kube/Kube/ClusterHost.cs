@@ -40,11 +40,6 @@ namespace Neon.Kube
         public const string AlertManager = "neon-alertmanager";
 
         /// <summary>
-        /// Neon Dashboard.
-        /// </summary>
-        public const string NeonDashboard = "neon-dashboard";
-
-        /// <summary>
         /// Single sign on service.
         /// </summary>
         public const string Sso = "neon-sso";
