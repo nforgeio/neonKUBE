@@ -404,11 +404,6 @@ namespace Neon.Kube
         public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>neon-dashboard</b> service.
-        /// </summary>
-        public static string NeonDashboard = "neon-dashboard";
-
-        /// <summary>
         /// Identifies the NEONKUBE cluster's <b>neon-node-agent</b> service.
         /// </summary>
         public static string NeonNodeAgent = "neon-node-agent";

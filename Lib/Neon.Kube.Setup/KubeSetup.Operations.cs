@@ -5327,7 +5327,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboard");
+                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboards");
 
                     await CreateNeonDashboardAsync(
                             controller,
@@ -5406,70 +5406,6 @@ $@"- name: StorageType
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
             
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboard");
-
-                    await CreateNeonDashboardAsync(
-                            controller,
-                            controlNode,
-                            name:         "kubernetes",
-                            url:          $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupState.ClusterDomain}",
-                            displayName: "Kubernetes",
-                            enabled:      true,
-                            displayOrder: 1);
-
-                    if (cluster.SetupState.ClusterDefinition.Features.Grafana)
-                    {
-                        await CreateNeonDashboardAsync(
-                            controller,
-                            controlNode,
-                            name:         "grafana",
-                            url:          $"https://{ClusterHost.Grafana}.{cluster.SetupState.ClusterDomain}",
-                            displayName:  "Grafana",
-                            enabled:      true,
-                            displayOrder: 10);
-                    }
-
-                    if (cluster.SetupState.ClusterDefinition.Features.Minio)
-                    {
-                        await CreateNeonDashboardAsync(
-                            controller,
-                            controlNode,
-                            name:         "minio",
-                            url:          $"https://{ClusterHost.Minio}.{cluster.SetupState.ClusterDomain}",
-                            displayName:  "Minio",
-                            enabled:      true,
-                            displayOrder: 10);
-                    }
-
-                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.Enabled)
-                    {
-                        await CreateNeonDashboardAsync(
-                            controller,
-                            controlNode,
-                            name:         "harbor",
-                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
-                            displayName:  "Harbor",
-                            enabled:      true,
-                            displayOrder: 10);
-                    }
-                     
-                    if (cluster.SetupState.ClusterDefinition.Features.Kiali)
-                    {
-                        await CreateNeonDashboardAsync(
-                            controller,
-                            controlNode,
-                            name:         "kiali",
-                            url:          $"https://{ClusterHost.Kiali}.{cluster.SetupState.ClusterDomain}",
-                            displayName:  "Kiali",
-                            enabled:      true,
-                            displayOrder: 10);
-                    }
-                });
-
-            controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent",
                 async () =>
                 {
@@ -5484,7 +5420,6 @@ $@"- name: StorageType
                     values.Add($"cluster.datacenter", cluster.SetupState.ClusterDefinition.Datacenter);
                     values.Add($"cluster.version", cluster.SetupState.ClusterDefinition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Hosting.Environment);
-                    values.Add($"neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -5510,60 +5445,6 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-node-agent");
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
-                });
-        }
-
-        /// <summary>
-        /// Installs <b>neon-dashboard</b>.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallNeonDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            var k8s           = GetK8sClient(controller);
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/neon-dashboard",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboard");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", cluster.Name);
-                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
-                    values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
-                    values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
-                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-
-                    await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
-                        releaseName:  "neon-dashboard",
-                        @namespace:   KubeNamespace.NeonSystem,
-                        prioritySpec: PriorityClass.NeonApp.Name,
-                        values:       values);
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-ready",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-dashboard");
-                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -5881,7 +5762,6 @@ $@"- name: StorageType
             values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
             values.Add("neonkube.clusterDomain.harborRegistry", ClusterHost.HarborRegistry);
-            values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
             values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
