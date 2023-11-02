@@ -48,17 +48,17 @@ namespace NeonClusterOperator
     /// </summary>
     public class MinioBucketFinalizer : ResourceFinalizerBase<V1MinioBucket>
     {
-        private readonly IKubernetes                   k8s;
-        private readonly ILogger<MinioBucketFinalizer> logger;
-        private readonly Service                       service;
-
-        private CancellationTokenSource portForwardCts;
+        private readonly IKubernetes                    k8s;
+        private readonly ILogger<MinioBucketFinalizer>  logger;
+        private readonly Service                        service;
+        private CancellationTokenSource                 portForwardCts;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s">The Kubernetes client.</param>
-        /// <param name="logger">The logger.</param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="logger">Specifies the logger.</param>
+        /// <param name="service">Specifies the parent service.</param>
         public MinioBucketFinalizer(
             IKubernetes                   k8s,
             ILogger<MinioBucketFinalizer> logger,
