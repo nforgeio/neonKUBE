@@ -307,9 +307,10 @@ namespace NeonNodeAgent
                     Logger.LogInformationEx("Updated cluster info");
                     await Task.CompletedTask;
                 },
-                KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
-                logger: Logger);
+                namespaceParameter: KubeNamespace.NeonStatus,
+                fieldSelector:      $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
         }
     }
 }

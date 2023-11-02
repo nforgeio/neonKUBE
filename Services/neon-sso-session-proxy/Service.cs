@@ -192,7 +192,8 @@ namespace NeonSsoSessionProxy
                             break;
                     }
                 },
-                logger: Logger);
+                retryDelay: TimeSpan.FromSeconds(30),
+                logger:     Logger);
 
             int port = 80;
 

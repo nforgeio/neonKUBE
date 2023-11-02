@@ -220,19 +220,6 @@ namespace NeonClusterOperator
 
             _ = operatorHost.RunAsync();
 
-#if DEBUG
-            _ = Task.Run(async () =>
-            {
-                while (true)
-                {
-                    await Task.Delay(500);
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    GC.Collect();
-                }
-            });
-#endif
-
             // Indicate that the service is running.
 
             await StartedAsync();
@@ -312,24 +299,6 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            //###########################################################################
-            // $todo(jefflill): Remove this hack once we've figured out the watcher issue.
-            //
-            // We need to ensure that we have the initial cluster information before this
-            // method returns.
-            //
-            // Marcus originally started the watcher and then used a [WaitFor()] call to
-            // wait for the watcher to report and set the [ClusterInfo] property.  Unfortunately,
-            // watchers don't seem to always report on objects that already exist.  We're
-            // going to hack around this for now by explicitly waiting for the cluster info
-            // before staring the watcher.
-
-            var retry = new LinearRetryPolicy(e => true, retryInterval: TimeSpan.FromSeconds(1), timeout: TimeSpan.FromSeconds(60));
-
-            ClusterInfo = await retry.InvokeAsync(async () => (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
-
-            //###########################################################################
-
             // Start the watcher.
 
             _ = K8s.WatchAsync<V1ConfigMap>(
@@ -341,9 +310,10 @@ namespace NeonClusterOperator
 
                     Logger.LogInformationEx("Updated cluster info");
                 },
-                KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
-                logger: Logger);
+                namespaceParameter: KubeNamespace.NeonStatus,
+                fieldSelector:      $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
 
             // Wait for the watcher to see the [ClusterInfo].
 
@@ -411,17 +381,19 @@ namespace NeonClusterOperator
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>
                 {
+                    await SyncContext.Clear;
+
                     var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
                     var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
 
                     harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                     Logger.LogInformationEx("Updated Harbor Client");
-                    await Task.CompletedTask;
                 },
-                KubeNamespace.NeonSystem,
-                fieldSelector: $"metadata.name=glauth-users",
-                logger: Logger);
+                namespaceParameter: KubeNamespace.NeonSystem,
+                fieldSelector:      $"metadata.name=glauth-users",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
         }
     }
 }
