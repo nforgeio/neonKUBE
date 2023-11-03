@@ -90,9 +90,9 @@ namespace NeonClusterOperator
                     if (exists)
                     {
                         var headers = new Dictionary<string, string>()
-                    {
-                        { "X-Minio-Force-Delete", "true" }
-                    };
+                        {
+                            { "X-Minio-Force-Delete", "true" }
+                        };
 
                         await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()).WithHeaders(headers));
                         logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
