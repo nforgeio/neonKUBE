@@ -657,6 +657,12 @@ cgroup_manager = ""systemd""
 # List of default capabilities for containers. If it is empty or commented out,
 # only the capabilities defined in the containers json file by the user/kube
 # will be added.
+#
+# NEONKUBE NOTE:
+#
+# We added the SYS_CHROOT capability so that containers can host SSHD servers.
+# This is disabled by default for CRI-O but works for Docker and Containerd
+# based CSI implementations.
 default_capabilities = [
     ""CHOWN"",
     ""DAC_OVERRIDE"",
@@ -667,11 +673,17 @@ default_capabilities = [
     ""SETPCAP"",
     ""NET_BIND_SERVICE"",
     ""KILL"",
+    ""SYS_CHROOT"",
 ]
 
 # List of default sysctls. If it is empty or commented out, only the sysctls
 # defined in the container json file by the user/kube will be added.
+#
+# NEONKUBE NOTE:
+#
+# We added ""net.ipv4.ping_group_range"" so ping will work from inside pods.
 default_sysctls = [
+    ""net.ipv4.ping_group_range=0 2147483647"",
 ]
 
 # List of additional devices. specified as
