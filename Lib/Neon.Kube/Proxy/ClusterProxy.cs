@@ -1265,16 +1265,6 @@ namespace Neon.Kube.Proxy
                 PublicAddresses    = SetupState.PublicAddresses
             };
 
-            Covenant.Assert(clusterInfo.Annotations != null);
-
-            if (SetupState.ClusterDefinition.Annotations != null)
-            {
-                foreach (var annotation in SetupState.ClusterDefinition.Annotations)
-                {
-                    clusterInfo.Annotations.Add(annotation.Key, annotation.Value);
-                }
-            }
-
             return clusterInfo;
         }
 

@@ -43,14 +43,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Specifies the cluster annatations.  Label names and values must follow the
-        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
-        /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
-        /// </summary>
-        [JsonProperty(PropertyName = "Annotations", Required = Required.Always)]
-        public Dictionary<string, string> Annotations { get; set; } = new Dictionary<string, string>();
-
-        /// <summary>
         /// Globally unique cluster identifier.  This is set during cluster setup and is 
         /// used to distinguish between customer clusters.
         /// </summary>

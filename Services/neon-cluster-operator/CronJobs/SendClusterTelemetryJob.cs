@@ -121,8 +121,7 @@ namespace NeonClusterOperator
                         clusterTelemetry.Nodes.Add(node);
                     }
 
-                    clusterTelemetry.ClusterInfo             = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
-                    clusterTelemetry.ClusterInfo.Description = null;
+                    clusterTelemetry.Details = new ClusterDetails((await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
 
                     using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
                     {
