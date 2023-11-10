@@ -33,6 +33,10 @@ spec:
       containers:
       - name: neon-cluster-operator
         env:
+        - name: DOTNET_GCConserveMemory
+          value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
+        - name: DOTNET_GCHighMemPercent
+          value: {{ .Values.dotnetGcHighMemPercent | default "5A" | quote }}
         - name: DOTNET_gcServer
           value: {{ .Values.dotnetGcServer | default 1 | quote }}
         - name: LOG_LEVEL

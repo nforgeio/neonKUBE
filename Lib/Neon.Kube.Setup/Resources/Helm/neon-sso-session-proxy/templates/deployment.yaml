@@ -39,6 +39,10 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: DOTNET_GCConserveMemory
+              value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
+            - name: DOTNET_GCHighMemPercent
+              value: {{ .Values.dotnetGcHighMemPercent | default "5A" | quote }}
             - name: DOTNET_gcServer
               value: {{ .Values.dotnetGcServer | quote }}
             - name: COOKIE_CIPHER
