@@ -102,7 +102,7 @@ namespace Neon.Kube.Config
         public string SsoPassword { get; set; }
 
         /// <summary>
-        /// Specifies the SSH admin password for the cluster nodes.
+        /// Specifies the SSH admin username for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]

@@ -751,7 +751,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
                             // CRI-O needs to be running and listening on its unix domain socket so that
                             // Kubelet can start and the cluster can be initialized via [kubeadm].  CRI-O
-                            // takes perhaps 20-30 seconds to start and we've run into occassional trouble
+                            // takes perhaps 20-30 seconds to start and we've run into occasional trouble
                             // with cluster setup failures because CRI-O hadn't started listening on its
                             // socket in time.
                             //
