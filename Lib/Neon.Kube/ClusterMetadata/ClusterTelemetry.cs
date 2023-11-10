@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// </summary>
     public class ClusterTelemetry
     {
-        private const string schemaVersion = "1";
+        private const string schema = "1";
 
         /// <summary>
         /// Constructor
@@ -54,9 +54,9 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the telemetry schema version.
         /// </summary>
-        [JsonProperty(PropertyName = "SchemaVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(schemaVersion)]
-        public string SchemaVersion { get; set; } = schemaVersion;
+        [JsonProperty(PropertyName = "Schema", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(schema)]
+        public string Schema { get; set; } = schema;
 
         /// <summary>
         /// Receive timestamp.  This isn't transmitted by the cluster and is set by the headend
