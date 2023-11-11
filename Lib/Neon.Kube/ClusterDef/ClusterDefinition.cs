@@ -493,6 +493,14 @@ namespace Neon.Kube.ClusterDef
         public FeatureOptions Features { get; set; } = new FeatureOptions();
 
         /// <summary>
+        /// Specifies the schedules for cluster jobs.
+        /// </summary>
+        [JsonProperty(PropertyName = "Jobs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "jobs", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public JobOptions Jobs { get; set; } = new JobOptions();
+
+        /// <summary>
         /// Identifies the datacenter.  This defaults to empty string for on-premise clusters
         /// or the region for clusters deployed to the cloud.
         /// </summary>
@@ -874,6 +882,7 @@ namespace Neon.Kube.ClusterDef
             Network            = Network ?? new NetworkOptions();
             Container          = Container ?? new ContainerOptions();
             Features           = Features ?? new FeatureOptions();
+            Jobs               = Jobs ?? new JobOptions();
 
             ClusterVersion = KubeVersions.NeonKube;
 
@@ -963,6 +972,7 @@ namespace Neon.Kube.ClusterDef
             Network.Validate(this);
             Container.Validate(this);
             Features.Validate(this);
+            Jobs.Validate(this);
 
             // Ensure that all of the node names are unique.
 

@@ -503,13 +503,6 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
 
-                    if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
-                    {
-                        controller.ClearStatus();
-                        controller.ThrowIfCancelled();
-                        await WaitForHarborImagePushAsync(controller, controlNode);
-                    }
-
                     // IMPORTANT:
                     //
                     // This must be the last step because it indicates that the cluster
@@ -5031,83 +5024,6 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// For neon desktop, wait for node images to be pushed to harbor.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WaitForHarborImagePushAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            var k8s = GetK8sClient(controller);
-
-            await controlNode.InvokeIdempotentAsync("setup/wait-harbor-image-push",
-                async () =>
-                {
-                    V1NeonClusterOperator clusterOperator = null;
-
-                    _ = k8s.WatchAsync<V1NeonClusterOperator>(
-                        async (@event) =>
-                        {
-                            await SyncContext.Clear;
-
-                            clusterOperator = @event.Value;
-                        },
-                        fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
-
-                    // Wait for cron schedule to run.
-
-                    var retry = new LinearRetryPolicy(
-                        transientDetector: null,
-                        retryInterval:     clusterOpPollInterval,
-                        timeout:           clusterOpTimeout);
-
-                    await retry.InvokeAsync(
-                        async () =>
-                        {
-                            await SyncContext.Clear;
-
-                            if (clusterOperator?.Status?.ContainerImages?.LastCompleted == null)
-                            {
-                                throw new TimeoutException("Waiting for [neon-cluster-operator] import Harbor container images.");
-                            }
-                        },
-                        cancellationToken: controller.CancellationToken);
-
-                    // Wait for node tasks to complete.
-
-                    await retry.InvokeAsync(
-                        async () =>
-                        {
-                            var labels = new Dictionary<string, string>
-                            {
-                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
-                            };
-                            var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
-                            var selectorString = string.Join(",", selector.ToArray());
-                            var tasks          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: selectorString);
-
-                            if (tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status.Phase != V1NeonNodeTask.Phase.Success))
-                            {
-                                throw new TimeoutException("Waiting for [neon-node-agent] NodeTask completions.");
-                            }
-                        },
-                        cancellationToken: controller.CancellationToken);
-
-                    // Reset schedule to default value after completion.
-
-                    clusterOperator.Spec.Updates.ContainerImages.Schedule = "0 0 0 ? * *";
-
-                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync(clusterOperator, clusterOperator.Name());
-                });
-        }
-
-        /// <summary>
         /// Iploads the cluster manifest as a config..
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -5240,7 +5156,7 @@ $@"- name: StorageType
                         new List<Task>()
                         {
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1MinioBucket>(),
-                            k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonClusterOperator>(),
+                            k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonClusterJobs>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
@@ -5249,60 +5165,34 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/cluster-operator-resource",
+            await controlNode.InvokeIdempotentAsync("setup/jobs",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "create", message: "neon-cluster-operator resource");
+                    controller.LogProgress(controlNode, verb: "create", message: "jobs");
 
-                    var nco = new V1NeonClusterOperator()
+                    var jobOptions  = cluster.SetupState.ClusterDefinition.Jobs;
+                    var jobResource = new V1NeonClusterJobs()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name = KubeService.NeonClusterOperator
                         },
-                        Spec = new V1NeonClusterOperator.OperatorSpec()
+                        Spec = new V1NeonClusterJobs.NeonClusterJobsSpec()
                         {
-                            Updates = new V1NeonClusterOperator.Updates()
-                            {
-                                ContainerImages = new V1NeonClusterOperator.UpdateSpec()
-                                {
-                                    Enabled  = !cluster.SetupState.ClusterDefinition.IsDesktop,
-                                    Schedule = cluster.SetupState.ClusterDefinition.IsDesktop ? string.Empty : "0 0 0 ? * *"
-                                },
-                                ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
-                                {
-                                    Enabled  = true,
-                                    Schedule = "0 0 0 ? * 1"
-                                },
-                                NodeCaCertificates = new V1NeonClusterOperator.UpdateSpec()
-                                {
-                                    Enabled  = true,
-                                    Schedule = "0 0 0 ? * *"
-                                },
-                                SecurityPatches = new V1NeonClusterOperator.UpdateSpec()
-                                {
-                                    Enabled  = true,
-                                    Schedule = "0 0 0 ? * *"
-                                },
-                                Telemetry = new V1NeonClusterOperator.UpdateSpec()
-                                {
-                                    Enabled  = true,
-                                    Schedule = "0 0 0 ? * *"
-                                }
-                            }
+                            HarborImagePush                = jobOptions.HarborImagePush,
+                            ControlPlaneCertificateRenewal = jobOptions.ControlPlaneCertificateRenewal,
+                            NodeCaCertificateUpdate        = jobOptions.NodeCaCertificateRenewal,
+                            LinuxSecurityPatches           = jobOptions.LinuxSecurityPatches,
+                            TelemetryPing                  = jobOptions.TelemetryPing
                         }
                     };
 
                     if (cluster.SetupState.ClusterDefinition.IsDesktop)
                     {
-                        nco.Spec.Updates.ClusterCertificate = new V1NeonClusterOperator.UpdateSpec()
-                        {
-                            Enabled  = true,
-                            Schedule = "0 0 * ? * *"
-                        };
+                        jobResource.Spec.ClusterCertificateRenewal = jobOptions.ClusterCertificateRenewal;
                     }
 
-                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonClusterJobs>(jobResource, jobResource.Name());
                 });
         }
 

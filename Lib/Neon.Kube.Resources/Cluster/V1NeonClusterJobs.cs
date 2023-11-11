@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        V1NeonClusterOperator.cs
+// FILE:        V1NeonClusterJobs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,20 +20,21 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
-using Neon.JsonConverters;
-using Neon.Operator.Attributes;
-
 using k8s;
 using k8s.Models;
+
+using Neon.JsonConverters;
+using Neon.Kube;
+using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
-    /// Specifies the <b>neon-cluster-operator</b> settings.
+    /// Specifies the cluster job settings.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonClusterOperator : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterOperator.OperatorSpec>, IStatus<V1NeonClusterOperator.OperatorStatus>
+    public class V1NeonClusterJobs : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterJobs.NeonClusterJobsSpec>, IStatus<V1NeonClusterJobs.NeonClusterJobsStatus>
     {
         /// <summary>
         /// Object API group.
@@ -48,37 +49,29 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonClusterOperator";
+        public const string KubeKind = "NeonClusterJob";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neonclusteroperators";
+        public const string KubePlural = "neonclusterjobs";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonClusterOperator()
+        public V1NeonClusterJobs()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind       = KubeKind;
         }
 
         /// <summary>
-        /// Gets or sets APIVersion defines the versioned schema of this
-        /// representation of an object. Servers should convert recognized
-        /// schemas to the latest internal value, and may reject unrecognized
-        /// values. More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// Returns the schema version of this representation of an object.
         /// </summary>
         public string ApiVersion { get; set; }
 
         /// <summary>
-        /// Gets or sets kind is a string value representing the REST resource
-        /// this object represents. Servers may infer this from the endpoint
-        /// the client submits requests to. Cannot be updated. In CamelCase.
-        /// More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// Returns the resource klind.
         /// </summary>
         public string Kind { get; set; }
 
@@ -90,116 +83,89 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// The spec.
         /// </summary>
-        public OperatorSpec Spec { get; set; }
+        public NeonClusterJobsSpec Spec { get; set; }
 
         /// <summary>
         /// The status.
         /// </summary>
-        public OperatorStatus Status { get; set; }
-
-        /// <summary>
-        /// The node execute task specification.
-        /// </summary>
-        public class OperatorSpec
-        {
-            /// <summary>
-            /// A test string.
-            /// </summary>
-            public string Message { get; set; }
-
-            /// <summary>
-            /// The cron schedule for updating node certificates.
-            /// </summary>
-            public Updates Updates { get; set; }
-        }
+        public NeonClusterJobsStatus Status { get; set; }
 
         /// <summary>
         /// The status.
         /// </summary>
-        public class OperatorStatus
+        public class NeonClusterJobsStatus
         {
             /// <summary>
             /// Control plane certificate update status.
             /// </summary>
-            public UpdateStatus ControlPlaneCertificates { get; set; } = new UpdateStatus();
+            public JobStatus ControlPlaneCertificates { get; set; } = new JobStatus();
 
             /// <summary>
             /// Node CA certificate update status.
             /// </summary>
-            public UpdateStatus NodeCaCertificates { get; set; } = new UpdateStatus();
+            public JobStatus NodeCaCertificates { get; set; } = new JobStatus();
 
             /// <summary>
             /// Update spec for security status.
             /// </summary>
-            public UpdateStatus SecurityPatches { get; set; } = new UpdateStatus();
+            public JobStatus SecurityPatches { get; set; } = new JobStatus();
 
             /// <summary>
-            /// Container images update status.
+            /// Container images push to Harbor update status.
             /// </summary>
-            public UpdateStatus ContainerImages { get; set; } = new UpdateStatus();
+            public JobStatus HarborImagePush { get; set; } = new JobStatus();
 
             /// <summary>
             /// Cluster telemetry update status.
             /// </summary>
-            public UpdateStatus Telemetry { get; set; } = new UpdateStatus();
+            public JobStatus Telemetry { get; set; } = new JobStatus();
 
             /// <summary>
-            /// Neon Desktop certificate should update status.
+            /// Neon Desktop certificate update status.
             /// </summary>
-            public UpdateStatus ClusterCertificate { get; set; } = new UpdateStatus();
+            public JobStatus ClusterCertificate { get; set; } = new JobStatus();
         }
 
         /// <summary>
-        /// The certificate update schedules.
+        /// Specifies the enhanced cron schedule for a cluster job as well as an
+        /// indication of whether the job is enabled or disabled.
         /// </summary>
-        public class Updates
+        public class JobSchedule
         {
-            /// <summary>
-            /// Control plane certificate update spec.
-            /// </summary>
-            public UpdateSpec ControlPlaneCertificates { get; set; } = new UpdateSpec();
+            private const string defaultSchedule = "R R 0 ? * *";
 
             /// <summary>
-            /// Node CA certificate update spec.
+            /// Default constructor.
             /// </summary>
-            public UpdateSpec NodeCaCertificates { get; set; } = new UpdateSpec();
+            public JobSchedule()
+            {
+            }
 
             /// <summary>
-            /// Update spec for security spec.
+            /// Parameterized constructor.
             /// </summary>
-            public UpdateSpec SecurityPatches { get; set; } = new UpdateSpec();
+            /// <param name="enabled">Indicates whether the job is enabled.</param>
+            /// <param name="schedule">Specifies the enhanced Quartz job schedule.</param>
+            public JobSchedule(bool enabled, string schedule)
+            {
+                this.Enabled  = enabled;
+                this.Schedule = schedule;
+            }
 
             /// <summary>
-            /// Update spec for container images.
+            /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
             /// </summary>
-            public UpdateSpec ContainerImages { get; set; } = new UpdateSpec();
+            public bool Enabled { get; set; } = false;
 
             /// <summary>
-            /// Update spec for telemetry.
+            /// The update schedule. This is enxtended Quartz cron expression.  This defaults
+            /// to <b>"R R 0 ? * *"</b> which fires every day at a random minute and second
+            /// between 12:00am and 1:00am.
             /// </summary>
-            public UpdateSpec Telemetry { get; set; } = new UpdateSpec();
-
-            /// <summary>
-            /// When the cluster certificate should be updated.
-            /// </summary>
-            public UpdateSpec ClusterCertificate { get; set; } = new UpdateSpec();
-        }
-
-        /// <summary>
-        /// The certificate update schedules.
-        /// </summary>
-        public class UpdateSpec
-        {
-            /// <summary>
-            /// Indicates whether this job is enabled or disabled.
-            /// </summary>
-            public bool Enabled { get; set; } = true;
-
-            /// <summary>
+            /// <remarks>
             /// <para>
-            /// The update schedule. This is a represented as a cron expression. Cron expressions are 
-            /// made up of seven sub-expressions that describe the details of the schedule. The sub expressions
-            /// are:
+            /// Cron expressions consist of seven sub-expressions that describe the details of the schedule.
+            /// The sub expressions are:
             /// </para>
             /// <list type="bullet">
             ///     <item>Seconds (0..59)</item>
@@ -213,10 +179,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <para>
             /// An example of a complete cron expression is <code>0 0 15 ? * MON</code> which means
             /// every Monday at 3pm.
-            /// </para>
-            /// </summary>
-            /// <remarks>
-            /// <para>
+            /// </para>        /// <para>
             /// For the full documentation which describes special characters, see: 
             /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
             /// </para>
@@ -224,7 +187,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <para>
             /// In addition to the standard Quartz defined special characters, we also
             /// support the <b>R</b> character which picks a random value within the
-            /// allow range for a field.  For example,
+            /// allow range for a field.  For example:
             /// </para>
             /// <para>
             /// 0 0 R R * *
@@ -237,16 +200,53 @@ namespace Neon.Kube.Resources.Cluster
             /// </para>
             /// </note>
             /// </remarks>
-            public string Schedule { get; set; } = "0 0 0 ? * 1";
+            public string Schedule { get; set; } = defaultSchedule;
         }
 
         /// <summary>
-        /// Update status spec.
+        /// The certificate update schedules.
         /// </summary>
-        public class UpdateStatus
+        public class NeonClusterJobsSpec
         {
             /// <summary>
-            /// The time that the task last completed.
+            /// CRON schedule for renewing the control plane certificate.
+            /// </summary>
+            public JobSchedule ControlPlaneCertificateRenewal { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for updating for Node CA certificates.
+            /// </summary>
+            public JobSchedule NodeCaCertificateUpdate { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for applying Linux security patches to the cluster nodes.
+            /// </summary>
+            public JobSchedule LinuxSecurityPatches { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for ensuring that the required NEONKUBE container images
+            /// are loaded into Harbor.
+            /// </summary>
+            public JobSchedule HarborImagePush { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for sending telemerty pings to the headend.
+            /// </summary>
+            public JobSchedule TelemetryPing { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for renewing the cluster certficate.
+            /// </summary>
+            public JobSchedule ClusterCertificateRenewal { get; set; } = new JobSchedule();
+        }
+
+        /// <summary>
+        /// Cluster job status.
+        /// </summary>
+        public class JobStatus
+        {
+            /// <summary>
+            /// The time that the job last completed.
             /// </summary>
             [JsonConverter(typeof(JsonNullableDateTimeConverter))]
             public DateTime? LastCompleted { get; set; }

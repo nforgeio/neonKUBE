@@ -52,14 +52,14 @@ namespace NeonClusterOperator
     /// control-plane certificates, ensuring that required container images are present,
     /// sending cluster telemetry to NEONCLOUD and checking cluster certificates.
     /// </summary>
-    [RbacRule<V1NeonClusterOperator>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1NeonClusterJobs>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(MaxConcurrentReconciles = 1)]
-    public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterOperator>
+    public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterJobs>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -118,13 +118,13 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobs resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJobs)));
 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
@@ -140,11 +140,11 @@ namespace NeonClusterOperator
                     await InitializeSchedulerAsync();
                 }
 
-                if (resource.Spec.Updates.NodeCaCertificates.Enabled)
+                if (resource.Spec.NodeCaCertificateUpdate.Enabled)
                 {
                     try
                     {
-                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.NodeCaCertificates.Schedule);
+                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.NodeCaCertificateUpdate.Schedule);
 
                         await updateCaCertificatesJob.DeleteFromSchedulerAsync(scheduler);
                         await updateCaCertificatesJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
@@ -155,11 +155,11 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.ControlPlaneCertificates.Enabled)
+                if (resource.Spec.ControlPlaneCertificateRenewal.Enabled)
                 {
                     try
                     {
-                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ControlPlaneCertificates.Schedule);
+                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ControlPlaneCertificateRenewal.Schedule);
 
                         await checkControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
                         await checkControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
@@ -170,15 +170,11 @@ namespace NeonClusterOperator
                     }
                 }
 
-                var nodes = await k8s.CoreV1.ListNodeAsync();
-
-                if (resource.Spec.Updates.ContainerImages.Enabled
-                    && !clusterInfo.IsDesktop
-                    && nodes.Items.Count > 1)
+                if (resource.Spec.HarborImagePush.Enabled)
                 {
                     try
                     {
-                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ContainerImages.Schedule);
+                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.HarborImagePush.Schedule);
 
                         await checkRegistryImagesJob.DeleteFromSchedulerAsync(scheduler);
                         await checkRegistryImagesJob.AddToSchedulerAsync(
@@ -196,11 +192,11 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.Telemetry.Enabled)
+                if (resource.Spec.TelemetryPing.Enabled)
                 {
                     try
                     {
-                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.Telemetry.Schedule);
+                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TelemetryPing.Schedule);
 
                         await sendClusterTelemetryJob.DeleteFromSchedulerAsync(scheduler);
                         await sendClusterTelemetryJob.AddToSchedulerAsync(
@@ -218,11 +214,11 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.ClusterCertificate.Enabled)
+                if (resource.Spec.ClusterCertificateRenewal.Enabled)
                 {
                     try
                     {
-                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ClusterCertificate.Schedule);
+                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ClusterCertificateRenewal.Schedule);
 
                         await checkClusterCertJob.DeleteFromSchedulerAsync(scheduler);
                         await checkClusterCertJob.AddToSchedulerAsync(
@@ -248,7 +244,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonClusterOperator resource)
+        public override async Task DeletedAsync(V1NeonClusterJobs resource)
         {
             await SyncContext.Clear;
 

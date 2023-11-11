@@ -23,8 +23,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube.Resources.Cluster;
 
-namespace Neon.Kube.ClusterDef.ClusterJobs
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the enhanced cron schedule for a cluster job as well as an
@@ -32,13 +33,56 @@ namespace Neon.Kube.ClusterDef.ClusterJobs
     /// </summary>
     public class JobSchedule
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private const string defaultSchedule = "R R 0 ? * *";
+
         /// <summary>
-        /// Indicates whether this job is enabled or disabled.
+        /// Casts a <see cref="JobSchedule"/> into a <see cref="V1NeonClusterJobs.JobSchedule"/>.
+        /// </summary>
+        /// <param name="jobSchedule">Specifies the schedule being converted.</param>
+        /// <returns>The converted schedule.</returns>
+        public static implicit operator V1NeonClusterJobs.JobSchedule(JobSchedule jobSchedule)
+        {
+            Covenant.Requires<ArgumentNullException>(jobSchedule != null, nameof(jobSchedule));
+
+            return new V1NeonClusterJobs.JobSchedule(jobSchedule.Enabled, jobSchedule.Schedule);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public JobSchedule()
+        {
+        }
+
+        /// <summary>
+        /// Parameterized constructor.
+        /// </summary>
+        /// <param name="enabled">Indicates whether the job is enabled.</param>
+        /// <param name="schedule">Specifies the enhanced Quartz job schedule.</param>
+        public JobSchedule(bool enabled, string schedule)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(schedule), nameof(schedule));
+            NeonExtendedHelper.FromEnhancedCronExpression(schedule);
+
+            this.Enabled  = enabled;
+            this.Schedule = schedule;
+        }
+
+        /// <summary>
+        /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
         /// </summary>
         public bool Enabled { get; set; } = false;
 
         /// <summary>
-        /// The update schedule. This is a represented as a cron expression.
+        /// The update schedule. This is enxtended Quartz cron expression.  This defaults
+        /// to <b>"R R 0 ? * *"</b> which fires every day at a random minute and second
+        /// between 12:00am and 1:00am.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -65,7 +109,7 @@ namespace Neon.Kube.ClusterDef.ClusterJobs
         /// <para>
         /// In addition to the standard Quartz defined special characters, we also
         /// support the <b>R</b> character which picks a random value within the
-        /// allow range for a field.  For example,
+        /// allow range for a field.  For example:
         /// </para>
         /// <para>
         /// 0 0 R R * *
@@ -78,7 +122,7 @@ namespace Neon.Kube.ClusterDef.ClusterJobs
         /// </para>
         /// </note>
         /// </remarks>
-        public string Schedule { get; set; } = "0 0 0 ? * *";
+        public string Schedule { get; set; } = defaultSchedule;
 
         /// <summary>
         /// Validates the options.
@@ -93,7 +137,7 @@ namespace Neon.Kube.ClusterDef.ClusterJobs
 
             if (string.IsNullOrEmpty(Schedule))
             {
-                Schedule = "0 0 0 ? * *";
+                Schedule = defaultSchedule;
             }
 
             // Validate the schedule.
