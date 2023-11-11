@@ -30,12 +30,14 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;
 using Neon.Operator.Controllers;
 using Neon.Operator.Rbac;
 using Neon.Tasks;
 
+using NeonClusterOperator.CronJobs;
 using NeonClusterOperator.Harbor;
 
 using OpenTelemetry.Trace;
@@ -64,6 +66,13 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// The <see cref="WorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
+        /// resource because we don't want the user to be able to disable this.  We're going to fix this to
+        /// run every couple hours.
+        /// </summary>
+        private static readonly JobSchedule workerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
+
         private static IScheduler                           scheduler;
         private static StdSchedulerFactory                  schedulerFactory;
         private static bool                                 initialized;
@@ -72,6 +81,7 @@ namespace NeonClusterOperator
         private static HarborImagePushJob                   pushHarborImagesJob;
         private static TelemetryPingJob                     telemetryPingJob;
         private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
+        private static WorkerNodeVcpuJob                    workerNodeVcpuJob;
 
         /// <summary>
         /// Static constructor.
@@ -84,26 +94,28 @@ namespace NeonClusterOperator
             pushHarborImagesJob              = new HarborImagePushJob();
             telemetryPingJob                 = new TelemetryPingJob();
             renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
+            workerNodeVcpuJob                = new WorkerNodeVcpuJob();
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                                k8s;
+        private readonly IKubernetes                    k8s;
         private readonly ILogger<NeonJobController>     logger;
-        private readonly HeadendClient                              headendClient;
-        private readonly HarborClient                               harborClient;
-        private readonly ClusterInfo                                clusterInfo;
+        private readonly HeadendClient                  headendClient;
+        private readonly HarborClient                   harborClient;
+        private readonly ClusterInfo                    clusterInfo;
+        private bool                                    startedWorkerNodeVcpuSchedule = false;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonJobController(
-            IKubernetes                              k8s,
-            ILogger<NeonJobController>   logger,
-            HeadendClient                            headendClient,
-            HarborClient                             harborClient,
-            ClusterInfo                             clusterInfo)
+            IKubernetes                 k8s,
+            ILogger<NeonJobController>  logger,
+            HeadendClient               headendClient,
+            HarborClient                harborClient,
+            ClusterInfo                 clusterInfo)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -138,6 +150,17 @@ namespace NeonClusterOperator
                 if (!initialized)
                 {
                     await InitializeSchedulerAsync();
+                }
+
+                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than picking up its
+                // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
+                // only on the first reconcile callback.
+
+                if (!startedWorkerNodeVcpuSchedule)
+                {
+                    await workerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, workerNodeVcpuSchedule.Schedule);
+
+                    startedWorkerNodeVcpuSchedule = true;
                 }
 
                 if (resource.Spec.NodeCaCertificateUpdate.Enabled)
