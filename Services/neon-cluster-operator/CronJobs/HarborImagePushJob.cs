@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckRegistryImagesJob.cs
+// FILE:        HarborImagePushJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -57,12 +57,12 @@ namespace NeonClusterOperator
     /// Harbor.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckRegistryImagesJob : CronJob, IJob
+    public class HarborImagePushJob : CronJob, IJob
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImagesJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<HarborImagePushJob>();
 
         //---------------------------------------------------------------------
         // Instance members
@@ -73,8 +73,8 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckRegistryImagesJob()
-            : base(typeof(CheckRegistryImagesJob))
+        public HarborImagePushJob()
+            : base(typeof(HarborImagePushJob))
         {
         }
 
@@ -86,7 +86,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(HarborImagePushJob)));
 
                 try
                 {
@@ -197,7 +197,7 @@ rm -rf {tempDir}
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(HarborImagePushJob)));
 
                 try
                 {

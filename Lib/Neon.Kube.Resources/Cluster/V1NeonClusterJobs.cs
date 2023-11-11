@@ -91,42 +91,6 @@ namespace Neon.Kube.Resources.Cluster
         public NeonClusterJobsStatus Status { get; set; }
 
         /// <summary>
-        /// The status.
-        /// </summary>
-        public class NeonClusterJobsStatus
-        {
-            /// <summary>
-            /// Control plane certificate update status.
-            /// </summary>
-            public JobStatus ControlPlaneCertificates { get; set; } = new JobStatus();
-
-            /// <summary>
-            /// Node CA certificate update status.
-            /// </summary>
-            public JobStatus NodeCaCertificates { get; set; } = new JobStatus();
-
-            /// <summary>
-            /// Update spec for security status.
-            /// </summary>
-            public JobStatus SecurityPatches { get; set; } = new JobStatus();
-
-            /// <summary>
-            /// Container images push to Harbor update status.
-            /// </summary>
-            public JobStatus HarborImagePush { get; set; } = new JobStatus();
-
-            /// <summary>
-            /// Cluster telemetry update status.
-            /// </summary>
-            public JobStatus Telemetry { get; set; } = new JobStatus();
-
-            /// <summary>
-            /// Neon Desktop certificate update status.
-            /// </summary>
-            public JobStatus ClusterCertificate { get; set; } = new JobStatus();
-        }
-
-        /// <summary>
         /// Specifies the enhanced cron schedule for a cluster job as well as an
         /// indication of whether the job is enabled or disabled.
         /// </summary>
@@ -238,6 +202,42 @@ namespace Neon.Kube.Resources.Cluster
             /// CRON schedule for renewing the cluster certficate.
             /// </summary>
             public JobSchedule ClusterCertificateRenewal { get; set; } = new JobSchedule();
+        }
+
+        /// <summary>
+        /// The status.
+        /// </summary>
+        public class NeonClusterJobsStatus
+        {
+            /// <summary>
+            /// Control plane certificate update status.
+            /// </summary>
+            public JobStatus ControlPlaneCertificateRenewal { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Node CA certificate update status.
+            /// </summary>
+            public JobStatus NodeCaCertificateUpdate { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Update spec for security status.
+            /// </summary>
+            public JobStatus LinuxSecurityPatches { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Container images push to Harbor update status.
+            /// </summary>
+            public JobStatus HarborImagePush { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Cluster telemetry update status.
+            /// </summary>
+            public JobStatus TelemetryPing { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Neon Desktop certificate update status.
+            /// </summary>
+            public JobStatus ClusterCertificateRenewal { get; set; } = new JobStatus();
         }
 
         /// <summary>

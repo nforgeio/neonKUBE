@@ -63,19 +63,19 @@ spec:
             type: object
           status:
             properties:
-              controlPlaneCertificates:
+              controlPlaneCertificateRenewal:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              nodeCaCertificates:
+              nodeCaCertificateUpdate:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              securityPatches:
+              linuxSecurityPatches:
                 properties:
                   lastCompleted:
                     format: date-time
@@ -87,13 +87,13 @@ spec:
                     format: date-time
                     type: string
                 type: object
-              telemetry:
+              telemetryPing:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              clusterCertificate:
+              clusterCertificateRenewal:
                 properties:
                   lastCompleted:
                     format: date-time

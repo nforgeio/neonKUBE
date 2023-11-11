@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        SendClusterTelemetryJob.cs
+// FILE:        TelemetryPingJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -50,18 +50,18 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles checking for expired 
+    /// Handles the transmission of telemetry pings to the headend. 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class SendClusterTelemetryJob : CronJob, IJob
+    public class TelemetryPingJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetryJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<TelemetryPingJob>();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SendClusterTelemetryJob()
-            : base(typeof(SendClusterTelemetryJob))
+        public TelemetryPingJob()
+            : base(typeof(TelemetryPingJob))
         {
         }
 
@@ -138,8 +138,8 @@ namespace NeonClusterOperator
                         patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.Telemetry, new V1NeonClusterJobs.JobStatus());
-                    patch.Replace(path => path.Status.Telemetry.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.TelemetryPing.LastCompleted, DateTime.UtcNow);
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),

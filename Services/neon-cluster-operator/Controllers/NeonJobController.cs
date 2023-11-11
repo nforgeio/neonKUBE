@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        NeonClusterOperatorController.cs
+// FILE:        NeonJobController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -48,9 +48,9 @@ using Task = System.Threading.Tasks.Task;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Manages global cluster CRON jobes including updating node CA certificates, checking
-    /// control-plane certificates, ensuring that required container images are present,
-    /// sending cluster telemetry to NEONCLOUD and checking cluster certificates.
+    /// Manages global cluster CRON jobs including updating node CA certificates, renewing
+    /// control-plane certificates, ensuring that required container images are pushed to
+    /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
     /// </summary>
     [RbacRule<V1NeonClusterJobs>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
@@ -59,38 +59,38 @@ namespace NeonClusterOperator
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(MaxConcurrentReconciles = 1)]
-    public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterJobs>
+    public class NeonJobController : ResourceControllerBase<V1NeonClusterJobs>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static IScheduler                       scheduler;
-        private static StdSchedulerFactory              schedulerFactory;
-        private static bool                             initialized;
-        private static UpdateCaCertificatesJob          updateCaCertificatesJob;
-        private static CheckControlPlaneCertificatesJob checkControlPlaneCertificatesJob;
-        private static CheckRegistryImagesJob           checkRegistryImagesJob;
-        private static SendClusterTelemetryJob          sendClusterTelemetryJob;
-        private static CheckClusterCertificateJob       checkClusterCertJob;
+        private static IScheduler                           scheduler;
+        private static StdSchedulerFactory                  schedulerFactory;
+        private static bool                                 initialized;
+        private static NodeCaCertificatesUpdateJob          nodeCaCertificatesUpdateJob;
+        private static ControlPlaneCertificateRenewalJob    renewControlPlaneCertificatesJob;
+        private static HarborImagePushJob                   pushHarborImagesJob;
+        private static TelemetryPingJob                     telemetryPingJob;
+        private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonClusterOperatorController() 
+        static NeonJobController() 
         {
             schedulerFactory                 = new StdSchedulerFactory();
-            updateCaCertificatesJob          = new UpdateCaCertificatesJob();
-            checkControlPlaneCertificatesJob = new CheckControlPlaneCertificatesJob();
-            checkRegistryImagesJob           = new CheckRegistryImagesJob();
-            sendClusterTelemetryJob          = new SendClusterTelemetryJob();
-            checkClusterCertJob              = new CheckClusterCertificateJob();
+            nodeCaCertificatesUpdateJob      = new NodeCaCertificatesUpdateJob();
+            renewControlPlaneCertificatesJob = new ControlPlaneCertificateRenewalJob();
+            pushHarborImagesJob              = new HarborImagePushJob();
+            telemetryPingJob                 = new TelemetryPingJob();
+            renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         private readonly IKubernetes                                k8s;
-        private readonly ILogger<NeonClusterOperatorController>     logger;
+        private readonly ILogger<NeonJobController>     logger;
         private readonly HeadendClient                              headendClient;
         private readonly HarborClient                               harborClient;
         private readonly ClusterInfo                                clusterInfo;
@@ -98,12 +98,12 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonClusterOperatorController(
+        public NeonJobController(
             IKubernetes                              k8s,
-            ILogger<NeonClusterOperatorController>   logger,
+            ILogger<NeonJobController>   logger,
             HeadendClient                            headendClient,
             HarborClient                             harborClient,
-            ClusterInfo                              clusterInfo)
+            ClusterInfo                             clusterInfo)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -146,8 +146,8 @@ namespace NeonClusterOperator
                     {
                         var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.NodeCaCertificateUpdate.Schedule);
 
-                        await updateCaCertificatesJob.DeleteFromSchedulerAsync(scheduler);
-                        await updateCaCertificatesJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                        await nodeCaCertificatesUpdateJob.DeleteFromSchedulerAsync(scheduler);
+                        await nodeCaCertificatesUpdateJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
                     }
                     catch (Exception e)
                     {
@@ -161,8 +161,8 @@ namespace NeonClusterOperator
                     {
                         var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ControlPlaneCertificateRenewal.Schedule);
 
-                        await checkControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                        await renewControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
+                        await renewControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
                     }
                     catch (Exception e)
                     {
@@ -176,8 +176,8 @@ namespace NeonClusterOperator
                     {
                         var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.HarborImagePush.Schedule);
 
-                        await checkRegistryImagesJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkRegistryImagesJob.AddToSchedulerAsync(
+                        await pushHarborImagesJob.DeleteFromSchedulerAsync(scheduler);
+                        await pushHarborImagesJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             containerImageSchedule,
@@ -198,8 +198,8 @@ namespace NeonClusterOperator
                     {
                         var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TelemetryPing.Schedule);
 
-                        await sendClusterTelemetryJob.DeleteFromSchedulerAsync(scheduler);
-                        await sendClusterTelemetryJob.AddToSchedulerAsync(
+                        await telemetryPingJob.DeleteFromSchedulerAsync(scheduler);
+                        await telemetryPingJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             clusterTelemetrySchedule,
@@ -220,8 +220,8 @@ namespace NeonClusterOperator
                     {
                         var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ClusterCertificateRenewal.Schedule);
 
-                        await checkClusterCertJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkClusterCertJob.AddToSchedulerAsync(
+                        await renewClusterCertificateJob.DeleteFromSchedulerAsync(scheduler);
+                        await renewClusterCertificateJob.AddToSchedulerAsync(
                             scheduler, 
                             k8s, 
                             neonDesktopCertSchedule,

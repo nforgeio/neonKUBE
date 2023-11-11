@@ -151,7 +151,7 @@ namespace NeonClusterOperator
 
         /// <summary>
         /// Checks the node passed and removes it from the cluster if the cluster is running
-        /// in a cloud and the worker node has fewer than 4 vCPUS.
+        /// in a cloud, the node is a worker, and has fewer than 4 vCPUS.
         /// </summary>
         /// <param name="node"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
