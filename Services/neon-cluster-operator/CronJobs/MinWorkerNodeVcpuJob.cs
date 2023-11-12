@@ -96,7 +96,7 @@ namespace NeonClusterOperator.CronJobs
                 {
                     // Perform this operation only for hosting environments where NEONFORGE collects revenue.
 
-                    if (Neon.Kube.KubeHelper.IsPaidHostingEnvironment(clusterInfo.HostingEnvironment))
+                    if (!Neon.Kube.KubeHelper.IsPaidHostingEnvironment(clusterInfo.HostingEnvironment))
                     {
                         return;
                     }
