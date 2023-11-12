@@ -95,11 +95,11 @@ namespace NeonClusterOperator
                         };
 
                         await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()).WithHeaders(headers));
-                        logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
+                        logger.LogInformationEx(() => $"Bucket [{resource.Name()}] deleted.");
                     }
                     else
                     {
-                        logger.LogInformationEx(() => $"Bucket {resource.Name()} doesn't exist.");
+                        logger.LogInformationEx(() => $"Bucket [{resource.Name()}] doesn't exist.");
                     }
                 }
                 finally
