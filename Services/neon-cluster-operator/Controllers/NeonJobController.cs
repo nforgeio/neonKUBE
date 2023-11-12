@@ -67,11 +67,11 @@ namespace NeonClusterOperator
         // Static members
 
         /// <summary>
-        /// The <see cref="WorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
+        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
         /// resource because we don't want the user to be able to disable this.  We're going to fix this to
         /// run every couple hours.
         /// </summary>
-        private static readonly JobSchedule workerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
+        private static readonly JobSchedule minWorkerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
 
         private static IScheduler                           scheduler;
         private static StdSchedulerFactory                  schedulerFactory;
@@ -81,7 +81,7 @@ namespace NeonClusterOperator
         private static HarborImagePushJob                   pushHarborImagesJob;
         private static TelemetryPingJob                     telemetryPingJob;
         private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
-        private static WorkerNodeVcpuJob                    workerNodeVcpuJob;
+        private static MinWorkerNodeVcpuJob                 minWorkerNodeVcpuJob;
 
         /// <summary>
         /// Static constructor.
@@ -94,7 +94,7 @@ namespace NeonClusterOperator
             pushHarborImagesJob              = new HarborImagePushJob();
             telemetryPingJob                 = new TelemetryPingJob();
             renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
-            workerNodeVcpuJob                = new WorkerNodeVcpuJob();
+            minWorkerNodeVcpuJob             = new MinWorkerNodeVcpuJob();
         }
 
         //---------------------------------------------------------------------
@@ -158,7 +158,7 @@ namespace NeonClusterOperator
 
                 if (!startedWorkerNodeVcpuSchedule)
                 {
-                    await workerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, workerNodeVcpuSchedule.Schedule);
+                    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWorkerNodeVcpuSchedule.Schedule);
 
                     startedWorkerNodeVcpuSchedule = true;
                 }

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    WorkerNodeVcpuJob.cs
+// FILE:	    MinWorkerNodeVcpuJob.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -57,15 +57,15 @@ namespace NeonClusterOperator.CronJobs
     /// cloud native Kubernetes clusters where the control plane is free.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class WorkerNodeVcpuJob : CronJob, IJob
+    public class MinWorkerNodeVcpuJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<WorkerNodeVcpuJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<MinWorkerNodeVcpuJob>();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public WorkerNodeVcpuJob()
-            : base(typeof(WorkerNodeVcpuJob))
+        public MinWorkerNodeVcpuJob()
+            : base(typeof(MinWorkerNodeVcpuJob))
         {
         }
 
