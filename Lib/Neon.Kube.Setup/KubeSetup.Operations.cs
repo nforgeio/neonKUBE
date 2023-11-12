@@ -1183,7 +1183,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      name: kube-apiserver
             //      ...
             //
-            // Note that Kublet will automatically restart the API server's static pod when it
+            // Note that Kubelet will automatically restart the API server's static pod when it
             // notices that that static pod manifest has been modified.
 
             const string manifestPath = "/etc/kubernetes/manifests/kube-apiserver.yaml";

@@ -136,7 +136,7 @@ namespace NeonClusterOperator.CronJobs
 
                             if (!node.Status.Allocatable.TryGetValue("cpu", out var allocatableCpu))
                             {
-                                // Looks like Kublet hasn't reported the number of CPUs yet.
+                                // Looks like Kubelet hasn't reported the number of node CPUs yet.
 
                                 continue;
                             }

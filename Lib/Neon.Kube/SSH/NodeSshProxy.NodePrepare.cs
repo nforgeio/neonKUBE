@@ -1251,7 +1251,7 @@ rm -rf linux-amd64
         }
   
         /// <summary>
-        /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kublet</b>.
+        /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kubelet</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void NodeInstallKubernetes(ISetupController controller)
@@ -1352,7 +1352,7 @@ EOF
 kubeadm config images pull --config=kubeadm.config.yaml 
 rm kubeadm.config.yaml
 
-# Configure kublet:
+# Configure kubelet:
 
 mkdir -p /opt/cni/bin
 mkdir -p /etc/cni/net.d
