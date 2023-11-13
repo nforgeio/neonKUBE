@@ -331,12 +331,5 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "PrivateAddress", Required = Required.Always | Required.AllowNull)]
         public string PrivateAddress { get; set; }
-
-        /// <summary>
-        /// Indicates whether the node is configured and is ready to accept external network traffic
-        /// for the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "Ingress", Required = Required.Always | Required.AllowNull)]
-        public bool Ingress { get; set; }
     }
 }

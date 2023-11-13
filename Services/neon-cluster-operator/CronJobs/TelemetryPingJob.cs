@@ -98,16 +98,6 @@ namespace NeonClusterOperator
                         node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;
                         node.Role                    = k8sNode.Metadata.GetLabel(NodeLabels.LabelRole);
 
-                        // $todo(jefflill):
-                        //
-                        // We need to really figure this out from the node status and Istio config.
-                        // We're currently assuming that only worker nodes support ingress unless
-                        // there are no workers and we're not checking node health either.
-                        //
-                        //      https://github.com/nforgeio/neonKUBE/issues/1816
-
-                        node.Ingress = !hasWorkers || node.Role == NodeRole.Worker;
-
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {
                             node.VCpus = cores.ToInt32();
