@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckClusterCertificateJob.cs
+// FILE:        ClusterCertificateRenewalJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -49,20 +49,20 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles updating of the <b>desktop.neoncluster.io</b> certificate.
+    /// Handles renewal of the Kubernetes root certificate.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckClusterCertificateJob : CronJob, IJob
+    public class ClusterCertificateRenewalJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckClusterCertificateJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<ClusterCertificateRenewalJob>();
 
         private static Random random   = new Random();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckClusterCertificateJob()
-            : base(typeof(CheckClusterCertificateJob))
+        public ClusterCertificateRenewalJob()
+            : base(typeof(ClusterCertificateRenewalJob))
         {
         }
         
@@ -75,7 +75,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckClusterCertificateJob)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(ClusterCertificateRenewalJob)));
 
                 try
                 {
@@ -115,19 +115,19 @@ namespace NeonClusterOperator
                         await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
                     if (clusterOperator.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.ClusterCertificate, new V1NeonClusterOperator.UpdateStatus());
-                    patch.Replace(path => path.Status.ClusterCertificate.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.ClusterCertificateRenewal, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.ClusterCertificateRenewal.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
                         name: clusterOperator.Name());
                 }
                 catch (Exception e)

@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        SendClusterTelemetryJob.cs
+// FILE:        TelemetryPingJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -50,18 +50,18 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles checking for expired 
+    /// Handles the transmission of telemetry pings to the headend. 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class SendClusterTelemetryJob : CronJob, IJob
+    public class TelemetryPingJob : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetryJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<TelemetryPingJob>();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SendClusterTelemetryJob()
-            : base(typeof(SendClusterTelemetryJob))
+        public TelemetryPingJob()
+            : base(typeof(TelemetryPingJob))
         {
         }
 
@@ -98,16 +98,6 @@ namespace NeonClusterOperator
                         node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;
                         node.Role                    = k8sNode.Metadata.GetLabel(NodeLabels.LabelRole);
 
-                        // $todo(jefflill):
-                        //
-                        // We need to really figure this out from the node status and Istio config.
-                        // We're currently assuming that only worker nodes support ingress unless
-                        // there are no workers and we're not checking node health either.
-                        //
-                        //      https://github.com/nforgeio/neonKUBE/issues/1816
-
-                        node.Ingress = !hasWorkers || node.Role == NodeRole.Worker;
-
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {
                             node.VCpus = cores.ToInt32();
@@ -130,19 +120,19 @@ namespace NeonClusterOperator
                         await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
                     if (clusterOperator.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.Telemetry, new V1NeonClusterOperator.UpdateStatus());
-                    patch.Replace(path => path.Status.Telemetry.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.TelemetryPing.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
                         name:  clusterOperator.Name());
                 }
                 catch (Exception e)

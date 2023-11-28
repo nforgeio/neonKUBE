@@ -56,8 +56,8 @@ rules:
   resources:
   - crioconfigurations
   - crioconfigurations/status
-  - neonclusteroperators
-  - neonclusteroperators/status
+  - neonclusterjobs
+  - neonclusterjobs/status
   - neoncontainerregistries
   - neoncontainerregistries/status
   - neondashboards

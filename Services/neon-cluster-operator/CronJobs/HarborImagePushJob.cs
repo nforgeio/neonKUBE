@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckRegistryImagesJob.cs
+// FILE:        HarborImagePushJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -57,12 +57,12 @@ namespace NeonClusterOperator
     /// Harbor.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckRegistryImagesJob : CronJob, IJob
+    public class HarborImagePushJob : CronJob, IJob
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImagesJob>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<HarborImagePushJob>();
 
         //---------------------------------------------------------------------
         // Instance members
@@ -73,8 +73,8 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckRegistryImagesJob()
-            : base(typeof(CheckRegistryImagesJob))
+        public HarborImagePushJob()
+            : base(typeof(HarborImagePushJob))
         {
         }
 
@@ -86,7 +86,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(HarborImagePushJob)));
 
                 try
                 {
@@ -164,19 +164,19 @@ rm -rf {tempDir}
                         startTime = startTime.AddSeconds(10);
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
                     if (clusterOperator.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.ContainerImages, new V1NeonClusterOperator.UpdateStatus());
-                    patch.Replace(path => path.Status.ContainerImages.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.HarborImagePush, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.HarborImagePush.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
                         name: clusterOperator.Name());
                 }
                 catch (Exception e)
@@ -197,7 +197,7 @@ rm -rf {tempDir}
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImagesJob)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(HarborImagePushJob)));
 
                 try
                 {

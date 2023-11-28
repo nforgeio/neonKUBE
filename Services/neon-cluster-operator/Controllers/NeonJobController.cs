@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        NeonClusterOperatorController.cs
+// FILE:        NeonJobController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,12 +30,14 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;
 using Neon.Operator.Controllers;
 using Neon.Operator.Rbac;
 using Neon.Tasks;
 
+using NeonClusterOperator.CronJobs;
 using NeonClusterOperator.Harbor;
 
 using OpenTelemetry.Trace;
@@ -48,62 +50,72 @@ using Task = System.Threading.Tasks.Task;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Manages global cluster CRON jobes including updating node CA certificates, checking
-    /// control-plane certificates, ensuring that required container images are present,
-    /// sending cluster telemetry to NEONCLOUD and checking cluster certificates.
+    /// Manages global cluster CRON jobs including updating node CA certificates, renewing
+    /// control-plane certificates, ensuring that required container images are pushed to
+    /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
     /// </summary>
-    [RbacRule<V1NeonClusterOperator>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1NeonClusterJobs>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(MaxConcurrentReconciles = 1)]
-    public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterOperator>
+    public class NeonJobController : ResourceControllerBase<V1NeonClusterJobs>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static IScheduler                       scheduler;
-        private static StdSchedulerFactory              schedulerFactory;
-        private static bool                             initialized;
-        private static UpdateCaCertificatesJob          updateCaCertificatesJob;
-        private static CheckControlPlaneCertificatesJob checkControlPlaneCertificatesJob;
-        private static CheckRegistryImagesJob           checkRegistryImagesJob;
-        private static SendClusterTelemetryJob          sendClusterTelemetryJob;
-        private static CheckClusterCertificateJob       checkClusterCertJob;
+        /// <summary>
+        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
+        /// resource because we don't want the user to be able to disable this.  We're going to fix this to
+        /// run every couple hours.
+        /// </summary>
+        private static readonly JobSchedule minWorkerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
+
+        private static IScheduler                           scheduler;
+        private static StdSchedulerFactory                  schedulerFactory;
+        private static bool                                 initialized;
+        private static NodeCaCertificatesUpdateJob          nodeCaCertificatesUpdateJob;
+        private static ControlPlaneCertificateRenewalJob    renewControlPlaneCertificatesJob;
+        private static HarborImagePushJob                   pushHarborImagesJob;
+        private static TelemetryPingJob                     telemetryPingJob;
+        private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
+        private static MinWorkerNodeVcpuJob                 minWorkerNodeVcpuJob;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonClusterOperatorController() 
+        static NeonJobController() 
         {
             schedulerFactory                 = new StdSchedulerFactory();
-            updateCaCertificatesJob          = new UpdateCaCertificatesJob();
-            checkControlPlaneCertificatesJob = new CheckControlPlaneCertificatesJob();
-            checkRegistryImagesJob           = new CheckRegistryImagesJob();
-            sendClusterTelemetryJob          = new SendClusterTelemetryJob();
-            checkClusterCertJob              = new CheckClusterCertificateJob();
+            nodeCaCertificatesUpdateJob      = new NodeCaCertificatesUpdateJob();
+            renewControlPlaneCertificatesJob = new ControlPlaneCertificateRenewalJob();
+            pushHarborImagesJob              = new HarborImagePushJob();
+            telemetryPingJob                 = new TelemetryPingJob();
+            renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
+            minWorkerNodeVcpuJob             = new MinWorkerNodeVcpuJob();
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                                k8s;
-        private readonly ILogger<NeonClusterOperatorController>     logger;
-        private readonly HeadendClient                              headendClient;
-        private readonly HarborClient                               harborClient;
-        private readonly ClusterInfo                                clusterInfo;
+        private readonly IKubernetes                    k8s;
+        private readonly ILogger<NeonJobController>     logger;
+        private readonly HeadendClient                  headendClient;
+        private readonly HarborClient                   harborClient;
+        private readonly ClusterInfo                    clusterInfo;
+        private bool                                    startedWorkerNodeVcpuSchedule = false;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonClusterOperatorController(
-            IKubernetes                              k8s,
-            ILogger<NeonClusterOperatorController>   logger,
-            HeadendClient                            headendClient,
-            HarborClient                             harborClient,
-            ClusterInfo                              clusterInfo)
+        public NeonJobController(
+            IKubernetes                 k8s,
+            ILogger<NeonJobController>  logger,
+            HeadendClient               headendClient,
+            HarborClient                harborClient,
+            ClusterInfo                 clusterInfo)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -118,13 +130,13 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobs resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJobs)));
 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
@@ -140,14 +152,25 @@ namespace NeonClusterOperator
                     await InitializeSchedulerAsync();
                 }
 
-                if (resource.Spec.Updates.NodeCaCertificates.Enabled)
+                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than picking up its
+                // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
+                // only on the first reconcile callback.
+
+                if (!startedWorkerNodeVcpuSchedule)
+                {
+                    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWorkerNodeVcpuSchedule.Schedule);
+
+                    startedWorkerNodeVcpuSchedule = true;
+                }
+
+                if (resource.Spec.NodeCaCertificateUpdate.Enabled)
                 {
                     try
                     {
-                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.NodeCaCertificates.Schedule);
+                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.NodeCaCertificateUpdate.Schedule);
 
-                        await updateCaCertificatesJob.DeleteFromSchedulerAsync(scheduler);
-                        await updateCaCertificatesJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                        await nodeCaCertificatesUpdateJob.DeleteFromSchedulerAsync(scheduler);
+                        await nodeCaCertificatesUpdateJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
                     }
                     catch (Exception e)
                     {
@@ -155,14 +178,14 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.ControlPlaneCertificates.Enabled)
+                if (resource.Spec.ControlPlaneCertificateRenewal.Enabled)
                 {
                     try
                     {
-                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ControlPlaneCertificates.Schedule);
+                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ControlPlaneCertificateRenewal.Schedule);
 
-                        await checkControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                        await renewControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
+                        await renewControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
                     }
                     catch (Exception e)
                     {
@@ -170,18 +193,14 @@ namespace NeonClusterOperator
                     }
                 }
 
-                var nodes = await k8s.CoreV1.ListNodeAsync();
-
-                if (resource.Spec.Updates.ContainerImages.Enabled
-                    && !clusterInfo.IsDesktop
-                    && nodes.Items.Count > 1)
+                if (resource.Spec.HarborImagePush.Enabled)
                 {
                     try
                     {
-                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ContainerImages.Schedule);
+                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.HarborImagePush.Schedule);
 
-                        await checkRegistryImagesJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkRegistryImagesJob.AddToSchedulerAsync(
+                        await pushHarborImagesJob.DeleteFromSchedulerAsync(scheduler);
+                        await pushHarborImagesJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             containerImageSchedule,
@@ -196,14 +215,14 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.Telemetry.Enabled)
+                if (resource.Spec.TelemetryPing.Enabled)
                 {
                     try
                     {
-                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.Telemetry.Schedule);
+                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TelemetryPing.Schedule);
 
-                        await sendClusterTelemetryJob.DeleteFromSchedulerAsync(scheduler);
-                        await sendClusterTelemetryJob.AddToSchedulerAsync(
+                        await telemetryPingJob.DeleteFromSchedulerAsync(scheduler);
+                        await telemetryPingJob.AddToSchedulerAsync(
                             scheduler,
                             k8s,
                             clusterTelemetrySchedule,
@@ -218,14 +237,14 @@ namespace NeonClusterOperator
                     }
                 }
 
-                if (resource.Spec.Updates.ClusterCertificate.Enabled)
+                if (resource.Spec.ClusterCertificateRenewal.Enabled)
                 {
                     try
                     {
-                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.Updates.ClusterCertificate.Schedule);
+                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ClusterCertificateRenewal.Schedule);
 
-                        await checkClusterCertJob.DeleteFromSchedulerAsync(scheduler);
-                        await checkClusterCertJob.AddToSchedulerAsync(
+                        await renewClusterCertificateJob.DeleteFromSchedulerAsync(scheduler);
+                        await renewClusterCertificateJob.AddToSchedulerAsync(
                             scheduler, 
                             k8s, 
                             neonDesktopCertSchedule,
@@ -248,7 +267,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonClusterOperator resource)
+        public override async Task DeletedAsync(V1NeonClusterJobs resource)
         {
             await SyncContext.Clear;
 

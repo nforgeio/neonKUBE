@@ -1295,12 +1295,12 @@ EOF
                     NodeInstallIPVS(controller);
                     NodeInstallPodman(controller);
                     NodeInstallKubernetes(controller);
-                    SetupKublet(controller);
+                    SetupKubelet(controller);
                 });
         }
 
         /// <summary>
-        /// Configures the <b>kublet</b> service.
+        /// Configures the <b>kubelet</b> service.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <remarks>
@@ -1309,14 +1309,14 @@ EOF
         /// the node image and is then configured for the cluster here.
         /// </note>
         /// </remarks>
-        public void SetupKublet(ISetupController controller)
+        public void SetupKubelet(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            InvokeIdempotent("setup/kublet",
+            InvokeIdempotent("setup/kubelet",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "kublet");
+                    controller.LogProgress(this, verb: "setup", message: "kubelet");
 
                     // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
                     // OS disk for most nodes and customize this at 93/95% for clusters with OS disks

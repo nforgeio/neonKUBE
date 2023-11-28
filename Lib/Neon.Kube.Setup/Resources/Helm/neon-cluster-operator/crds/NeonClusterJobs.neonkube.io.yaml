@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: neonclusteroperators.neonkube.io
+  name: neonclusterjobs.neonkube.io
 spec:
   group: neonkube.io
   names:
-    kind: NeonClusterJobs
-    plural: neonclusteroperators
+    kind: NeonClusterJob
+    plural: neonclusterjobs
     shortNames: []
-    singular: neonclusterjobs
+    singular: neonclusterjob
   scope: Cluster
   versions:
   - additionalPrinterColumns: []
@@ -18,42 +18,42 @@ spec:
         properties:
           spec:
             properties:
-              controlPlaneCertificates:
+              controlPlaneCertificateRenewal:
                 properties:
                   enabled:
                     type: boolean
                   schedule:
                     type: string
                 type: object
-              nodeCaCertificates:
+              nodeCaCertificateUpdate:
                 properties:
                   enabled:
                     type: boolean
                   schedule:
                     type: string
                 type: object
-              securityPatches:
+              linuxSecurityPatches:
                 properties:
                   enabled:
                     type: boolean
                   schedule:
                     type: string
                 type: object
-              containerImages:
+              harborImagePush:
                 properties:
                   enabled:
                     type: boolean
                   schedule:
                     type: string
                 type: object
-              telemetry:
+              telemetryPing:
                 properties:
                   enabled:
                     type: boolean
                   schedule:
                     type: string
                 type: object
-              clusterCertificate:
+              clusterCertificateRenewal:
                 properties:
                   enabled:
                     type: boolean
@@ -63,37 +63,37 @@ spec:
             type: object
           status:
             properties:
-              controlPlaneCertificates:
+              controlPlaneCertificateRenewal:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              nodeCaCertificates:
+              nodeCaCertificateUpdate:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              securityPatches:
+              linuxSecurityPatches:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              containerImages:
+              harborImagePush:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              telemetry:
+              telemetryPing:
                 properties:
                   lastCompleted:
                     format: date-time
                     type: string
                 type: object
-              clusterCertificate:
+              clusterCertificateRenewal:
                 properties:
                   lastCompleted:
                     format: date-time
