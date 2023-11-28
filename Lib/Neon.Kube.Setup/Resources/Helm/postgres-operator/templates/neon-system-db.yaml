@@ -33,6 +33,12 @@ spec:
     glauth: neon_service
   postgresql:
     version: "14"
+    parameters:
+      archive_mode: 'on'
+      archive_timeout: 1h
+      max_wal_size: 1GB
+      wal_keep_size: 1GB
+      wal_level: archive
   volume:
     size: {{ .Values.persistence.size }}
     storageClass: {{ .Values.persistence.storageClass }}
