@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonNodeAgent</RootNamespace>
         <IsPackable>false</IsPackable>
@@ -25,6 +25,7 @@
     <PropertyGroup>
         <ServerGarbageCollection>true</ServerGarbageCollection>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
     </PropertyGroup>
 
     <ItemGroup>
@@ -52,7 +53,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Tomlyn" Version="0.16.2" />
     </ItemGroup>

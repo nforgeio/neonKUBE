@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0-windows10.0.17763.0</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonCli</RootNamespace>
-        <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <AssemblyName>neon-cli</AssemblyName>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <Configurations>Debug;Release</Configurations>
