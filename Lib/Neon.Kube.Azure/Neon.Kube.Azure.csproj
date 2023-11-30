@@ -29,7 +29,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.10.1" />
+        <PackageReference Include="Azure.Identity" Version="1.10.4" />
         <PackageReference Include="Azure.ResourceManager" Version="1.7.0" />
         <PackageReference Include="Azure.ResourceManager.Compute" Version="1.2.0" />
         <PackageReference Include="Azure.ResourceManager.Network" Version="1.4.0" />
