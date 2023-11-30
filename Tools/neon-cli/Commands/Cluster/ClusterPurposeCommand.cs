@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterPurposeCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterPurposeCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,11 +60,12 @@ namespace NeonCli
     public class ClusterPurposeCommand : CommandBase
     {
         private const string usage = @"
-Prints or sets the current cluster's purpose.
+Prints or sets the current NEONKUBE cluster purpose.  This is a high-level
+indication of how the cluster will be used.
 
 USAGE:
 
-    neon cluster purpose [unspecified | development | test | stage | production]
+    neon cluster purpose [development | production | stage | test | unspecified]
 
 REMARKS:
 
@@ -78,11 +79,11 @@ and this command to change the purpose to one of the possible values:
 
 where PURPOSE can be passed as (case insensitive):
 
-    unspecified
     development
-    test
-    stage
     production
+    stage
+    test
+    unspecified
 
 ";
         /// <inheritdoc/>
@@ -114,7 +115,7 @@ where PURPOSE can be passed as (case insensitive):
                 Program.Exit(1);
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var purposeArg  = commandLine.Arguments.ElementAtOrDefault(0);
                 var clusterInfo = await cluster.GetClusterInfoAsync();
@@ -139,7 +140,7 @@ where PURPOSE can be passed as (case insensitive):
                             Console.Error.WriteLine($"    {NeonHelper.EnumToString(purpose)}");
                         }
 
-                        Program.Exit(1);
+                        Program.Exit(-1);
                     }
 
                     clusterInfo.Purpose = newPurpose;

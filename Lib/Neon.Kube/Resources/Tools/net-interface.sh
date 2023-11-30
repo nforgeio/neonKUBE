@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         net-interface
 # CONTRIBUTOR:  Jeff Lill

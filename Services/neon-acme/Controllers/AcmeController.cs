@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    AcmeController.cs
+// FILE:        AcmeController.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,13 +85,13 @@ namespace NeonAcme.Controllers
         }
 
         /// <summary>
-        /// Handles challenge presentations from Cert Manager.
+        /// Handles challenge presentations from CertManager.
         /// </summary>
         /// <param name="challenge">Specifies the challenge.</param>
         /// <returns>The challenge response.</returns>
         [HttpPost("neoncluster_io")]
         [Produces("application/json")]
-        public async Task<ActionResult> PresentNeonclusterChallengeAsync([FromBody] ChallengePayload challenge)
+        public async Task<ActionResult> PresentNeonClusterChallengeAsync([FromBody] ChallengePayload challenge)
         {
             Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");

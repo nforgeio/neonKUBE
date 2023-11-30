@@ -16,10 +16,13 @@ spec:
       annotations:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
+      enableServiceLinks: false
       serviceAccountName: grafana-operator
       serviceAccount: grafana-operator
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-      {{- toYaml .Values.nodeSelector | nindent 8 }}
+        {{- include "grafana.nodeSelector" . | nindent 8 }}
+      {{- end }}
       priorityClassName: {{ .Values.priorityClassName }}
       {{- with .Values.tolerations }}
       tolerations:

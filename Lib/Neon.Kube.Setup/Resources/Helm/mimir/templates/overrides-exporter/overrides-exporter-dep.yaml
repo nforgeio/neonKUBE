@@ -35,6 +35,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ template "mimir.serviceAccountName" . }}
       {{- if .Values.overrides_exporter.priorityClassName }}
       priorityClassName: {{ .Values.overrides_exporter.priorityClassName }}
@@ -94,8 +95,10 @@ spec:
         {{- with .Values.overrides_exporter.extraContainers }}
         {{ toYaml . | nindent 8 }}
         {{- end }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml .Values.overrides_exporter.nodeSelector | nindent 8 }}
+        {{- include "mimir.nodeSelector" . | nindent 8 }}
+      {{- end }}
       affinity:
         {{- toYaml .Values.overrides_exporter.affinity | nindent 8 }}
       tolerations:

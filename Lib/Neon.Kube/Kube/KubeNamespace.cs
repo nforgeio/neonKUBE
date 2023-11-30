@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNamespace.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeNamespace.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the built-in namespace names created for Kubernetes and neonKUBE.
+    /// Defines the namespace names created for NEONKUBE clusters.
     /// </summary>
     public static class KubeNamespace
     {
@@ -77,32 +77,32 @@ namespace Neon.Kube
         public const string NeonStorage = "neon-storage";
 
         /// <summary>
-        /// Hosts neonKUBE infrastructure.
-        /// </summary>
-        public const string NeonSystem = "neon-system";
-
-        /// <summary>
         /// Hosts cluster status information.
         /// </summary>
         public const string NeonStatus = "neon-status";
 
         /// <summary>
-        /// Returns the set of built-in Kubernetes namespaces.
+        /// Hosts NEONKUBE infrastructure.
+        /// </summary>
+        public const string NeonSystem = "neon-system";
+
+        /// <summary>
+        /// Returns the set of stock Kubernetes clusters namespaces.
         /// </summary>
         public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of built-in neonKUBE namespaces.
+        /// Returns the set of stock NEONKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and neonKUBE namespaces.
+        /// Returns the set of all stock Kubernetes and NEONKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
+        /// Returns the set of all Kubernetes and NEONKUBE namespaces but without the <b>default</b> namespace.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespacesWithoutDefault { get; private set; }
 

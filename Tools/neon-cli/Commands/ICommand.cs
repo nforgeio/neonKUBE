@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ICommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ICommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,15 +68,6 @@ namespace NeonCli
         /// Indicates that command options should be checked against <see cref="ExtendedOptions"/>.
         /// </summary>
         bool CheckOptions { get; }
-
-        /// <summary>
-        /// Returns <c>true</c> when the command requires server SSH credentials to be
-        /// specified on the command line via the <b>-u/--user</b> and <b>-p/--password</b>
-        /// options vs. obtaining them from the currently logged in cluster secrets or
-        /// not needing credentials at all.
-        /// </summary>
-        /// <param name="commandLine">The command line.</param>
-        bool NeedsSshCredentials(CommandLine commandLine);
 
         /// <summary>
         /// Returns <c>true</c> when the command will require access to a hosting manager.

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    DesktopServiceProxy.cs
+//-----------------------------------------------------------------------------
+// FILE:        DesktopServiceProxy.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ using ProtoBuf.Grpc.Client;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Used to proxy non-HyperV operations to the Neon Desktop service or
+    /// Used to proxy non-Hyper-V operations to the Neon Desktop service or
     /// execute them directly when the current process is running with 
     /// elevated privileges.
     /// </summary>
@@ -85,7 +85,13 @@ namespace Neon.Kube.Setup
             if (!isAdmin)
             {
                 desktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
-                desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+
+                if (desktopServiceChannel == null)
+                {
+                    throw new NeonKubeException("[neon-desktop-service] is not running.");
+                }
+
+                desktopService = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
 
@@ -150,6 +156,8 @@ namespace Neon.Kube.Setup
         /// <returns>A <see cref="Dictionary{TKey, TValue}"/> mapping feature names to <see cref="WindowsFeatureStatus"/>"/> instances.</returns>
         public async Task<Dictionary<string, WindowsFeatureStatus>> GetWindowsOptionalFeaturesAsync()
         {
+            await SyncContext.Clear;
+
             if (isAdmin)
             {
                 return NeonHelper.GetWindowsOptionalFeatures();

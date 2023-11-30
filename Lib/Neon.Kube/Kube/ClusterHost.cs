@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterHost.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterHost.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,11 +38,6 @@ namespace Neon.Kube
         /// Alertmanager service.
         /// </summary>
         public const string AlertManager = "neon-alertmanager";
-
-        /// <summary>
-        /// Neon Dashboard.
-        /// </summary>
-        public const string NeonDashboard = "neon-dashboard";
 
         /// <summary>
         /// Single sign on service.

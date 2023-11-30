@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    CronJob.cs
+//-----------------------------------------------------------------------------
+// FILE:        CronJob.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -23,14 +23,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry.Trace;
 
@@ -41,31 +41,31 @@ using Quartz;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// 
+    /// Wrapper class for cron jobs.
     /// </summary>
     public class CronJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CronJob>();
 
         /// <summary>
-        /// The name of the cron job.
+        /// Identifies the job.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The group.
+        /// Specifiers the job group.
         /// </summary>
         public string Group { get; set; } = "ClusterSettingsCron";
 
         /// <summary>
-        /// The Job type.
+        /// Soecifies the job type.
         /// </summary>
         public Type Type { get; set; }   
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="type">The job type.</param>
+        /// <param name="type">Specifies the job type.</param>
         public CronJob(Type type)
         {
             Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
@@ -75,7 +75,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Adds the cron job to a specified scheduler.
+        /// Adds the job to a specified Quartz scheduler.
         /// </summary>
         /// <param name="scheduler">Specifies the scheduler.</param>
         /// <param name="k8s">Specifies the Kubernetes client.</param>
@@ -110,7 +110,7 @@ namespace NeonClusterOperator
                     }
                 }
 
-                // Trigger the job to run now, and then repeat every 10 seconds
+                // Trigger the job to run now, and then repeat as scheduled.
 
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity(Name, Group)

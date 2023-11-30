@@ -26,8 +26,7 @@ operator:
     runAsGroup: 1000
     runAsNonRoot: true
     fsGroup: 1000
-  nodeSelector:
-    neonkube.io/monitor.metrics-internal: 'true'
+  nodeSelector: {}
   affinity: {}
   tolerations: []
   resources:
@@ -44,8 +43,7 @@ console:
   imagePullSecrets: []
   initcontainers: []
   replicaCount: 1
-  nodeSelector:
-    neonkube.io/monitor.metrics-internal: 'true'
+  nodeSelector: {}
   affinity: {}
   tolerations: []
   resources: {}
@@ -96,8 +94,7 @@ tenants:
         ## eligible to run on a node, the node must have each of the
         ## indicated key-value pairs as labels.
         ## Read more here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-        nodeSelector:
-          neonkube.io/system.minio-internal: 'true'
+        nodeSelector: {}
         ## Affinity settings for MinIO pods. Read more about affinity
         ## here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity.
         affinity:
@@ -183,8 +180,6 @@ tenants:
         value: public
       - name: MINIO_PROMETHEUS_JOB_ID
         value: minio
-      - name: MINIO_STORAGE_CLASS_STANDARD
-        value: EC:3
     ## PriorityClassName indicates the Pod priority and hence importance of a Pod relative to other Pods.
     ## This is applied to MinIO pods only.
     ## Refer Kubernetes documentation for details https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass/

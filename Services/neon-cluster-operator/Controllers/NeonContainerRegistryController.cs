@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonContainerRegistryController.cs
+//-----------------------------------------------------------------------------
+// FILE:        NeonContainerRegistryController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,52 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.JsonPatch.Helpers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using k8s;
+using k8s.Models;
 
-using JsonDiffPatch;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Glauth;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 using Neon.Tasks;
-using Neon.Time;
 
-using Dex;
-
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Prometheus;
-using Neon.Kube.Operator.Util;
 
 namespace NeonClusterOperator
 {
@@ -71,11 +48,10 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonContainerRegistry"/>.
     /// </para>
     /// </summary>
-    [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1Secret>(Verbs = RbacVerb.Get, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "glauth-users")]
-    [Controller(MaxConcurrentReconciles = 1)]
-    public class NeonContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [ResourceController(MaxConcurrentReconciles = 1)]
+    public class NeonContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -99,36 +75,16 @@ namespace NeonClusterOperator
             IKubernetes                                k8s,
             ILogger<NeonContainerRegistryController>   logger)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
             this.k8s    = k8s;
             this.logger = logger;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-
-            try
-            {
-                await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e);
-                await CreateNeonLocalRegistryAsync();
-            }
-        }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
 
@@ -138,7 +94,7 @@ namespace NeonClusterOperator
 
                 await SyncContext.Clear;
 
-                logger?.LogInformationEx(() => $"Reconciling {typeof(V1NeonContainerRegistry)} [{resource.Namespace()}/{resource.Name()}].");
+                logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 
@@ -206,7 +162,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonContainerRegistry resource)
+        public override async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
 

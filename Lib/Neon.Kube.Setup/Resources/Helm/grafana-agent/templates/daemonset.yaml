@@ -17,6 +17,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
+      enableServiceLinks: false
       hostPID: {{ .Values.integrations.nodeExporter.enabled }}
       hostNetwork: {{ .Values.integrations.nodeExporter.enabled }}
       dnsPolicy: ClusterFirstWithHostNet

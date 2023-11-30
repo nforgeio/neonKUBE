@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeHelper.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.K8s;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
@@ -73,86 +74,6 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        //---------------------------------------------------------------------
-        // Extension methods
-
-        /// <summary>
-        /// Sets the named extension value by adding it if it doesn't already exist or changing
-        /// the existing value.
-        /// </summary>
-        /// <typeparam name="T">Specifies the property value type.</typeparam>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="value">Specifies the value being set.</param>
-        public static void Set<T>(this List<NamedExtension> extensions, string name, T value)
-        {
-            Covenant.Requires<ArgumentNullException>(extensions != null, nameof(extensions));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            foreach (var item in extensions)
-            {
-                if (item.Name == name)
-                {
-                    item.Extension = value;
-                    return;
-                }
-            }
-
-            extensions.Add(new NamedExtension() { Name = name, Extension = value });
-        }
-
-        /// <summary>
-        /// Searches <paramref name="extensions"/> for an extension with the name passed and
-        /// returns its value when found, otherwise returns <paramref name="default"/>.
-        /// </summary>
-        /// <typeparam name="T">Specifies the property value type.</typeparam>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
-        /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
-        /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
-        public static T Get<T>(this List<NamedExtension> extensions, string name, T @default)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            if (extensions == null)
-            {
-                return @default;
-            }
-
-            foreach (var item in extensions)
-            {
-                if (item.Name == name)
-                {
-                    return (T)item.Extension;
-                }
-            }
-
-            return @default;
-        }
-
-        /// <summary>
-        /// Removes a named extension if present.
-        /// </summary>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the name of the extension being removed.</param>
-        public static void Remove(this List<NamedExtension> extensions, string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            for (int i = 0; i < extensions.Count; i++)
-            {
-                if (extensions[i].Name == name)
-                {
-                    extensions.RemoveAt(i);
-                    return;
-                }
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private static Guid                 clientId;
         private static KubeConfig           cachedConfig;
         private static string               cachedNeonKubeUserFolder;
@@ -172,10 +93,10 @@ namespace Neon.Kube
         private static string               cachedToolsFolder;
         private static string               cachedDevopmentFolder;
         private static string               cachedNodeContainerImagesFolder;
-        private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedVmImageFolder;
         private static string               cachedUserSshFolder;
+        private static string               cachedNeonCliPath;
         private static object               jsonConverterLock = new object();
 
         private static List<KeyValuePair<string, object>> cachedTelemetryTags;
@@ -207,10 +128,10 @@ namespace Neon.Kube
             cachedToolsFolder               = null;
             cachedDevopmentFolder           = null;
             cachedNodeContainerImagesFolder = null;
-            cachedPwshPath                  = null;
             cachedResources                 = null;
             cachedVmImageFolder             = null;
             cachedUserSshFolder             = null;
+            cachedNeonCliPath               = null;
         }
 
         /// <summary>
@@ -329,7 +250,7 @@ namespace Neon.Kube
         /// <returns>The file text.</returns>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonDESKTOP application or a 
+        /// by another process (e.g. the NEONDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -354,7 +275,7 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonDESKTOP application or a 
+        /// by another process (e.g. the NEONDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -387,7 +308,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Accesses the neonDESKTOP client configuration.
+        /// Accesses the NEONDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
         {
@@ -480,7 +401,7 @@ namespace Neon.Kube
         /// <summary>
         /// Determines whether a cluster hosting environment deploys to the cloud.
         /// </summary>
-        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
         public static bool IsCloudEnvironment(HostingEnvironment hostingEnvironment)
         {
@@ -507,6 +428,13 @@ namespace Neon.Kube
                     throw new NotImplementedException("Unexpected hosting environment.");
             }
         }
+
+        /// <summary>
+        /// Determines whether NEONFORGE collects revenue from a cluster hosting environment.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> for paid environments.</returns>
+        public static bool IsPaidHostingEnvironment(HostingEnvironment hostingEnvironment) => IsCloudEnvironment(hostingEnvironment);
 
         /// <summary>
         /// Determines whether a cluster hosting environment is available only for NEONFORGE
@@ -554,7 +482,7 @@ namespace Neon.Kube
         /// the socket will be located within the Windows program data folder.
         /// </note>
         /// </summary>
-        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
+        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "service.sock");
 
         /// <summary>
         /// Returns the path to the <b>.ssh</b> folder within user's home folder.
@@ -661,7 +589,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the user specific neonKUBE temporary folder, creating the folder if it doesn't already exist.
+        /// Returns the path the user specific NEONKUBE temporary folder, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
@@ -737,8 +665,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing Kubernetes related tools, creating the folder 
-        /// if it doesn't already exist.
+        /// Returns the path the folder used for holding Kubernetes related tools when running
+        /// <b>neon-cli</b> as a developer, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string ToolsFolder
@@ -759,7 +687,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder used by neonKUBE development tools, 
+        /// Returns the path the folder used by NEONKUBE development tools, 
         /// creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
@@ -782,8 +710,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the path the folder used by neonKUBE development tools to
-        /// cache the packed container image files used to prepare neonKUBE node
+        /// Returns the path the folder used by NEONKUBE development tools to
+        /// cache the packed container image files used to prepare NEONKUBE node
         /// images, creating the folder if it doesn't already exist.
         /// </para>
         /// <note>
@@ -834,7 +762,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neon-desktop state folder.
+        /// Returns the path to the NEONDESKTOP state folder.
         /// </summary>
         public static string DesktopFolder
         {
@@ -854,7 +782,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP log folder.
+        /// Returns path to the NEONDESKTOP log folder.
         /// </summary>
         public static string DesktopLogFolder
         {
@@ -874,7 +802,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP Hyper-V state folder.
+        /// Returns path to the NEONDESKTOP Hyper-V state folder.
         /// </summary>
         public static string DesktopHypervFolder
         {
@@ -954,8 +882,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the path to the global neonDESKTOP program data folder.  This is used for information
-        /// to be shared across all users as well as between the user programs and the Neon Desktop Service.
+        /// Returns the path to the global NEONDESKTOP program data folder.  This is used for information
+        /// to be shared across all users as well as between the user programs and the neon-desktop-service.
         /// </para>
         /// <note>
         /// All users will have read/write access to files in this folder.
@@ -970,7 +898,7 @@ namespace Neon.Kube
                     return cachedDesktopCommonFolder;
                 }
 
-                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
+                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NEONFORGE", "neon-desktop");
 
                 if (OperatingSystem.IsWindowsVersionAtLeast(10))
                 {
@@ -1089,19 +1017,18 @@ namespace Neon.Kube
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-cli\
-        ///     neon\               # neon-cli binaries
-        ///     powershell\         # Powershell 7.x
-        ///     ssh\                # SSH related tools
+        ///     .                       # neon-cli binaries
+        ///     neon-desktop-service    # neon-desktop-service binaries
+        ///     ssh\                    # SSH related tools
         /// </code>
         /// <para>
         /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-desktop\
-        ///     desktop\            # neon-desktop binaries
-        ///     neon\               # neon-cli binaries
-        ///     powershell\         # Powershell 7.x
-        ///     ssh\                # SSH related tools
+        ///     .                       # neon-desktop and neon-cli binaries
+        ///     neon-desktop-service    # neon-desktop-service binaries
+        ///     ssh\                    # SSH related tools
         /// </code>
         /// </remarks>
         public static string InstallFolder
@@ -1118,36 +1045,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the Powershell Core executable to be used.
-        /// This will first examine the <b>NEON_INSTALL_FOLDER</b> environment
-        /// variable to see if the installed version of Powershell Core should
-        /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
-        /// the <b>PATH</b> will be searched.
-        /// </summary>
-        public static string PwshPath
-        {
-            get
-            {
-                if (cachedPwshPath != null)
-                {
-                    return cachedPwshPath;
-                }
-
-                if (!string.IsNullOrEmpty(InstallFolder))
-                {
-                    var pwshPath = Path.Combine(InstallFolder, "powershell", "pwsh.exe");
-
-                    if (File.Exists(pwshPath))
-                    {
-                        return cachedPwshPath = pwshPath;
-                    }
-                }
-
-                return cachedPwshPath = "pwsh.exe";
-            }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> if the current assembly was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
@@ -1158,16 +1055,16 @@ namespace Neon.Kube
         /// <summary>
         /// Loads or reloads the Kubernetes configuration.
         /// </summary>
-        /// <returns>The <see cref="Config"/>.</returns>
+        /// <returns>The <see cref="KubeConfig"/>.</returns>
         public static KubeConfig LoadConfig()
         {
             return cachedConfig = KubeConfig.Load();
         }
 
         /// <summary>
-        /// Returns the user's current <see cref="KubeConfig"/>.
+        /// Returns the user's current <see cref="Config.KubeConfig"/>.
         /// </summary>
-        public static KubeConfig Config
+        public static KubeConfig KubeConfig
         {
             get
             {
@@ -1190,7 +1087,7 @@ namespace Neon.Kube
 
             cachedConfig = config;
 
-            config.Save();
+            config.Save(KubeHelper.KubeConfigPath);
         }
 
         /// <summary>
@@ -1224,21 +1121,21 @@ namespace Neon.Kube
         {
             if (contextName == null)
             {
-                Config.CurrentContext = null;
+                KubeConfig.CurrentContext = null;
             }
             else
             {
-                var newContext = Config.GetContext(contextName);
+                var newContext = KubeConfig.GetContext(contextName);
 
                 if (newContext == null)
                 {
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                Config.CurrentContext = (string)contextName;
+                KubeConfig.CurrentContext = (string)contextName;
             }
 
-            Config.Save();
+            KubeConfig.Save();
         }
 
         /// <summary>
@@ -1259,13 +1156,13 @@ namespace Neon.Kube
         {
             get
             {
-                if (Config == null || string.IsNullOrEmpty(Config.CurrentContext))
+                if (KubeConfig == null || string.IsNullOrEmpty(KubeConfig.CurrentContext))
                 {
                     return null;
                 }
                 else
                 {
-                    return Config.GetContext(Config.CurrentContext);
+                    return KubeConfig.GetContext(KubeConfig.CurrentContext);
                 }
             }
         }
@@ -1406,7 +1303,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Ensures that <b>kubectl</b> tool whose version is at least as great as the Kubernetes
-        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
+        /// cluster version is installed to the <b>NEONKUBE</b> programs folder by copying the
         /// tool from the cache if necessary.
         /// </para>
         /// <note>
@@ -1547,7 +1444,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Ensures that <b>helm</b> client installed on the workstation version is at least as
-        /// great as the requested cluster version is installed to the <b>neonKUBE</b> programs 
+        /// great as the requested cluster version is installed to the <b>NEONKUBE</b> programs 
         /// folder by copying the tool from the cache if necessary.
         /// </para>
         /// <note>
@@ -1643,7 +1540,7 @@ namespace Neon.Kube
             Task.Run(
                 () =>
                 {
-                    NeonHelper.ExecuteAsync("kubectl",
+                    NeonHelper.Execute("kubectl",
                         args: new string[]
                         {
                             "--namespace", @namespace,
@@ -1847,12 +1744,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nodeMtu == 0 || (512 <= nodeMtu && nodeMtu <= 9000), nameof(nodeMtu));
 
-            var sbNameservers = new StringBuilder();
-
             if (nodeMtu == 0)
             {
                 nodeMtu = NetConst.DefaultMTU;
             }
+
+            var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
 
@@ -1870,12 +1767,30 @@ $@"
 # password.
 
 echo 'sysadmin:{newPassword}' | chpasswd
+
+# Restart [sshd] to pick the change.
+
+systemctl restart ssh
 ";
             if (String.IsNullOrWhiteSpace(newPassword))
             {
                 // Clear the change password script when there's no password.
 
                 changePasswordScript = "\r\n";
+            }
+
+            var sbResolvConf = new StringBuilder();
+
+            sbResolvConf.AppendLineLinux(
+@"#------------------------------------------------------------------------------
+# NEONKUBE explicitly manages the [/etc/resolv.conf] file to prevent DHCP from
+# messing with this even though we're using a STATIC netplan config.  We delete
+# the original symlinked file during cluster setup and replace it with this file.
+");
+
+            foreach (var nameServer in nameServers)
+            {
+                sbResolvConf.AppendLineLinux($"nameserver {nameServer}");
             }
 
             var nodePrepScript =
@@ -1892,7 +1807,7 @@ mountFolder=${{1}}
 #
 # https://github.com/nforgeio/neonKUBE/issues/980
 
-sleep 10
+sleep 5
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
@@ -1930,6 +1845,16 @@ network:
        addresses: [{sbNameservers}]
 EOF
 
+# Replace [/etc/resolv.conf] with our manually managed file.
+
+rm /etc/resolv.conf
+cat <<EOF > /etc/resolv.conf
+{sbResolvConf}
+EOF
+chmod 644 /etc/resolv.conf
+
+# Restart the network.
+
 echo ""Restart network""
 
 while true; do
@@ -1952,7 +1877,7 @@ sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd
 
 # Restart SSHD to pick up the changes.
 
-systemctl restart sshd
+systemctl restart ssh
 
 exit 0
 ";
@@ -1998,8 +1923,8 @@ exit 0
             // a script or other process.
             //
             // We're going to use a version of this tool deployed with the Git tools for Windows.
-            // This will be installed with neonDESKTOP and is also available as part of the
-            // neonKUBE Git repo as a fall back for Neon developers that haven't installed 
+            // This will be installed with NEONDESKTOP and is also available as part of the
+            // NEONKUBE Git repo as a fall back for Neon developers that haven't installed 
             // the desktop yet.
 
             // Look for the installed version first.
@@ -2029,7 +1954,7 @@ exit 0
         }
 
         /// <summary>
-        /// Creates a SSH key for a neonKUBE cluster.
+        /// Creates a SSH key for a NEONKUBE cluster.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
@@ -2061,8 +1986,8 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
-                var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
+                var publicPUB      = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub")));
+                var privateOpenSSH = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key")));
 
                 //-------------------------------------------------------------
                 // We also need the public key in PEM format.
@@ -2080,7 +2005,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
                 }
 
-                var publicOpenSSH = result.OutputText;
+                var publicOpenSSH = NeonHelper.ToLinuxLineEndings(result.OutputText);
 
                 //-------------------------------------------------------------
                 // Also convert the public key to SSH2 (RFC 4716).
@@ -2097,7 +2022,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
                 }
 
-                var publicSSH2 = result.OutputText;
+                var publicSSH2 = NeonHelper.ToLinuxLineEndings(result.OutputText);
 
                 // Strip out the comment header line if one was added during the conversion.
 
@@ -2114,7 +2039,7 @@ exit 0
                     }
                 }
 
-                publicSSH2 = sbPublicSSH2.ToString();
+                publicSSH2 = NeonHelper.ToLinuxLineEndings(sbPublicSSH2.ToString());
 
                 //-------------------------------------------------------------
                 // We need the private key as PEM
@@ -2136,7 +2061,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
                 }
 
-                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
+                var privatePEM = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem")));
 
                 //-------------------------------------------------------------
                 // We need to obtain the MD5 fingerprint from the public key.
@@ -2154,7 +2079,7 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
-                var fingerprintMd5 = result.OutputText.Trim();
+                var fingerprintMd5 = NeonHelper.ToLinuxLineEndings(result.OutputText.Trim());
 
                 //-------------------------------------------------------------
                 // We also need the SHA256 fingerprint.
@@ -2172,7 +2097,7 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
-                var fingerprintSha2565 = result.OutputText.Trim();
+                var fingerprintSha2565 = NeonHelper.ToLinuxLineEndings(result.OutputText.Trim());
 
                 //-------------------------------------------------------------
                 // Return the key information.
@@ -2201,12 +2126,12 @@ exit 0
 
         /// <summary>
         /// <para>
-        /// Returns the fixed SSH key shared by all neon-desktop built-in clusters.
+        /// Returns the fixed SSH key shared by all NEONDESKTOP clusters.
         /// </para>
         /// <note>
-        /// This isn't really a security issue because built-in clusters are not
+        /// This isn't really a security issue because NEONDESKTOP clusters are not
         /// reachable from outside the machine they're deployed on and also because
-        /// the built-in desktop cluster is not intended to host production workloads.
+        /// the NEONDESKTOP cluster is not intended to host production workloads.
         /// </note>
         /// </summary>
         /// <returns>The <see cref="KubeSshKey"/>.</returns>
@@ -2214,9 +2139,9 @@ exit 0
         {
             // $note(jefflill):
             //
-            // This key was generated using the neonCLOUD neon-image tool via:
+            // This key was generated using the NEONCLOUD neon-image tool via:
             //
-            //      neon-image sshkey neon-desktop root
+            //      neon-image sshkey NEONDESKTOP root
             //
             // SSH keys don't have an expiration so this key could potentionally work
             // forever, as long as the encryption algorithms are still supported.
@@ -2348,7 +2273,7 @@ passphrase:
         /// Returns the OpenSSH configuration file used for cluster nodes.
         /// </summary>
         public static string OpenSshConfig =>
-@"# FILE:	       sshd_config
+@"# FILE:          sshd_config
 # CONTRIBUTOR: Jeff Lill
 # COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
@@ -2364,7 +2289,7 @@ passphrase:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This file is written to neonKUBE nodes during cluster preparation.  The
+# This file is written to NEONKUBE nodes during cluster preparation.  The
 # settings below were captured from the OpenSSH version installed with
 # Ubuntu-22.04:
 #
@@ -2508,7 +2433,7 @@ Subsystem sftp  /usr/lib/openssh/sftp-server
 # ForceCommand cvs server
 
 ###############################################################################
-# neonKUBE customization: relocated from the top of the original file         #
+# NEONKUBE customization: relocated from the top of the original file         #
 ###############################################################################
 
 Include /etc/ssh/sshd_config.d/*.conf
@@ -2525,7 +2450,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             var allowPasswordAuthValue = allowPasswordAuth ? "yes" : "no";
 
             return
-$@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
+$@"# FILE:         /etc/ssh/sshd_config.d/50-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
 # COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
@@ -2541,7 +2466,7 @@ $@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This file is written to neonKUBE nodes during cluster preparation
+# This file is written to NEONKUBE nodes during cluster preparation
 # to customize OpenSSH.
 #
 # See the sshd_config(5) manpage for details
@@ -2651,7 +2576,7 @@ TCPKeepAlive yes
         /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
-        /// <param name="toolName">The requested tool name, one of: <b>helm</b> or <b>kubectl</b>.</param>
+        /// <param name="toolName">The requested tool name, currently <b>helm</b> is supported.</param>
         /// <param name="toolChecker">Callback taking the the tool path as a parameter and returning <c>true</c> when the tool version matches what's required.</param>
         /// <param name="userToolsFolder">
         /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
@@ -2705,10 +2630,10 @@ TCPKeepAlive yes
 
             // If the tool exists in the standard install location, then simply return its
             // path.  We're going to assume that the tool version is correct in this case
-            // when [userToolsFolder=true].
+            // [userToolsFolder=true].
             //
-            // If the tool exists and [userToolsFolder==false], we're going to verify its version
-            // and return the tool path when that's correct.
+            // If the tool exists and [userToolsFolder==false], we're going to verify its
+            // version and return the tool path when that's correct.
             // 
             // Otherwise if the tool doesn't exist or its version is incorrect, we're
             // going to drop thru to download the binaries to [installFolder] when
@@ -2717,7 +2642,7 @@ TCPKeepAlive yes
 
             var toolPath = Path.Combine(installFolder, toolFile);
 
-            if (File.Exists(toolPath) && (!userToolsFolder || toolChecker(toolPath)))
+            if (File.Exists(toolPath) && (userToolsFolder || toolChecker(toolPath)))
             {
                 return toolPath;
             }
@@ -2741,8 +2666,8 @@ TCPKeepAlive yes
                 }
             }
 
-            // We'll land here if there's no cached binary or if its version is not correct.  Any
-            // existing binary will be deleted and then we'll attempt to download a new copy.
+            // We'll land here when there's no cached binary or if its version is not correct.
+            // Any existing binary will be deleted and then we'll attempt to download a new copy.
             //
             // NOTE: We're going to require that the URI being downloaded is a TAR.GZ or a .ZIP file.
 
@@ -2753,7 +2678,6 @@ TCPKeepAlive yes
                             toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase), 
                             "Expecting a TAR.GZ or .ZIP file.");
 
-            Console.Error.WriteLine($"*** Download: {toolUri}");
             NeonHelper.DeleteFile(toolPath);
 
             using (var httpClient = new HttpClient())
@@ -2864,79 +2788,6 @@ TCPKeepAlive yes
         /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
         /// </para>
         /// </remarks>
-        public static string GetKubectlPath(string installFolder, bool userToolsFolder = false)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
-
-            Func<string, bool> toolChecker =
-                toolPath =>
-                {
-                    // [kubectl version --client] output will look like:
-                    //
-                    //      Client Version: version.Info{Major:"1", Minor:"21", GitVersion:"v1.21.5", GitCommit:"aea7bbadd2fc0cd689de94a54e5b7b758869d691", GitTreeState:"clean", BuildDate:"2021-09-15T21:10:45Z", GoVersion:"go1.16.8", Compiler:"gc", Platform:"windows/amd64"}
-
-                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version", "--client" }).EnsureSuccess();
-                    var versionOutput = response.OutputText;
-                    var versionRegex  = new Regex(@"\sGitVersion:""v(?'version'[\d.]+)""", RegexOptions.None);
-                    var match         = versionRegex.Match(versionOutput);
-
-                    if (match.Success)
-                    {
-                        return match.Groups["version"].Value == KubeVersions.Kubectl;
-                    }
-                    else
-                    {
-                        throw new Exception($"Unable to extract [kubectl] version from: {versionOutput}");
-                    }
-                };
-
-            Func<string> toolUriRetriever =
-                () =>
-                {
-                    if (NeonHelper.IsWindows)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-windows-amd64.tar.gz";
-                    }
-                    else if (NeonHelper.IsLinux)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-linux-amd64.tar.gz";
-                    }
-                    else if (NeonHelper.IsOSX)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-darwin-amd64.tar.gz";
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(NeonHelper.OSDescription);
-                    }
-                };
-
-            return GetToolPath(installFolder, "kubectl", toolChecker, toolUriRetriever, userToolsFolder);
-        }
-
-        /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
-        /// </summary>
-        /// <param name="installFolder">Path to the tool installation folder.</param>
-        /// <param name="userToolsFolder">
-        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
-        /// the method will download the file to <see cref="ToolsFolder"/>.
-        /// </param>
-        /// <returns>The fully qualified tool path.</returns>
-        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
-        /// <remarks>
-        /// <para>
-        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
-        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
-        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
-        /// </para>
-        /// <para>
-        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
-        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
-        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
-        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
-        /// </para>
-        /// </remarks>
         public static string GetHelmPath(string installFolder, bool userToolsFolder = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
@@ -2948,18 +2799,27 @@ TCPKeepAlive yes
                     //
                     //      version.BuildInfo{Version:"v3.3.1", GitCommit:"249e5215cde0c3fa72e27eb7a30e8d55c9696144", GitTreeState:"clean", GoVersion:"go1.14.7"}
 
-                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
-                    var versionOutput = response.OutputText;
-                    var versionRegex  = new Regex(@"Version:""v(?'version'[\d.]+)""", RegexOptions.None);
-                    var match         = versionRegex.Match(versionOutput);
+                    try
+                    {
+                        var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
+                        var versionOutput = response.OutputText;
+                        var versionRegex  = new Regex(@"Version:""v(?'version'[\d.]+)""", RegexOptions.None);
+                        var match         = versionRegex.Match(versionOutput);
 
-                    if (match.Success)
-                    {
-                        return match.Groups["version"].Value == KubeVersions.Helm;
+                        if (match.Success)
+                        {
+                            return match.Groups["version"].Value == KubeVersions.Helm;
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to get [helm] version from: {versionOutput}");
+                        }
                     }
-                    else
+                    catch
                     {
-                        throw new Exception($"Unable to extract [helm] version from: {versionOutput}");
+                        // [helm.exe] doesn't exist at that location or is invalid.
+
+                        return false;
                     }
                 };
 
@@ -3025,12 +2885,9 @@ TCPKeepAlive yes
 
             if (config == null)
             {
-                if (config.SkipTlsVerify == false
-                    && config.SslCaCerts == null)
+                if (!config.SkipTlsVerify && config.SslCaCerts == null)
                 {
-                    var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                    var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
                     config.SslCaCerts = store.Certificates;
                 }
@@ -3096,7 +2953,7 @@ TCPKeepAlive yes
         /// and <see cref="IKubernetesObject.Kind"/> properties by reflecting <typeparamref name="T"/> and using
         /// the constant <b>KubeGroup</b>, <b>KubeApiVersion</b> and <b>KubeKind</b> values.  This is very convenient 
         /// but will be somwehat slower than setting these values explicitly but is probably worth the cost in most
-        /// situations because Kubernetes objects are typically read much more often than created.
+        /// situations because Kubernetes objects are typically read much more often than being created.
         /// </para>
         /// <note>
         /// This method requires that <typeparamref name="T"/> define string <b>KubeGroup</b> <b>KubeApiVersion</b> 
@@ -3143,10 +3000,10 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Determines whether a custom resource definition is a neonKUBE custom resource.
+        /// Determines whether a custom resource definition is a NEONKUBE custom resource.
         /// </summary>
         /// <param name="crd">The custom resource definition.</param>
-        /// <returns><c>true</c> for neonKUBE resource definitions.</returns>
+        /// <returns><c>true</c> for NEONKUBE resource definitions.</returns>
         public static bool IsNeonKubeCustomResource(V1CustomResourceDefinition crd)
         {
             Covenant.Requires<ArgumentNullException>(crd != null, nameof(crd));
@@ -3211,7 +3068,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// Returns the path to the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
         /// </summary>
         /// <returns>The <b>KubeVersions.cd</b> path.</returns>
         /// <exception cref="InvalidOperationException">
@@ -3249,9 +3106,9 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeVersions.NeonKube"/> contant value extracted from the 
-        /// <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
-        /// <b>NK_ROOT</b> environment variable must reference the root of the <b>neonKUBE</b>
+        /// Returns the <see cref="KubeVersions.NeonKube"/> constant value extracted from the 
+        /// <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
+        /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
         /// </summary>
         /// <returns>The <b>NeonKube</b> version.</returns>
@@ -3276,7 +3133,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Edits the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
+        /// Edits the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
         /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
         /// </summary>
         /// <param name="version">The new version number.</param>
@@ -3363,15 +3220,15 @@ TCPKeepAlive yes
 </head>
 <body style=""background-color: #979797;"">
 <div style=""background-color: #c3c3c3; border-radius: 1em; margin: 1em; padding: 1em;"">
-	<h1>Success!</h1>
-	<p>You are now logged in. This window will close automatically in 5 seconds...</p>
+    <h1>Success!</h1>
+    <p>You are now logged in. This window will close automatically in 5 seconds...</p>
 </div>
 <script>
-	setTimeout(""window.close()"",5000) 
+    setTimeout(""window.close()"",5000) 
 </script>
 </body>
 </html>";
-            var buffer         = Encoding.UTF8.GetBytes(responseString);
+            var buffer = Encoding.UTF8.GetBytes(responseString);
 
             context.Response.ContentLength64 = buffer.Length;
 
@@ -3388,38 +3245,342 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Helper to get a Kubernetes client.
+        /// Creates a <see cref="IKubernetes"/> client from a kubeconfig file.
         /// </summary>
-        /// <param name="kubeConfigPath"></param>
-        /// <param name="currentContext"></param>
-        /// <returns></returns>
-        public static IKubernetes GetKubernetesClient(
-            string kubeConfigPath = null,
-            string currentContext = null)
+        /// <param name="kubeConfigPath">Optionally specifies the path to the kubecontext file.</param>
+        /// <param name="currentContext">Optionally specifies the name of the context to use.</param>
+        /// <returns>The <see cref="IKubernetes"/>.</returns>
+        /// <remarks>
+        /// This method just returns a client for the current context in the standard location when
+        /// <paramref name="kubeConfigPath"/> isn't passed, otherwise it will load the kubeconfig
+        /// from that path and return a client for the current context or the specific context identified
+        /// by <paramref name="currentContext"/>.
+        /// </remarks>
+        public static IKubernetes CreateKubernetesClient(string kubeConfigPath = null, string currentContext = null)
         {
-            KubernetesClientConfiguration config = null;
+            KubernetesClientConfiguration   k8sConfig;
 
             if (kubeConfigPath != null)
             {
-                config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
+                k8sConfig = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
             }
             else
             {
-                config = KubernetesClientConfiguration.BuildDefaultConfig();
+                k8sConfig = KubernetesClientConfiguration.BuildDefaultConfig();
             }
 
-            if (config.SslCaCerts == null)
+            if (k8sConfig.SslCaCerts == null)
             {
-                var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
-                config.SslCaCerts = store.Certificates;
+                k8sConfig.SslCaCerts = store.Certificates;
             }
 
-            var k8s = new Kubernetes(config, new KubernetesRetryHandler());
+            return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+        }
 
-            return k8s;
+        /// <summary>
+        /// Creates a <see cref="IKubernetes"/> client for the current cluster specified
+        /// by a <see cref="Config.KubeConfig"/>.
+        /// </summary>
+        /// <param name="config">The source kubeconfig.</param>
+        /// <returns>The <see cref="IKubernetes"/>.</returns>
+        public static IKubernetes GetKubernetesClient(KubeConfig config)
+        {
+            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            config.Validate(needsCurrentCluster: true);
+
+            using (var tempFile = new TempFile(suffix: ".yaml"))
+            {
+                File.WriteAllText(tempFile.Path, NeonHelper.YamlSerialize(config));
+
+                var k8sConfig = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: tempFile.Path);
+
+                if (k8sConfig.SslCaCerts == null)
+                {
+                    var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
+
+                    k8sConfig.SslCaCerts = store.Certificates;
+                }
+
+                return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+            }
+        }
+
+        /// <summary>
+        /// Verifies that the label name and valud conforms to the Kubernetes label constraints:
+        /// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+        /// </summary>
+        /// <param name="labelType">
+        /// Identifies the type of label being checked.  Any exceptions thrown wil;
+        /// have their message text prefixed by this.
+        /// </param>
+        /// <param name="key">Specifies the label key.</param>
+        /// <param name="value">Specifies the label value.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown when the label name or value invalid.</exception>
+        public static void ValidateKubernetesLabel(string labelType, string key, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(labelType != null, nameof(labelType));
+            Covenant.Requires<ArgumentNullException>(key != null, nameof(key));
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+
+            // Verify that custom node label name and value satisfies the following criteria:
+            // 
+            // NAMES:
+            //
+            //      1. Have an optional reverse domain prefix.
+            //      2. Be at least one character long.
+            //      3. Start and end with an alpha numeric character.
+            //      4. Include only alpha numeric characters, dashes,
+            //         underscores or dots.
+            //      5. Does not have consecutive dots or dashes.
+            //
+            // VALUES:
+            //
+            //      1. Must start or end with an alphnumeric character.
+            //      2. May include alphanumerics, dashes, underscores or dots
+            //         between the beginning and ending characters.
+            //      3. Values can be empty.
+            //      4. Maximum length is 63 characters.
+
+            if (key.Length == 0)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key for value [{value}] is blank.");
+            }
+
+            var pSlash = key.IndexOf('/');
+            var domain = pSlash == -1 ? null : key.Substring(0, pSlash);
+            var name   = pSlash == -1 ? key : key.Substring(pSlash + 1);
+
+            // Validate the NAME:
+
+            if (domain != null)
+            {
+                if (!NetHelper.IsValidDnsHost(domain))
+                {
+                    throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has an invalid reverse domain prefix.");
+                }
+
+                if (domain.Length > 253)
+                {
+                    throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has a reverse domain prefix that's longer than 253 characters.");
+                }
+            }
+
+            if (name.Length == 0)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] is empty.");
+            }
+            else if (name.Contains(".."))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive dots.");
+            }
+            else if (name.Contains("--"))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive dashes.");
+            }
+            else if (name.Contains("__"))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive underscores.");
+            }
+            else if (!char.IsLetterOrDigit(name.First()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] does not begin with a letter or digit.");
+            }
+            else if (!char.IsLetterOrDigit(name.Last()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] does not end with a letter or digit.");
+            }
+
+            foreach (var ch in name)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
+                {
+                    continue;
+                }
+
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+            }
+
+            // Validate the VALUE:
+
+            if (value == string.Empty)
+            {
+                return;
+            }
+
+            if (!char.IsLetterOrDigit(value.First()) || !char.IsLetterOrDigit(value.First()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label [{key}={value}] value is invalid.  Values must start and end with a letter or digit.");
+            }
+
+            foreach (var ch in value)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
+                {
+                    continue;
+                }
+
+                throw new ClusterDefinitionException($"{labelType}: Label value [{key}={value}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+            }
+
+            if (value.Length > 63)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label value [{key}={value}] is too long.  Values can have a maximum of 63 characters.");
+            }
+        }
+
+        /// <summary>
+        /// Locates the most recent <b>neon-cli</b> executable.  Note that this returns the path
+        /// to our version of <b>kubectl</b> rather than the <b>neon-cli</b> executable that implements
+        /// our customized subcommands.
+        /// </summary>
+        /// <returns>The path to the executable.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when no executable was found.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method is intended to work well on normal user machines where the neonKUBE/neonCLOUD
+        /// sources and build environments are not configured as well as for maintainers that need to
+        /// execute most recent executable to test/debug recent changes.
+        /// </para>
+        /// <para>
+        /// If either of <b>neon-cli</b> or <b>neon-desktop</b> is installed on the workstation
+        /// (determined by the presence of the <b>NEON_INSTALL_FOLDER</b> environment variable),
+        /// we'll return the path to the executable from the installation folder.  When those are
+        /// not installed, we'll return <b>$(NC_ROOT)/Build/neon-cli/neon.exe</b>.
+        /// </para>
+        /// <para>
+        /// A <see cref="FileNotFoundException"/> will be thrown we couldn't locate the executable.
+        /// </para>
+        /// </remarks>
+        public static string NeonCliPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(cachedNeonCliPath))
+                {
+                    return cachedNeonCliPath;
+                }
+
+                var neonInstallFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
+                var ncRoot            = Environment.GetEnvironmentVariable("NC_ROOT");
+                var neonPath          = (string)null;
+
+                if (!string.IsNullOrEmpty(neonInstallFolder))
+                {
+                    neonPath = Path.Combine(neonInstallFolder, "neon.exe");
+                }
+                else if (!string.IsNullOrEmpty(ncRoot))
+                {
+                    neonPath = Path.Combine(ncRoot, "Build", "neon-cli", "neon.exe");
+                }
+
+                if (neonPath == null || !File.Exists(neonPath))
+                {
+                    string details;
+
+                    if (!string.IsNullOrEmpty(neonInstallFolder))
+                    {
+                        details = "The [neon.exe] program could not be located within the installation folder.\r\n\r\nYou may need to reinstall from here: https://github.com/nforgeio/neonKUBE/releases";
+                    }
+                    else if (!string.IsNullOrEmpty(ncRoot))
+                    {
+                        details = "MAINTAINERS: Rebuild the executable via:\r\n\r\nneoncloud-builder -dirty -noclean -nobuild -kubectlonly";
+                    }
+                    else
+                    {
+                        details = "You'll need to install one of [neon-cli] or [neon-desktop] from here:\r\n\r\nhttps://github.com/nforgeio/neonKUBE/releases";
+                    }
+
+                    throw new FileNotFoundException($"[{neonPath}] does not exist.\r\n\r\n{details}");
+                }
+
+                return cachedNeonCliPath = neonPath;
+            }
+        }
+
+        /// <summary>
+        /// Builds the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </summary>
+        private static void EnsureNeonKubectl()
+        {
+            try
+            {
+                _ = NeonCliPath;
+            }
+            catch (FileNotFoundException)
+            {
+                var response = NeonHelper.ExecuteCapture("neoncloud-builder",
+                    new object[]
+                    {
+                        "-dirty",
+                        "-noclean",
+                        "-nobuild",
+                        "-kubectlonly"
+                    });
+
+                response.EnsureSuccess();
+            }
+        }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
+        public static async Task<int> NeonCliExecuteAsync(object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            EnsureNeonKubectl();
+
+            return await NeonHelper.ExecuteAsync(NeonCliPath, args);
+        }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
+        public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            EnsureNeonKubectl();
+
+            return await NeonHelper.ExecuteCaptureAsync(NeonCliPath, args);
+        }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
+        public static ExecuteResponse NeonCliExecuteCapture(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            EnsureNeonKubectl();
+
+            return NeonHelper.ExecuteCapture(NeonCliPath, args);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    OperatorStartup.cs
+//-----------------------------------------------------------------------------
+// FILE:        OperatorStartup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,11 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Net.Http;
-
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,18 +23,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Cluster;
-
-using k8s;
-using k8s.Models;
-
-using OpenTelemetry;
-using OpenTelemetry.Instrumentation;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using Neon.Kube.Operator.ResourceManager;
+using Neon.Operator;
 
 namespace NeonNodeAgent
 {
@@ -76,7 +61,18 @@ namespace NeonNodeAgent
         {
             services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service)
-                .AddKubernetesOperator();
+                .AddKubernetesOperator()
+                .AddController<NodeTaskController>(
+                    options: new Neon.Operator.ResourceManager.ResourceManagerOptions()
+                    {
+                        AutoRegisterFinalizers  = true,
+                        Scope                   = Neon.Operator.Attributes.EntityScope.Cluster,
+                        MaxConcurrentReconciles = 1,
+                    },
+                    leaderConfig: new Neon.K8s.LeaderElectionConfig(
+                        @namespace: KubeNamespace.NeonSystem,
+                        leaseName:  $"{Program.Service.Name}.nodetask-{Node.Name}",
+                        identity:   Pod.Name));
         }
 
         /// <summary>

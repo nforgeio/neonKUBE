@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeTaskController.cs
+//-----------------------------------------------------------------------------
+// FILE:        NodeTaskController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,42 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
 
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-using Newtonsoft.Json;
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.K8s;
+using Neon.Kube;
+using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Tasks;
 
 using OpenTelemetry.Trace;
-
-using Prometheus;
 
 namespace NeonClusterOperator
 {
@@ -72,9 +59,10 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    [ResourceController(MaxConcurrentReconciles = 1)]
+    public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -89,116 +77,25 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                 k8s;
-        private readonly ILogger<NodeTaskController> logger;
+        private readonly IKubernetes                    k8s;
+        private readonly ILogger<NodeTaskController>    logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NodeTaskController(
-            IKubernetes k8s,
+            IKubernetes                 k8s,
             ILogger<NodeTaskController> logger)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
             this.k8s    = k8s;
             this.logger = logger;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-
-            // We're going to handle this by looking at each node task and checking
-            // to see whether the target node actually exists.  Rather than listing
-            // the node first, which would be expensive for a large cluster we'll
-            // fetch and cache node information as we go along.
-
-            var nodeNameToExists = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
-            var resources        = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
-
-            foreach (var nodeTask in resources)
-            {
-                var deleteMessage = $"Deleting node task [{nodeTask.Name()}] because it is assigned to the non-existent cluster node [{nodeTask.Spec.Node}].";
-
-                if (nodeNameToExists.TryGetValue(nodeTask.Spec.Node, out var nodeExists))
-                {
-                    // Target node status is known.
-
-                    if (nodeExists)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        logger?.LogInformationEx(deleteMessage);
-
-                        try
-                        {
-                            await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
-                        }
-                        catch (Exception e)
-                        {
-                            logger?.LogErrorEx(e);
-                        }
-
-                        continue;
-                    }
-                }
-
-                // Determine whether the node exists.
-
-                try
-                {
-                    var node = await k8s.CoreV1.ReadNodeAsync(nodeTask.Spec.Node);
-
-                    nodeExists = true;
-                    nodeNameToExists.Add(nodeTask.Spec.Node, nodeExists);
-                }
-                catch (HttpOperationException e)
-                {
-                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        nodeExists = false;
-                        nodeNameToExists.Add(nodeTask.Spec.Node, nodeExists);
-                    }
-                    else
-                    {
-                        logger?.LogErrorEx(e);
-                        continue;
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger?.LogErrorEx(e);
-                    continue;
-                }
-
-                if (!nodeExists)
-                {
-                    logger?.LogInformationEx(deleteMessage);
-
-                    try
-                    {
-                        await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
-                    }
-                    catch (Exception e)
-                    {
-                        logger?.LogErrorEx(e);
-                    }
-                }
-            }
-        }
-
         /// <inheritdoc/>
-        public async Task StatusModifiedAsync(V1NeonNodeTask resource)
+        public override async Task StatusModifiedAsync(V1NeonNodeTask resource)
         {
             await SyncContext.Clear;
 

@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.cs
+//-----------------------------------------------------------------------------
+// FILE:        Program.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,25 +16,16 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Net;
 using Neon.Service;
 
-using k8s;
-using k8s.Models;
-using System.Xml.Linq;
 using Prometheus.DotNetRuntime;
 
 namespace NeonNodeAgent
@@ -60,7 +51,8 @@ namespace NeonNodeAgent
             {
                 Service = new Service(KubeService.NeonNodeAgent);
 
-                Service.MetricsOptions.Mode = MetricsMode.Scrape;
+                Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                Service.MetricsOptions.Port         = NeonHelper.IsDevWorkstation ? NetHelper.GetUnusedTcpPort(IPAddress.Loopback) : 9762;
                 Service.MetricsOptions.GetCollector =
                     () =>
                     {
@@ -73,12 +65,24 @@ namespace NeonNodeAgent
             }
             catch (Exception e)
             {
-                // We really shouldn't see exceptions here but let's log something
-                // just in case.  Note that logging may not be initialized yet so
-                // we'll just output a string.
+                if (Service?.Logger != null)
+                {
+                    Service.Logger.LogCriticalEx(e);
+                }
+                else
+                {
+                    // Logging isn't initialized, so fallback to just writing to SDTERR.
 
-                Console.Error.WriteLine(NeonHelper.ExceptionError(e));
-                Environment.Exit(-1);
+                    Console.Error.WriteLine("CRITICAL: " + NeonHelper.ExceptionError(e, stackTrace: true));
+
+                    if (e.StackTrace != null)
+                    {
+                        Console.Error.WriteLine("STACK TRACE:");
+                        Console.Error.WriteLine(e.StackTrace);
+                    }
+                }
+
+                Environment.Exit(1);
             }
         }
     }

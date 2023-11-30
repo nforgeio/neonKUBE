@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigCluster.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeConfigCluster.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,8 +36,10 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
+using Neon.Kube.K8s;
 using Namotion.Reflection;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Config
 {
@@ -65,94 +67,191 @@ namespace Neon.Kube.Config
         /// </summary>
         [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public KubeConfigClusterConfig Config { get; set; }
+        public KubeConfigClusterConfig Cluster { get; set; }
 
         /// <summary>
         /// Returns an extension value.
         /// </summary>
         /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="propertyName">Specifies the property name.</param>
+        /// <param name="name">Specifies the extension name.</param>
         /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
         /// <returns>The extension value.</returns>
-        private T GetExtensionValue<T>(string propertyName, T @default)
+        public T GetExtensionValue<T>(string name, T @default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (Config == null || Config.Extensions == null)
+            if (Cluster == null || Cluster.Extensions == null)
             {
                 return @default;
             }
 
-            return Config.Extensions.TryGetPropertyValue(propertyName, @default);
+            try
+            {
+                return Cluster.Extensions.Get<T>(name, @default);
+            }
+            catch
+            {
+                return @default;
+            }
         }
 
         /// <summary>
         /// Sets an extension value.
         /// </summary>
         /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="propertyName">Specifies the property name.</param>
+        /// <param name="name">Specifies the extension name.</param>
         /// <param name="value">Specifies the value being set.</param>
-        private void SetExtensionValue<T>(string propertyName, T value)
+        public void SetExtensionValue<T>(string name, T value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (Config == null)
+            if (Cluster == null)
             {
-                Config = new KubeConfigClusterConfig();
+                Cluster = new KubeConfigClusterConfig();
             }
 
-            if (Config.Extensions == null)
+            if (Cluster.Extensions == null)
             {
-                Config.Extensions = new List<NamedExtension>();
+                Cluster.Extensions = new List<NamedExtension>();
             }
 
-            Config.Extensions.Set<T>(propertyName, value);
+            Cluster.Extensions.Set<T>(name, value);
         }
 
         /// <summary>
-        /// Indicates that this is a neonKUBE cluster.  This will allways be <c>false</c> for
-        /// non-neonKUBE clusters.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsNeonKube
-        {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, value);
-        }
-
-        /// <summary>
-        /// Indicates that this is a neon-desktop cluster. This will always be <c>false</c> for
-        /// non-neonKUBE clusters.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsNeonDesktop
-        {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
-        }
-
-        /// <summary>
-        /// Holds additional information about neonKUBE clusters.  This will be
-        /// <c>null</c> for non-neonKUBE clusters.
+        /// Holds additional information about NEONKUBE clusters.  This will be
+        /// <c>null</c> for non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
         public KubeClusterInfo ClusterInfo
         {
-            get => GetExtensionValue<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, null);
-            set => SetExtensionValue<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, value);
+            get => GetExtensionValue<KubeClusterInfo>(NeonKubeExtensions.ClusterInfo, null);
+            set => SetExtensionValue<KubeClusterInfo>(NeonKubeExtensions.ClusterInfo, value);
         }
 
         /// <summary>
-        /// Optionally holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
-        /// uses this decide whether to deploy a new cluster when the definition has changed.
+        /// Identifies the <see cref="Neon.Kube.ClusterDef.HostingEnvironment"/> for NEONKUBE clusters.
+        /// This will be <see cref="HostingEnvironment.Unknown"/> for non-NEONKUBE clusters.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public HostingEnvironment HostingEnvironment
+        {
+            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensions.HostingEnvironment, HostingEnvironment.Unknown);
+            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensions.HostingEnvironment, value);
+        }
+
+        /// <summary>
+        /// Holds the <see cref="Neon.Kube.ClusterDef.HostingOptions"/> for NEONKUBE clusters.
+        /// This will be <c>null</c> for non-NEONKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public HostingOptions Hosting
+        {
+            get => GetExtensionValue<HostingOptions>(NeonKubeExtensions.Hosting, null);
+            set => SetExtensionValue<HostingOptions>(NeonKubeExtensions.Hosting, value);
+        }
+
+        /// <summary>
+        /// Specifies the prefix added by the hosting environments to virtual machine names.  This may
+        /// be the empty string form NEONKUBE clusters and always will be <c>null</c> for non-NEONKUBE
+        /// clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string HostingNamePrefix
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.HostingNamePrefix, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.HostingNamePrefix , value);
+        }
+
+        /// <summary>
+        /// Indicates that this is a neon-desktop cluster. This will be <c>false</c> for
+        /// non-NEONKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsNeonDesktop
+        {
+            get => GetExtensionValue<bool>(NeonKubeExtensions.IsNeonDesktop, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensions.IsNeonDesktop, value);
+        }
+
+        /// <summary>
+        /// Indicates that this is a NEONKUBE cluster.  This will be <c>false</c> for
+        /// non-NEONKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsNeonKube
+        {
+            get => GetExtensionValue<bool>(NeonKubeExtensions.IsNeonKube, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensions.IsNeonKube, value);
+        }
+
+        /// <summary>
+        /// Specifies the cluster's SSO admin password.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string SsoUsername
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SsoUsername, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SsoUsername, value);
+        }
+
+        /// <summary>
+        /// Specifies the cluster's SSO admin password.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string SsoPassword
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SsoPassword, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SsoPassword, value);
+        }
+
+        /// <summary>
+        /// Specifies the SSH admin username for cluster nodes.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string SshUsername
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SshUsername, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SshUsername, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Specifies the SSH padmin assword for cluster nodes.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string SshPassword
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SshPassword, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SshPassword, value);
+        }
+
+        /// <summary>
+        /// Holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
+        /// uses this decide whether to deploy a new cluster when the definition has changed.
+        /// This will be <c>null</c> for non-NEONKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public ClusterDefinition TestClusterDefinition
         {
-            get => GetExtensionValue<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, null);
-            set => SetExtensionValue<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, value);
+            get => GetExtensionValue<ClusterDefinition>(NeonKubeExtensions.TestClusterDefinition, null);
+            set => SetExtensionValue<ClusterDefinition>(NeonKubeExtensions.TestClusterDefinition, value);
         }
     }
 }

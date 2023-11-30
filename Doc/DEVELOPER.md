@@ -1,6 +1,6 @@
-﻿# neonKUBE Developer Setup
+# NEONKUBE Developer Setup
 
-This page describes how to get started with neonKUBE development.
+This page describes how to get started with NEONKUBE development.
 
 ## Workstation Requirements
 
@@ -9,23 +9,26 @@ This page describes how to get started with neonKUBE development.
 * Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
-Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and neonKUBE only builds on Windows at this time.
+Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and NEONKUBE only builds on Windows at this time.
 
 ## Workstation Configuration
 
 Follow the steps below to configure a development or test workstation:
 
-1. Follow the **optional** maintainer setup instructions for the **neonSDK** repo at: [neonSDK](https://github.com/nforgeio/neonsdk/blob/master/Doc/DEVELOPER.md)
+1. Follow the **optional** maintainer setup instructions for the **NEONSDK** repo at: [NEONSDK](https://github.com/nforgeio/neonsdk/blob/master/Doc/DEVELOPER.md)
 
 2. **Clone** the https://github.com/nforgeio/neonKUBE.git repository to your workstation:
 
-    * **IMPORTANT:** All NEONFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
+    **IMPORTANT:** All NEONFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
 
     ```
     cd "%NF_ROOT%\.."
     mkdir neonKUBE
     git clone https://github.com/nforgeio/neonKUBE.git
     ```
+
+    **RECOMMENDED:** **Exclude your source repos** from Windows **Virus Scanning**; that really slows down builds:
+    ([info](https://support.microsoft.com/en-us/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26)
 
 3. Configure the build **environment variables**:
 
@@ -34,9 +37,9 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
 
-4. Install Node.js from: [here](https://nodejs.org/dist/v16.17.0/node-v16.17.0-x64.msi)
+4. Install **Node.js** from: [here](https://nodejs.org/dist/v16.17.0/node-v16.17.0-x64.msi)
 
-   NOTE: Install with default options.
+   **NOTE:** Install with default options.
   
 5. Confirm that the solution builds:
 
@@ -46,4 +49,4 @@ Follow the steps below to configure a development or test workstation:
     * Click the **Install** link at the top of the solution explorer panel when there's a warning about a missing SDK.
     * Select **Build/Rebuild** Solution
 
-6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the NEONCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.

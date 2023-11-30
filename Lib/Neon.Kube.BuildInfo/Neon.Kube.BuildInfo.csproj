@@ -5,7 +5,7 @@
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.BuildInfo</RootNamespace>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: neonKUBE build information</Description>
+        <Description>INTERNAL USE ONLY: NEONKUBE build information</Description>
         <IsPackable>true</IsPackable>
         <PackageProjectUrl></PackageProjectUrl>
         <RepositoryType>git</RepositoryType>
@@ -19,15 +19,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GitInfo" Version="2.2.0">
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
+        <PackageReference Include="GitInfo" Version="3.3.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>

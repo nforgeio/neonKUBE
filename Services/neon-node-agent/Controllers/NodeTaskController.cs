@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeTaskController.cs
+//-----------------------------------------------------------------------------
+// FILE:        NodeTaskController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -28,12 +28,12 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator.Controllers;
+using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
@@ -45,7 +45,7 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -66,16 +66,20 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [ResourceController(Ignore = true)]
+    public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
+        public new string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
         
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger                                     logger = TelemetryHub.CreateLogger<NodeTaskController>();
+        private static readonly ILogger     logger = TelemetryHub.CreateLogger<NodeTaskController>();
 
         // Paths to relevant folders in the host file system.
 
@@ -92,11 +96,47 @@ namespace NeonNodeAgent
         }
 
         /// <summary>
+        /// Selects only tasks assigned to the current node to be handled by the resource manager.
+        /// </summary>
+        /// <param name="task">The task being filtered.</param>
+        /// <returns><b>true</b> if the task is assigned to the current node.</returns>
+        private static bool NodeTaskFilter(V1NeonNodeTask task)
+        {
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+
+            // Handle all tasks when debugging.
+
+            if (!NeonHelper.IsLinux)
+            {
+                return true;
+            }
+
+            // ...otherwise, just for the tasks assigned to the host node.
+
+            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private readonly IKubernetes k8s;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public NodeTaskController(IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.k8s = k8s;
+        }
+
+        /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {
@@ -138,80 +178,12 @@ rm $0
             }
         }
 
-        /// <summary>
-        /// Selects only tasks assigned to the current node to be handled by the resource manager.
-        /// </summary>
-        /// <param name="task">The task being filtered.</param>
-        /// <returns><b>true</b> if the task is assigned to the current node.</returns>
-        private static bool NodeTaskFilter(V1NeonNodeTask task)
-        {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
-
-            // Handle all tasks when debugging.
-
-            if (!NeonHelper.IsLinux)
-            {
-                return true;
-            }
-
-            // ...otherwise, just for the tasks assigned to the host node.
-
-            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes k8s;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public NodeTaskController(IKubernetes k8s)
-        {
-            Covenant.Requires(k8s != null, nameof(k8s));
-
-            this.k8s = k8s;
-        }
-
         /// <inheritdoc/>
-        public async Task IdleAsync()
-        {
-            logger.LogInformationEx("[IDLE]");
-
-            // Handle execution of scheduled tasks.
-
-            // $todo(jefflill):
-            //
-            // I'm implementing this here because even though this would be better
-            // implemented via requeued events.  Unfortunately, we haven't implemented
-            // that yet.
-
-            var utcNow = DateTime.UtcNow;
-
-            foreach (var scheduledTask in (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
-                .Where(task => NodeTaskFilter(task))
-                .Where(task => task.Status != null && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
-                .Where(task => !task.Spec.StartAfterTimestamp.HasValue || task.Spec.StartAfterTimestamp <= utcNow)
-                .Where(task => !task.Spec.StartBeforeTimestamp.HasValue || task.Spec.StartBeforeTimestamp < utcNow)
-                .OrderByDescending(task => task.Metadata.CreationTimestamp))
-            {
-                await ExecuteTaskAsync(scheduledTask);
-            }
-
-            // Manage tasks by deleting finished tasks after their retention period,
-            // detecting and deleting orphanded tasks, as well as detecting tardy tasks
-            // that have missed their scheduling window.
-
-            await CleanupTasksAsync();
-        }
-
-        /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
             var name = resource.Name();
 
-            logger.LogInformationEx(() => $"RECONCILED: {name}");
+            logger.LogInformationEx(() => $"RECONCILING: {name}");
 
             // We have a new node task targeting the host node:
             //
@@ -247,38 +219,52 @@ rm $0
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
             {
-                var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
-
-                patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
-                patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
-
-                nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-
-                var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
-
-                if (nodeOwnerReference != null)
+                try
                 {
-                    if (nodeTask.Metadata.OwnerReferences == null)
+                    var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                    patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
+                    patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
+
+                    nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+
+                    var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
+
+                    if (nodeOwnerReference != null)
                     {
-                        nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
+                        if (nodeTask.Metadata.OwnerReferences == null)
+                        {
+                            nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
+                        }
+
+                        nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
                     }
 
-                    nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
+                    nodeTask = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
                 }
-
-                nodeTask = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
             }
 
             if (nodeTask.Status.FinishTimestamp.HasValue)
             {
-                var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
-
-                if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
+                try
                 {
-                    logger.LogInformationEx(() => $"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                    await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
+                    var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
 
-                    return null;
+                    if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
+                    {
+                        logger.LogInformationEx(() => $"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
+                        await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
+
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
                 }
             }
 
@@ -286,50 +272,53 @@ rm $0
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
             {
-                var utcNow = DateTime.UtcNow;
-
-                // Abort if we missed the end the scheduled window.
-
-                if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
+                try
                 {
-                    logger.LogWarningEx(() => $"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+                    var utcNow = DateTime.UtcNow;
 
-                    // Update the node task status to: TARDY
+                    // Abort if we missed the end the scheduled window.
 
-                    var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
-
-                    patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
-                    patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                    patch.Replace(path => path.Status.ExitCode, -1);
-
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-
-                    return null;
-                }
-
-                // Don't start before a scheduled time.
-
-                // $todo(jefflill):
-                //
-                // We should requeue the event for the remaining time here, instead of letting
-                // the IDLE handler execute the delayed task.
-
-                if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
-                {
-                    if (nodeTask.Spec.StartAfterTimestamp.HasValue && nodeTask.Spec.StartAfterTimestamp.Value <= utcNow)
+                    if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
                     {
-                        await ExecuteTaskAsync(nodeTask);
+                        logger.LogWarningEx(() => $"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+
+                        // Update the node task status to: TARDY
+
+                        var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                        patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
+                        patch.Replace(path => path.Status.FinishTimestamp, utcNow);
+                        patch.Replace(path => path.Status.ExitCode, -1);
+
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                         return null;
                     }
-                    else
-                    {
-                        return null;
-                    }
-                }
 
-                await ExecuteTaskAsync(nodeTask);
+                    // Don't start before a scheduled time.
+
+                    // $todo(jefflill):
+                    //
+                    // We should requeue the event for the remaining time here, instead of letting
+                    // the IDLE handler execute the delayed task.
+
+                    if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                    {
+                        if (nodeTask.Spec.StartAfterTimestamp.HasValue && nodeTask.Spec.StartAfterTimestamp.Value >= utcNow)
+                        {
+                            return null;
+                        }
+                    }
+
+                    await ExecuteTaskAsync(nodeTask);
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
             }
+
+            logger.LogInformationEx(() => $"RECONCILED: {name}");
 
             return ResourceControllerResult.Ok();
         }

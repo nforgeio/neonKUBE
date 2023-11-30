@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1VirtualService.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1VirtualService.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel.DataAnnotations;
+
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.Attributes;
+
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
 namespace Neon.Kube.Resources.Istio
 {
@@ -26,6 +30,7 @@ namespace Neon.Kube.Resources.Istio
     /// 
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class V1VirtualService : IKubernetesObject<V1ObjectMeta>, ISpec<V1VirtualServiceSpec>, IValidate
     {
         /// <summary>

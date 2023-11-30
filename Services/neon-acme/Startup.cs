@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Startup.cs
+// FILE:        Startup.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,11 +80,11 @@ namespace NeonAcme
                 .AddSwaggerGen(
                     options =>
                     {
-                        options.SwaggerDoc("v3",
+                        options.SwaggerDoc("v1alpha1",
                             new OpenApiInfo
                             {
-                                Title   = "v1",
-                                Version = "v1"
+                                Title   = "neon-acme",
+                                Version = "v1alpha1"
                             });
                     });
 
@@ -107,7 +107,7 @@ namespace NeonAcme
             app.UseSwagger(
                 options =>
                 {
-                    options.RouteTemplate = "/openapi/{documentName}";
+                    options.RouteTemplate = "/apis/{documentName}";
                 });
             app.UseRouting();
             app.UseHttpMetrics();

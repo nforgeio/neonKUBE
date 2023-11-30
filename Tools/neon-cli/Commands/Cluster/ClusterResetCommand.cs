@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterResetCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterResetCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterResetCommand : CommandBase
     {
         private const string usage = @"
-Resets the current cluster to its original condition.
+Resets the current NEONKUBE cluster to its factory new condition.
 
 USAGE:
 
@@ -67,68 +67,67 @@ USAGE:
 
 OPTIONS:
 
-    --force              - forces cluster stop without user confirmation
+    --auth              - Resets authentication (Dex, Glauth)
+
+    --crio              - Resets referenced container registeries to the 
+                          cluster definition specifications and removes
+                          any non-system container images
+
+    --force              - Forces cluster stop without user confirmation
                            or verifying unlocked status
 
-    --crio              - resets referenced container registeries to the 
-                          cluster definition specifications and removes
-                          any non-standard container images
+    --harbor            - Resets Harbor components
 
-    --auth              - resets authentication (Dex, Glauth)
-
-    --harbor            - resets Harbor components
-
-    --minio             - resets Minio
-
-    --monitoring        - clears monitoring data as well as non-standard
-                          dashboards and alerts
-
-    --keep-namespaces   - comma separated list of non-standard namespaces
-                          to be retained or ""*"" to exclude all non-standard
+    --keep-namespaces   - Comma separated list of non-system namespaces
+                          to be retained or ""*"" to retain all non-system
                           namespaces
+
+    --minio             - Resets Minio
+
+    --monitoring        - Clears monitoring data as well as non-system
+                          dashboards and alerts
 
 REMARKS:
 
-This command works by removing all non-standard namespaces including [default],
-along with anything contained within them.  The [default] namespace will be
-recreated afterwards, restoring it to its original empty condition.  You can
-specify namespaces to be retained via [--namespace-exclude], passing a comma
-separated list of namespaces.
+This command works by removing all non-system namespaces including [default],
+along with any resources within.  The [default] namespace will be recreated
+afterwards, restoring it to its original empty condition.  You can specify
+namespaces to be retained via [--namespace-exclude], passing a comma separated
+list of namespaces.
 
 The command also resets Harbor, Minio, CRIO-O, Dex and the monitoring components
-to their defaults.  All components are reset by default, but you can You can control
-which components are reset by passing one or more of the compnent options.
+to their defaults.  All components are reset by default, but you can you can
+control whether some components are reset by passing one or more of the options.
 
 EXAMPLES:
 
-Full cluster reset with confirmation:
+Reset cluster with confirmation prompt:
 
     neon cluster reset
 
-Full cluster reset without confirmation:
+Reset cluster without confirmation prompt:
 
     neon cluster reset --force
 
-Full cluster reset while retaining the ""foo"" and ""bar"" namespaces:
+Reset ckuster while retaining the ""foo"" and ""bar"" namespaces:
 
     neon cluster reset --keep-namespaces=foo,bar
 
-Full cluster reset excluding all non-standard namespaces:
+Reset cluster, excluding all non-system namespaces:
 
     neon cluster reset --keep-namespaces=*
 
-Reset Minio and Harbor as well as removing all non-standard namespaces:
+Reset cluster Minio and Harbor as well as removing all non-system namespaces:
 
     neon cluster reset --minio --harbor
 
 NOTE:
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+This command will not work on a locked clusters as a safety measure.
 
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
+All clusters besides NEONDESKTOP clusters are locked by default when they're
+deployed.  You can disable this by setting [IsLocked=false] in your cluster
+definition or by executing this command on your cluster:
 
     neon cluster unlock
 
@@ -200,7 +199,7 @@ cluster definition or by executing this command on your cluster:
                 }
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var status = await cluster.GetClusterHealthAsync();
 
@@ -243,7 +242,7 @@ cluster definition or by executing this command on your cluster:
                                 ResetMinio      = minio,
                                 ResetMonitoring = monitoring
                             },
-                            progressMessage => Console.WriteLine(progressMessage));
+                            progress: progressMessage => Console.WriteLine(progressMessage));
 
                         Console.WriteLine($"RESET: {cluster.Name}");
                         break;

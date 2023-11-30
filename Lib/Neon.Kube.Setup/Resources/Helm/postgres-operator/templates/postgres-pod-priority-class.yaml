@@ -1,6 +1,6 @@
 # $note(jefflill):
 #
-# We're going to use a predefined  neonKUBE priority class so we don't
+# We're going to use a predefined  NEONKUBE priority class so we don't
 # need to create a priority class here.
 
 #{{- if .Values.podPriorityClassName }}

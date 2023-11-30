@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    DesktopService.cs
+//-----------------------------------------------------------------------------
+// FILE:        DesktopService.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,9 +29,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-using ProtoBuf.Grpc.Server;
 using OpenTelemetry.Exporter;
 using OpenTelemetry;
+
+using ProtoBuf.Grpc.Server;
 
 namespace Neon.Kube.DesktopService
 {
@@ -169,6 +170,10 @@ namespace Neon.Kube.DesktopService
 
             cts  = new CancellationTokenSource();
             task = app.StartAsync(cts.Token);
+
+            // Ensure that everyone can read/write the unix domain socket.
+
+            NeonExtendedHelper.SetUnixDomainSocketEveryonePermissions(socketPath, read: true, write: true);
         }
 
         /// <inheritdoc/>

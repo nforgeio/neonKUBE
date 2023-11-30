@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    GlauthController.cs
+//-----------------------------------------------------------------------------
+// FILE:        GlauthController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,6 +26,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
@@ -39,18 +43,15 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator;
+using Neon.Operator.Rbac;
 using Neon.Net;
-using Neon.Kube.Resources;
 using Neon.Tasks;
 using Neon.Time;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
+using Npgsql;
 
 using Newtonsoft.Json;
 
@@ -58,36 +59,52 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
-using Npgsql;
+using Neon.Operator.Controllers;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    [Controller(
+    [ResourceController(
         ManageCustomResourceDefinitions = false,
-        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller")]
+        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
+        MaxConcurrentReconciles = 1)]
     [RbacRule<V1Secret>(
-        Verbs         = RbacVerb.Get, 
-        Scope         = EntityScope.Namespaced,
-        Namespace     = KubeNamespace.NeonSystem,
-        ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
+        Verbs         = RbacVerb.All, 
+        Scope         = EntityScope.Cluster,
+        Namespace     = KubeNamespace.NeonSystem)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
-    public class GlauthController : IResourceController<V1Secret>
+    public class GlauthController : ResourceControllerBase<V1Secret>
     {
-        //---------------------------------------------------------------------
-        // Static members
+        private static string                       connectionString;
 
-        private static string connectionString;
+        private readonly IKubernetes                k8s;
+        private readonly ILogger<GlauthController>  logger;
+        private readonly Service                    service;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public GlauthController(
+            IKubernetes k8s, 
+            ILogger<GlauthController> logger,
+            Service service)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+
+            this.k8s     = k8s;
+            this.logger  = logger;
+            this.service = service;
+        }
 
         /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
@@ -110,9 +127,9 @@ namespace NeonClusterOperator
                     connectionString = $"Host=localhost;Port={localPort};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
                     service.PortForwardManager.StartPodPortForward(
-                        name:       pod.Name(), 
-                        @namespace: KubeNamespace.NeonSystem, 
-                        localPort:  localPort, 
+                        name: pod.Name(),
+                        @namespace: KubeNamespace.NeonSystem,
+                        localPort: localPort,
                         remotePort: 5432);
                 }
 
@@ -120,42 +137,8 @@ namespace NeonClusterOperator
             }
         }
 
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes               k8s;
-        private readonly ILogger<GlauthController> logger;
-        private readonly Service                   service;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public GlauthController(
-            IKubernetes k8s, 
-            ILogger<GlauthController> logger,
-            Service service)
-        {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
-
-            this.k8s     = k8s;
-            this.logger  = logger;
-            this.service = service;
-        }
-
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-        }
-
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource)
         {
             await SyncContext.Clear;
 
@@ -187,7 +170,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1Secret resource)
+        public override async Task DeletedAsync(V1Secret resource)
         {
             await SyncContext.Clear;
 

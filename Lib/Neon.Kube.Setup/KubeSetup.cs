@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetup.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeSetup.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="ClusterManifest"/> for the current neonKUBE build.  This is generated
+        /// Returns the <see cref="ClusterManifest"/> for the current NEONKUBE build.  This is generated
         /// by the internal <b>neon-image prepare node ...</b> tool command which prepares node images.
         /// This manifest describes the container images that will be provisioned into clusters.
         /// </para>
@@ -131,7 +131,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Returns the cluster definition required to prepare a neonDESKTOP built-in cluster for 
+        /// Returns the cluster definition required to prepare a NEONDESKTOP cluster for 
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
@@ -143,7 +143,7 @@ namespace Neon.Kube.Setup
         /// </para>
         /// </param>
         /// <returns>The cluster definition.</returns>
-        public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
+        public static ClusterDefinition GetDesktopClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
             var resourceName = "Neon.Kube.Setup.ClusterDefinitions.";
 
@@ -172,14 +172,14 @@ namespace Neon.Kube.Setup
                     var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
 
                     clusterDefinition.Validate();
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Built-in cluster definitions must include exactly one node.");
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "NEONDESKTOP cluster definitions must include exactly one node.");
 
                     if (!string.IsNullOrEmpty(deploymentPrefix))
                     {
                         clusterDefinition.Deployment.Prefix = deploymentPrefix;
                     }
 
-                    // We allow the built-in cluster to be deployed on machines with only
+                    // We allow the NEONDESKTOP cluster to be deployed on machines with only
                     // 4 processors.  When we see this, we're going to reduce the number
                     // of processors assigned to the buuilt-in VM to just 3.
 
@@ -187,11 +187,11 @@ namespace Neon.Kube.Setup
 
                     if (processorCount < 4)
                     {
-                        throw new NotSupportedException($"neonKUBE built-in clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
+                        throw new NotSupportedException($"NEONDESKTOP clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
                     }
                     else if (processorCount == 4)
                     {
-                        clusterDefinition.Hosting.Vm.Cores = 3;
+                        clusterDefinition.Hosting.Hypervisor.VCpus = 3;
                     }
 
                     clusterDefinition.RootPassword = KubeConst.RootDesktopPassword;
@@ -296,14 +296,7 @@ namespace Neon.Kube.Setup
 
             Covenant.Assert(!string.IsNullOrEmpty(configPath) && File.Exists(configPath), $"Cannot locate Kubernetes config at [{configPath}].");
 
-            // We're using a generated wrapper class to handle transient retries rather than 
-            // modifying the built-in base retry policy.  We're really just trying to handle
-            // the transients that happen during setup when the API server is unavailable for
-            // some reaon (like it's being restarted).
-
-            var k8s = KubeHelper.GetKubernetesClient(kubeConfigPath: configPath, currentContext: cluster.KubeContext.Name);
-
-            controller.Add(KubeSetupProperty.K8sClient, k8s);
+            controller.Add(KubeSetupProperty.K8sClient, KubeHelper.CreateKubernetesClient());
         }
 
         /// <summary>
@@ -312,16 +305,21 @@ namespace Neon.Kube.Setup
         /// the headend for potential failure analysis.
         /// </para>
         /// <note>
-        /// This method does nothing when <see cref="KubeEnv.DisableTelemetryVariable"/> returns <b>true</b>
-        /// or when the cluster was deployed with unredacted logs.
+        /// This method does nothing when <see cref="KubeEnv.DisableTelemetryVariable"/> returns <b>true</b>,
+        /// when the cluster was deployed with unredacted logs or when there's no error.
         /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="e">Optionally passed as the exception thrown for the problem.</param>
         /// <returns>The tracing <see cref="Task"/>.</returns>
-        private static void UploadDeploymentLogs(ISetupController controller, Exception e = null)
+        private static void UploadFailedDeploymentLogs(ISetupController controller, Exception e = null)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            if (!controller.IsFaulted && e == null)
+            {
+                return;
+            }
 
             var logFolder = KubeHelper.LogFolder;
 
@@ -377,7 +375,7 @@ namespace Neon.Kube.Setup
             var timestampUtc = DateTime.UtcNow;
             var uploadId     = Guid.NewGuid();
             var clientId     = KubeHelper.ClientId;
-            var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement neonCLOUD users
+            var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement NEONCLOUD users
 
             using (var tempZipFile = new TempFile(".zip"))
             {

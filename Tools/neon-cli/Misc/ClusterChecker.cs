@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterChecker.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterChecker.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -183,7 +183,7 @@ namespace NeonCli
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         /// <remarks>
         /// <para>
-        /// neonKUBE clusters deploy all required images to CRI-O running on all cluster
+        /// NEONKUBE clusters deploy all required images to CRI-O running on all cluster
         /// nodes as well as the local Harbor registry.  This not only improves the cluster
         /// setup experience but also makes air gapped cluster possible.
         /// </para>
@@ -303,7 +303,7 @@ namespace NeonCli
         /// <para>
         /// By default, pods will be created with <b>PriorityClass=0</b>.  Kubernetes ensures that
         /// its own critical services have very high priority class values so they will be evicted
-        /// last.  neonKUBE deploys dozens of services that need to have priority classes higher
+        /// last.  NEONKUBE deploys dozens of services that need to have priority classes higher
         /// than most user services.  So we assign one of several priorities to our pods based on
         /// their reliative priority as defined here: <see cref="PriorityClass"/>.
         /// </para>

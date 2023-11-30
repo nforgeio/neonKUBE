@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    XenServerHostingManager.cs
+//-----------------------------------------------------------------------------
+// FILE:        XenServerHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,22 +28,28 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
 using k8s.Models;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
+using Neon.Retry;
+
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting.XenServer
 {
@@ -94,6 +100,45 @@ namespace Neon.Kube.Hosting.XenServer
             public long Length { get; set; }
         }
 
+        /// <summary>
+        /// Maps a Hyper-V virtual machine to the corresponding cluster node name.
+        /// </summary>
+        private struct ClusterVm
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="machine">Specifies the virtual machine.</param>
+            /// <param name="xenClient">Specifies the <see cref="XenClient"/> hosting the virtual machine.</param>
+            /// <param name="nodeName">Specifies the associated cluster node name.</param>
+            public ClusterVm(XenVirtualMachine machine, XenClient xenClient, string nodeName)
+            {
+                Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
+                Covenant.Requires<ArgumentNullException>(xenClient != null, nameof(xenClient));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+                this.Machine   = machine;
+                this.XenClient = xenClient;
+                this.NodeName  = nodeName;
+            }
+
+            /// <summary>
+            /// Returns the XenServer machine.
+            /// </summary>
+            public XenVirtualMachine Machine { get; private set; }
+
+            /// <summary>
+            /// Returns the associated cluster node name.
+            /// </summary>
+            public string NodeName { get; private set; }
+
+            /// <summary>
+            /// Returns the <see cref="XenClient"/> referencing the XenServer hosting
+            /// the virtual machine.
+            /// </summary>
+            public XenClient XenClient { get; private set; }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -107,8 +152,13 @@ namespace Neon.Kube.Hosting.XenServer
         /// </summary>
         public static void Load()
         {
-            // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this method.
+            // This method can't do nothing because the C# compiler may optimize calls
+            // out of trimmed executables and we need this type to be discoverable
+            // via reflection.
+            //
+            // This call does almost nothing to prevent C# optimization.
+
+            Load(() => new XenServerHostingManager());
         }
 
         //---------------------------------------------------------------------
@@ -157,18 +207,32 @@ namespace Neon.Kube.Hosting.XenServer
             this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = cluster.SetupState.ClusterDefinition.Nodes.Max(node => node.Name.Length) + cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition).Length;
+
+            string vmNamePrefix;
+
+            if (cluster.SetupState != null)
+            {
+                vmNamePrefix   = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+                maxVmNameWidth = cluster.Nodes.Max(node => node.Name.Length) + vmNamePrefix.Length;
+            }
+            else
+            {
+                Covenant.Assert(cluster.KubeConfig.Cluster != null);
+
+                vmNamePrefix   = cluster.KubeConfig.Cluster.HostingNamePrefix;
+                maxVmNameWidth = 16 + vmNamePrefix.Length;     // We don't have info about the cluster nodes so we'll pick a reasonable max node name length instead.
+            }
 
             // Create the [XenClient] instances that we'll use to manage the XenServer hosts.
 
             xenClients = new List<XenClient>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in cluster.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = GetHostIpAddress(host);
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostPassword;
+                var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -212,28 +276,29 @@ namespace Neon.Kube.Hosting.XenServer
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.XenServer, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
 
             if (clusterDefinition.Hosting.Environment != HostingEnvironment.XenServer)
             {
                 throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
             }
 
-            if (clusterDefinition.Hosting == null || clusterDefinition.Hosting.Vm == null)
+            if (clusterDefinition.Hosting == null || clusterDefinition.Hosting.Hypervisor == null)
             {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}] property is required for XenServer clusters.");
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor)}] property is required for XenServer clusters.");
             }
 
-            var defaultHostUsername = clusterDefinition.Hosting.Vm.HostUsername;
-            var defaultHostPassword = clusterDefinition.Hosting.Vm.HostPassword;
+            var defaultHostUsername = clusterDefinition.Hosting.Hypervisor.HostUsername;
+            var defaultHostPassword = clusterDefinition.Hosting.Hypervisor.HostPassword;
 
-            if (clusterDefinition.Hosting.Vm.Hosts == null || clusterDefinition.Hosting.Vm.Hosts.Count == 0)
+            if (clusterDefinition.Hosting.Hypervisor.Hosts == null || clusterDefinition.Hosting.Hypervisor.Hosts.Count == 0)
             {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}.{nameof(VmHostingOptions.Hosts)}] must specify at least one XenServer host.");
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor)}.{nameof(HypervisorHostingOptions.Hosts)}] must specify at least one XenServer host.");
             }
 
             var hostSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var host in clusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in clusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 if (string.IsNullOrEmpty(host.Username) && string.IsNullOrEmpty(defaultHostUsername))
                 {
@@ -253,16 +318,64 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in clusterDefinition.Nodes)
             {
-                if (node.Vm == null || string.IsNullOrEmpty(node.Vm.Host))
+                if (node.Hypervisor == null || string.IsNullOrEmpty(node.Hypervisor.Host))
                 {
-                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] does not specify a [{nameof(VmNodeOptions)}.{nameof(VmNodeOptions.Host)}]");
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] does not specify a [{nameof(HypervisorNodeOptions)}.{nameof(HypervisorNodeOptions.Host)}]");
                 }
 
-                if (!hostSet.Contains(node.Vm.Host))
+                if (!hostSet.Contains(node.Hypervisor.Host))
                 {
-                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Vm.Host}] which is not defined.");
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Hypervisor.Host}] which is not defined.");
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var readiness = new HostingReadiness();
+
+            // Collect information about the cluster nodes so we can verify that
+            //cluster makes sense.
+
+            var hostedNodes = clusterDefinition.Nodes
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .ToList();
+
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
+
+            // Verify that the XenServer hosts required by the cluster are available.
+
+            Parallel.ForEach(cluster.Hosting.Hypervisor.Hosts, parallelOptions,
+                host =>
+                {
+                    var hostAddress  = GetHostIpAddress(host);
+                    var hostname     = host.Name;
+                    var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                    var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
+
+                    if (string.IsNullOrEmpty(hostname))
+                    {
+                        hostname = host.Address;
+                    }
+
+                    try
+                    {
+                        using (var xenClient = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder))
+                        {
+                            xenClient.Connect();
+                        }
+                    }
+                    catch (XenException)
+                    {
+                        readiness.AddProblem(HostingReadinessProblem.XenServerType, $"Host unavailable: {host.Address}");
+                    }
+                });
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>
@@ -280,10 +393,8 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine = node.Vm.Host;
-                node.Labels.ComputeCores    = node.Vm.GetCores(cluster.SetupState.ClusterDefinition);
-                node.Labels.ComputeRam      = (int)(node.Vm.GetMemory(cluster.SetupState.ClusterDefinition) / ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine   = node.Hypervisor.Host;
+                node.Labels.StorageOSDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
             }
 
             // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.
@@ -299,12 +410,12 @@ namespace Neon.Kube.Hosting.XenServer
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in cluster.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = NetHelper.ParseIPv4Address(GetHostIpAddress(host));
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostPassword;
+                var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -342,7 +453,7 @@ namespace Neon.Kube.Hosting.XenServer
             // speed up cluster setup.  This works because each XenServer
             // host is essentially independent from the others.
 
-            xenController = new SetupController<XenClient>($"Provisioning [{cluster.SetupState.ClusterDefinition.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
+            xenController = new SetupController<XenClient>($"Provisioning [{cluster.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
             {
                 MaxParallel = this.MaxParallel
             };
@@ -401,7 +512,7 @@ namespace Neon.Kube.Hosting.XenServer
                 controller.AddNodeStep("openebs",
                     (controller, node) =>
                     {
-                        var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
+                        var xenClient = xenClients.Single(client => client.Name == node.Metadata.Hypervisor.Host);
 
                         node.Status = "openebs: waiting for host...";
 
@@ -416,7 +527,7 @@ namespace Neon.Kube.Hosting.XenServer
                                 var disk = new XenVirtualDisk()
                                 {
                                     Name        = $"{GetVmName(node)}: openebs",
-                                    Size        = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
+                                    Size        = node.Metadata.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
                                     Description = "OpenEBS cStor"
                                 };
 
@@ -435,6 +546,58 @@ namespace Neon.Kube.Hosting.XenServer
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
             }
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("node topology",
+                async controller =>
+                {
+                    controller.LogProgress(verb: "label", message: "node topology");
+
+                    var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+                    var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterDefinition = cluster.SetupState.ClusterDefinition;
+                    var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+                    foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+                    {
+                        controller.ThrowIfCancelled();
+
+                        var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+                        var patch = new V1Node()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Labels = k8sNode.Labels()
+                            }
+                        };
+
+                        // We're going to set the region to the cluster name and the zone to the name of
+                        // the XenServer host, by default.
+
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/region"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/region", clusterDefinition.Name);
+                        }
+
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/zone"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", nodeDefinition.Hypervisor.Host);
+                        }
+
+                        if (patch.Metadata.Labels.Count > 0)
+                        {
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        }
+                    }
+                });
         }
 
         /// <summary>
@@ -477,7 +640,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             var nodeDefinitions = cluster.SetupState.ClusterDefinition.NodeDefinitions.Values;
 
-            return cluster.Nodes.Where(node => node.Metadata.Vm.Host.Equals(xenClient.Name, StringComparison.InvariantCultureIgnoreCase))
+            return cluster.Nodes.Where(node => node.Metadata.Hypervisor.Host.Equals(xenClient.Name, StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(node => node.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
@@ -499,19 +662,36 @@ namespace Neon.Kube.Hosting.XenServer
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeSshProxy<NodeDefinition> node)
         {
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            cluster.EnsureSetupMode();
+
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
         /// Returns the name to use for the virtual machine that will host the node.
         /// </summary>
-        /// <param name="node">The target node.</param>
+        /// <param name="nodeDefinition">The target node definition.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(NodeDefinition node)
+        private string GetVmName(NodeDefinition nodeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            cluster.EnsureSetupMode();
 
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{nodeDefinition.Name}";
+        }
+
+        /// <summary>
+        /// Returns the name to use for naming the virtual machine that will host the node.
+        /// </summary>
+        /// <param name="nodeDeployment">The target node deployment.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDeployment nodeDeployment)
+        {
+            Covenant.Requires<ArgumentNullException>(nodeDeployment != null, nameof(nodeDeployment));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "Use this method only for already deployed clusters.");
+
+            return $"{cluster.KubeConfig.Cluster.HostingNamePrefix}{nodeDeployment.Name}";
         }
 
         /// <summary>
@@ -522,8 +702,9 @@ namespace Neon.Kube.Hosting.XenServer
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            cluster.EnsureSetupMode();
 
-            var prefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            var prefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -538,6 +719,27 @@ namespace Neon.Kube.Hosting.XenServer
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Converts a virtual machine name into the corresponding cluster node name, as
+        /// defined in the cluster definition.
+        /// </summary>
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
+        private string VmNameToNodeName(string vmName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "The cluster must already be deployed.");
+
+            var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return vmName.Substring(prefix.Length);
         }
 
         /// <summary>
@@ -589,7 +791,7 @@ namespace Neon.Kube.Hosting.XenServer
                 }
                 else
                 {
-                    Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+                    Covenant.Assert(File.Exists(nodeImagePath), () => $"Missing file: {nodeImagePath}");
 
                     driveTemplateName = Path.GetFileName(nodeImagePath);
                     driveTemplatePath = nodeImagePath;
@@ -628,7 +830,7 @@ namespace Neon.Kube.Hosting.XenServer
             // compare the MD5 encoded in the remote template description against
             // the local template MD5.  The remote description should look like:
             //
-            //      neonKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NEONKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // We'll return immediately if the description MD5 matches otherwise
             // we'll remove the remote template and import a new one.
@@ -646,7 +848,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 if (match.Success)
                 {
-                    // The description has an encoded MD5 so compare that against the
+                    // The description includes the MD5 so compare that against the
                     // MD5 for the local template.  We're done when they match.
 
                     if (templateMd5 == match.Groups["md5"].Value)
@@ -689,7 +891,7 @@ namespace Neon.Kube.Hosting.XenServer
             // Install the node template on the XenServer.  Note that we're going to
             // add a description formatted like:
             //
-            //      neonKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NEONKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // The MD5 is computed for the GZIP compressed node image as downloaded
             // from the source.  We're expecting a file at $"{driveTemplatePath}.gz" 
@@ -719,7 +921,12 @@ namespace Neon.Kube.Hosting.XenServer
             xenSshProxy.Status = $"install: node image {templateName} (slow)";
             xenController.SetGlobalStepStatus();
 
-            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.SetupState.ClusterDefinition.Hosting.XenServer.StorageRepository, description: $"neonKUBE Node Image [MD5:{md5}]");
+            // I've seen cases where template import fails due to a transient problem
+            // so we'll try this twice.
+
+            var retry = new LinearRetryPolicy(e => true, maxAttempts: 3, retryInterval: TimeSpan.FromSeconds(10));
+
+            retry.Invoke(() => xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]"));
 
             xenSshProxy.Status = string.Empty;
             xenController.SetGlobalStepStatus();
@@ -756,24 +963,24 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (hostInfo.Version < KubeVersions.MinXenServerVersion)
             {
-                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+                throw new NotSupportedException($"NEONKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
             }
 
             foreach (var node in GetHostedNodes(xenClient))
             {
                 var vmName      = GetVmName(node);
-                var cores       = node.Metadata.Vm.GetCores(cluster.SetupState.ClusterDefinition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.SetupState.ClusterDefinition);
-                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
+                var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
+                var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
-                    cores:                      cores,
+                    vcpus:                      vcpus,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
-                    snapshot:                   cluster.SetupState.ClusterDefinition.Hosting.XenServer.Snapshot,
-                    primaryStorageRepository:   cluster.SetupState.ClusterDefinition.Hosting.XenServer.StorageRepository);
+                    snapshot:                   cluster.Hosting.XenServer.Snapshot,
+                    primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository);
 
                 xenSshProxy.Status = string.Empty;
 
@@ -875,6 +1082,14 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
+        public override async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            return await CheckForIPConflictsAsync(clusterDefinition);
+        }
+
+        /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
             if (cluster.SetupState.PublicAddresses?.Any() ?? false)
@@ -886,13 +1101,13 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(reserveMemory >= 0, nameof(reserveMemory));
-            Covenant.Requires<ArgumentException>(reserveDisk >= 0, nameof(reserveDisk));
+            Covenant.Requires<ArgumentException>(reservedDisk >= 0, nameof(reservedDisk));
 
-            // NOTE: We're going to allow CPUs to be oversubscribed but not RAM or disk.
+            // NOTE: We're going to allow CPUs to be over subscribed but not RAM or disk.
             //       We will honor the memory and disk reservations for XenServer.
 
             var availability = new HostingResourceAvailability();
@@ -952,7 +1167,7 @@ namespace Neon.Kube.Hosting.XenServer
                             ResourceType = HostingConstrainedResourceType.VmHost,
                             Details      = "XenServer host is offline",
                             Nodes        = cluster.SetupState.ClusterDefinition.Nodes
-                                               .Where(node => node.Vm.Host.Equals(offlineHostname, StringComparison.InvariantCultureIgnoreCase))
+                                               .Where(node => node.Hypervisor.Host.Equals(offlineHostname, StringComparison.InvariantCultureIgnoreCase))
                                                .OrderBy(node => node.Name)
                                                .Select(node => node.Name)
                                                .ToList()
@@ -977,11 +1192,11 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                var hostname = node.Vm.Host;
+                var hostname = node.Hypervisor.Host;
 
-                hostnameToRequiredMemory[hostname] += node.Vm.GetMemory(cluster.SetupState.ClusterDefinition);
+                hostnameToRequiredMemory[hostname] += node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
 
-                var requiredDiskForNode = node.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var requiredDiskForNode = node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 if (node.OpenEbsStorage)
                 {
@@ -990,7 +1205,7 @@ namespace Neon.Kube.Hosting.XenServer
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
-                            requiredDiskForNode += node.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
+                            requiredDiskForNode += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
                             break;
 
                         default:
@@ -1005,7 +1220,7 @@ namespace Neon.Kube.Hosting.XenServer
             //-----------------------------------------------------------------
             // Construct and return the resource availability.
 
-            var hostNodes = cluster.SetupState.ClusterDefinition.Nodes.ToLookup(node => node.Vm.Host, node => node);
+            var hostNodes = cluster.SetupState.ClusterDefinition.Nodes.ToLookup(node => node.Hypervisor.Host, node => node);
 
             foreach (var hostNodeGroup in hostNodes)
             {
@@ -1086,11 +1301,49 @@ namespace Neon.Kube.Hosting.XenServer
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
+        /// <summary>
+        /// Returns information about the cluster virtual machines and the related node names.
+        /// </summary>
+        /// <returns>The cluster virtual machine information.</returns>
+        private List<ClusterVm> GetClusterVms()
+        {
+            // We're going to assume that all virtual machines that match cluster node names
+            // (after stripping off any cluster prefix) belong to the cluster and will
+            // map the actual VM states to our node states.
+
+            var clusterVms = new List<ClusterVm>();
+
+            foreach (var xenClient in xenClients)
+            {
+                foreach (var machine in xenClient.Machine.List())
+                {
+                    var nodeName = VmNameToNodeName(machine.NameLabel);
+
+                    if (nodeName != null)
+                    {
+                        clusterVms.Add(new ClusterVm(machine, xenClient, nodeName));
+                    }
+                }
+            }
+
+            return clusterVms;
+        }
+
         /// <inheritdoc/>
         public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
+
+            // $todo(jefflill):
+            //
+            // We're using cluster name prefixes to identify Hyper-V virtual machines that
+            // belong to the cluster.  This is a bit of a hack.
+            //
+            // We need to implement Hyper-V VM tagging in the future and then use a cluster
+            // ID tag for this instead.
+            //
+            //      https://github.com/nforgeio/neonSDK/issues/67
 
             var clusterHealth = new ClusterHealth();
 
@@ -1141,37 +1394,8 @@ namespace Neon.Kube.Hosting.XenServer
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to the XenServer hosts.
 
-            var contextName = $"root@{cluster.SetupState.ClusterDefinition.Name}";
-            var context     = KubeHelper.Config.GetContext(contextName);
-
-            // Create a hashset holding the names of nodes that have existing virtual machines
-            // and also construct a dictionary mapping the actual virtual machine names to
-            // the machine information.
-
-            var existingNodes    = new HashSet<string>();
-            var existingMachines = new Dictionary<string, XenVirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var nodeNameToVm in hostnameToVms.Values)
-            {
-                if (nodeNameToVm == null)
-                {
-                    // Host is offline.
-
-                    continue;
-                }
-
-                foreach (var machine in nodeNameToVm.Values)
-                {
-                    var nodeDefinition = VmNameToNodeDefinition(machine.NameLabel);
-
-                    if (nodeDefinition != null)
-                    {
-                        existingNodes.Add(nodeDefinition.Name);
-                    }
-
-                    existingMachines.Add(machine.NameLabel, machine);
-                }
-            }
+            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
+            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Report when any XenServer hosts are offline.
 
@@ -1195,152 +1419,130 @@ namespace Neon.Kube.Hosting.XenServer
                 return clusterHealth;
             }
 
-            // Build the cluster status.
+            // Create a list of the XenServer virtual machines that belong to the cluster.
 
-            if (context == null)
+            var clusterVms = GetClusterVms();
+
+            foreach (var clusterVm in clusterVms)
             {
-                // The Kubernetes context for this cluster doesn't exist, so we know that any
-                // virtual machines with names matching the virtual machines that would be
-                // provisioned for the cluster definition are conflicting.
+                var state = ClusterNodeState.NotProvisioned;
 
-                clusterHealth.State   = ClusterState.NotFound;
-                clusterHealth.Summary = "Cluster does not exist";
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+                switch (clusterVm.Machine.PowerState)
                 {
-                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                    case XenVmPowerState.Unknown:
+
+                        state = ClusterNodeState.Unknown;
+                        break;
+
+                    case XenVmPowerState.Halted:
+
+                        state = ClusterNodeState.Off;
+                        break;
+
+                    case XenVmPowerState.Running:
+
+                        state = ClusterNodeState.Running;
+                        break;
+
+                    case XenVmPowerState.Paused:
+
+                        state = ClusterNodeState.Paused;
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
                 }
+
+                clusterHealth.Nodes.Add(clusterVm.NodeName, state);
+            }
+
+            // We're going to examine the node states from the XenServer perspective and
+            // short-circuit the health check when the cluster nodes are not provisioned,
+            // are paused or appear to be transitioning between states.
+
+            if (clusterHealth.Nodes.Values.Count == 0)
+            {
+                clusterHealth.State   = ClusterState.NotFound;
+                clusterHealth.Summary = "Cluster not found.";
 
                 return clusterHealth;
             }
-            else
+
+            var commonNodeState = clusterHealth.Nodes.Values.First();
+
+            foreach (var nodeState in clusterHealth.Nodes.Values)
             {
-                // We're going to assume that all virtual machines that match cluster node names
-                // (after stripping off any cluster prefix) belong to the cluster and will
-                // map the actual VM states to public node states.
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+                if (nodeState != commonNodeState)
                 {
-                    var nodeState = ClusterNodeState.NotProvisioned;
+                    // Nodes have differing states so we're going to consider the cluster
+                    // to be transitioning.
 
-                    if (existingNodes.Contains(node.Name))
-                    {
-                        var vmName = GetVmName(node);
-
-                        if (existingMachines.TryGetValue(vmName, out var machine))
-                        {
-                            switch (machine.PowerState)
-                            {
-                                case XenVmPowerState.Unknown:
-
-                                    nodeState = ClusterNodeState.Unknown;
-                                    break;
-
-                                case XenVmPowerState.Halted:
-
-                                    nodeState = ClusterNodeState.Off;
-                                    break;
-
-                                case XenVmPowerState.Paused:
-
-                                    nodeState = ClusterNodeState.Paused;
-                                    break;
-
-                                case XenVmPowerState.Running:
-
-                                    nodeState = ClusterNodeState.Running;
-                                    break;
-
-                                default:
-
-                                    throw new NotImplementedException();
-                            }
-                        }
-                    }
-
-                    clusterHealth.Nodes.Add(node.Name, nodeState);
+                    clusterHealth.State   = ClusterState.Transitioning;
+                    clusterHealth.Summary = "Cluster is transitioning";
+                    break;
                 }
+            }
 
-                // We're going to examine the node states from the XenServer perspective and
-                // short-circuit the Kubernetes level cluster health check when the cluster
-                // nodes are not provisioned, are paused or appear to be transitioning
-                // between starting, stopping, or paused states.
+            if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+            {
+                clusterHealth.State   = ClusterState.Configuring;
+                clusterHealth.Summary = "Cluster is partially configured";
+            }
+            else if (clusterHealth.State != ClusterState.Transitioning)
+            {
+                // If we get here then all of the nodes have the same state so
+                // we'll use that common state to set the overall cluster state.
 
-                var commonNodeState = clusterHealth.Nodes.Values.First();
-
-                foreach (var nodeState in clusterHealth.Nodes.Values)
+                switch (commonNodeState)
                 {
-                    if (nodeState != commonNodeState)
-                    {
-                        // Nodes have differing states so we're going to consider the cluster
-                        // to be transitioning.
+                    case ClusterNodeState.Paused:
 
-                        clusterHealth.State   = ClusterState.Transitioning;
-                        clusterHealth.Summary = "Cluster is transitioning";
+                        clusterHealth.State   = ClusterState.Paused;
+                        clusterHealth.Summary = "Cluster is paused";
                         break;
-                    }
-                }
 
-                if (cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
-                {
-                    clusterHealth.State   = ClusterState.Configuring;
-                    clusterHealth.Summary = "Cluster is partially configured";
-                }
-                else if (clusterHealth.State != ClusterState.Transitioning)
-                {
-                    // If we get here then all of the nodes have the same state so
-                    // we'll use that common state to set the overall cluster state.
+                    case ClusterNodeState.Starting:
 
-                    switch (commonNodeState)
-                    {
-                        case ClusterNodeState.Paused:
+                        clusterHealth.State   = ClusterState.Unhealthy;
+                        clusterHealth.Summary = "Cluster is starting";
+                        break;
 
-                            clusterHealth.State   = ClusterState.Paused;
-                            clusterHealth.Summary = "Cluster is paused";
-                            break;
+                    case ClusterNodeState.Running:
 
-                        case ClusterNodeState.Starting:
+                        clusterHealth.State   = ClusterState.Healthy;
+                        clusterHealth.Summary = "Cluster is running";
+                        break;
 
-                            clusterHealth.State   = ClusterState.Unhealthy;
-                            clusterHealth.Summary = "Cluster is starting";
-                            break;
+                    case ClusterNodeState.Off:
 
-                        case ClusterNodeState.Running:
+                        clusterHealth.State   = ClusterState.Off;
+                        clusterHealth.Summary = "Cluster is offline";
+                        break;
 
-                            clusterHealth.State   = ClusterState.Healthy;
-                            clusterHealth.Summary = "Cluster is configured";
-                            break;
+                    case ClusterNodeState.NotProvisioned:
 
-                        case ClusterNodeState.Off:
+                        clusterHealth.State   = ClusterState.NotFound;
+                        clusterHealth.Summary = "Cluster is not found.";
+                        break;
 
-                            clusterHealth.State   = ClusterState.Off;
-                            clusterHealth.Summary = "Cluster is turned off";
-                            break;
+                    case ClusterNodeState.Unknown:
+                    default:
 
-                        case ClusterNodeState.NotProvisioned:
-
-                            clusterHealth.State   = ClusterState.NotFound;
-                            clusterHealth.Summary = "Cluster is not found.";
-                            break;
-
-                        case ClusterNodeState.Unknown:
-                        default:
-
-                            clusterHealth.State   = ClusterState.NotFound;
-                            clusterHealth.Summary = "Cluster not found";
-                            break;
-                    }
+                        clusterHealth.State   = ClusterState.NotFound;
+                        clusterHealth.Summary = "Cluster not found";
+                        break;
                 }
 
                 if (clusterHealth.State == ClusterState.Off)
                 {
-                    clusterHealth.Summary = "Cluster is turned off";
+                    clusterHealth.Summary = "Cluster is offline";
 
                     return clusterHealth;
                 }
-
-                return clusterHealth;
             }
+
+            return clusterHealth;
         }
 
         /// <inheritdoc/>
@@ -1351,27 +1553,15 @@ namespace Neon.Kube.Hosting.XenServer
 
             // We just need to start any cluster VMs that aren't already running.
 
-            Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
-                node =>
+            Parallel.ForEach(GetClusterVms(), parallelOptions,
+                clusterVm =>
                 {
-                    var vmName    = GetVmName(node);
-                    var xenClient = xenClients.Single(xenClient => xenClient.Name.Equals(node.Vm.Host, StringComparison.InvariantCultureIgnoreCase));
-                    var vm        = xenClient.Machine.Find(name: vmName);
-
-                    if (vm == null)
-                    {
-                        // We may see this when the cluster definition doesn't match the 
-                        // deployed cluster VMs.  We're just going to ignore this.
-
-                        return;
-                    }
-
-                    switch (vm.PowerState)
+                    switch (clusterVm.Machine.PowerState)
                     {
                         case XenVmPowerState.Halted:
                         case XenVmPowerState.Paused:
 
-                            xenClient.Machine.Start(vm);
+                            clusterVm.XenClient.Machine.Start(clusterVm.Machine);
                             break;
 
                         case XenVmPowerState.Running:
@@ -1381,7 +1571,7 @@ namespace Neon.Kube.Hosting.XenServer
                         default:
                         case XenVmPowerState.Unknown:
 
-                            throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.PowerState}");
+                            throw new NotImplementedException($"Unexpected VM state: {clusterVm.NodeName}:{clusterVm.Machine.PowerState}");
                     }
                 });
         }
@@ -1394,11 +1584,13 @@ namespace Neon.Kube.Hosting.XenServer
 
             // We just need to stop any running cluster VMs.
 
-            Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes,
+            var deployment = await cluster.GetDeploymentAsync();
+
+            Parallel.ForEach(deployment.Nodes,
                 node =>
                 {
                     var vmName    = GetVmName(node);
-                    var xenClient = GetXenClient(node.Vm.Host);
+                    var xenClient = GetXenClient(node.Hypervisor.Host);
                     var vm        = xenClient.Machine.Find(vmName);
 
                     if (vm == null)
@@ -1449,58 +1641,15 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            // If [removeOrphans=true] and the cluster definition specifies a
-            // VM name prefix, then we'll simply remove all VMs with that prefix
-            // that exist on any of the target XenServer hosts.
-            //
-            // Otherwise, we'll do a normal remove.
-
-            var vmPrefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
-
-            if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
-            {
-                Parallel.ForEach(xenClients, parallelOptions,
-                    xenClient =>
-                    {
-                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), parallelOptions,
-                            vm =>
-                            {
-                                xenClient.Machine.Remove(vm, keepDrives: false);
-                            });
-                    });
-
-                return;
-            }
-
-            // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
-            // Note that we're just turning nodes off to save time and because we're going
-            // to be deleting them all anyway.
-
-            await StopClusterAsync(stopMode: StopMode.TurnOff);
-
-            Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes,
-                node =>
+            Parallel.ForEach(GetClusterVms(),
+                clusterVm =>
                 {
-                    var vmName    = GetVmName(node);
-                    var xenClient = GetXenClient(node.Vm.Host);
-                    var vm        = xenClient.Machine.Find(vmName);
-
-                    if (vm == null)
-                    {
-                        // We may see this when the cluster definition doesn't match the 
-                        // deployed cluster VMs or if a VM has already been manually deleted.
-                        //
-                        // We're just going to ignore this situation.
-
-                        return;
-                    }
-
-                    xenClient.Machine.Remove(vm, keepDrives: false);
+                    clusterVm.XenClient.Machine.Remove(clusterVm.Machine, keepDrives: false);
                 });
         }
     }

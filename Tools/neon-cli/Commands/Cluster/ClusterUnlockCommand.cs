@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterUnlockCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterUnlockCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,16 +59,21 @@ namespace NeonCli
     public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current cluster by allowing ClusterFixture to run unit tests
-as well as allowing potentially distructive commands like:
+Unlocks the current NEONKUBE cluster, enabling dangerous operations like:
 
     remove, reset, pause and stop
 
-to execute without user confirmation.
+and also to enable [ClusterFixture] to run unit tests on the cluster.
 
 USAGE:
 
     neon cluster unlock
+
+REMARKS:
+
+All clusters besides NEONDESKTOP clusters are locked by default when they're
+deployed.  You can disable this by setting [IsLocked=false] in your cluster
+definition.
 
 ";
         /// <inheritdoc/>
@@ -102,7 +107,7 @@ USAGE:
                 Program.Exit(1);
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var status       = await cluster.GetClusterHealthAsync();
                 var capabilities = cluster.Capabilities;
@@ -112,9 +117,8 @@ USAGE:
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        Console.WriteLine($"Unlocking: {cluster.Name}...");
                         await cluster.UnlockAsync();
-                        Console.WriteLine($"UNLOCKED:  {cluster.Name}");
+                        Console.WriteLine($"{cluster.Name}: is UNLOCKED");
                         break;
 
                     default:

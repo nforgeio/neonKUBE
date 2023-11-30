@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ISetupController.cs
+//-----------------------------------------------------------------------------
+// FILE:        ISetupController.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
-using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.SSH;
 
 namespace Neon.Kube.Setup
@@ -204,7 +204,7 @@ namespace Neon.Kube.Setup
         /// <param name="node">Identifies the node</param>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogProgress(SSH.ILinuxSshProxy node, string verb, string message);
+        void LogProgress(Neon.SSH.ILinuxSshProxy node, string verb, string message);
 
         /// <summary>
         /// <para>
@@ -217,7 +217,7 @@ namespace Neon.Kube.Setup
         /// </summary>
         /// <param name="node">Identifies the node</param>
         /// <param name="message">The message.</param>
-        void LogProgressError(SSH.ILinuxSshProxy node, string message);
+        void LogProgressError(Neon.SSH.ILinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>
@@ -253,6 +253,13 @@ namespace Neon.Kube.Setup
         /// </summary>
         /// <param name="e">The exception.</param>
         void LogGlobalException(Exception e);
+
+        /// <summary>
+        /// Clears any global status and the status for all cluster nodes.  This should
+        /// generally be called after completing a setup operation so that outdated status
+        /// strings won't linger for setup steps that do a lot of work.
+        /// </summary>
+        void ClearStatus();
 
         /// <summary>
         /// Indicates whether cluster setup is faulted due to a global problem or when
@@ -353,7 +360,7 @@ namespace Neon.Kube.Setup
         void Cancel();
 
         /// <summary>
-        /// Throws a <see cref="OperationCanceledException"/> after <see cref="Cancel()"/> has been called.
+        /// Throws a <see cref="OperationCanceledException"/> when <see cref="Cancel()"/> has been called.
         /// </summary>
         void ThrowIfCancelled();
 
@@ -363,7 +370,7 @@ namespace Neon.Kube.Setup
         CancellationToken CancellationToken { get; }
 
         /// <summary>
-        /// Indicates that setup is being cancelled.
+        /// Indicates that setup as been cancelled due to a previous call to <see cref="Cancel"/>.
         /// </summary>
         bool IsCancelPending { get; }
 

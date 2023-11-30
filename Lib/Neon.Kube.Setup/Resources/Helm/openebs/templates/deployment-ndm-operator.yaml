@@ -33,6 +33,7 @@ spec:
         openebs.io/component-name: ndm-operator
         openebs.io/version: {{ .Values.release.version }}
     spec:
+      enableServiceLinks: false
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -80,9 +81,9 @@ spec:
         - name: OPENEBS_IO_IMAGE_PULL_SECRETS
           value: "{{- range $index, $secret := .Values.imagePullSecrets}}{{if $index}},{{end}}{{ $secret.name }}{{- end}}"
 {{- end }}
-{{- if .Values.ndmOperator.nodeSelector }}
+{{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.ndmOperator.nodeSelector | indent 8 }}
+        {{- include "openebs.nodeSelector" . | nindent 8 }}
 {{- end }}
 {{- if .Values.ndmOperator.tolerations }}
       tolerations:

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+//-----------------------------------------------------------------------------
+// FILE:        NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ namespace Neon.Kube.GrpcProto
 {
     /// <summary>
     /// <para>
-    /// <b>INTERNAL USE ONLY:</b> Defines internal GRPC protobuf messages and services used by neonKUBE applications.
+    /// <b>INTERNAL USE ONLY:</b> Defines internal GRPC protobuf messages and services used by NEONKUBE applications.
     /// </para>
     /// <note>
     /// This is only supported for .NET 6.0 applications.

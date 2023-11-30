@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeEnv.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeEnv.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the neonKUBE related environment variables as well as properties
+    /// Defines the NEONKUBE related environment variables as well as properties
     /// that access them.
     /// </summary>
     public static class KubeEnv
     {
         /// <summary>
-        /// Environment variable used to disable telemetry from neonKUBE client applications.
+        /// Environment variable used to disable telemetry from NEONKUBE client applications.
         /// The supported values are <b>true</b> or <b>false</b>.
         /// </summary>
         public const string DisableTelemetryVariable = "NEONKUBE_DISABLE_TELEMETRY";
@@ -50,7 +50,7 @@ namespace Neon.Kube
         public const string TelemetryUriVariable = "NEONKUBE_TELEMETRY_URI";
 
         /// <summary>
-        /// Returns the OTEL Collector Log endpoint URI where neonKUBE related clients should direct
+        /// Returns the OTEL Collector Log endpoint URI where NEONKUBE related clients should direct
         /// their telemetry.  This defaults to <b>https://telemetry.neoncloud.io</b> but can
         /// be modified by developers for testing purposes by setting the <c>NEONKUBE_TELEMETRY_URI</c>
         /// environment variable.
@@ -58,7 +58,7 @@ namespace Neon.Kube
         public static Uri TelemetryLogsUri => new Uri(Environment.GetEnvironmentVariable(TelemetryUriVariable) ?? "https://telemetry.neoncloud.io/v1/logs", UriKind.Absolute);
 
         /// <summary>
-        /// Returns the OTEL Collector Trace endpoint URI where neonKUBE related clients should direct
+        /// Returns the OTEL Collector Trace endpoint URI where NEONKUBE related clients should direct
         /// their telemetry.  This defaults to <b>https://telemetry.neoncloud.io</b> but can
         /// be modified by developers for testing purposes by setting the <c>NEONKUBE_TELEMETRY_URI</c>
         /// environment variable.
@@ -72,7 +72,7 @@ namespace Neon.Kube
         public const string HeadendUriVariable = "NEONKUBE_HEADEND_URI";
 
         /// <summary>
-        /// Returns the URI neonKUBE related headend services.  This defaults to <b>https://headend.neoncloud.io</b>
+        /// Returns the URI NEONKUBE related headend services.  This defaults to <b>https://headend.neoncloud.io</b>
         /// but can be modified bhy developers for testing purposes by setting the <c>NEONKUBE_HEADEND_URI</c>
         /// environment variable.
         /// </summary>

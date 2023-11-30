@@ -1,5 +1,5 @@
 @echo off
-REM Configures the environment variables required to build neonKUBE projects.
+REM Configures the environment variables required to build NEONKUBE projects.
 REM 
 REM 	buildenv [ <source folder> ]
 REM
@@ -9,7 +9,7 @@ REM
 REM This must be [RUN AS ADMINISTRATOR].
 
 echo ===========================================
-echo * neonKUBE Build Environment Configurator *
+echo * NEONKUBE Build Environment Configurator *
 echo ===========================================
 
 REM Default NK_ROOT to the folder holding this batch file after stripping
@@ -22,7 +22,7 @@ if not [%1]==[] set NK_ROOT=%1
 
 if exist %NK_ROOT%\neonKUBE.sln goto goodPath
 echo The [%NK_ROOT%\neonKUBE.sln] file does not exist.  Please pass the path
-echo to the neonKUBE solution folder.
+echo to the NEONKUBE solution folder.
 goto done
 
 :goodPath 
@@ -73,7 +73,7 @@ pathtool -dedup -system -add "%NK_BUILD%\neon"
 pathtool -dedup -system -add "%NK_TOOLBIN%"
 pathtool -dedup -system -add "%NK_ROOT%\External\OpenSSL"
 
-REM Configure the neonKUBE program folder and add it to the PATH.
+REM Configure the NEONKUBE program folder and add it to the PATH.
 
 if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
 pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
@@ -82,7 +82,7 @@ REM Remove obsolete paths if they exist.
 
 pathtool --dedup -del "%NK_TOOLBIN%\OpenSSL"
 
-REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
+REM Configure the NEONKUBE kubeconfig path (as a USER environment variable).
 
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
@@ -96,4 +96,3 @@ echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
 echo ============================================================================================
-pause

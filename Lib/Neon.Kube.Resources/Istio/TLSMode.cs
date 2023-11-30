@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    TLSMode.cs
+//-----------------------------------------------------------------------------
+// FILE:        TLSMode.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,19 +49,19 @@ namespace Neon.Kube.Resources.Istio
         /// TLS route to determine the destination service from the service registry.
         /// </summary>
         [EnumMember(Value = "PASSTHROUGH")]
-        Passthrough = 0,
+        PASSTHROUGH = 0,
 
         /// <summary>
         /// Secure connections with standard TLS semantics.
         /// </summary>
         [EnumMember(Value = "SIMPLE")]
-        Simple,
+        SIMPLE,
 
         /// <summary>
         /// Secure connections to the downstream using mutual TLS by presenting server certificates for authentication.
         /// </summary>
         [EnumMember(Value = "MUTUAL")]
-        Mutual,
+        MUTUAL,
 
         /// <summary>
         /// <para>
@@ -76,7 +76,7 @@ namespace Neon.Kube.Resources.Istio
         /// </para>
         /// </summary>
         [EnumMember(Value = "AUTO_PASSTHROUGH")]
-        AutoPassthrough,
+        AUTO_PASSTHROUGH,
 
         /// <summary>
         /// <para>
@@ -86,6 +86,6 @@ namespace Neon.Kube.Resources.Istio
         /// </para>
         /// </summary>
         [EnumMember(Value = "ISTIO_MUTUAL")]
-        IstioMutual
+        ISTIO_MUTUAL
     }
 }

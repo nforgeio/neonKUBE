@@ -21,6 +21,7 @@ spec:
         {{ toYaml . }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
       priorityClassName: {{ .Values.priorityClassName }}
       containers:

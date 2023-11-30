@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterCheckCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterCheckCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,8 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
+// $todo(jefflill): We need to check for failed pods here too.
+
 namespace NeonCli
 {
     /// <summary>
@@ -58,9 +60,9 @@ namespace NeonCli
     public class ClusterCheckCommand : CommandBase
     {
         private const string usage = @"
-Performs various checks on the current cluster.  These checks are targeted at 
-neonKUBE maintainers to verify that cluster setup worked correctly.  This does
-the same thing as the [neon cluster setup --check] option.
+Performs various checks on the current NEONKUBE cluster.  These checks are
+targeted at NEONKUBE maintainers to verify that cluster setup worked correctly.
+This does the same thing as the [neon cluster setup --check] option.
 
 USAGE: 
 
@@ -68,19 +70,20 @@ USAGE:
 
 OPTIONS:
 
-    --all               - Implied when no other options are specified
+    --all               - Performs all checks.  This is implied when no other
+                          options are present
+
+    --details           - Includes additional information for some of the 
+                          checks even when there are no errors
 
     --container-images  - Verifies that all container images running on the
                           cluster are included in the cluster manifest
 
-    --priority-class    - Verifies that all running pod templates specify a
-                          non-zero PriorityClass.
+    --priority-class    - Verifies that all running pods have a non-zero
+                          PriorityClass
 
-    --resources         - Verifies that all pod containers specifiy resource
+    --resources         - Verifies that all pod containers specify resource
                           request and limits
-
-    --details           - Includes additional information for some of the 
-                          checks even when there are no errors
 
 REMARKS:
 
@@ -94,6 +97,9 @@ This command returns a non-zero exit code when one or more checks fail.
         public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--priority-class", "--resources", "--details" };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -105,7 +111,7 @@ This command returns a non-zero exit code when one or more checks fail.
             if (commandLine.Arguments.Length > 0)
             {
                 Console.Error.WriteLine("*** ERROR: Unexpected argument.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             Console.WriteLine();
@@ -114,7 +120,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             if (context == null)
             {
-                Console.Error.WriteLine($"*** ERROR: No Kubernetes context is currently selected.");
+                Console.Error.WriteLine($"*** ERROR: No NEONKUBE cluster is selected.");
                 Program.Exit(1);
             }
 
@@ -135,7 +141,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             // Perform the requested checks.
 
-            var k8s   = KubeHelper.GetKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
+            var k8s   = KubeHelper.CreateKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
             var error = false;
 
             if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(k8s, details: details))

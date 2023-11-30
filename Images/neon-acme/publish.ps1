@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.1.3 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Marcus Bowyer
@@ -19,14 +19,13 @@
 # Builds the neon-acme images and pushes them to Docker Hub.
 #
 # NOTE: You must be already logged into the target container registry.
-#
-# USAGE: pwsh -f publish.ps1 [-all]
 
 param 
 (
-	[parameter(Mandatory=$False,Position=1)][string] $config = "Release",
+	[parameter(Mandatory=$true, Position=1)]
+    [string]$config,
 	[switch]$allVersions = $false,
-    [switch]$nopush = $false
+    [switch]$nopush      = $false
 )
 
 #----------------------------------------------------------

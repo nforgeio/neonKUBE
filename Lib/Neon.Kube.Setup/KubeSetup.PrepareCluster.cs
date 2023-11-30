@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetup.PrepareCluster.cs
+ //-----------------------------------------------------------------------------
+// FILE:        KubeSetup.PrepareCluster.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+
+using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
@@ -39,14 +43,14 @@ using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
+using Neon.Kube.K8s;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Namotion.Reflection;
-using System.ComponentModel.Design;
 
 namespace Neon.Kube.Setup
 {
@@ -70,7 +74,7 @@ namespace Neon.Kube.Setup
         /// <param name="options">Specifies the cluster prepare options.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
-        public static ISetupController CreateClusterPrepareController(
+        public static async Task<ISetupController> CreateClusterPrepareControllerAsync(
             ClusterDefinition           clusterDefinition,
             bool                        cloudMarketplace,
             PrepareClusterOptions       options)
@@ -89,7 +93,7 @@ namespace Neon.Kube.Setup
             if (options.DesktopReadyToGo)
             {
                 Covenant.Assert(clusterDefinition.IsDesktop, $"Expected [{nameof(clusterDefinition.IsDesktop)}] to be TRUE.");
-                Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
+                Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, () => $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
 
                 options.DebugMode = false;
             }
@@ -113,7 +117,7 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(
+            var cluster = ClusterProxy.Create(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Prepare,
@@ -140,6 +144,11 @@ namespace Neon.Kube.Setup
             // Ensure that the nodes have valid IP addresses.
 
             clusterDefinition.ValidatePrivateNodeAddresses();
+
+            // Perform final cluster definition validation.  This gives hosting managers
+            // the chance verify that cloud VM sizes are valid.
+
+            await hostingManager.CheckDeploymentReadinessAsync(clusterDefinition);
 
             // Override the cluster definition package caches when requested.
 
@@ -220,6 +229,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
+            controller.Add(KubeSetupProperty.Insecure, options.Insecure);
 
             // Configure the cluster preparation steps.
 
@@ -243,6 +253,19 @@ namespace Neon.Kube.Setup
                     hostingManager.WaitSeconds = 60;
                 });
 
+            // Check for IP address conflicts.
+
+            controller.AddGlobalStep("check IP conflicts",
+                async controller =>
+                {
+                    var conflicts = await cluster.HostingManager.CheckForConflictsAsync(clusterDefinition);
+
+                    if (conflicts != null)
+                    {
+                        throw new NeonKubeException(conflicts);
+                    }
+                });
+
             // Delete any existing cluster in the environment when requested.
 
             if (options.RemoveExisting)
@@ -250,51 +273,62 @@ namespace Neon.Kube.Setup
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
                     {
-                        await hostingManager.DeleteClusterAsync(removeOrphans: true);
+                        await hostingManager.DeleteClusterAsync();
                     });
             }
 
             controller.AddGlobalStep("generate credentials",
                 controller =>
                 {
-                    // We're going to generate a secure random password and we're going to append
-                    // an extra 4-character string to ensure that the password meets Azure (and probably
-                    // other cloud) minimum requirements:
-                    //
-                    // The supplied password must be between 6-72 characters long and must 
-                    // satisfy at least 3 of password complexity requirements from the following: 
-                    //
-                    //      1. Contains an uppercase character
-                    //      2. Contains a lowercase character
-                    //      3. Contains a numeric digit
-                    //      4. Contains a special character
-                    //      5. Control characters are not allowed
-                    //
-                    // For on-premise hypervisor environments such as Hyper-V and XenServer, we're
-                    // going use the [neon-init] service to mount a virtual DVD that will change
-                    // the password before configuring the network on first boot.
-                    //
-                    // For cloud environments, we're going to use the cloud APIs to interact with
-                    // [cloud-init] to provision the [sysadmin] account's SSH key.
-
-                    var hostingManager   = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                     var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
 
-                    controller.SetGlobalStepStatus("generate: SSH password");
-
-                    if (desktopReadyToGo)
+                    if (options.Insecure)
                     {
-                        // We're going to configure a fixed password for built-in desktop clusters.
+                        // This mode is used by maintainers so they can easily SSH into cluster nodes
+                        // for debugging purposes.
+                        //
+                        // WARNING: This should never be used for production clusters!
 
                         setupState.SshPassword = KubeConst.SysAdminPassword;
                     }
                     else
                     {
-                        // Generate a secure SSH password and append a string that guarantees that
-                        // the generated password meets minimum cloud requirements.
+                        // We're going to generate a secure random password and we're going to append
+                        // an extra 4-character string to ensure that the password meets Azure (and probably
+                        // other cloud) minimum requirements:
+                        //
+                        // The supplied password must be between 6-72 characters long and must 
+                        // satisfy at least 3 of password complexity requirements from the following: 
+                        //
+                        //      1. Contains an uppercase character
+                        //      2. Contains a lowercase character
+                        //      3. Contains a numeric digit
+                        //      4. Contains a special character
+                        //      5. Control characters are not allowed
+                        //
+                        // For on-premise hypervisor environments such as Hyper-V and XenServer, we're
+                        // going use the [neon-init] service to mount a virtual DVD that will change
+                        // the password before configuring the network on first boot.
+                        //
+                        // For cloud environments, we're going to use the cloud APIs to interact with
+                        // [cloud-init] to provision the [sysadmin] account's SSH key.
 
-                        setupState.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-                        setupState.SshPassword += ".Aa0";
+                        controller.SetGlobalStepStatus("generate: SSH password");
+
+                        if (desktopReadyToGo)
+                        {
+                            // We're going to configure a fixed password for NEONDESKTOP clusters.
+
+                            setupState.SshPassword = KubeConst.SysAdminPassword;
+                        }
+                        else
+                        {
+                            // Generate a secure SSH password and append a string that guarantees that
+                            // the generated password meets minimum cloud requirements.
+
+                            setupState.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                            setupState.SshPassword += ".Aa0";
+                        }
                     }
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
@@ -302,7 +336,7 @@ namespace Neon.Kube.Setup
                     // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
                     //
-                    // NOTE: All build-in neon-desktop clusters share the same SSH keys.  This isn't really
+                    // NOTE: All build-in NEONDESKTOP clusters share the same SSH keys.  This isn't really
                     //       a security issue because these clusters are not reachable from outside the host
                     //       machine and are also not intended for production workloads.
 
@@ -323,7 +357,7 @@ namespace Neon.Kube.Setup
                     }
 
                     // We also need to generate the cluster's root SSO password, unless this was specified
-                    // in the cluster definition (typically for built-in neon-desktop clusters).
+                    // in the cluster definition (typically for NEONDESKTOP clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
@@ -372,7 +406,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("node check",
                 (controller, node) =>
                 {
-                    // Ensure that the node image type and version matches the current neonKUBE version.
+                    // Ensure that the node image type and version matches the current NEONKUBE version.
 
                     var imageType = node.ImageType;
 
@@ -400,7 +434,7 @@ namespace Neon.Kube.Setup
 
                     if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
                     {
-                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                        throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                     }
                 });
 
@@ -408,18 +442,11 @@ namespace Neon.Kube.Setup
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
-                    node.AllowSshPasswordLogin(false);
+                    node.AllowSshPasswordLogin(options.Insecure);
 
                     // Update node proxies with the generated SSH credentials.
 
                     node.UpdateCredentials(setupState.SshCredentials);
-
-                    // Remove the [sysadmin] user password; we support only SSH key authentication.
-
-                    if (!options.DesktopReadyToGo)
-                    {
-                        node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
-                    }
                 });
 
             if (!options.DesktopReadyToGo)
@@ -431,11 +458,11 @@ namespace Neon.Kube.Setup
                     });
             }
 
-            // Register the cluster domain with the headend, except for built-in desktop clusters.
+            // Register the cluster domain with the headend, except for NEONDESKTOP clusters.
             //
             // Note that we're also going to add this entry to the local [$/etc/hosts] file so clusters
             // will be recable from this machine even when not connected to the Internet.  We'll do
-            // this for built-in clusters as well.
+            // this for NEONDESKTOP clusters as well.
 
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
@@ -448,6 +475,7 @@ namespace Neon.Kube.Setup
                     if (options.DesktopReadyToGo)
                     {
                         setupState.ClusterId     = KubeHelper.GenerateClusterId();
+                        setupState.ClusterName   = clusterDefinition.Name;
                         setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
 
                         hostName    = KubeConst.DesktopClusterDomain;
@@ -481,7 +509,11 @@ namespace Neon.Kube.Setup
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
-                    // For the built-in desktop cluster, add these records to both the
+                    // Log the cluster ID for debugging purposes.
+
+                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+
+                    // For the NEONDESKTOP cluster, add these records to both the
                     // node's local [/etc/hosts] file.  Note that the node is named
                     // "neon-desktop".
                     //
@@ -508,18 +540,92 @@ namespace Neon.Kube.Setup
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
             //
-            // NOTE: This isn't required for pre-built clusters.
+            // NOTE: This isn't required for NEONDESKTOP clusters.
 
             if (!options.DesktopReadyToGo)
             {
                 hostingManager.AddPostProvisioningSteps(controller);
             }
 
-            // Built-in neon-desktop clusters need to configure the workstation login, etc.
+            // NEONDESKTOP clusters need to configure the workstation login, etc.
 
             if (options.DesktopReadyToGo)
             {
-                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.FirstControlNode); ;
+                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
+            }
+
+            // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
+            // We're going to waita maximum of 10 minutes before giving up.
+
+            if (options.DesktopReadyToGo)
+            {
+                controller.AddGlobalStep("stabilizing: cluster...",
+                    async controller =>
+                    {
+                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
+                        setupState.Save();
+
+                        // Wait a bit to give the cluster a chance to restart the pods.
+
+                        await Task.Delay(TimeSpan.FromSeconds(60));
+
+                        // Wait for the pods to stabilize.
+
+                        using (var k8s = KubeHelper.CreateKubernetesClient())
+                        {
+                            var startedUtc      = DateTime.UtcNow;
+                            var maxWaitInterval = TimeSpan.FromMinutes(15);
+                            var pauseInterval   = TimeSpan.FromSeconds(5);
+                            var badPods         = new List<V1Pod>();
+
+                            while (true)
+                            {
+                                var pods = (await k8s.CoreV1.ListAllPodsAsync()).Items;
+
+                                badPods.Clear();
+
+                                foreach (var pod in pods)
+                                {
+                                    if (pod.Status.Phase != "Running" || pod.Status.ContainerStatuses.Any(status => !status.Ready))
+                                    {
+                                        badPods.Add(pod);
+                                    }
+                                }
+
+                                if (badPods.Count == 0)
+                                {
+                                    return;
+                                }
+
+                                // Fail if we've exceeded the maximum wait time, logging info
+                                // about the failed pods.
+
+                                if (DateTime.UtcNow - startedUtc >= maxWaitInterval)
+                                {
+                                    var sb = new StringBuilder();
+
+                                    controller.LogGlobalError($"[{badPods.Count}] unhealthy pods are preventing cluster stabilization.");
+
+                                    foreach (var badPod in badPods
+                                        .OrderBy(pod => pod.Namespace())
+                                        .ThenBy(pod => pod.Name()))
+                                    {
+                                        sb.Clear();
+                                        sb.AppendLine();
+                                        sb.AppendLine($"POD: {badPod.Name()}@{badPod.Namespace()}");
+                                        sb.AppendLine("-----------------------------");
+                                        sb.AppendLine(NeonHelper.YamlSerialize(badPod));
+                                    }
+
+                                    throw new TimeoutException($"The cluster hasn't stabilized ");
+                                }
+
+                                // Otherwise wait a bit and retry.
+
+                                await Task.Delay(pauseInterval);
+                            }
+                        }
+                    });
             }
 
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup
@@ -546,7 +652,7 @@ namespace Neon.Kube.Setup
             controller.AddDisposable(cluster);
             controller.AddDisposable(desktopServiceProxy);
 
-            return controller;
+            return await Task.FromResult(controller);
         }
     }
 }

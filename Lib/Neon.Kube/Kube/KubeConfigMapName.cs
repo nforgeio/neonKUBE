@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigMapName.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeConfigMapName.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,12 +32,12 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines internal neonKUBE global cluster configmap names.
+    /// Defines internal NEONKUBE global cluster configmap names.
     /// </summary>
     public static class KubeConfigMapName
     {
         /// <summary>
-        /// Identifes the neonKUBE configmap used to report cluster health.  This configmap is
+        /// Identifes the NEONKUBE configmap used to report cluster health.  This configmap is
         /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
@@ -45,7 +45,7 @@ namespace Neon.Kube
         public const string ClusterHealth = "cluster-health";
 
         /// <summary>
-        /// Identifes the neonKUBE configmap used to report cluster info.  This configmap is
+        /// Identifes the NEONKUBE configmap used to report cluster info.  This configmap is
         /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
@@ -54,7 +54,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Identifies the neonKUBE configmap used to indicate whether the cluster is considered
+        /// Identifies the NEONKUBE configmap used to indicate whether the cluster is considered
         /// to be locked.  <b>neon-desktop</b>, <b>neon-cli</b>, and <b>ClusterFixture</b> use 
         /// this to block operations like cluster <b>reset</b>, <b>remove</b>, <b>pause</b>, and 
         /// <b>stop</b> when the cluster  is locked in an attempt to avoid harmful operations on

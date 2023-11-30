@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // FILE:        Service.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -41,8 +41,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.CertManager;
 using Neon.Net;
@@ -65,6 +66,9 @@ using OpenTelemetry.Trace;
 
 using YamlDotNet.RepresentationModel;
 using System.Net.Http;
+using KubeHelper = Neon.Kube.KubeHelper;
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -169,6 +173,7 @@ namespace NeonNodeAgent
     /// </item>
     /// </list>
     /// </remarks>
+    [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public partial class Service : NeonService
     {
         /// <summary>
@@ -199,31 +204,29 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            K8s = KubeHelper.GetKubernetesClient();
+            K8s = KubeHelper.CreateKubernetesClient();
 
             await WatchClusterInfoAsync();
             
             // Start the web service.
 
-            var port = 11006;
-
-
-            var k8s = KubernetesOperatorHost
+            var operatorHost = KubernetesOperatorHost
                .CreateDefaultBuilder()
-               .ConfigureOperator(configure =>
+               .ConfigureOperator(settings =>
                {
-                   configure.Port = port;
-                   configure.AssemblyScanningEnabled = true;
-                   configure.Name = Name;
+                   settings.Port                    = KubePort.NeonNodeAgent;
+                   settings.AssemblyScanningEnabled = false;
+                   settings.Name                    = Name;
+                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
                })
-               .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
+               .AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                .UseStartup<OperatorStartup>()
                .Build();
 
-            _ = k8s.RunAsync();
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{KubePort.NeonNodeAgent}");
 
-            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
+            _ = operatorHost.RunAsync();
 
             // Indicate that the service is running.
 
@@ -250,7 +253,8 @@ namespace NeonNodeAgent
                             return true;
                         }
 
-                        // filter out leader election since it's really chatty
+                        // Filter out leader election since it's really chatty.
+
                         if (httpcontext.RequestUri.Host == "10.253.0.1")
                         {
                             return false;
@@ -264,11 +268,12 @@ namespace NeonNodeAgent
                 .AddOtlpExporter(
                 options =>
                 {
-                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.ExportProcessorType         = ExportProcessorType.Batch;
                     options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                 });
+
             return true;
         }
 
@@ -297,13 +302,15 @@ namespace NeonNodeAgent
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
                 {
-                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = Neon.K8s.TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");
                     await Task.CompletedTask;
                 },
-                KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                namespaceParameter: KubeNamespace.NeonStatus,
+                fieldSelector:      $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
         }
     }
 }

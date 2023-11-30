@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+//-----------------------------------------------------------------------------
+// FILE:        NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// This namespace includes additional utilties for testing neonKUBE functionality.
+    /// This namespace includes additional utilties for testing NEONKUBE functionality.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

@@ -32,6 +32,7 @@ spec:
         openebs.io/component-name: openebs-localpv-provisioner
         openebs.io/version: {{ .Values.release.version }}
     spec:
+      enableServiceLinks: false
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

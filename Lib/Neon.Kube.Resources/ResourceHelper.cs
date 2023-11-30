@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ResourceHelper.cs
+//-----------------------------------------------------------------------------
+// FILE:        ResourceHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ namespace Neon.Kube.Resources
     /// <summary>
     /// Internal helpers.
     /// </summary>
-    internal static class ResourceHelper
+    public static class ResourceHelper
     {
         /// <summary>
-        /// Identifies the standard neonKUBE Kubernetes resource group.
+        /// Identifies the standard NEONKUBE Kubernetes resource group.
         /// </summary>
         public const string NeonKubeResourceGroup = "neonkube.io";
     }

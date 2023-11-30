@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterPauseCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterPauseCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,8 +59,8 @@ namespace NeonCli
     public class ClusterPauseCommand : CommandBase
     {
         private const string usage = @"
-Pauses the current cluster by putting its nodes to sleep.  This is not
-supported by all hosting environments.
+Pauses the current NEONKUBE cluster by putting its nodes to sleep.  This may
+not be supported by all hosting environments.
 
 USAGE:
 
@@ -68,19 +68,18 @@ USAGE:
 
 OPTIONS:
 
-    --force     - forces cluster stop without user confirmation
+    --force     - forces cluster pause without user confirmation
                   or verifying unlocked status
 
 REMARKS:
 
 Use the [neon cluster start] command to resume a paused cluster.
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+This command will not work on a locked clusters as a safety measure.
 
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
+All clusters besides NEONDESKTOP clusters are locked by default when they're
+deployed.  You can disable this by setting [IsLocked=false] in your cluster
+definition or by executing this command on your cluster:
 
     neon cluster unlock
 
@@ -121,7 +120,7 @@ cluster definition or by executing this command on your cluster:
 
             var force = commandLine.HasOption("--force");
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var capabilities = cluster.Capabilities;
 
@@ -169,8 +168,8 @@ cluster definition or by executing this command on your cluster:
                         }
                         catch (TimeoutException)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                            Console.Error.WriteLine();
+                            Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
                         }
                         break;
 

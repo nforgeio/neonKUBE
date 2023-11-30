@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.cs
+//-----------------------------------------------------------------------------
+// FILE:        Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,18 +52,17 @@ using Neon.Kube.GrpcProto.Desktop;
 using Neon.Kube.Hosting;
 using Neon.SSH;
 using Neon.Windows;
-using Neon.WinTTY;
 
+using OpenTelemetry;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 
 using ProtoBuf.Grpc.Client;
-using OpenTelemetry;
 
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure and manage the nodes of a neonKUBE cluster.
+    /// This tool is used to configure and manage the nodes of a NEONKUBE cluster.
     /// </summary>
     public static class Program
     {
@@ -82,7 +81,7 @@ namespace NeonCli
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// neonKUBE and neonCLOUD (premium) GitHub repositories.
+        /// NEONKUBE and NEONCLOUD (premium) GitHub repositories.
         /// </remarks>
         public const bool IsPremium =
 #if PREMIUM
@@ -124,11 +123,6 @@ namespace NeonCli
         /// Returns the orignal program <see cref="CommandLine"/>.
         /// </summary>
         public static CommandLine CommandLine { get; private set; }
-
-        /// <summary>
-        /// Returns the fully qualified path to the <b>kubectl</b> binary.
-        /// </summary>
-        public static string KubectlPath { get; private set; }
 
         /// <summary>
         /// Returns the fully qualified path to the <b>helm</b> binary.
@@ -173,21 +167,11 @@ namespace NeonCli
         /// <returns>The exit code.</returns>
         public static async Task<int> Main(string[] args)
         {
-            string usage = $@"
+            var usage = $@"
 {Program.Name} [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:
-
-    neon [OPTIONS] COMMAND [ARG...]
-
-NEON KUBECTL COMMANDS:
-
-    [neon-cli] supports all standard kubectl commands like (more help below):
-
-    neon apply -f my-manifest.yaml
-
-NEON CLUSTER LIFE-CYCLE COMMANDS:
 
     neon cluster check
     neon cluster dashboard
@@ -203,31 +187,19 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
-    neon cluster verify     [CLUSTER-DEF]
+    neon cluster validate   [CLUSTER-DEF]
 
     neon login              COMMAND
     neon logout
 
-NEON HELM COMMANDS:
+    neon toolpath           TOOLNAME
 
-    The neon-cli supports all standard Helm commands by prefixing
-    them with [helm], like:
-
-    neon helm install -f my-values.yaml my-redis ./redis
-
-NEON UTILITY COMMANDS:
-
-    neon tool generate iso  SOURCE-FOLDER ISO-PATH
-    neon tool password      COMMAND
-    neon tool vault         COMMAND
-    neon tool version       [-n] [--git] [--minimum=VERSION]
-
-CLUSTER MANAGEMENT ARGUMENTS:
+ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in
 
-    COMMAND             - Subcommand and arguments
+    TOOLNAME            - Identifies a related tool, one of: helm
 
 NOTE: Command line arguments and options may include references to 
       profile values, secrets and environment variables, like:
@@ -320,22 +292,15 @@ NOTE: Command line arguments and options may include references to
 
             Logger.LogInformationEx(() => $"starting: {Name}");
 
-            //-----------------------------------------------------------------
-            // Use the version of Powershell Core installed with the application,
-            // if present.
-
-            PowerShell.PwshPath = KubeHelper.PwshPath;
-
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
-            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
-            // will download them when they're not already present.
+            // Fetch the paths to the [helm] binary.  Note that this
+            // will be downloaded them when it's not already present.
 
-            KubectlPath = GetKubectlPath();
-            HelmPath    = GetHelmPath();
+            HelmPath = GetHelmPath();
 
             // Process the command line.
 
@@ -360,14 +325,12 @@ NOTE: Command line arguments and options may include references to
 
                 CommandLine = new CommandLine(args);
 
-                if (CommandLine.Items.Length == 0)
+                if (CommandLine.HasHelpOption || CommandLine.Items.Length == 0)
                 {
-                    // Output our standard usage help and then launch [kubectl] to display
-                    // its help as well.
+                    // Output our standard usage help.
 
                     Console.WriteLine(usage);
-                    NeonHelper.Execute(KubectlPath, Array.Empty<object>());
-                    Program.Exit(0);
+                    Program.Exit(CommandLine.HasHelpOption ? 0 : -1);
                 }
 
                 // Scan for enabled commands in the current assembly.
@@ -404,11 +367,9 @@ NOTE: Command line arguments and options may include references to
                     }
                     else
                     {
-                        // Output our standard usage help and then launch [kubectl] to
-                        // display its help as well.
+                        // Output our standard usage help.
 
                         Console.WriteLine(usage);
-                        NeonHelper.Execute(KubectlPath, Array.Empty<object>());
                     }
 
                     Program.Exit(0);
@@ -416,58 +377,20 @@ NOTE: Command line arguments and options may include references to
 
                 // Start a trace for the command.
 
-                traceActivity = ActivitySource?.CreateActivity("command", ActivityKind.Internal, parentId: null, 
-                    tags: new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
+                traceActivity = ActivitySource?.CreateActivity(
+                    "command",
+                    ActivityKind.Internal,
+                    parentId: null, 
+                    tags:     new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
 
                 // Lookup the command.
 
                 command = GetCommand(CommandLine, commands);
 
-                if (CommandLine.Arguments.ElementAtOrDefault(0) == "tool" && command == null)
-                {
-                    // Special case invalid command detection for [tool] commands.
-
-                    Console.WriteLine(usage);
-                    Program.Exit(1);
-                }
-
                 if (command == null)
                 {
-                    // This must be a [kubectl] command, so spawn [kubectl] to handle it.
-                    // Note that we'll create a TTY for commands with a [-t] or [--tty]
-                    // option so that editors and other interactive commands will work.
-
-                    // $todo(jefflill):
-                    //
-                    // I believe this treats this as if the user specified the [-i] or
-                    // [--stdin] option as well.  Most users probably specify [-it]
-                    // together, but we may need to revisit this at some point.
-
-                    var tty = CommandLine.HasOption("--tty");
-
-                    if (!tty)
-                    {
-                        // Look for a [-t] option.
-
-                        foreach (var item in CommandLine.Items.Where(item => item.StartsWith("-") && item.Length > 1 && item[1] != '-'))
-                        {
-                            if (item.Contains('t'))
-                            {
-                                tty = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (tty)
-                    {
-                        new ConsoleTTY().Run($"\"{KubectlPath}\" {CommandLine}");
-                        Program.Exit(0);
-                    }
-                    else
-                    {
-                        Program.Exit(NeonHelper.Execute(KubectlPath, CommandLine.Items));
-                    }
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
+                    Program.Exit(-1);
                 }
 
                 // This is one of our commands, so ensure that there are no unexpected
@@ -594,6 +517,50 @@ NOTE: Command line arguments and options may include references to
             }
 
             // No match.
+
+            return null;
+        }
+
+        /// <summary>
+        /// Looks for a <b>--output=FORMAT</b> or <b>-o=FORMAT</b> option on the command line
+        /// passed and returns the format or <n>null</n> when neither option is present.
+        /// </summary>
+        /// <param name="commandLine"></param>
+        /// <returns>The format specified or <c>null</c>.</returns>
+        public static OutputFormat? GetOutputFormat(CommandLine commandLine)
+        {
+            Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
+
+            var formatString = commandLine.GetOption("--output");
+
+            if (formatString == null)
+            {
+                formatString = commandLine.GetOption("-o");
+            }
+
+            if (string.IsNullOrEmpty(formatString))
+            {
+                return null;
+            }
+
+            switch (formatString.ToLowerInvariant())
+            {
+                case "json":
+
+                    return OutputFormat.Json;
+
+                case "yaml":
+
+                    return OutputFormat.Yaml;
+
+                default:
+
+                    Console.Error.WriteLine($"*** ERROR: [{formatString}] is not a supported output format.");
+                    Program.Exit(1);
+                    break;
+            }
+
+            // We should never reach this.
 
             return null;
         }
@@ -751,59 +718,21 @@ NOTE: Command line arguments and options may include references to
         }
 
         /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// Returns the path to <b>helm</b> tool binary to be used by <b>neon-cli</b>.
         /// </summary>
         /// <returns>The fully qualified tool path.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
         /// <remarks>
         /// <para>
-        /// Installed versions of <b>neon-cli</b> expect the <b>kubectl</b> and <b>helm</b> tools to
-        /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
+        /// Installed versions of <b>neon-cli</b> expect the <b>helm</b> toolto be located
+        /// in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\NEONFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\NEONDESKTOP\
+        ///     neon.exe
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
-        ///         kubectl.exe
-        /// </code>
-        /// <para>
-        /// If this folder exists and the tool binary exists within that folder, then we'll simply
-        /// return the path to the binary.
-        /// </para>
-        /// <para>
-        /// If the tool folder or binary does not exist, then the user is probably a developer running
-        /// an uninstalled version of the tool, perhaps in the debugger.  In this case, we're going to
-        /// cache these binaries in the special tools folder: <see cref="KubeHelper.ToolsFolder"/>.
-        /// </para>
-        /// <para>
-        /// If the tool folder and/or the requested tool binary doesn't exist or the tool version doesn't
-        /// match what's specified in <see cref="KubeVersions"/>, then this method will attempt to download
-        /// the binary to <b>%TEMP%\neon-tool-cache</b>, indicating that this is happening on the
-        /// console.
-        /// </para>
-        /// </remarks>
-        public static string GetKubectlPath()
-        {
-            return KubeHelper.GetKubectlPath(InstalledToolFolder, userToolsFolder: true);
-        }
-
-        /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
-        /// </summary>
-        /// <returns>The fully qualified tool path.</returns>
-        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
-        /// <remarks>
-        /// <para>
-        /// Installed versions of <b>neon-cli</b> expect the <b>kubectl</b> and <b>helm</b> tools to
-        /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
-        /// </para>
-        /// <code>
-        /// C:\Program Files\NEONFORGE\neonDESKTOP\
-        ///     neon-cli.exe
-        ///     tools\
-        ///         helm.exe
-        ///         kubectl.exe
         /// </code>
         /// <para>
         /// If this folder exists and the tool binary exists within that folder, then we'll simply
@@ -817,7 +746,7 @@ NOTE: Command line arguments and options may include references to
         /// <para>
         /// If the tool folder and/or ther equested tool binary doesn't exist or the tool version doesn't
         /// match what's specified in <see cref="KubeVersions"/>, then this method will attempt to download
-        /// the binary to <b>%TEMP%\neon-tool-cache</b>, indicating that this is happening on the
+        /// the binary to <see cref="KubeHelper.ToolsFolder"/>, indicating that this is happening on the
         /// console.
         /// </para>
         /// </remarks>

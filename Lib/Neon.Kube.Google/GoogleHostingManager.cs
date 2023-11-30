@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    GoogleHostingManager.cs
+//-----------------------------------------------------------------------------
+// FILE:        GoogleHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,8 +77,13 @@ namespace Neon.Kube.Hosting.Google
         /// </summary>
         public static void Load()
         {
-            // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this method.
+            // This method can't do nothing because the C# compiler may optimize calls
+            // out of trimmed executables and we need this type to be discoverable
+            // via reflection.
+            //
+            // This call does almost nothing to prevent C# optimization.
+
+            Load(() => new GoogleHostingManager());
         }
 
         //---------------------------------------------------------------------
@@ -161,6 +166,18 @@ namespace Neon.Kube.Hosting.Google
                 throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Google}].");
             }
         }
+
+        /// <inheritdoc/>
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
 
         /// <inheritdoc/>
         public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)

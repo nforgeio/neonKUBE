@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterValidateCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterValidateCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ namespace NeonCli
     public class ClusterValidateCommand : CommandBase
     {
         private const string usage = @"
-Verifies a cluster definition file.
+Validates a NEONKUBE cluster definition YAML file.
 
 USAGE:
 
@@ -54,6 +54,9 @@ ARGUMENTS:
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "validate" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()
@@ -69,7 +72,7 @@ ARGUMENTS:
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Parse and validate the cluster definition.

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neonkube-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Performs a clean build of the neonKUBE solution and publishes binaries
+# Performs a clean build of the NEONKUBE solution and publishes binaries
 # to the [$/build] folder.
 #
 # USAGE: pwsh -f neonkube-builder.ps1 [OPTIONS]
@@ -44,7 +44,7 @@ if ($codedoc)
     Write-Error "ERROR: Code documentation builds are temporarily disabled until we"
     Write-Error "       port to DocFX.  SHFB doesn't work for multi-targeted projects."
     Write-Error " "
-    Write-Error "       https://github.com/nforgeio/neonKUBE/issues/1206"
+    Write-Error "       https://github.com/nforgeio/neonkube/issues/1206"
     Write-Error " "
     exit 1
 }
@@ -82,6 +82,7 @@ else
 }
 
 $msbuild     = $env:MSBUILDPATH
+$neonBuild   = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
 $nkRoot      = $env:NK_ROOT
 $nkSolution  = "$nkRoot\neonKUBE.sln"
 $nkBuild     = "$env:NK_BUILD"
@@ -93,6 +94,13 @@ $env:PATH   += ";$nkBuild"
 
 $neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
+
+    #------------------------------------------------------------------------------
+	# Specify whether we're building with package or project references.
+
+    # $todo(jefflill): We're hardcoding project references for now.
+
+    $env:NEON_BUILD_USE_NUGETS = "false"
 
 #------------------------------------------------------------------------------
 # Perform the operation.
@@ -119,6 +127,11 @@ try
     #--------------------------------------------------------------------------
     # Build the solution.
 
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
+
     if (-not $nobuild)
     {
         # We see somewhat random build problems when Visual Studio has the solution open,
@@ -143,31 +156,11 @@ try
 
         Write-Info ""
         Write-Info "*******************************************************************************"
-        Write-Info "***                           RESTORE PACKAGES                              ***"
-        Write-Info "*******************************************************************************"
-        Write-Info ""
-
-        dotnet restore
-
-        & dotnet restore "$nkSolution"
-
-        if (-not $?)
-        {
-            throw "ERROR: RESTORE FAILED"
-        }
-
-        Write-Info ""
-        Write-Info "*******************************************************************************"
         Write-Info "***                           CLEAN SOLUTION                                ***"
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
-        }
+        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
         Write-Info ""
         Write-Info "*******************************************************************************"
@@ -175,7 +168,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nkSolution" $buildConfig -restore -m -verbosity:$verbosity
+        & "$msbuild" "$nkSolution" $buildConfig -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:$verbosity
 
         if (-not $?)
         {
@@ -209,7 +202,7 @@ try
             throw "ERROR: Cannot remove: $nkBuild\codedoc"
         }
 
-        & "$msbuild" "$nkSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity
+        & "$msbuild" "$nkSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity -p:SolutionName=$env:SolutionName
 
         if (-not $?)
         {

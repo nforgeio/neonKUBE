@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    CrioConfigController.cs
+//-----------------------------------------------------------------------------
+// FILE:        CrioConfigController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -32,11 +32,11 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Resources;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator.Controllers;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
@@ -47,7 +47,7 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -96,11 +96,12 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class CrioConfigController : IResourceController<V1CrioConfiguration>
+    [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [ResourceController]
+    public class CrioConfigController : ResourceControllerBase<V1CrioConfiguration>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.crioconfiguration-{Node.Name}";
+        public new string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.crioconfiguration-{Node.Name}";
 
         //---------------------------------------------------------------------
         // Local types
@@ -262,13 +263,13 @@ namespace NeonNodeAgent
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
-        internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
 
         // Paths to relevant folders in the host file system.
 
+        internal static readonly string     configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      hostNeonRunFolder;
         private static readonly string      hostContainerRegistriesFolder;
 
@@ -298,12 +299,28 @@ namespace NeonNodeAgent
             }
         }
 
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private readonly IKubernetes k8s;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public CrioConfigController(
+            IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.k8s     = k8s;
+        }
+
         /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {
@@ -351,38 +368,12 @@ rm $0
                 reloginInterval = TimeSpan.FromHours(24);
             }
 
-            
+
             reloginMaxRandomInterval = reloginInterval.Divide(4);
         }
-        
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private readonly IKubernetes k8s;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public CrioConfigController(
-            IKubernetes k8s)
-        {
-            Covenant.Requires(k8s != null, nameof(k8s));
-
-            this.k8s     = k8s;
-        }
 
         /// <inheritdoc/>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            log.LogInformationEx("IDLE");
-
-            return;
-        }
-
-        /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;
 
@@ -635,7 +626,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1CrioConfiguration resource)
+        public override async Task DeletedAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;
             

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ param
 #Ensure-VisualStudioNotRunning
 
 # Verify that the user has the required environment variables.  These will
-# be available only for maintainers and are intialized by the neonCLOUD
+# be available only for maintainers and are intialized by the NEONCLOUD
 # [buildenv.cmd] script.
 
 if (!(Test-Path env:NC_ROOT))
@@ -58,7 +58,7 @@ if (!(Test-Path env:NC_ROOT))
     "*** ERROR: This script is intended for maintainers only:"
     "           [NC_ROOT] environment variable is not defined."
     ""
-    "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+    "           Maintainers should re-run the NEONCLOUD [buildenv.cmd] script."
 
     return 1
 }
@@ -104,7 +104,7 @@ function Publish
     #
     # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget"
+    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget" -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
     if (Test-Path "$env:NK_ROOT\Lib\$project\prerelease.txt")
@@ -128,14 +128,14 @@ function Publish
 
 try
 {
-	# We're going to build the RELEASE configuration.
-
-    $config = "Release"
-	
-    #------------------------------------------------------------------------------
-    # Load the library and neonKUBE versions.
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
 
     $msbuild         = $env:MSBUILDPATH
+    $neonBuild       = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
+    $config          = "Release"
     $nkRoot          = "$env:NK_ROOT"
     $nkSolution      = "$nkRoot\neonKUBE.sln"
     $nkBuild         = "$env:NK_BUILD"
@@ -173,32 +173,13 @@ try
 
     if (-not $restore)
     {
-
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                           RESTORE PACKAGES                               ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        & dotnet restore "$nkSolution"
-
-        if (-not $?)
-        {
-            throw "ERROR: RESTORE FAILED"
-        }
-
         Write-Info ""
         Write-Info "********************************************************************************"
         Write-Info "***                            CLEAN SOLUTION                                ***"
         Write-Info "********************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
-        }
+        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
         Write-Info  ""
         Write-Info  "*******************************************************************************"
@@ -206,7 +187,7 @@ try
         Write-Info  "*******************************************************************************"
         Write-Info  ""
 
-        & "$msbuild" "$nkSolution" -p:Configuration=Release -restore -m -verbosity:quiet
+        & "$msbuild" "$nkSolution" -p:Configuration=Release -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet
 
         if (-not $?)
         {
@@ -227,8 +208,6 @@ try
         SetVersion Neon.Kube.Hosting              $neonkubeVersion
         SetVersion Neon.Kube.HyperV               $neonkubeVersion
         SetVersion Neon.Kube.Models               $neonkubeVersion
-        SetVersion Neon.Kube.Operator             $neonkubeVersion
-        SetVersion Neon.Kube.Operator.Templates   $neonkubeVersion
         SetVersion Neon.Kube.Resources            $neonkubeVersion
         SetVersion Neon.Kube.Setup                $neonkubeVersion
         SetVersion Neon.Kube.XenServer            $neonkubeVersion
@@ -248,9 +227,6 @@ try
         Publish Neon.Kube.Hosting                 $neonkubeVersion
         Publish Neon.Kube.HyperV                  $neonkubeVersion
         Publish Neon.Kube.Models                  $neonkubeVersion
-        Publish Neon.Kube.Operator                $neonkubeVersion
-        Publish Neon.Kube.Operator.Templates      $neonkubeVersion
-        Publish Neon.Kube.Resources               $neonkubeVersion
         Publish Neon.Kube.Setup                   $neonkubeVersion
         Publish Neon.Kube.XenServer               $neonkubeVersion
         Publish Neon.Kube.Xunit                   $neonkubeVersion

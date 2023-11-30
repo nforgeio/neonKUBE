@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterManifest.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterManifest.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace Neon.Kube
     /// <para>
     /// Holds information about a deployed cluster including things like the container images
     /// that need to be present in the local Harbor deployment.  This information is associated
-    /// with a specific version of neonKUBE and is generated automatically during neonCLOUD
+    /// with a specific version of NEONKUBE and is generated automatically during NEONCLOUD
     /// node image builds and is uploaded to S3 as a JSON document.
     /// </para>
     /// <para>
@@ -64,7 +64,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns information about the container images deployed to a new neonKUBE cluster.
+        /// Returns information about the container images deployed to a new NEONKUBE cluster.
         /// </summary>
         [JsonProperty(PropertyName = "ContainerImages", Required = Required.Always)]
         [YamlMember(Alias = "containerImages", ApplyNamingConventions = false)]

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterContainerImage.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterContainerImage.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// container registeries.
         /// </para>
         /// <note>
-        /// Source references have their tags set to the neonKUBE cluster version.
+        /// Source references have their tags set to the NEONKUBE cluster version.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SourceRef", Required = Required.Always)]

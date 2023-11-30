@@ -1,0 +1,42 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neoncontainerregistries.neonkube.io
+spec:
+  group: neonkube.io
+  names:
+    kind: NeonContainerRegistry
+    plural: neoncontainerregistries
+    shortNames: []
+    singular: neoncontainerregistry
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              prefix:
+                type: string
+              searchOrder:
+                format: int32
+                type: integer
+              insecure:
+                type: boolean
+              blocked:
+                type: boolean
+              location:
+                type: string
+              username:
+                type: string
+              password:
+                type: string
+            required:
+            - prefix
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources: {}

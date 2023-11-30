@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConst.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeConst.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,37 +50,37 @@ namespace Neon.Kube
         /// <summary>
         /// The maximum number of cluster control-plane nodes.
         /// </summary>
-        public const int MaxControlNodes = 5;
+        public const int MaxControlPlaneNodes = 5;
 
         /// <summary>
-        /// The minimum number of cores required by control-plane nodes.
+        /// The minimum number of vCPUs required by control-plane nodes.
         /// </summary>
-        public const int MinControlNodeCores = 4;
+        public const int MinControlNodeVCpus = 2;
 
         /// <summary>
-        /// The minimum number of cores required by worker nodes.
+        /// The minimum number of vCPUs required by worker nodes.
         /// </summary>
-        public const int MinWorkerCores = 4;
+        public const int MinWorkerNodeVCpus = 4;
 
         /// <summary>
         /// The minimum RAM (MiB) required for control-plane nodes.
         /// </summary>
-        public const int MinControlNodeRamMiB = 8192;
+        public const int MinControlPlaneNodeRamMiB = 8192;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
         /// </summary>
-        public const int MinWorkerRamMiB = 8192;
+        public const int MinWorkerNodeRamMiB = 8192;
 
         /// <summary>
         /// The minimum required network interface cards for control-plane nodes.
         /// </summary>
-        public const int MinControlNodeNics = 1;
+        public const int MinControlPlaneNodeNics = 1;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.
         /// </summary>
-        public const int MinWorkerNics = 1;
+        public const int MinWorkerNodeNics = 1;
 
         /// <summary>
         /// The root Kubernetes context username for provisioned clusters. 
@@ -100,7 +100,7 @@ namespace Neon.Kube
         public const string RootDesktopPassword = "root";
 
         /// <summary>
-        /// The neonKUBE domain used to host neonKUBE cluster DNS records.
+        /// The NEONKUBE domain used to host NEONKUBE cluster DNS records.
         /// </summary>
         public const string NeonClusterDomain = "neoncluster.io";
 
@@ -130,14 +130,14 @@ namespace Neon.Kube
         public const int SysAdminGID = 1000;
 
         /// <summary>
-        /// The default <b>sysadmin</b> account password baked into neonKUBE
+        /// The default <b>sysadmin</b> account password baked into NEONKUBE
         /// base images.  This will generally be changed to a secure password 
         /// during cluster provisioning.
         /// </summary>
         public const string SysAdminPassword = "sysadmin0000";
 
         /// <summary>
-        /// <b>$/etc/hosts</b> section name used by neonKUBE applications for persisting
+        /// <b>$/etc/hosts</b> section name used by NEONKUBE applications for persisting
         /// DNS host entries via <see cref="NetHelper.ModifyLocalHosts(string, Dictionary{string, System.Net.IPAddress})"/>.
         /// </summary>
         public const string EtcHostsSectionName = "Added for NEONKUBE";
@@ -166,7 +166,7 @@ namespace Neon.Kube
         public const string ImageTypePath = "/etc/neonkube/image-type";
 
         /// <summary>
-        /// Path to the node file holding the neonKUBE version.
+        /// Path to the node file holding the NEONKUBE version.
         /// </summary>
         public const string ImageVersionPath = "/etc/neonkube/image-version";
 
@@ -178,9 +178,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// The number of IP addresses reserved by cloud deployments at the beginning of the 
-        /// node subnet by the cloud provider and also for future neonKUBE features.
+        /// node subnet by the cloud provider and also for future NEONKUBE features.
         /// This typically includes the cloud default gateway and DNS forwarding IPs as well
-        /// as potential future neonKUBE features such as an integrated VPN and perhaps 
+        /// as potential future NEONKUBE features such as an integrated VPN and perhaps 
         /// management VMs.
         /// </summary>
         public const int CloudSubnetStartReservedIPs = 10;
@@ -230,14 +230,14 @@ namespace Neon.Kube
         public const int MaxNodeDiskSizeGiB = 16 * 1024;
 
         /// <summary>
-        /// Returns the URL to the neonKUBE GitHub repository.
+        /// Returns the URL to the NEONKUBE GitHub repository.
         /// </summary>
-        public const string KubeGitHubRepoUrl = "https://github.com/nforgeio/neonKUBE";
+        public const string KubeGitHubRepoUrl = "https://github.com/nforgeio/NEONKUBE";
 
         /// <summary>
-        /// Returns the URL to th neonKUBE help site.
+        /// Returns the URL to th NEONKUBE help site.
         /// </summary>
-        public const string KubeHelpUrl = "https://github.com/nforgeio/neonKUBE";
+        public const string KubeHelpUrl = "https://github.com/nforgeio/NEONKUBE";
 
         /// <summary>
         /// Returns the domain used to configure cluster DNS names that can
@@ -273,27 +273,27 @@ namespace Neon.Kube
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
-        /// Identifies the GitHub organization where we host released neonKUBE container images.
+        /// Identifies the GitHub organization where we host released NEONKUBE container images.
         /// </summary>
         public const string NeonKubeReleaseOrganization = "neonkube-release";
 
         /// <summary>
-        /// Identifies the GitHub organization where we host staged neonKUBE container images.
+        /// Identifies the GitHub organization where we host staged NEONKUBE container images.
         /// </summary>
         public const string NeonKubeStageOrganization = "neonkube-stage";
 
         /// <summary>
-        /// Identifies the neonKUBE release container image registry.
+        /// Identifies the NEONKUBE release container image registry.
         /// </summary>
         public const string NeonKubeReleaseRegistry = $"ghcr.io/{NeonKubeReleaseOrganization}";
 
         /// <summary>
-        /// Identifies the neonKUBE stage container image registry.
+        /// Identifies the NEONKUBE stage container image registry.
         /// </summary>
         public const string NeonKubeStageRegistry = $"ghcr.io/{NeonKubeStageOrganization}";
 
         /// <summary>
-        /// Returns the appropriate public container neonKUBE registry to be used for the git 
+        /// Returns the appropriate public container NEONKUBE registry to be used for the git 
         /// branch the assembly was built from.  This returns <see cref="NeonKubeReleaseRegistry"/> for
         /// release branches and <see cref="NeonKubeStageRegistry"/> for all other branches.
         /// </summary>
@@ -391,25 +391,25 @@ namespace Neon.Kube
 
         /// <summary>
         /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
-        /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
+        /// for creating the internal virtual switch where the NEONDESKTOP cluster
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
         public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
-        /// The built-in neon-desktop cluster name.
+        /// The NEONDESKTOP cluster name.
         /// </summary>
         public const string NeonDesktopClusterName = "neon-desktop";
 
         /// <summary>
-        /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
+        /// Identifies the Kubernetes context name for the NEONDESKTOP cluster.
         /// </summary>
         public const string NeonDesktopContextName = $"{RootUser}@{NeonDesktopClusterName}";
 
         /// <summary>
-        /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.
+        /// Identifies the Hyper-V virtual machine used to host the NEONDESKTOP cluster.
         /// </summary>
-        public const string NeonDesktopHyperVBuiltInVmName = "neon-desktop";
+        public const string NeonDesktopHyperVVmName = "neon-desktop";
 
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.
@@ -422,7 +422,7 @@ namespace Neon.Kube
         public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
 
         /// <summary>
-        /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
+        /// Identifies the Kubernetes group where NEONKUBE custom resources will be located.
         /// </summary>
         public const string NeonKubeResourceGroup = "neonkube.io";
 

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,11 +47,13 @@ USAGE:
     neon cluster check
     neon cluster dashboard
     neon cluster delete     [OPTIONS]
+    neon cluster deploy     [OPTION] CLUSTER-DEF
     neon cluster health
     neon cluster info
     neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
+    neon cluster property   [-n] NAME
     neon cluster purpose    [unspecified | development | test | stage | production]
     neon cluster pause      [OPTIONS]
     neon cluster reset      [OPTIONS]
@@ -59,7 +61,7 @@ USAGE:
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
-    neon cluster verify     [CLUSTER-DEF]
+    neon cluster validate   [CLUSTER-DEF]
 ";
 
         /// <inheritdoc/>
@@ -75,6 +77,7 @@ USAGE:
         public override async Task RunAsync(CommandLine commandLine)
         {
             Help();
+            Program.Exit(commandLine.Arguments.Length == 0 ? 0 : 1);
             await Task.CompletedTask;
         }
     }

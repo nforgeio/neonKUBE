@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeDiagnostics.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeDiagnostics.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -57,7 +58,7 @@ using Neon.Windows;
 namespace Neon.Kube
 {
     /// <summary>
-    /// neonKUBE cluster diagnostics.
+    /// NEONKUBE cluster diagnostics.
     /// </summary>
     public static class KubeDiagnostics
     {

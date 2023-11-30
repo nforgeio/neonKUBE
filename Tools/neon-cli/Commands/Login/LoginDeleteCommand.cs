@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    LoginDeleteCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        LoginDeleteCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,28 +41,31 @@ namespace NeonCli
     public class LoginDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes a Kubernetes context from the local computer.
+Removes a NEONKUBE context from the local worstation.
 
 USAGE:
 
-    neon login delete   [--force] [ USER@CLUSTER[/NAMESPACE] ]
+    neon login delete|rm [--force] [CONTEXT-NAME]
 
 ARGUMENTS:
 
-    USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
+    CONTEXT-NAME    - Optionally specifies the context to be removed.  The
+                      current context is removed by default.
 
 OPTIONS:
 
-    --force             - Don't prompt, just remove and ignore missing logins
+    --force         - Don't prompt for permission and also ignore missing contexts
 
 REMARKS:
 
-By default, this comman will remove the current login when 
-USER@CLUSTER[/NAMESPACE is not specified.
+This command removes the current login when CONTEXT-NAME is not specified.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "login", "delete" }; 
+        public override string[] Words => new string[] { "login", "delete" };
+
+        /// <inheritdoc/>
+        public override string[] AltWords => new string[] { "login", "rm" };
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" };
@@ -92,14 +95,14 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
                     Program.Exit(1);
                 }
             }
 
             if (contextName != null)
             {
-                context = KubeHelper.Config.GetContext(contextName);
+                context = KubeHelper.KubeConfig.GetContext(contextName);
 
                 if (context == null)
                 {
@@ -110,7 +113,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                     }
                     else
                     {
-                        KubeHelper.Config.RemoveContext(contextName);
+                        KubeHelper.KubeConfig.RemoveContext(contextName);
                         Program.Exit(0);
                     }
                 }
@@ -123,7 +126,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                 {
                     if (!force)
                     {
-                        Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
+                        Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
                         Program.Exit(1);
                     }
                     else
@@ -135,7 +138,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                 contextName = (KubeContextName)context.Name;
             }
 
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to remove: {contextName}?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to delete: {contextName}?"))
             {
                 return;
             }
@@ -156,8 +159,8 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             // Remove the login and kubecontext
 
-            KubeHelper.Config.RemoveContext(context);
-            Console.WriteLine($"Removed: {contextName}");
+            KubeHelper.KubeConfig.RemoveContext(context);
+            Console.WriteLine($"Deleted: {contextName}");
             Console.WriteLine();
 
             await Task.CompletedTask;

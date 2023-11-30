@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         deployment.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -454,14 +454,12 @@ function Save-ToS3
         [Parameter(Position=1, Mandatory=$true)]
         [string]$targetUri,
         [Parameter(Mandatory=$false)]
-        [bool]$gzip = $false,
-        [Parameter(Mandatory=$false)]
+        [switch]$gzip = $false,
         [string]$metadata = "",
-        [Parameter(Mandatory=$false)]
-        [bool]$publicReadAccess = $false
+        [switch]$publicReadAccess = $false
     )
 
-    [Neon.Deployment.AwsCli]::S3Upload($sourcePath, $targetUri, $gzip, $metedata, $publicReadAccess)
+    [Neon.Deployment.AwsCli]::S3Upload($sourcePath, $targetUri, $gzip, $metadata, $publicReadAccess)
 }
 
 #------------------------------------------------------------------------------
@@ -523,46 +521,37 @@ function Remove-FromS3
 }
 
 #------------------------------------------------------------------------------
-# Code signs an executable file with a code signing token.
+# Removes one or more S3 objects.
 #
 # ARGUMENTS:
 #
-#   targetPath          - Specifies the path to the file being signed.
-#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
-#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
-#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
-#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
-#   password            - Specifies the certificate password.
+#   targetUri           - Identifies target S3 URI or prefix for the object(s) to be removed.  This may be either an
+#                         [s3://BUCKET[/KEY]] or a [https://s3.REGION.amazonaws.com/BUCKET[/KEY]] URI 
+#                         referencing an S3 bucket and key.  Note that the key is optional which means that all
+#                         objects in the bucket are eligible for removal.
 #
-# REMARKS:
+#   recursive           - Optionally indicates that [targetUri] specifies a folder prefix and that
+#                         all objects within the folder are eligble for removal. 
 #
-# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
-#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
-#          allow only a very limited number of signing attempts with invalid passwords.
+#   include             - Optionally specifies a pattern specifying the objects to be removed.
 #
-# This method uses the Windows version of <b>signtool.exe</b> embedded into the
-# the <b>Neon.Deployment</b> library and to perform the code signing and this 
-# tool runs only on Windows.
+#   exclude             - Optionally specifies a pattern specifying objects to be excluded from removal.
 
-function Sign-Binary
+function Remove-FromS3
 {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$true)]
-        [string]$targetPath,
-        [Parameter(Position=1, Mandatory=$true)]
-        [string]$provider,
-        [Parameter(Position=2, Mandatory=$true)]
-        [string]$certBase64,
-        [Parameter(Position=3, Mandatory=$true)]
-        [string]$container,
-        [Parameter(Position=4, Mandatory=$true)]
-        [string]$timestampUri,
-        [Parameter(Position=5, Mandatory=$true)]
-        [string]$password
+        [string]$targetUri,
+        [Parameter(Mandatory=$false)]
+        [bool]$recursive = $false,
+        [Parameter(Mandatory=$false)]
+        [string]$include = "",
+        [Parameter(Mandatory=$false)]
+        [string]$exclude = ""
     )
 
-    [Neon.Deployment.CodeSigner]::SignBinary($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+    [Neon.Deployment.AwsCli]::S3Remove($targetUri, $recursive, $include, $exclude)
 }
 
 #------------------------------------------------------------------------------
@@ -591,7 +580,7 @@ function Sign-Binary
 #
 #   [$true] when the current machine is able to sign code using the parameters passed.
 
-function Sign-IsReady
+function Sign-IsReady-WithUsbToken
 {
     [CmdletBinding()]
     param (
@@ -607,5 +596,52 @@ function Sign-IsReady
         [string]$password
     )
 
+    $profile = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
+
     return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $certBase64, $container, $timestampUri, $password)
+}
+
+#------------------------------------------------------------------------------
+# Signs an executable file with a USB code signing token.
+#
+# ARGUMENTS:
+#
+#   targetPath          - Specifies the path to the file being signed.
+#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
+#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
+#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
+#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
+#   password            - Specifies the certificate password.
+#
+# REMARKS:
+#
+# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
+#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
+#          allow only a very limited number of signing attempts with invalid passwords.
+#
+# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# the <b>Neon.Deployment</b> library and to perform the code signing and this 
+# tool runs only on Windows.
+
+function Sign-WithUsbToken
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$targetPath,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$provider,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$certBase64,
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$container,
+        [Parameter(Position=4, Mandatory=$true)]
+        [string]$timestampUri,
+        [Parameter(Position=5, Mandatory=$true)]
+        [string]$password
+    )
+
+    $profile = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
+
+    [Neon.Deployment.CodeSigner]::Sign($profile, $targetPath)
 }

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    AzureImageDetails.cs
+//-----------------------------------------------------------------------------
+// FILE:        AzureImageDetails.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,13 +28,22 @@ using Newtonsoft.Json;
 
 namespace Neon.Kube.Models
 {
+    /// <summary>
+    /// Holds the information required to deploy a node from an Azure VM image.
+    /// </summary>
     [Target("all")]
     public interface AzureImageDetails
     {
+        /// <summary>
+        /// Identifies the Azure marketplace compute plan.
+        /// </summary>
         [JsonProperty(PropertyName = "ComputePlan", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         AzureComputePlan ComputePlan { get; set; }
 
+        /// <summary>
+        /// Identifies the Azure VM image.
+        /// </summary>
         [JsonProperty(PropertyName = "ImageReference", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         AzureImageReference ImageReference { get; set; }

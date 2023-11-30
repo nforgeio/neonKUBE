@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    IHostingManager.cs
+//-----------------------------------------------------------------------------
+// FILE:        IHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Setup;
 using Neon.Net;
@@ -37,18 +38,15 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
-using Renci.SshNet;
-using Renci.SshNet.Common;
-
 namespace Neon.Kube.Hosting
 {
     /// <summary>
-    /// Interface describing neonKUBE hosting manager implementions for different environments..
+    /// Interface describing NEONKUBE hosting manager implementions for different environments..
     /// </summary>
     /// <remarks>
     /// <para>
     /// <see cref="IHostingManager"/> implementations are used to provision the infrastructure required
-    /// to deploy a neonKUBE cluster to various environments including on-premise via XenServer or
+    /// to deploy a NEONKUBE cluster to various environments including on-premise via XenServer or
     /// Hyper-V hypervisors or to public clouds like AWS, Azure, and Google.  This infrastructure
     /// includes creating or initializing the servers as well as configuring networking in cloud
     /// environments.
@@ -68,9 +66,17 @@ namespace Neon.Kube.Hosting
         /// Verifies that a cluster is valid for the hosting manager, customizing 
         /// properties as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <paramref name="clusterDefinition">Specifies the cluster definition.</paramref>
         /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
         void Validate(ClusterDefinition clusterDefinition);
+
+        /// <summary>
+        /// Performs any final hosting environmet readiness check before deploying a cluster.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="HostingReadinessException">Thrown if any problems were detected.</exception>
+        public Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned
@@ -88,7 +94,7 @@ namespace Neon.Kube.Hosting
         int MaxParallel { get; set; }
 
         /// <summary>
-        /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).
+        /// Number of seconds to delay after specific operations (e.g. to allow services to stabilize).
         /// This defaults to <b>0.0</b>.
         /// </summary>
         double WaitSeconds { get; set; }
@@ -220,6 +226,26 @@ namespace Neon.Kube.Hosting
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
+        /// <summary>
+        /// Returns the <b>lat/long</b> coordinates of the region or datacenter
+        /// hosting the cluster when possible.  The coordinates will be returned
+        /// as <c>null</c> when this is unknown.
+        /// </summary>
+        /// <returns>The datacenter coordinates or <c>null</c> values.</returns>
+        Task<(double? Latitude, double? Longitude)> GetDatacenterCoordinatesAsync();
+
+        /// <summary>
+        /// Checks for any conflicts that might arise when provisoning a cluster.
+        /// Currently, this checks for existing machines using IP addresses that
+        /// will conflict with one or more of the cluster nodes.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <returns>
+        /// <c>null</c> when there are no conflicts, otherise a string detailing
+        /// the conflicts.
+        /// </returns>
+        Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition);
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods
 
@@ -232,11 +258,11 @@ namespace Neon.Kube.Hosting
         /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
-        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <param name="reservedDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
         /// <returns>Details about whether cluster deployment can proceed.</returns>
         /// <remarks>
         /// <para>
-        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reservedDisk"/> parameters
         /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
         /// manager implementations are free to ignore this when they don't really makse sense.
         /// </para>
@@ -249,14 +275,22 @@ namespace Neon.Kube.Hosting
         /// those environemnts will still work well when all available resources are consumed.
         /// </para>
         /// </remarks>
-        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
+        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0);
 
         /// <summary>
-        /// Retrieves the health status of a cluster from the hosting manager's perspective.  This includes information
-        /// about the infrastructor provisioned for the cluster.
+        /// Retrieves the health status of the current cluster from the hosting manager's perspective
+        /// This includes information about the infrastructure provisioned for the cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
-        /// <returns>The <see cref="ClusterHealth"/>.</returns>
+        /// <returns>
+        /// <para>
+        /// The <see cref="ClusterHealth"/> information for the current cluster.
+        /// </para>
+        /// <note>
+        /// When there is no current cluster, the health information will return indicating
+        /// that no cluster was found.
+        /// </note>
+        /// </returns>
         Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default);
 
         /// <summary>
@@ -312,27 +346,20 @@ namespace Neon.Kube.Hosting
         /// <para>
         /// Deletes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
-        /// The cluster does not need to be running.  This method can optionally remove clusters
-        /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
-        /// group or VM name prefix.
+        /// The cluster does not need to be running.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="removeOrphans">
-        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
-        /// prefix will be removed as well.  See the remarks for more information.
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definition.  This is used in situations where
+        /// you need to remove a cluster without having its kubeconfig context.  Use this
+        /// with <b>extreme care</b> because in the mode, the cluster cannot be queried to
+        /// determine whether it's locked or not and locked clusters will be deleted too.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <remarks>
-        /// <para>
-        /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
-        /// via the <b>ClusterFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
-        /// </para>
-        /// </remarks>
-        Task DeleteClusterAsync(bool removeOrphans = false);
+        Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null);
     }
 }

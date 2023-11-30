@@ -1,4 +1,4 @@
-﻿Neon.Kube.Xunit
+Neon.Kube.Xunit
 ===============
 
-**INTERNAL USE ONLY:** Core library used by neonKUBE related tooling.
+**INTERNAL USE ONLY:** Core library used by NEONKUBE related tooling.

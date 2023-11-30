@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetupProperty.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeSetupProperty.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,13 +99,13 @@ namespace Neon.Kube
         public const string ClusterAdvice = "setup-advice";
 
         /// <summary>
-        /// Property name for accessing the neonCLOUD headend service client.
+        /// Property name for accessing the NEONCLOUD headend service client.
         /// </summary>
         public const string NeonCloudHeadendClient = "neoncloud-headend-client";
 
         /// <summary>
         /// Property name for a boolean indicating that the node image has already been downloaded
-        /// (e.g. by neonDESKTOP) and does not need to be downloaded hosting managers during cluster
+        /// (e.g. by NEONDESKTOP) and does not need to be downloaded hosting managers during cluster
         /// provisioning.  Image downloading should be considered to be enabled when this property
         /// is not present.
         /// </summary>
@@ -131,14 +131,14 @@ namespace Neon.Kube
         public const string HarborCredentials = "harbor-credentials";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating that we're building a ready-to-go 
-        /// desktop image.
+        /// Property name for a <c>bool</c> value indicating that we're <b>building</b> a
+        /// ready-to-go desktop image.
         /// </summary>
         public const string BuildDesktopImage = "build-desktop-image";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating whether a cluster using a ready-to-go desktop
-        /// image is being deployed.
+        /// Property name for a <c>bool</c> value indicating whether we're <b>deploying</b>
+        /// a cluster using a ready-to-go desktop image.
         /// </summary>
         public const string DesktopReadyToGo = "desktop-readytogo";
 
@@ -147,5 +147,17 @@ namespace Neon.Kube
         /// specific privileged operations from a non-privileged process.
         /// </summary>
         public const string DesktopServiceProxy = "desktop-service-proxy";
+
+        /// <summary>
+        /// <para>
+        /// Property name for a <c>bool</c> value indicating we should not secure the cluster
+        /// nodes with a generated secure password and also that we should allow SSH password
+        /// authentication, for cluster debugging purposes.
+        /// </para>
+        /// <note>
+        /// <b>WARNING!</b> This should never be used for production clusters.
+        /// </note>
+        /// </summary>
+        public const string Insecure = "insecure";
     }
 }

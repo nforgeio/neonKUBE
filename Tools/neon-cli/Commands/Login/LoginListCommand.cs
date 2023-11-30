@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    LoginListCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        LoginListCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
+using Windows.Gaming.Input.Custom;
 
 namespace NeonCli
 {
@@ -41,20 +42,39 @@ namespace NeonCli
     [Command]
     public class LoginListCommand : CommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class LoginInfo
+        {
+            public string context { get; set; }
+            public string @namespace { get; set; }
+            public bool current { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string usage = @"
-Lists the neonKUBE contexts available on the local computer.
+Lists the NEONKUBE contexts.
 
 USAGE:
 
-    neon login list
-    neon login ls
+    neon login list|ls
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "login", "list" }; 
+        public override string[] Words => new string[] { "login", "list" };
 
         /// <inheritdoc/>
         public override string[] AltWords => new string[] { "login", "ls" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--output",
+            "-o"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -68,16 +88,17 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            HostingLoader.Initialize();
+            commandLine.DefineOption("--namespace", "-n");
+            commandLine.DefineOption("--output", "-o");
 
-            var config  = KubeHelper.Config;
+            var outputFormat = Program.GetOutputFormat(commandLine);
+
+            var config  = KubeHelper.KubeConfig;
             var current = KubeHelper.CurrentContext;
-            var logins  = new List<string>();
-
-            foreach (var context in KubeHelper.Config.Contexts
+            var logins  = KubeHelper.KubeConfig.Contexts
                 .Where(context =>
                 {
-                    var cluster = config.GetCluster(current.Cluster);
+                    var cluster = config.GetCluster(context.Context.Cluster);
 
                     if (cluster == null)
                     {
@@ -88,24 +109,44 @@ USAGE:
                         return cluster.IsNeonKube;
                     }
                 })
-                .OrderBy(context => context.Name))
-            {
-                logins.Add(context.Name);
-            }
+                .OrderBy(context => context.Name)
+                .Select(context => new LoginInfo() { context = context.Name, @namespace = context.Context.Namespace, current = context == current })
+                .ToArray();
 
             Console.WriteLine();
 
-            if (logins.Count == 0)
+            if (outputFormat.HasValue)
             {
-                Console.Error.WriteLine("*** No neonKUBE logins.");
+                switch (outputFormat.Value)
+                {
+                    case OutputFormat.Json:
+
+                        Console.WriteLine(NeonHelper.JsonSerialize(logins, Formatting.Indented));
+                        break;
+
+                    case OutputFormat.Yaml:
+
+                        Console.WriteLine(NeonHelper.YamlSerialize(logins));
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
             }
             else
             {
-                var maxLoginNameWidth = logins.Max(login => login.Length);
-
-                foreach (var login in logins.OrderBy(login => login))
+                if (logins.Length == 0)
                 {
-                    if (current != null && login == current.Name)
+                    Console.Error.WriteLine("No NEONKUBE logins.");
+                    return;
+                }
+
+                var maxLoginNameWidth = logins.Max(login => login.context.Length);
+
+                foreach (var login in logins)
+                {
+                    if (login.current)
                     {
                         Console.Write(" --> ");
                     }
@@ -114,7 +155,14 @@ USAGE:
                         Console.Write("     ");
                     }
 
-                    Console.WriteLine(login);
+                    var formattedName = login.context;
+
+                    if (formattedName.Length < maxLoginNameWidth)
+                    {
+                        formattedName += new string(' ', maxLoginNameWidth - formattedName.Length);
+                    }
+
+                    Console.WriteLine($"{formattedName} ({(login.@namespace ?? "default")})");
                 }
 
                 Console.WriteLine();

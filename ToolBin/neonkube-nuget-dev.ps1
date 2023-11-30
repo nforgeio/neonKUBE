@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neonkube-nuget-dev.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 #       -restore        - Just restore the CSPROJ files after cancelling publish
 #
 # Generally, you'll use this script without any options to publish to the private
-# feed in the neonCLOUD headend using the atomic counter there to update VERSION
+# feed in the NEONCLOUD headend using the atomic counter there to update VERSION
 # numbers, especially for shared branches and especially the master branch.
 #
 # During development on private branches, you may wish to use a local feed
@@ -57,7 +57,7 @@
 # within the local feed folder:
 #
 #   C:\nc-nuget-local\neonKUBE.version.txt
-#   C:\nc-nuget-local\neonSDK.version.txt
+#   C:\nc-nuget-local\NEONSDK.version.txt
 #
 # These simply hold the next version as an integer on the first line for 
 # each set of packages.  You'll need to manually initialize these files
@@ -103,7 +103,7 @@ if ($release)
 }
 
 # Verify that the user has the required environment variables.  These will
-# be available only for maintainers and are intialized by the neonCLOUD
+# be available only for maintainers and are intialized by the NEONCLOUD
 # [buildenv.cmd] script.
 
 if (!(Test-Path env:NC_ROOT))
@@ -111,20 +111,9 @@ if (!(Test-Path env:NC_ROOT))
     "*** ERROR: This script is intended for maintainers only:"
     "           [NC_ROOT] environment variable is not defined."
     ""
-    "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+    "           Maintainers should re-run the NEONCLOUD [buildenv.cmd] script."
 
     return 1
-}
-
-# We're going to build the DEBUG configuration by default for DEV packages so debugging will be easier.
-
-if ($release)
-{
-    $config = "Release"
-}
-else
-{
-    $config = "Debug"
 }
 
 $neonSdkVersionParameter = ""
@@ -161,8 +150,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    Write-Output dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
-    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
+    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
     $nugetPath = "$env:NK_BUILD\nuget\$project.$version.nupkg"
@@ -181,7 +169,14 @@ function Publish
 
 try
 {
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
+
     $msbuild     = $env:MSBUILDPATH
+    $neonBuild   = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
+    $config      = "Release"
     $nkRoot      = "$env:NK_ROOT"
     $nkSolution  = "$nkRoot\neonKUBE.sln"
     $branch      = GitBranch $nkRoot
@@ -195,8 +190,8 @@ try
     {
         # EMERGENCY MODE: Use local counters.
 
-        $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonSDK.version.txt")
-        $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
+        $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "NEONSDK.version.txt")
+        $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "NEONKUBE.version.txt")
 
         if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nfVersionPath"))
         {
@@ -206,17 +201,17 @@ try
             Write-Error "    $nfVersionPath" -ErrorAction continue
             Write-Error "" -ErrorAction continue
             Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
-            Write-Error "by your local neonCLOUD solution:" -ErrorAction continue
+            Write-Error "by your local NEONCLOUD solution:" -ErrorAction continue
             Write-Error "" -ErrorAction continue
-            Write-Error "The easiest way to do this is to open the [neonCLOUD/Tools/neon-cli/neon-cli.csproj]" -ErrorAction continue
+            Write-Error "The easiest way to do this is to open the [NEONCLOUD/Tools/neon-cli/neon-cli.csproj]" -ErrorAction continue
             Write-Error "file extract the minor version for the package references as described below:" -ErrorAction continue
             Write-Error "" -ErrorAction continue
-            Write-Error "    neonKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
-            Write-Error "    neonSDK.version.txt: from Neon.Common" -ErrorAction continue
+            Write-Error "    NEONKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
+            Write-Error "    NEONSDK.version.txt: from Neon.Common" -ErrorAction continue
             Write-Error "" -ErrorAction continue
             Write-Error "NOTE: These two version numbers are currently the same (Jan 2022), but they" -ErrorAction continue
             Write-Error "      may diverge at any time and will definitely diverge after we separate " -ErrorAction continue
-            Write-Error "      neonSDK and neonKUBE." -ErrorAction continue
+            Write-Error "      NEONSDK and NEONKUBE." -ErrorAction continue
             exit 1
         }
 
@@ -227,10 +222,10 @@ try
     }
     else
     {
-        # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
+        # We're going to call the NEONCLOUD nuget versioner service to atomically increment the 
         # dev package version counters for the solution and then generate the full version for
-        # the packages we'll be publishing.  We'll use separate counters for the neonSDK and
-        # neonKUBE packages.
+        # the packages we'll be publishing.  We'll use separate counters for the NEONSDK and
+        # NEONKUBE packages.
         #
         # The package versions will also include the current branch appended to the preview tag
         # so a typical package version will look like:
@@ -281,21 +276,7 @@ try
     $env:NEON_PUBLIC_SOURCELINK = "true"
 
     #------------------------------------------------------------------------------
-    # We need to do a solution build to ensure that any tools or other dependencies 
-    # are built before we build and publish the individual packages.
-
-    Write-Info ""
-    Write-Info "********************************************************************************"
-    Write-Info "***                           RESTORE PACKAGES                               ***"
-    Write-Info "********************************************************************************"
-    Write-Info ""
-
-    & dotnet restore "$nkSolution" $neonSdkVersionParameter
-
-    if (-not $?)
-    {
-        throw "ERROR: RESTORE FAILED"
-    }
+    # Clean and build the solution.
 
     Write-Info ""
     Write-Info "********************************************************************************"
@@ -303,12 +284,7 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
-
-    if (-not $?)
-    {
-        throw "ERROR: CLEAN FAILED"
-    }
+    Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
     Write-Info  ""
     Write-Info  "*******************************************************************************"
@@ -316,7 +292,7 @@ try
     Write-Info  "*******************************************************************************"
     Write-Info  ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet $neonSdkVersionParameter
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet $neonSdkVersionParameter
 
     if (-not $?)
     {
@@ -336,9 +312,6 @@ try
     Publish Neon.Kube.Hosting                   $neonkubeVersion
     Publish Neon.Kube.HyperV                    $neonkubeVersion
     Publish Neon.Kube.Models                    $neonkubeVersion
-    Publish Neon.Kube.Operator                  $neonkubeVersion
-    Publish Neon.Kube.Operator.MSBuild          $neonkubeVersion
-    Publish Neon.Kube.Operator.Templates        $neonkubeVersion
     Publish Neon.Kube.Resources                 $neonkubeVersion
     Publish Neon.Kube.Setup                     $neonkubeVersion
     Publish Neon.Kube.XenServer                 $neonkubeVersion

@@ -169,6 +169,7 @@ spec:
       labels:
         name: istio-operator
     spec:
+      enableServiceLinks: false
       serviceAccountName: istio-operator
       containers:
         - name: istio-operator

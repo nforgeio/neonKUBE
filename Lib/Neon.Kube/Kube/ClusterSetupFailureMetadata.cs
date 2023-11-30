@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterSetupFailureMetadata.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterSetupFailureMetadata.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ namespace Neon.Kube
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// The current neonKUBE version.
+        /// The current NEONKUBE version.
         /// </summary>
         [JsonProperty(PropertyName = "NeonKubeVersion", Required = Required.Always)]
         [YamlMember(Alias = "neonKubeVersion", ApplyNamingConventions = false)]
@@ -55,7 +55,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Set to the UUID for the user.  Note that this will be set to <see cref="Guid.Empty"/>
-        /// until we have the chance to implement neonCLOUD users.
+        /// until we have the chance to implement NEONCLOUD users.
         /// </summary>
         [JsonProperty(PropertyName = "UserId", Required = Required.Always)]
         [YamlMember(Alias = "userId", ApplyNamingConventions = false)]

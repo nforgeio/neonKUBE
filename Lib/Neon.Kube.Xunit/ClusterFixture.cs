@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterFixture.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ using k8s.Models;
 
 using Xunit;
 using Xunit.Abstractions;
+using System.CodeDom;
 
 // $hack(jeff):
 //
@@ -55,7 +56,7 @@ namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// <para>
-    /// Fixture for testing against neonKUBE clusters.  This can execute against an existing
+    /// Fixture for testing against NEONKUBE clusters.  This can execute against an existing
     /// cluster or it can manage the lifecycle of a new cluster during test runs.
     /// </para>
     /// <note>
@@ -93,10 +94,10 @@ namespace Neon.Kube.Xunit
     ///   environment: hyperv
     ///   hyperv:
     ///     useInternalSwitch: true
-    ///   vm:
+    ///   hypervisor:
     ///     namePrefix: "test"
-    ///     cores: 4
-    ///     memory: 12 GiB
+    ///     vcpus: 4
+    ///     memory: 8 GiB
     ///     osDisk: 64 GiB
     /// network:
     ///   premiseSubnet: 100.64.0.0/24
@@ -151,7 +152,7 @@ namespace Neon.Kube.Xunit
     /// </code>
     /// </note>
     /// <para>
-    /// This fixture can be used to run tests against an existing neonKUBE cluster as well
+    /// This fixture can be used to run tests against an existing NEONKUBE cluster as well
     /// as a new clusters deployed by the fixture.  The idea here is that you'll have
     /// your unit test class inherit from <see cref="IClassFixture{TFixture}"/>, passing
     /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
@@ -193,14 +194,14 @@ namespace Neon.Kube.Xunit
     /// <see cref="K8s"/>.
     /// </para>
     /// <para>
-    /// The fixture also provides the <see cref="NeonExecute(string[])"/> method which can be used for 
+    /// The fixture also provides the <see cref="NeonExecuteCaptureAsync(string[])"/> method which can be used for 
     /// executing <b>kubectl</b>, <b>helm</b>, and other commands using the <b>neon-cli</b>.  Commands
     /// will be executed against the test cluster (as the current config) and a <see cref="ExecuteResponse"/>
     /// will be returned holding the command exit code as well as the output text.
     /// </para>
     /// <para><b>CLUSTER TEST METHOD ATTRIBUTES</b></para>
     /// <para>
-    /// Tests that require a neonKUBE cluster will generally be quite slow and will require additional
+    /// Tests that require a NEONKUBE cluster will generally be quite slow and will require additional
     /// resources on the machine where the test is executing and potentially external resources including
     /// XenServer hosts, cloud accounts, specific network configuration, etc.  This means that cluster
     /// based unit tests can generally run only on specifically configured enviroments.
@@ -212,7 +213,7 @@ namespace Neon.Kube.Xunit
     /// variable <b>does not exist</b>.
     /// </para>
     /// <para>
-    /// Test methods that require neonKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
+    /// Test methods that require NEONKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
     /// <see cref="ClusterTheoryAttribute"/> instead of <see cref="FactAttribute"/> or <see cref="TheoryAttribute"/>.
     /// Then by default, these methods won't be executed unless the user has explicitly enabled this on the test
     /// machine by defining the <c>NEON_CLUSTER_TESTING</c> environment variable.
@@ -271,7 +272,7 @@ namespace Neon.Kube.Xunit
     /// <para><b>CLUSTER CONFLICTS</b></para>
     /// <para>
     /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Start()</b> 
-    /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
+    /// methods may conflict with an existing production or NEONDESKTOP cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
     /// within separate directories named like <b>~/.neonkube/spaces/$fixture</b>.
     /// This effectively isolates clusters deployed by the fixture from the user clusters.
@@ -289,7 +290,7 @@ namespace Neon.Kube.Xunit
     /// username, like <b>runner0-</b> or <b>jeff-</b>, or <b>runner0-jeff-</b>...
     /// </para>
     /// <note>
-    /// neonKUBE maintainers can also use <see cref="IProfileClient"/> combined with the <b>neon-assistant</b>
+    /// NEONKUBE maintainers can also use <see cref="IProfileClient"/> combined with the <b>neon-assistant</b>
     /// tool to reference per-user and/or per-machine profile settings including things like cluster name prefixes, 
     /// reserved node IP addresses, etc.  These can be referenced by cluster definitions using special macros like
     /// <c>$&lt;$&lt;$&lt;NAME&gt;&gt;&gt;</c> as described here: <see cref="PreprocessReader"/>.
@@ -364,7 +365,7 @@ namespace Neon.Kube.Xunit
                 {
                     if (options.RemoveClusterOnDispose)
                     {
-                        Cluster.DeleteAsync(deleteOrphans: true).WaitWithoutAggregate();
+                        Cluster.DeleteClusterAsync().WaitWithoutAggregate();
                     }
                     else
                     {
@@ -424,6 +425,22 @@ namespace Neon.Kube.Xunit
         {
             options ??= new ClusterFixtureOptions();
 
+            // Obtain the cluster definition from the special kubecondig cluster extension.
+            // Fail when this isn't present because the current cluster mush not be a test
+            // cluster then.
+
+            this.ClusterDefinition = KubeHelper.KubeConfig.Cluster?.TestClusterDefinition;
+
+            if (ClusterDefinition == null)
+            {
+                throw new NeonKubeException($"[{KubeHelper.KubeConfig.CurrentContext}] was not provisioned by: {nameof(ClusterFixture)}");
+            }
+
+            if (ClusterDefinition.IsLocked)
+            {
+                throw new NeonKubeException($"Cluster for [{KubeHelper.KubeConfig.CurrentContext}] is locked and cannot be used for testing.");
+            }
+
             // Make a copy of the options and then disable any settings that don't apply to
             // running tests against the current cluster.
 
@@ -440,7 +457,7 @@ namespace Neon.Kube.Xunit
             //      * That it's running
             //      * That it's not locked
 
-            Cluster = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+            Cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
             try
             {
@@ -517,7 +534,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -529,6 +546,8 @@ namespace Neon.Kube.Xunit
         public TestFixtureStatus StartWithClusterDefinition(ClusterDefinition clusterDefinition, ClusterFixtureOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            this.ClusterDefinition = clusterDefinition;
 
             if (clusterDefinition.IsLocked)
             {
@@ -562,7 +581,7 @@ namespace Neon.Kube.Xunit
 
             if (string.IsNullOrEmpty(imageUriOrPath))
             {
-                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment).Result;
+                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: KubeVersions.BuildBranch).Result;
             }
 
             if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
@@ -606,16 +625,16 @@ namespace Neon.Kube.Xunit
             ;
             var clusterExists     = false;
             var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var configContext     = KubeHelper.Config.GetContext(configContextName);
-            var configCluster     = KubeHelper.Config.GetCluster(configContext.Cluster);
+            var configContext     = KubeHelper.KubeConfig.GetContext(configContextName);
 
             if (configContext != null)
             {
+                var configCluster             = KubeHelper.KubeConfig.GetCluster(configContext.Context.Cluster);
                 var existingClusterDefinition = configCluster.TestClusterDefinition;
 
                 if (existingClusterDefinition == null)
                 {
-                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it wasn't deployed by [{nameof(ClusterFixture)}].");
+                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it can't determine that it was deployed by [{nameof(ClusterFixture)}].");
                 }
 
                 clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, existingClusterDefinition);
@@ -626,10 +645,10 @@ namespace Neon.Kube.Xunit
                 // It looks like the test cluster may already exist.  We'll verify
                 // that it's running, healthy, unlocked and the cluster versions match.
                 // When all of these conditions are true, we'll use the existing cluster,
-                // otherwise we'll remove the cluster as well as its context/login,
-                // and deploy a new cluster below.
+                // otherwise we'll remove the cluster as well as its context, and deploy
+                // a new cluster below.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
                 {
                     KubeHelper.SetCurrentContext(configContextName);
 
@@ -646,16 +665,16 @@ namespace Neon.Kube.Xunit
                     {
                         // We need to reset an existing cluster to ensure it's in a known state.
 
-                        cluster.ResetAsync().WaitWithoutAggregate();
+                        cluster.ResetAsync(clusterDefinition: clusterDefinition).WaitWithoutAggregate();
 
                         started   = true;
                         IsRunning = true;
-                        Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+                        Cluster   = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
                         return TestFixtureStatus.Started;
                     }
 
-                    cluster.DeleteAsync(deleteOrphans: true).WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
             }
             else
@@ -664,9 +683,9 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = ClusterProxy.Create(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), cloudMarketplace: options.CloudMarketplace))
                 {
-                    cluster.DeleteAsync(deleteOrphans: true).WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
             }
 
@@ -692,10 +711,7 @@ namespace Neon.Kube.Xunit
                     Unredacted    = options.Unredacted
                 };
 
-                var controller = KubeSetup.CreateClusterPrepareController(
-                    clusterDefinition:   clusterDefinition,
-                    cloudMarketplace:    options.CloudMarketplace,
-                    options:             prepareOptions);
+                var controller = KubeSetup.CreateClusterPrepareControllerAsync(clusterDefinition: clusterDefinition, cloudMarketplace: options.CloudMarketplace, options: prepareOptions).Result;
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
@@ -735,10 +751,7 @@ namespace Neon.Kube.Xunit
                     Unredacted  = options.Unredacted
                 };
 
-                var controller = KubeSetup.CreateClusterSetupController(
-                    clusterDefinition: clusterDefinition,
-                    cloudMarketplace:  options.CloudMarketplace,
-                    options:           setupOptions);
+                var controller = KubeSetup.CreateClusterSetupControllerAsync(clusterDefinition: clusterDefinition, cloudMarketplace: options.CloudMarketplace, options: setupOptions).Result;
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
@@ -757,6 +770,14 @@ namespace Neon.Kube.Xunit
 
                         throw new NotImplementedException();
                 }
+
+                // Add the cluster definition to the new cluster in the current kubeconfig.
+                // We use this to indicate that it's a test cluster and also to determine
+                // whether it needs to be redeployed.
+
+                KubeHelper.KubeConfig.Reload();
+                KubeHelper.KubeConfig.Cluster.TestClusterDefinition = clusterDefinition;
+                KubeHelper.KubeConfig.Save();
             }
             finally
             {
@@ -770,7 +791,7 @@ namespace Neon.Kube.Xunit
 
             started   = true;
             IsRunning = true;
-            Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+            Cluster   = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
             return TestFixtureStatus.Started;
         }
@@ -780,7 +801,7 @@ namespace Neon.Kube.Xunit
         /// Deploys a new cluster as specified by the cluster definition YAML definition.
         /// </para>
         /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// This method removes any existing NEONKUBE cluster before deploying a fresh one.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionYaml">The cluster definition YAML.</param>
@@ -821,7 +842,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -842,7 +863,7 @@ namespace Neon.Kube.Xunit
         /// Deploys a new cluster as specified by a cluster definition YAML file.
         /// </para>
         /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// This method removes any existing NEONKUBE cluster before deploying a fresh one.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionFile"><see cref="FileInfo"/> for the cluster definition YAML file.</param>
@@ -883,7 +904,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -1006,49 +1027,10 @@ namespace Neon.Kube.Xunit
         /// neon helm install -f values.yaml myapp .
         /// neon helm uninstall myapp
         /// </code>
-        /// <para><b>THROW EXCEPTION ON ERRORS</b></para>
-        /// <para>
-        /// Rather than explicitly checking the <see cref="ExecuteResponse.ExitCode"/> and throwing
-        /// exceptions yourself, you can call <see cref="ExecuteResponse.EnsureSuccess()"/> which
-        /// throws an <see cref="ExecuteException"/> for non-zero exit codes or you can use
-        /// <see cref="NeonExecuteWithCheck(string[])"/> which does this for you.
-        /// </para>
         /// </remarks>
-        public ExecuteResponse NeonExecute(params string[] args)
+        public async Task<ExecuteResponse> NeonExecuteCaptureAsync(params string[] args)
         {
-            return NeonHelper.ExecuteCapture("neon", args);
-        }
-
-        /// <summary>
-        /// Executes a <b>neon-cli</b> command against the current test cluster, throwing an
-        /// <see cref="ExecuteException"/> for non-zero exit codes.
-        /// </summary>
-        /// <param name="args">The command arguments.</param>
-        /// <returns>An <see cref="ExecuteResponse"/> with the exit code and output text.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>neon-cli</b> is a wrapper around the <b>kubectl</b> and <b>helm</b> tools.
-        /// </para>
-        /// <para><b>KUBECTL COMMANDS:</b></para>
-        /// <para>
-        /// <b>neon-cli</b> implements <b>kubectl</b> commands directly like:
-        /// </para>
-        /// <code>
-        /// neon get pods
-        /// neon apply -f myapp.yaml
-        /// </code>
-        /// <para><b>HELM COMMANDS:</b></para>
-        /// <para>
-        /// <b>neon-cli</b> implements <b>helm</b> commands like <b>neon helm...</b>:
-        /// </para>
-        /// <code>
-        /// neon helm install -f values.yaml myapp .
-        /// neon helm uninstall myapp
-        /// </code>
-        /// </remarks>
-        public ExecuteResponse NeonExecuteWithCheck(params string[] args)
-        {
-            return NeonExecute(args).EnsureSuccess();
+            return await KubeHelper.NeonCliExecuteCaptureAsync(args);
         }
 
         /// <summary>
@@ -1058,7 +1040,7 @@ namespace Neon.Kube.Xunit
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
-                Cluster?.ResetAsync(options.ResetOptions, message => WriteTestOutputLine(message)).WaitWithoutAggregate();
+                Cluster?.ResetAsync(options.ResetOptions, clusterDefinition: ClusterDefinition, progress: message => WriteTestOutputLine(message)).WaitWithoutAggregate();
                 Thread.Sleep(options.ResetOptions.StabilizeSeconds);
             }
 

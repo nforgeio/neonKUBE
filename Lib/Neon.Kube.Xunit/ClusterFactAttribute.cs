@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:        ClusterFactAttribute.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// <para>
-    /// Used for marking test cases that access or provision neonKUBE clusters by
+    /// Used for marking test cases that access or provision NEONKUBE clusters by
     /// extending <see cref="FactAttribute"/> and skipping these tests when they
     /// cannot or should not be executed on the current machine.
     /// </para>

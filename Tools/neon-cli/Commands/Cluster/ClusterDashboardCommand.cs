@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDashboardCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterDashboardCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,17 +42,29 @@ namespace NeonCli
     public class ClusterDashboardCommand : CommandBase
     {
         private const string usage = @"
-Lists the dashboards available for the current cluster or displays a named
-dashboard in a browser window.
+Lists the dashboards available for the current NEONKUBE cluster or displays
+a named dashboard in a browser window.
 
 USAGE:
 
-    neon cluster dashboard         - Lists available dashboard names
-    neon cluster dashboard NAME    - Displays the named dashboard
+    neon cluster dashboard              - Lists available dashboard names
+    neon cluster dashboard NAME [--url] - Launches a browser for the dashboard
+
+ARGUMENTS:
+
+    NAME        - identifies the desired dashboard
+
+OPTIONS:
+
+    --url       - Returns the dashboard URL in the output rather than
+                  lanching a browser
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "dashboard" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--url" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -66,24 +78,25 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            Console.WriteLine();
-
             var currentContext = KubeHelper.CurrentContext;
 
             if (currentContext == null)
             {
-                Console.Error.WriteLine("*** ERROR: No cluster selected.");
+                Console.Error.WriteLine("*** ERROR: No NEONKUBE cluster is selected.");
                 Program.Exit(1);
             }
 
             var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
+            var url           = commandLine.HasOption("--url");
 
-            using (var cluster = new ClusterProxy(currentContext, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var dashboards = await cluster.ListClusterDashboardsAsync();
 
                 if (string.IsNullOrEmpty(dashboardName))
                 {
+                    Console.WriteLine();
+
                     if (dashboards.Count > 0)
                     {
                         Console.WriteLine("Available Dashboards:");
@@ -108,11 +121,18 @@ USAGE:
                 {
                     if (dashboards.TryGetValue(dashboardName, out var dashboard))
                     {
-                        NeonHelper.OpenPlatformBrowser(dashboard.Spec.Url, newWindow: true);
+                        if (url)
+                        {
+                            Console.WriteLine(dashboard.Spec.Url);
+                        }
+                        else
+                        {
+                            NeonHelper.OpenBrowser(dashboard.Spec.Url);
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"*** ERROR: Dashboard [{dashboardName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Dashboard [{dashboardName}] does not exist.");
                         Program.Exit(1);
                     }
                 }

@@ -43,6 +43,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ include "loki.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -109,9 +110,9 @@ spec:
         {{- end }}
       affinity:
         {{- toYaml .Values.ruler.affinity | nindent 8 }}
-      {{- with .Values.ruler.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "loki.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.ruler.tolerations }}
       tolerations:

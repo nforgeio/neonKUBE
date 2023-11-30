@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonSsoConnector.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1NeonSsoConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ using System.Text.Json.Serialization;
 using k8s;
 using k8s.Models;
 
+using Neon.Operator.Attributes;
 using Neon.Kube.Resources.Dex;
 using Neon.Kube.Resources.JsonConverters;
 

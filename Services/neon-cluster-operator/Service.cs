@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // FILE:        Service.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -16,78 +16,55 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-
-using Neon.Common;
-using Neon.Data;
-using Neon.Diagnostics;
-using Neon.Kube;
-using Neon.Kube.Clients;
-using Neon.Kube.Glauth;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.CertManager;
-using Neon.Net;
-using Neon.Kube.PortForward;
-using Neon.Retry;
-using Neon.Service;
-using Neon.Tasks;
-
-using NeonClusterOperator.Harbor;
-
-using DnsClient;
 
 using Grpc.Net.Client;
 
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.K8s;
+using Neon.Kube;
+using Neon.Kube.Clients;
+using Neon.Kube.Glauth;
+using Neon.Kube.PortForward;
+using Neon.Net;
+using Neon.Operator;
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
+using Neon.Retry;
+using Neon.Service;
+using Neon.Tasks;
+
+using NeonClusterOperator.Harbor;
+
 using Newtonsoft.Json.Linq;
 
 using Npgsql;
 
 using OpenTelemetry;
-using OpenTelemetry.Instrumentation.Quartz;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Prometheus;
-
-using Quartz;
-using Quartz.Impl;
 using Quartz.Logging;
-using Minio;
 
-using Task    = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
+using KubeHelper = Neon.Kube.KubeHelper;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -207,13 +184,16 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            K8s = KubeHelper.GetKubernetesClient();
+            K8s = KubeHelper.CreateKubernetesClient();
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
             if (NeonHelper.IsDevWorkstation)
             {
                 this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
+
+                var headendTokenSecret = await K8s.CoreV1.ReadNamespacedSecretAsync("neoncloud-headend-token", KubeNamespace.NeonSystem);
+                SetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN", Encoding.UTF8.GetString(headendTokenSecret.Data["token"]));
             }
 
             await WatchClusterInfoAsync();
@@ -225,20 +205,20 @@ namespace NeonClusterOperator
 
             // Start the web service.
 
-            var k8s = KubernetesOperatorHost
+            var operatorHost = KubernetesOperatorHost
                .CreateDefaultBuilder()
-               .ConfigureOperator(configure =>
+               .ConfigureOperator(settings =>
                {
-                   configure.AssemblyScanningEnabled = true;
-                   configure.Name                    = Name;
-                   configure.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.AssemblyScanningEnabled = false;
+                   settings.Name                    = Name;
+                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
                .UseStartup<OperatorStartup>()
                .Build();
 
-            _ = k8s.RunAsync();
+            _ = operatorHost.RunAsync();
 
             // Indicate that the service is running.
 
@@ -319,36 +299,21 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            //###########################################################################
-            // $todo(jefflill): Remove this hack once we've figured out the watcher issue.
-            //
-            // We need to ensure that wa have the initial cluster information before this
-            // method returns.
-            //
-            // Marcus originally started the watcher and then used a [WaitFor()] call to
-            // wait for the watcher to report and set the [ClusterInfo] property.  Unfortunately,
-            // watchers don't seem to always report on objects that already exist.  We're
-            // going to hack around this for now by explicitly waiting for the cluster info
-            // before staring the watcher.
-
-            var retry = new LinearRetryPolicy(e => true, retryInterval: TimeSpan.FromSeconds(1), timeout: TimeSpan.FromSeconds(60));
-
-            ClusterInfo = await retry.InvokeAsync(async () => (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
-
-            //###########################################################################
-
             // Start the watcher.
 
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = K8s.WatchAsync<V1ConfigMap>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = Neon.K8s.TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                    Logger.LogInformationEx("Updated cluster info");
+                },
+                namespaceParameter: KubeNamespace.NeonStatus,
+                fieldSelector:      $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
 
             // Wait for the watcher to see the [ClusterInfo].
 
@@ -371,14 +336,21 @@ namespace NeonClusterOperator
             }
             else
             {
-                var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
                 var localPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
-                
-                PortForwardManager.StartPodPortForward(
-                    name:       pod.Name(),
-                    @namespace: KubeNamespace.NeonSystem,
-                    localPort:  localPort, 
-                    remotePort: dexPort);
+
+                try
+                {
+                    var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+
+                    PortForwardManager.StartPodPortForward(
+                        name: pod.Name(),
+                        @namespace: KubeNamespace.NeonSystem,
+                        localPort: localPort,
+                        remotePort: dexPort);
+                }
+                catch
+                {
+                }
 
                 channel = GrpcChannel.ForAddress($"http://localhost:{localPort}");
             }
@@ -409,16 +381,19 @@ namespace NeonClusterOperator
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>
                 {
+                    await SyncContext.Clear;
+
                     var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
                     var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
 
                     harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                     Logger.LogInformationEx("Updated Harbor Client");
-                    await Task.CompletedTask;
                 },
-                KubeNamespace.NeonSystem,
-                fieldSelector: $"metadata.name=glauth-users");
+                namespaceParameter: KubeNamespace.NeonSystem,
+                fieldSelector:      $"metadata.name=glauth-users",
+                retryDelay:         TimeSpan.FromSeconds(30),
+                logger:             Logger);
         }
     }
 }

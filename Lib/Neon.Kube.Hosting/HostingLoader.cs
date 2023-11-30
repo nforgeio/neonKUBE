@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingLoader.cs
+//-----------------------------------------------------------------------------
+// FILE:        HostingLoader.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,9 +100,9 @@ namespace Neon.Kube.Hosting
                 // reason.  It could be possible that we can't reference or load both sets
                 // of subassemblies at the same time.
                 //
-                // I'm going to defer this for now though.  I suspect that the ultimate
-                // solution will be to handle this as part of a greater extensibility
-                // strategy and this is unlikely to become a problem any time soon.
+                // I'm going to defer worrying about all of this for now though.  I suspect
+                // that the ultimate solution will be to handle this as part of a greater
+                // extensibility strategy and this is unlikely to become a problem any time soon.
 
                 AwsHostingManager.Load();
                 AzureHostingManager.Load();
@@ -113,7 +113,7 @@ namespace Neon.Kube.Hosting
 
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
-                // end then use the environment specified in the attributes to determine
+                // and then use the environment specified in the attributes to determine
                 // which hosting manager class to instantiate and return.
 
                 environmentToHostingManager = new Dictionary<HostingEnvironment, Type>();
@@ -177,12 +177,12 @@ namespace Neon.Kube.Hosting
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, (string)null, (string)null, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -191,28 +191,28 @@ namespace Neon.Kube.Hosting
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, nodeImageUri, (string)null, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
         public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.SetupState.ClusterDefinition.Hosting.Environment), "This method does not support cloud hosting environments.");
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.Hosting.Environment), "This method does not support cloud hosting environments.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImagePath), nameof(nodeImagePath));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, false, (string)null, nodeImagePath, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Hosting.Environment}]");
         }
     }
 }

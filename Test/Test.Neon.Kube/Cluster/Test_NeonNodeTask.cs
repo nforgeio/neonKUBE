@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NeonNodeTask.cs
+//-----------------------------------------------------------------------------
+// FILE:        Test_NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Kube.K8s;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Xunit;
@@ -43,6 +43,7 @@ using Xunit.Abstractions;
 namespace TestKube
 {
     [Trait(TestTrait.Category, TestArea.NeonKube)]
+    [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonNodeTask
@@ -278,7 +279,7 @@ touch $NODE_ROOT{filePath}
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstControlNode.Name;
+            spec.Node             = fixture.Cluster.DeploymentControlNode.Name;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
 @"
@@ -341,7 +342,7 @@ exit 123
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstControlNode.Name;
+            spec.Node             = fixture.Cluster.DeploymentControlNode.Name;
             spec.TimeoutSeconds   = 15;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
@@ -402,7 +403,7 @@ sleep 30
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node                 = fixture.Cluster.FirstControlNode.Name;
+            spec.Node                 = fixture.Cluster.DeploymentControlNode.Name;
             spec.StartBeforeTimestamp = DateTime.UtcNow - TimeSpan.FromHours(1);
             spec.TimeoutSeconds       = 15;
             spec.RetentionSeconds     = 30;
@@ -443,7 +444,7 @@ sleep 5
             var spec         = nodeTask.Spec;
             var scheduledUtc = DateTime.UtcNow + TimeSpan.FromSeconds(90);
 
-            spec.Node                = fixture.Cluster.FirstControlNode.Name;
+            spec.Node                = fixture.Cluster.DeploymentControlNode.Name;
             spec.StartAfterTimestamp = scheduledUtc;
             spec.TimeoutSeconds      = 15;
             spec.RetentionSeconds    = 30;

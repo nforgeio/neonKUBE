@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "minio-operator.console-selectorLabels" . | nindent 8 }}
     spec:
+      enableServiceLinks: false
     {{- with .Values.operator.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -27,9 +28,9 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.console.nodeSelector }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "minio.nodeSelector" . | nindent 8 }}
     {{- end }}
     {{- with .Values.console.affinity }}
       affinity:

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterStartCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterStartCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterStartCommand : CommandBase
     {
         private const string usage = @"
-Starts a stopped or paused cluster.  This is not supported by all environments.
+Starts the current stopped or paused NEONKUBE cluster.
 
 USAGE:
 
@@ -97,7 +97,7 @@ USAGE:
                 Program.Exit(1);
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var status       = await cluster.GetClusterHealthAsync();
                 var capabilities = cluster.Capabilities;
@@ -122,8 +122,8 @@ USAGE:
                         }
                         catch (TimeoutException)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                            Console.Error.WriteLine();
+                            Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
                         }
                         break;
 

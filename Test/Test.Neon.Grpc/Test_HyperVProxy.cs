@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Test_HyperVProxy.cs
+// FILE:        Test_HyperVProxy.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // The contents of this repository are for private use by NEONFORGE, LLC. and may not be
 // divulged or used for any purpose by other organizations or individuals without a
@@ -61,7 +61,7 @@ namespace TestGrpc
         private const string TestMachineName2 = "test-hypervproxy-2";
         private const string TestSwitchName   = "test-hypervproxy";
 
-        private static readonly string socketPath   = Path.Combine(Path.GetTempPath(), $"hypervproxy-test-{Guid.NewGuid().ToString("d")}.sock");
+        private static readonly string socketPath   = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $"hypervproxy-test.sock");
         private static readonly string templatePath = TestHelper.GetUbuntuTestVhdxPath();
 
         /// <summary>

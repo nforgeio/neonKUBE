@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1AuthorizationPolicy.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1AuthorizationPolicy.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel.DataAnnotations;
+
 using k8s;
 using k8s.Models;
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
+
+using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Istio
 {
@@ -26,6 +28,7 @@ namespace Neon.Kube.Resources.Istio
     /// Enables access control on workloads.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [Ignore]
     public class V1AuthorizationPolicy : IKubernetesObject<V1ObjectMeta>, ISpec<V1AuthorizationPolicySpec>, IValidate
     {
         /// <summary>

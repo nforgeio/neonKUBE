@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    OperatorStartup.cs
+//-----------------------------------------------------------------------------
+// FILE:        OperatorStartup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,6 +19,11 @@ using System;
 using System.Net.Http;
 using System.Text;
 
+using k8s;
+using k8s.Models;
+
+using Minio;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -28,26 +33,20 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Resources;
+using Neon.Operator;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Minio;
+using Neon.Operator.ResourceManager;
 
 using NeonClusterOperator.Harbor;
-
-using k8s;
-using k8s.Models;
-
-using Minio;
 
 using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Task = System.Threading.Tasks.Task;
+using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
-using Neon.Kube.Operator.ResourceManager;
 
 namespace NeonClusterOperator
 {
@@ -85,6 +84,7 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service)
+                .AddSingleton(Service.ClusterInfo)
                 .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient)

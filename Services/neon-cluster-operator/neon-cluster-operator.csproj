@@ -9,53 +9,27 @@
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-cluster-operator</AssemblyName>
         <Configurations>Debug;Release</Configurations>
-        <NoWarn>$(NoWarn);CS2002</NoWarn>
+        <NoWarn>$(NoWarn);CS2002;CS8034</NoWarn>
     </PropertyGroup>
+
+    <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
 
     <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds</NeonOperatorCrdOutputDir>
+        <NeonOperatorRbacOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\templates</NeonOperatorRbacOutputDir>
+        <NeonOperatorWebhookOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\templates</NeonOperatorWebhookOutputDir>
+        <NeonOperatorAnalyzerLoggingEnabled>True</NeonOperatorAnalyzerLoggingEnabled>
+        <NeonOperatorAnalyzerLoggingDir>$(NK_TEMP)</NeonOperatorAnalyzerLoggingDir>
+        <NeonOperatorAutoRegisterWebhooks>True</NeonOperatorAutoRegisterWebhooks>
+    </PropertyGroup>
+
     <ItemGroup>
         <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" GrpcServices="Client" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="DnsClient" Version="1.6.1" />
-        <PackageReference Include="Google.Protobuf" Version="3.22.3" />
-        <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
-        <PackageReference Include="Grpc.Tools" Version="2.53.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
-        <PackageReference Include="Minio" Version="4.0.7" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="NSwag.MSBuild" Version="13.18.2">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="OpenTelemetry" Version="1.4.0" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
-        <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.2" />
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
-        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Quartz" Version="3.6.2" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-		</ItemGroup>
-
-		<ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -69,39 +43,70 @@
         </None>
     </ItemGroup>
 
-    <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-        <Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />
-        <Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
-        <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
-    </Target>
-
-    <Target Name="NSwag" AfterTargets="BeforeBuild">
+    <Target Name="NSwag" BeforeTargets="CoreCompile">
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
 
-	<!--
-	$todo(jefflill): 02-25-2023
-	
-	I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
-	this manifest in the [Neon.Kube.Setup] and [neon-cluster-operator] projects as resources.
-	This resulted in a chicken-and-egg issue where rebuilding the manifest in neonCLOUD
-	would change the manifest, which was result in a change to [neon-cluster-operator]
-	which would cause the manifest to change when rebuilt, and so on...
-	
-	We're refactoring this by having our installers (built in neonCLOUD) include the
-	[cluster-manifest.json] file in the installed application folder so [neon-cli]
-	and [neon-desktop] can read the file from there or fallback to downloading it
-	from S3.
-	
-	The problem is that this file is git-ignored, so we need a way to remove it from
-	all checked out repos.  That's what this build target does.
-	
-	This target is temporary and can be removed in a few months.
-	-->
+    <!-- Non-NEONFORGE package references -->
 
-	<Target Name="DeleteClusterManifest" BeforeTargets="Build">
-		<Message Importance="high" Text="Delete: Resources/cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-		<Delete Files="$(ProjectDir)Resources\cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-	</Target>
+    <ItemGroup>
+        <PackageReference Include="DnsClient" Version="1.7.0" />
+        <PackageReference Include="Google.Protobuf" Version="3.24.3" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.58.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Minio" Version="5.0.0" />
+        <PackageReference Include="NSwag.MSBuild" Version="13.20.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="OpenTelemetry" Version="1.6.0" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
+        <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />
+        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+        <PackageReference Include="Quartz" Version="3.7.0" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\operator-sdk\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
+
+    <!-- NEONFORGE package or project references -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Operator" Version="$(NeonOperatorPackageVersion)" />
+                <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common.Extensions\Neon.Common.Extensions.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
 </Project>

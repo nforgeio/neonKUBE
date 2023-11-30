@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetupAdvice.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeSetupAdvice.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ namespace Neon.Kube
     /// <see cref="KubeClusterAdvice"/> maintains a dictionary of <see cref="KubeServiceAdvice"/> 
     /// instances keyed by the service identity (one of the service identify constants defined
     /// here).  The constructor initializes empty advice instances for each of the known
-    /// neonKUBE services.
+    /// NEONKUBE services.
     /// </para>
     /// <para>
     /// The basic idea here is that an early setup step will be executed that constructs a
@@ -114,157 +114,157 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>AlertManager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>AlertManager</b> service.
         /// </summary>
         public static string AlertManager = "alertmanager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>BlackboxExporter</b> service.
+        /// Identifies the NEONKUBE cluster's <b>BlackboxExporter</b> service.
         /// </summary>
         public static string BlackboxExporter = "blackbox-exporter";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Calico</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Calico</b> service.
         /// </summary>
         public static string Calico = "calico";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Cert Manager</b> service manager nodes.
+        /// Identifies the NEONKUBE cluster's <b>CertManager</b> service manager nodes.
         /// </summary>
         public static string CertManager = "cert-manager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's system database.
+        /// Identifies the NEONKUBE cluster's system database.
         /// </summary>
         public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's system database pooler.
+        /// Identifies the NEONKUBE cluster's system database pooler.
         /// </summary>
         public static string NeonSystemDbPooler = "neon-system-db-pooler";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's system database metrics sidecar.
+        /// Identifies the NEONKUBE cluster's system database metrics sidecar.
         /// </summary>
         public static string NeonSystemDbMetrics = "neon-system-db-metrics";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>CoreDNS</b> service.
+        /// Identifies the NEONKUBE cluster's <b>CoreDNS</b> service.
         /// </summary>
         public static string CoreDns = "coredns";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Dex</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Dex</b> service.
         /// </summary>
         public static string Dex = "dex";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>etcd nodes</b> service.
+        /// Identifies the NEONKUBE cluster's <b>etcd nodes</b> service.
         /// </summary>
         public static string EtcdCluster = "etcd-cluster";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Etcd Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Etcd Operator</b> service.
         /// </summary>
         public static string EtcdOperator = "etcd-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>FluentBit</b> service.
+        /// Identifies the NEONKUBE cluster's <b>FluentBit</b> service.
         /// </summary>
         public static string FluentBit = "fluentbit";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Glauth</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Glauth</b> service.
         /// </summary>
         public static string Glauth = "glauth";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Grafana</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Grafana</b> service.
         /// </summary>
         public static string Grafana = "grafana";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> service.
         /// </summary>
         public static string GrafanaAgent = "grafana-agent";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> daemonset service.
+        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> daemonset service.
         /// </summary>
         public static string GrafanaAgentNode = "grafana-agent-node";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> service.
         /// </summary>
         public static string GrafanaAgentOperator = "grafana-agent-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor</b> service.
         /// </summary>
         public static string Harbor = "harbor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Chartmuseum</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Chartmuseum</b> service.
         /// </summary>
         public static string HarborChartmuseum = "harbor-chartmuseum";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Clair</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Clair</b> service.
         /// </summary>
         public static string HarborClair = "harbor-clair";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Core</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Core</b> service.
         /// </summary>
         public static string HarborCore = "harbor-core";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Jobservice</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Jobservice</b> service.
         /// </summary>
         public static string HarborJobservice = "harbor-jobservice";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Notary Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Notary Server</b> service.
         /// </summary>
         public static string HarborNotaryServer = "harbor-notary-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Notary Signer</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Notary Signer</b> service.
         /// </summary>
         public static string HarborNotarySigner = "harbor-notary-signer";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Portal</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Portal</b> service.
         /// </summary>
         public static string HarborPortal = "harbor-portal";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Registry</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Harbor Registry</b> service.
         /// </summary>
         public static string HarborRegistry = "harbor-registry";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Redis</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Redis</b> service.
         /// </summary>
         public static string Redis = "redis";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Istio Proxy</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Istio Proxy</b> service.
         /// </summary>
         public static string IstioProxy = "istio-proxy";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Istio Ingress Gateway</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Istio Ingress Gateway</b> service.
         /// </summary>
         public static string IstioIngressGateway = "istio-ingressgateway";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Istio Pilot</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Istio Pilot</b> service.
         /// </summary>
         public static string IstioPilot = "istio-pilot";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Kubernetes Dashboard</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Kubernetes Dashboard</b> service.
         /// </summary>
         public static string KubernetesDashboard = "kubernetes-dashboard";
 
@@ -274,312 +274,307 @@ namespace Neon.Kube
         public static string KubeStateMetrics = "kube-state-metrics";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Kiali</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Kiali</b> service.
         /// </summary>
         public static string Kiali = "kiali";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki</b> service.
         /// </summary>
         public static string Loki = "loki";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Compactor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Compactor</b> service.
         /// </summary>
         public static string LokiCompactor = "loki-compactor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Distributor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Distributor</b> service.
         /// </summary>
         public static string LokiDistributor = "loki-distributor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Index Gateway</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Index Gateway</b> service.
         /// </summary>
         public static string LokiIndexGateway = "loki-index-gateway";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Ingester</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Ingester</b> service.
         /// </summary>
         public static string LokiIngester = "loki-ingester";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Querier</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Querier</b> service.
         /// </summary>
         public static string LokiQuerier = "loki-querier";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Query Frontend</b> service.
         /// </summary>
         public static string LokiQueryFrontend = "loki-query-frontend";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Ruler</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Ruler</b> service.
         /// </summary>
         public static string LokiRuler = "loki-ruler";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki Table Manager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Loki Table Manager</b> service.
         /// </summary>
         public static string LokiTableManager = "loki-table-manager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Memcached</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Memcached</b> service.
         /// </summary>
         public static string Memcached = "memcached";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Metrics-Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Metrics-Server</b> service.
         /// </summary>
         public static string MetricsServer = "metrics-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir</b> service.
         /// </summary>
         public static string Mimir = "mimir";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
         /// </summary>
         public static string MimirAlertmanager = "mimir-alertmanager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Compactor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Compactor</b> service.
         /// </summary>
         public static string MimirCompactor = "mimir-compactor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Distributor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Distributor</b> service.
         /// </summary>
         public static string MimirDistributor = "mimir-distributor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Ingester</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Ingester</b> service.
         /// </summary>
         public static string MimirIngester = "mimir-ingester";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir OverridesExporter</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir OverridesExporter</b> service.
         /// </summary>
         public static string MimirOverridesExporter = "mimir-overrides-exporter";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Querier</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Querier</b> service.
         /// </summary>
         public static string MimirQuerier = "mimir-querier";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Query Frontend</b> service.
         /// </summary>
         public static string MimirQueryFrontend = "mimir-query-frontend";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
         /// </summary>
         public static string MimirRuler = "mimir-ruler";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
         /// </summary>
         public static string MimirStoreGateway = "mimir-store-gateway";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Minio</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Minio</b> service.
         /// </summary>
         public static string Minio = "minio";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Minio Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Minio Operator</b> service.
         /// </summary>
         public static string MinioOperator = "minio-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-acme</b> service.
+        /// Identifies the NEONKUBE cluster's <b>neon-acme</b> service.
         /// </summary>
         public static string NeonAcme = "neon-acme";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-cluster-operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>neon-cluster-operator</b> service.
         /// </summary>
         public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-dashboard</b> service.
-        /// </summary>
-        public static string NeonDashboard = "neon-dashboard";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-node-agent</b> service.
+        /// Identifies the NEONKUBE cluster's <b>neon-node-agent</b> service.
         /// </summary>
         public static string NeonNodeAgent = "neon-node-agent";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>neon-sso-session-proxy</b> service.
+        /// Identifies the NEONKUBE cluster's <b>neon-sso-session-proxy</b> service.
         /// </summary>
         public static string NeonSsoSessionProxy = "neon-sso-session-proxy";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Node Problem Detector</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Node Problem Detector</b> service.
         /// </summary>
         public static string NodeProblemDetector = "node-problem-detector";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>oauth2-proxy</b> service.
+        /// Identifies the NEONKUBE cluster's <b>oauth2-proxy</b> service.
         /// </summary>
         public static string Oauth2Proxy = "oauth2-proxy";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Admission Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Admission Server</b> service.
         /// </summary>
         public static string OpenEbsAdmissionServer = "openebs-admission-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS API Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS API Server</b> service.
         /// </summary>
         public static string OpenEbsApiServer = "openebs-api-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor</b> service.
         /// </summary>
         public static string OpenEbsCstor = "openebs-cstor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor Admission Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor Admission Server</b> service.
         /// </summary>
         public static string OpenEbsCstorAdmissionServer = "openebs-cstor-admission-server";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSI Controller</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSI Controller</b> service.
         /// </summary>
         public static string OpenEbsCstorCsiController = "openebs-cstor-csi-controller";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSI Node</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSI Node</b> service.
         /// </summary>
         public static string OpenEbsCstorCsiNode = "openebs-cstor-csi-node";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CSPC Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSPC Operator</b> service.
         /// </summary>
         public static string OpenEbsCstorCspcOperator = "openebs-cstor-cspc-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CVC Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CVC Operator</b> service.
         /// </summary>
         public static string OpenEbsCstorCvcOperator = "openebs-cstor-cvc-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Jiva</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Jiva</b> service.
         /// </summary>
         public static string OpenEbsJiva = "openebs-jiva";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Local PV Provisioner</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Local PV Provisioner</b> service.
         /// </summary>
         public static string OpenEbsLocalPvProvisioner = "openebs-localpv-provisioner";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Node Disk Manager Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Node Disk Manager Operator</b> service.
         /// </summary>
         public static string OpenEbsNdmOperator = "openebs-ndm-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Node Disk Manager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Node Disk Manager</b> service.
         /// </summary>
         public static string OpenEbsNdm = "openebs-ndm";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS API Server</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS API Server</b> service.
         /// </summary>
         public static string OpenEbsProvisioner = "openebs-provisioner";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Snapshot Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Snapshot Operator</b> service.
         /// </summary>
         public static string OpenEbsSnapshotOperator = "openebs-snapshot-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
         /// </summary>
         public static string OpenEbsWebhook = "openebs-webhook";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Cstor Pool</b> containers.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Cstor Pool</b> containers.
         /// </summary>
         public static string OpenEbsCstorPool = "openebs-cstor-pool";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>OpenEBS Cstor Pool</b> sidecar containers.
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Cstor Pool</b> sidecar containers.
         /// </summary>
         public static string OpenEbsCstorPoolAux = "openebs-cstor-pool-aux";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Prometheus</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Prometheus</b> service.
         /// </summary>
         public static string Prometheus = "prometheus";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Prometheus Operator</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Prometheus Operator</b> service.
         /// </summary>
         public static string PrometheusOperator = "prometheus-operator";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Reloader</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Reloader</b> service.
         /// </summary>
         public static string Reloader = "reloader";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo</b> service.
         /// </summary>
         public static string Tempo = "tempo";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
         /// </summary>
         public static string TempoAlertmanager = "tempo-alertmanager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Compactor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Compactor</b> service.
         /// </summary>
         public static string TempoCompactor = "tempo-compactor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Distributor</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Distributor</b> service.
         /// </summary>
         public static string TempoDistributor = "tempo-distributor";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Ingester</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Ingester</b> service.
         /// </summary>
         public static string TempoIngester = "tempo-ingester";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo OverridesExporter</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo OverridesExporter</b> service.
         /// </summary>
         public static string TempoOverridesExporter = "tempo-overrides-exporter";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Querier</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Querier</b> service.
         /// </summary>
         public static string TempoQuerier = "tempo-querier";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Query Frontend</b> service.
         /// </summary>
         public static string TempoQueryFrontend = "tempo-query-frontend";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
         /// </summary>
         public static string TempoRuler = "tempo-ruler";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
         /// </summary>
         public static string TempoStoreGateway = "tempo-store-gateway";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Redis HA</b> service.
+        /// Identifies the NEONKUBE cluster's <b>Redis HA</b> service.
         /// </summary>
         public static string RedisHA = "redis-ha";
 

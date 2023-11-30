@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeContextName.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeContextName.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ namespace Neon.Kube.Config
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE encodes context names like:
+    /// NEONKUBE encodes context names like:
     /// </para>
     /// <para>
     /// <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
@@ -150,14 +150,14 @@ namespace Neon.Kube.Config
         /// <returns>The parsed name.</returns>
         /// <remarks>
         /// <para>
-        /// neonKUBE supports a context name format that includes a user name like:
+        /// NEONKUBE supports a context name format that includes a user name like:
         /// </para>
         /// <example>
         /// <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
         /// </example>
         /// <para>
         /// We assume that contexts including an <b>"@"</b> are associated with a
-        /// neonKUBE cluster and use this to link to additional login information.
+        /// NEONKUBE cluster and use this to link to additional login information.
         /// We can also parse context names without an <b>"@"</b>.  The parsed
         /// <see cref="User"/> property will be set to <c>null</c> in this case.
         /// </para>
@@ -182,7 +182,7 @@ namespace Neon.Kube.Config
 
             if (pAt == -1)
             {
-                // Looks like a standard (non-neonKUBE) context name.
+                // Looks like a standard (non-NEONKUBE) context name.
 
                 var name = new KubeContextName();
 
@@ -222,7 +222,7 @@ namespace Neon.Kube.Config
             }
             else
             {
-                // Looks like a neonKUBE context name.
+                // Looks like a NEONKUBE context name.
 
                 if (pSlash != -1 && pSlash < pAt)
                 {
@@ -283,7 +283,7 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Parameterized constructor.
         /// </summary>
-        /// <param name="username">The username.  This may be <c>null</c> for non-neonKUBE cluster logins.</param>
+        /// <param name="username">The username.  This may be <c>null</c> for non-NEONKUBE cluster logins.</param>
         /// <param name="cluster">The cluster name.</param>
         /// <param name="kubeNamespace">Optionally specifies the namespace (defaults to <b>"default"</b>).</param>
         /// <remarks>
@@ -313,7 +313,7 @@ namespace Neon.Kube.Config
         /// </para>
         /// <note>
         /// We currently assume that only contexts with a <see cref="User"/> are
-        /// neonKUBE clusters.
+        /// NEONKUBE clusters.
         /// </note>
         /// </summary>
         public string User { get; private set; }
@@ -329,8 +329,8 @@ namespace Neon.Kube.Config
         public string Namespace { get; private set; }
 
         /// <summary>
-        /// Indicates whether this is a neonKUBE context name or a standard one.
-        /// neonKUBE contexts include a user name before the <b>"@"</b> symbol.
+        /// Indicates whether this is a NEONKUBE context name or a standard one.
+        /// NEONKUBE contexts include a user name before the <b>"@"</b> symbol.
         /// </summary>
         public bool IsNeonKube => User != null;
 

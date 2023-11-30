@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeImageType.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeImageType.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the neonKUBE image types.
+    /// Enumerates the NEONKUBE image types.
     /// </summary>
     public enum KubeImageType
     {
@@ -45,7 +45,7 @@ namespace Neon.Kube
         Node,
 
         /// <summary>
-        /// Identifies a prebuilt built-in neondesktop cluster image.
+        /// Identifies a prebuilt NEONDESKTOP cluster image.
         /// </summary>
         [EnumMember(Value = "desktop")]
         Desktop,

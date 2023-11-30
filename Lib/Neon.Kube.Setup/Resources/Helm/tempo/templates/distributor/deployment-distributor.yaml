@@ -39,6 +39,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ include "tempo.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
@@ -121,9 +122,9 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.distributor.terminationGracePeriodSeconds }}      
       affinity:
         {{- toYaml .Values.distributor.affinity | nindent 8 }}
-      {{- with .Values.distributor.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "tempo.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.distributor.tolerations }}
       tolerations:

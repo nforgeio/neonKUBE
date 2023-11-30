@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    PodWebhook.cs
+//-----------------------------------------------------------------------------
+// FILE:        PodWebhook.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -27,8 +27,8 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Webhook;
+using Neon.Operator;
+using Neon.Operator.Webhooks;
 using Neon.Tasks;
 
 using k8s;
@@ -39,7 +39,7 @@ using Quartz.Logging;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook that sets priority classes for neonKUBE pods.
+    /// Webhook that sets priority classes for NEONKUBE pods.
     /// </summary>
     [Webhook(
         name:                    "pod-policy.neonkube.io",
@@ -51,9 +51,9 @@ namespace NeonClusterOperator
         operations:  AdmissionOperations.Create, 
         resources:   V1Pod.KubePluralName,
         scope:       "*")]
-    public class PodWebhook : IMutatingWebhook<V1Pod>
+    public class PodWebhook : MutatingWebhookBase<V1Pod>
     {
-        private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
+        private ILogger<PodWebhook> logger { get; set; }
 
         private bool modified = false;
 
@@ -69,14 +69,14 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="logger">Optionally specifies the logger.</param>
         public PodWebhook(
-            ILogger<IMutatingWebhook<V1Pod>> logger = null)
+            ILogger<PodWebhook> logger = null)
             : base()
         {
             this.logger = logger;
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
         {
             await SyncContext.Clear;
 
@@ -91,7 +91,7 @@ namespace NeonClusterOperator
 
                     if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                     {
-                        logger?.LogInformationEx(() => $"Pod not in a neonKUBE namespace.");
+                        logger?.LogInformationEx(() => $"Pod not in a NEONKUBE namespace.");
 
                         return MutationResult.NoChanges();
                     }
@@ -113,7 +113,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Used to check whether a pod within a neonKUBE namespace has a priority class
+        /// Used to check whether a pod within a NEONKUBE namespace has a priority class
         /// assigned and sets the priority class and also <see cref="modified"/> when the
         /// pod has no priority class.  For harbor related pods, this sets the priority
         /// class to <see cref="PriorityClass.NeonStorage"/> or <see cref="PriorityClass.NeonMin"/>

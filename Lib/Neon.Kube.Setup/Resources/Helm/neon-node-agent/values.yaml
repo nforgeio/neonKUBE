@@ -1,4 +1,4 @@
-# neonKUBE service [values.yaml] files are used for specifying parameters 
+# NEONKUBE service [values.yaml] files are used for specifying parameters 
 # based on cluster-advice recommendations (e.g. for single-node clusters vs. 
 # larger multi-node clusters).
 #
@@ -23,27 +23,24 @@ resources:
 
 serviceMesh:
   enabled: true
-# Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
-logLevel: info
+# Log level: none, trace, debug, information/info, warning/warn, error, critical
+
+logLevel: information
 
 service:
   type: ClusterIP
   ports:
-    - name: http-web
-      port: 80
-      protocol: TCP
-      targetPort: 5000
     - name: https-web
       protocol: TCP
       port: 443
-      targetPort: 5001
+      targetPort: 11006
 
 metrics:
   # Enable Prometheus metrics endpoint
   enabled: true
   # Serve Prometheus metrics on this port
-  port: 9762
+  port: 11006
   servicemonitor:
     # Enable Prometheus Operator ServiceMonitor
     enabled: true

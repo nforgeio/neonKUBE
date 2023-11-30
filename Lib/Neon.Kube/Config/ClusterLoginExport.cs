@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterLoginExport.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterLoginExport.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds all of the information required to import/export a cluster
-    /// login.  This includes the Kubernetes cluster, login, and neonKUBE
+    /// login.  This includes the Kubernetes cluster, login, and NEONKUBE
     /// extensions.
     /// </summary>
     public class ClusterLoginExport
@@ -54,23 +54,16 @@ namespace Neon.Kube.Config
         /// <summary>
         /// The Kubernetes cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
         public KubeConfigCluster Cluster { get; set; }
 
         /// <summary>
         /// The Kubernetes context.
         /// </summary>
-        [JsonProperty(PropertyName = "Context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContext Context { get; set; }
-
-        /// <summary>
-        /// The cluster login information.  This may be <c>null</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public KubeClusterInfo Extensions { get; set; }
 
         /// <summary>
         /// The Kubernetes user.

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    BareMetalHostingManager.cs
+//-----------------------------------------------------------------------------
+// FILE:        BareMetalHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
@@ -81,8 +82,13 @@ namespace Neon.Kube.Hosting.BareMetal
         /// </summary>
         public static void Load()
         {
-            // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this method.
+            // This method can't do nothing because the C# compiler may optimize calls
+            // out of trimmed executables and we need this type to be discoverable
+            // via reflection.
+            //
+            // This call does almost nothing to prevent C# optimization.
+
+            Load(() => new BareMetalHostingManager()); ;
         }
 
         //---------------------------------------------------------------------
@@ -149,11 +155,20 @@ namespace Neon.Kube.Hosting.BareMetal
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.BareMetal, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.BareMetal}].");
 
-            if (clusterDefinition.Hosting.Environment != HostingEnvironment.BareMetal)
-            {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.BareMetal}].");
-            }
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <inheritdoc/>
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
 
         /// <inheritdoc/>
@@ -182,38 +197,6 @@ namespace Neon.Kube.Hosting.BareMetal
         private void DetectLabels(NodeSshProxy<NodeDefinition> node)
         {
             CommandResponse result;
-
-            // Download [/proc/meminfo] and extract the [MemTotal] value (in kB).
-
-            result = node.SudoCommand("cat /proc/meminfo", RunOptions.FaultOnError);
-
-            if (result.ExitCode == 0)
-            {
-                var memInfo       = result.OutputText;
-                var memTotalRegex = new Regex(@"^MemTotal:\s*(?<size>\d+)\s*kB", RegexOptions.Multiline);
-                var memMatch      = memTotalRegex.Match(memInfo);
-
-                if (memMatch.Success && long.TryParse(memMatch.Groups["size"].Value, out var memSizeKiB))
-                {
-                    // Note that the RAM reported by Linux is somewhat less than the
-                    // physical RAM installed.
-
-                    node.Metadata.Labels.ComputeRam = (int)(memSizeKiB / 1024);  // Convert KiB --> MiB
-                }
-            }
-
-            // Download [/proc/cpuinfo] and count the number of processors.
-
-            result = node.SudoCommand("cat /proc/cpuinfo", RunOptions.FaultOnError);
-
-            if (result.ExitCode == 0)
-            {
-                var cpuInfo          = result.OutputText;
-                var processorRegex   = new Regex(@"^processor\s*:\s*\d+", RegexOptions.Multiline);
-                var processorMatches = processorRegex.Matches(cpuInfo);
-
-                node.Metadata.Labels.ComputeCores = processorMatches.Count;
-            }
 
             // Determine the primary disk size.
 
@@ -247,7 +230,7 @@ namespace Neon.Kube.Hosting.BareMetal
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiB(deviceSize);
+                        node.Metadata.Labels.StorageOSDiskSize = ByteUnits.ToGiB(deviceSize);
                         break;
                     }
                 }

@@ -69,8 +69,10 @@ spec:
           name: grafana-secret
       - secretRef:
           name: grafana-env
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-      {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- include "grafana.nodeSelector" . | nindent 6 }}
+    {{- end }}
     priorityClassName: {{ .Values.priorityClassName }}
     {{- with .Values.tolerations }}
     tolerations:

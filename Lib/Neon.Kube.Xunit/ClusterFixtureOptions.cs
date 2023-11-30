@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterFixtureOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterFixtureOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ namespace Neon.Kube.Xunit
         /// for on-premise environments.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
-        /// You must be a neonKUBE maintainer to use private node images.
+        /// You must be a NEONKUBE maintainer to use private node images.
         /// </note>
         /// </summary>
         public bool CloudMarketplace { get; set; } = true;
@@ -140,7 +140,7 @@ namespace Neon.Kube.Xunit
         public string ImageUriOrPath { get; set; } = null;
 
         /// <summary>
-        /// Optionally overrides the default neonCLOUD headend URI.  This defaults to <c>null</c>.
+        /// Optionally overrides the default NEONCLOUD headend URI.  This defaults to <c>null</c>.
         /// </summary>
         public string NeonCloudHeadendUri { get; set; } = null;
 

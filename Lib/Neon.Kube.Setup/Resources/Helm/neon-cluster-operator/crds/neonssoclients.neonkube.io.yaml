@@ -1,0 +1,68 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neonssoclients.neonkube.io
+spec:
+  group: neonkube.io
+  names:
+    kind: NeonSsoClient
+    plural: neonssoclients
+    shortNames: []
+    singular: neonssoclient
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              id:
+                type: string
+              secret:
+                type: string
+              redirectUris:
+                items:
+                  type: string
+                type: array
+              trustedPeers:
+                items:
+                  type: string
+                type: array
+              public:
+                type: boolean
+              name:
+                type: string
+              logoUrl:
+                type: string
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      type: integer
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              state:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

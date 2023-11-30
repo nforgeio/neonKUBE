@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupController.cs
+//-----------------------------------------------------------------------------
+// FILE:        SetupController.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
@@ -1144,8 +1145,8 @@ namespace Neon.Kube.Setup
         // This is part of the final setup refactor where all cluster prepare/setup 
         // related code is relocated to the [Neon.Kube] library so it can be referenced
         // by different kinds of applications.  This will include [neon-cli] as well
-        // as neonDESKTOP right now and perhaps Temporal based workflows in the future
-        // as part of a neonCLOUD offering.
+        // as NEONDESKTOP right now and perhaps Temporal based workflows in the future
+        // as part of a NEONCLOUD offering.
         //
         // The LogProgress() methods update global or node-specific status.  For nodes,
         // this will be set as the node status text.  The Error() methods do the same
@@ -1221,7 +1222,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgress(SSH.ILinuxSshProxy node, string message)
+        public void LogProgress(Neon.SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1244,7 +1245,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgress(SSH.ILinuxSshProxy node, string verb, string message)
+        public void LogProgress(Neon.SSH.ILinuxSshProxy node, string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1295,7 +1296,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgressError(SSH.ILinuxSshProxy node, string message)
+        public void LogProgressError(Neon.SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1341,6 +1342,17 @@ namespace Neon.Kube.Setup
             LogGlobal($"*** ERROR: {NeonHelper.ExceptionError(e)}");
             LogGlobal($"*** STACK:");
             LogGlobal(e.StackTrace);
+        }
+
+        /// <inheritdoc/>
+        public void ClearStatus()
+        {
+            SetGlobalStepStatus();
+
+            foreach (var node in nodes)
+            {
+                node.Status = string.Empty;
+            }
         }
 
         /// <inheritdoc/>
@@ -1431,7 +1443,7 @@ namespace Neon.Kube.Setup
 
             // This method has been synchronous for a very long time (maybe 5 years).
             // We need to make this async now so that it will integrate well with
-            // the neonDESKTOP UX. 
+            // the NEONDESKTOP UX. 
             //
             // We're simply going to wrap the main setup loop onto a new thread and
             // have setup execute there.  We'll use a task completion source to signal

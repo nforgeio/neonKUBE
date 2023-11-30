@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonContainerRegistryFinalizer.cs
+//-----------------------------------------------------------------------------
+// FILE:        NeonContainerRegistryFinalizer.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,24 +17,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
+using Neon.Operator.Finalizers;
+using Neon.Operator.Util;
 
-using k8s.Models;
-using Neon.Kube.Operator.Finalizer;
-using System.Diagnostics.Contracts;
-using k8s;
-using Neon.Kube.Operator.Util;
 using OpenTelemetry.Resources;
 
 namespace NeonClusterOperator
@@ -42,7 +43,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Finalizes deletion of <see cref="V1NeonContainerRegistry"/> resources.
     /// </summary>
-    public class NeonContainerRegistryFinalizer : IResourceFinalizer<V1NeonContainerRegistry>
+    public class NeonContainerRegistryFinalizer : ResourceFinalizerBase<V1NeonContainerRegistry>
     {
         private readonly IKubernetes                             k8s;
         private readonly ILogger<NeonContainerRegistryFinalizer> logger;
@@ -64,7 +65,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1NeonContainerRegistry resource)
+        public override async Task FinalizeAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
 

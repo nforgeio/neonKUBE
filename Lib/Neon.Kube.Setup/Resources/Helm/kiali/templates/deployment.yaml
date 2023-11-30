@@ -24,6 +24,7 @@ spec:
         {{- toYaml .Values.podAnnotations | nindent 8 }}
     {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ include "kiali-operator.fullname" . }}
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName | quote }}
@@ -32,9 +33,9 @@ spec:
       tolerations:
       {{- toYaml .Values.tolerations | nindent 8 }}
       {{- end }}
-      {{- if .Values.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-      {{- toYaml .Values.nodeSelector | nindent 8 }}
+        {{- include "kiali-operator.nodeSelector" . | nindent 8 }}
       {{- end }}
       containers:
       - name: operator

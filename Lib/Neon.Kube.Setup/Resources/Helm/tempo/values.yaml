@@ -140,8 +140,7 @@ ingester:
                 app.kubernetes.io/component: ingester
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for ingester pods
-  nodeSelector:
-    neonkube.io/monitor.traces-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for ingester pods
   tolerations: []
   # -- Extra volumes for ingester pods
@@ -238,8 +237,7 @@ distributor:
                 app.kubernetes.io/component: distributor
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for distributor pods
-  nodeSelector:
-    neonkube.io/monitor.traces-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for distributor pods
   tolerations: []
   # -- Extra volumes for distributor pods
@@ -287,8 +285,7 @@ compactor:
   # -- Grace period to allow the compactor to shutdown before it is killed
   terminationGracePeriodSeconds: 30
   # -- Node selector for compactor pods
-  nodeSelector:
-    neonkube.io/monitor.traces-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for compactor pods
   tolerations: []
   # -- Extra volumes for compactor pods
@@ -363,8 +360,7 @@ querier:
                 app.kubernetes.io/component: querier
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for querier pods
-  nodeSelector:
-    neonkube.io/monitor.traces-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for querier pods
   tolerations: []
   # -- Extra volumes for querier pods
@@ -483,8 +479,7 @@ queryFrontend:
                 app.kubernetes.io/component: query-frontend
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for query-frontend pods
-  nodeSelector:
-    neonkube.io/monitor.traces-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for query-frontend pods
   tolerations: []
   # -- Extra volumes for query-frontend pods

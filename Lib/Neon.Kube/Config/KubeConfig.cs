@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfig.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeConfig.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,30 +52,42 @@ namespace Neon.Kube.Config
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns information loaded from the user's <b>~/.kube/config</b> file.
+        /// Reads and returns information loaded from the user's <b>~/.kube/config</b> file
+        /// or the specified file.
         /// </summary>
+        /// <param name="configPath">
+        /// Optionally specifies the location of the kubeconfig file.  This defaults to the
+        /// user's <b>~/.kube/config</b> file.
+        /// </param>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
-        public static KubeConfig Load()
+        public static KubeConfig Load(string configPath = null)
         {
-            var configPath = KubeHelper.KubeConfigPath;
+            configPath = configPath ?? KubeHelper.KubeConfigPath;
 
             if (File.Exists(configPath))
             {
                 var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ParseTextFileWithRetry(configPath));
 
+                config.path = configPath;
+
                 config.Validate();
-                
+
                 return config;
             }
             else
             {
-                return new KubeConfig();
+                return new KubeConfig()
+                {
+                    path = configPath
+                };
             }
         }
 
         //---------------------------------------------------------------------
         // Instance members.
+
+        private string path;
 
         /// <summary>
         /// Default constructor.
@@ -123,12 +135,12 @@ namespace Neon.Kube.Config
         public string CurrentContext { get; set; }
 
         /// <summary>
-        /// Optional dictionary of preferences.
+        /// Optional global kubeconfig preferences.
         /// </summary>
         [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, string> Preferences { get; set; } = null;
+        public KubeConfigPreferences Preferences { get; set; } = null;
 
         /// <summary>
         /// Lists the user configurations.
@@ -136,17 +148,6 @@ namespace Neon.Kube.Config
         [JsonProperty(PropertyName = "users", Required = Required.Always)]
         [YamlMember(Alias = "users", ApplyNamingConventions = false)]
         public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
-
-        /// <summary>
-        /// Lists any custom extension properties.  Extensions are name/value pairs added
-        /// by vendors to hold arbitrary information.  Take care to choose property names
-        /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
-        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
-        /// </summary>
-        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Returns the current context or <c>null</c>.
@@ -165,6 +166,42 @@ namespace Neon.Kube.Config
                 {
                     return GetContext(CurrentContext);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns the current cluster or <c>null</c>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public KubeConfigCluster Cluster
+        {
+            get
+            {
+                if (Context == null)
+                {
+                    return null;
+                }
+
+                return GetCluster(Context.Context.Cluster);
+            }
+        }
+
+        /// <summary>
+        /// Returns the current user or <c>null</c>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public KubeConfigUser User
+        {
+            get
+            {
+                if (Context == null)
+                {
+                    return null;
+                }
+
+                return GetUser(Context.Context.User);
             }
         }
 
@@ -234,10 +271,62 @@ namespace Neon.Kube.Config
 
             if (!noSave)
             {
-                // Also the setup state file for this cluster if it exists.  This may be
-                // present if cluster prepare/setup was interrupted for the cluster.
+                // Also remove the setup state file for this cluster if it exists.
+                // This may be present if cluster prepare/setup was interrupted
+                // for the cluster.
 
                 KubeSetupState.Delete(name.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Obtains the current context, cluster, and user in one go.
+        /// </summary>
+        /// <param name="context">Returns as the current context or <c>null</c>.</param>
+        /// <param name="cluster">Returns as the current cluster or <c>null</c>.</param>
+        /// <param name="user">Returns as the current user or <c>null</c>.</param>
+        /// <exception cref="InvalidDataException">
+        /// Thrown when one or both of the referenced current context, cluster or
+        /// user doesn't exist.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// This method returns <c>null</c> for all values when there is no current context
+        /// and when there is a current context, it ensures that the referenced context, cluster
+        /// and user actually exists, throwing an <see cref="InvalidDataException"/> when any
+        /// are missing.
+        /// </note>
+        /// </remarks>
+        public void GetCurrent(out KubeConfigContext context, out KubeConfigCluster cluster, out KubeConfigUser user)
+        {
+            context = null;
+            cluster = null;
+            user    = null;
+
+            if (CurrentContext == null)
+            {
+                return;
+            }
+
+            context = GetContext(CurrentContext);
+
+            if (context == null)
+            {
+                throw new InvalidDataException($"KubeConfig [context={CurrentContext}] does not exist.");
+            }
+
+            cluster = GetCluster(context.Context.Cluster);
+
+            if (cluster == null)
+            {
+                throw new InvalidDataException($"KubeConfig [cluster={context.Context.Cluster}] does not exist.");
+            }
+
+            user = GetUser(context.Context.User);
+
+            if (user == null)
+            {
+                throw new InvalidDataException($"KubeConfig [user={context.Context.User}] does not exist.");
             }
         }
 
@@ -245,8 +334,12 @@ namespace Neon.Kube.Config
         /// Removes a Kubernetes context, if it exists.
         /// </summary>
         /// <param name="context">The context to be removed.</param>
+        /// <param name="removeClusterAndUser">
+        /// Optionally disable removal of the referenced cluster and user if
+        /// they're not referenced elsewhere (defaults to <c>true</c>).
+        /// </param>
         /// <param name="noSave">Optionally prevent context save after the change.</param>
-        public void RemoveContext(KubeConfigContext context, bool noSave = false)
+        public void RemoveContext(KubeConfigContext context, bool removeClusterAndUser = true, bool noSave = false)
         {
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
@@ -266,6 +359,36 @@ namespace Neon.Kube.Config
                 CurrentContext = null;
             }
 
+            // Remove the referenced cluster and user if enabled and when they're
+            // not referenced by another context.
+
+            if (removeClusterAndUser)
+            {
+                if (!Contexts.Any(ctx => ctx.Context.Cluster == context.Context.Cluster))
+                {
+                    for (int i = 0; i < Clusters.Count; i++)
+                    {
+                        if (Clusters[i].Name == context.Context.Cluster)
+                        {
+                            Clusters.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+
+                if (!Contexts.Any(ctx => ctx.Context.User == context.Context.User))
+                {
+                    for (int i = 0; i < Users.Count; i++)
+                    {
+                        if (Users[i].Name == context.Context.User)
+                        {
+                            Users.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+            }
+
             // Persist as required.
 
             if (!noSave)
@@ -275,21 +398,73 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
+        /// Removes a cluster from the config as well as any contexts referencing it.
+        /// </summary>
+        /// <param name="clusterName"></param>
+        public void RemoveCluster(string clusterName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+
+            // Set the current context to NULL if it references the cluster being removed.
+
+            if (Context != null && Context.Context.Cluster == clusterName)
+            {
+                SetContext();
+            }
+
+            // Remove any users and contexts referencing the cluster.
+
+            foreach (var context in Contexts.Where(context => context.Context.Cluster == clusterName).ToArray())
+            {
+                Contexts.Remove(context);
+            }
+
+            foreach (var user in Users.Where(user => user.ClusterName == clusterName).ToArray())
+            {
+                Users.Remove(user);
+            }
+
+            Save();
+        }
+
+        /// <summary>
         /// Validates the kubeconfig.
         /// </summary>
+        /// <param name="needsCurrentCluster">
+        /// Optionally specifies that the config must have a current context identifying the
+        /// cluster and user.
+        /// </param>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
-        public void Validate()
+        public void Validate(bool needsCurrentCluster = false)
         {
             if (Kind != "Config")
             {
                 throw new NeonKubeException($"Invalid [{nameof(Kind)}={Kind}].");
+            }
+
+            if (needsCurrentCluster)
+            {
+                if (Context == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig does not specify a current context.");
+                }
+
+                if (Cluster == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Context.Cluster}] cluster which cannot be found.");
+                }
+
+                if (User == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Context.User}] user which cannot be found.");
+                }
             }
         }
 
         /// <summary>
         /// Sets the current context.
         /// </summary>
-        /// <param name="contextName">The name of the current context or <c>null</c> to deselect the context.</param>
+        /// <param name="contextName">The name of the current context or <c>null</c> to deselect the current context.</param>
         /// <exception cref="NeonKubeException">Thrown if the context does not exist.</exception>
         public void SetContext(string contextName = null)
         {
@@ -307,22 +482,130 @@ namespace Neon.Kube.Config
                 CurrentContext = contextName;
             }
 
-            Save();
+            if (path != null)
+            {
+                Save();
+            }
         }
 
         /// <summary>
-        /// Persists the KubeConfig.
+        /// Reloads the kubeconfig from the global config file.
         /// </summary>
-        public void Save()
+        /// <exception cref="InvalidOperationException">Thrown when the config is not backed by a file.</exception>
+        public void Reload()
+        {
+            lock (syncRoot)
+            {
+                if (path == null)
+                {
+                    throw new InvalidOperationException($"Cannot reload [{nameof(KubeConfig)}] without a file path.");
+                }
+
+                // We're going to read into a temporary instance and then update
+                // this instance's properties from the loaded instance.
+
+                var config = Load(path);
+
+                this.Preferences    = config.Preferences;
+                this.CurrentContext = config.CurrentContext;
+                this.Users          = config.Users;
+                this.Contexts       = config.Contexts;
+                this.Clusters       = config.Clusters;
+            }
+        }
+
+        /// <summary>
+        /// Persists the KubeConfig to the user's <b>~/.kube/config</b> file
+        /// or the specified file. 
+        /// </summary>
+        /// <param name="configPath">
+        /// Optionally specifies the location of the kubeconfig file.  This defaults to the
+        /// path the config was loaded from.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the config was not loaded from a file and <paramref name="configPath"/>
+        /// is not specified.
+        /// </exception>
+        public void Save(string configPath = null)
         {
             lock (syncRoot)
             {
                 // Persist the KubeConfig.
 
-                var configPath = KubeHelper.KubeConfigPath;
+                path = configPath ?? path;
 
-                File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
+                if (path == null)
+                {
+                    throw new InvalidOperationException($"Cannot save [{nameof(KubeConfig)}] without a file path.");
+                }
+
+                File.WriteAllText(path, NeonHelper.YamlSerialize(this));
             }
+        }
+
+        /// <summary>
+        /// Constructs a deep clone of the instance.
+        /// </summary>
+        /// <param name="currentOnly">Optionally strips out the non-current contexts, clusters, and users.</param>
+        /// <returns>The deep cloned <see cref="KubeConfig"/>.</returns>
+        public KubeConfig Clone(bool currentOnly = false)
+        {
+            var clone = NeonHelper.JsonClone(this);
+
+            if (currentOnly && clone.CurrentContext != null)
+            {
+                var delContexts = clone.Contexts.Where(context => context.Name != clone.CurrentContext).ToArray();
+                var delClusters = clone.Clusters.Where(cluster => cluster.Name != clone.Context.Context.Cluster).ToArray();
+                var delUsers    = clone.Users.Where(user => user.Name != clone.Context.Context.User).ToArray();
+
+                foreach (var context in delContexts)
+                {
+                    clone.Contexts.Remove(context);
+                }
+
+                foreach (var cluster in delClusters)
+                {
+                    clone.Clusters.Remove(cluster);
+                }
+
+                foreach (var user in delUsers)
+                {
+                    clone.Users.Remove(user);
+                }
+            }
+
+            return clone;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Searches the config for the named context.  If it's present, the method will clone
+        /// the config, make the named context as current and then remove all other contexts and
+        /// users.  <c>null</c> will be returned if the named context doesn't exist.
+        /// </para>
+        /// <para>
+        /// This is handy when you need to operate on a cluster that's not the current one.
+        /// </para>
+        /// </summary>
+        /// <param name="contextName"></param>
+        /// <returns>
+        /// The new <see cref="KubeConfig"/> with the specified context set or <c>null</c>
+        /// when the desired context does exist.
+        /// </returns>
+        public KubeConfig CloneAndSetContext(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            if (GetContext(contextName) == null)
+            {
+                return null;
+            }
+
+            var clone = Clone();
+
+            clone.SetContext(contextName);
+
+            return clone.Clone(currentOnly: true);
         }
     }
 }

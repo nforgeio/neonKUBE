@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonDashboardController.cs
+//-----------------------------------------------------------------------------
+// FILE:        NeonDashboardController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,50 +16,24 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
-
-using NeonClusterOperator.Harbor;
-
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
-using OpenTelemetry.Resources;
+using Neon.Diagnostics;
+using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Tasks;
+
 using OpenTelemetry.Trace;
 
-using Prometheus;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
-
-using Task    = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -68,8 +42,9 @@ namespace NeonClusterOperator
     /// Manages <see cref="V1NeonDashboard"/> resources.
     /// </para>
     /// </summary>
-    [RbacRule<V1NeonDashboard>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NeonDashboardController : IResourceController<V1NeonDashboard>
+    [RbacRule<V1NeonDashboard>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [ResourceController(MaxConcurrentReconciles = 5)]
+    public class NeonDashboardController : ResourceControllerBase<V1NeonDashboard>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -92,26 +67,15 @@ namespace NeonClusterOperator
             IKubernetes k8s,
             ILogger<NeonDashboardController> logger)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
             this.k8s    = k8s;
             this.logger = logger;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-        }
-
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonDashboard resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonDashboard resource)
         {
             await SyncContext.Clear;
 
@@ -125,7 +89,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonDashboard resource)
+        public override async Task DeletedAsync(V1NeonDashboard resource)
         {
             await SyncContext.Clear;
 

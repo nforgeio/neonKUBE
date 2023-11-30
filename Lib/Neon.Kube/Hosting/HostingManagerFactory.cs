@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingManagerFactory.cs
+//-----------------------------------------------------------------------------
+// FILE:        HostingManagerFactory.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ namespace Neon.Kube.Hosting
         /// </summary>
         private void CheckInitialized()
         {
-            Covenant.Assert(Loader != null, $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Kube.Hosting] assembly first.");
+            Covenant.Assert(Loader != null, () => $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Kube.Hosting] assembly first.");
         }
 
         /// <inheritdoc/>
@@ -87,7 +87,7 @@ namespace Neon.Kube.Hosting
         public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.SetupState.ClusterDefinition.Hosting.Environment) || cloudMarketplace, $"[{nameof(cloudMarketplace)}=true] is not allowed for on-premise hosting environments.");
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.Hosting.Environment) || cloudMarketplace, $"[{nameof(cloudMarketplace)}=true] is not allowed for on-premise hosting environments.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
 
             CheckInitialized();

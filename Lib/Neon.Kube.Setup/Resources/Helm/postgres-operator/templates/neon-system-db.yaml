@@ -33,6 +33,12 @@ spec:
     glauth: neon_service
   postgresql:
     version: "14"
+    parameters:
+      archive_mode: 'on'
+      archive_timeout: 1h
+      max_wal_size: 1GB
+      wal_keep_size: 1GB
+      wal_level: archive
   volume:
     size: {{ .Values.persistence.size }}
     storageClass: {{ .Values.persistence.storageClass }}
@@ -199,11 +205,10 @@ spec:
 
 # Add node affinity support by allowing postgres pods to schedule only on nodes that
 # have label: "postgres-operator:enabled" set.
+  {{- if eq (include "nodeSelectorEnabled" .) "true" }}
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: neonkube.io/node.role 
-              operator: In
-              values:
-                - control-plane
+            {{- include "postgres-operator.nodeAffinity" . | nindent 12 }}
+  {{- end }}

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonNodeTask.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-
-using Neon.JsonConverters;
 
 using k8s;
 using k8s.Models;
+
+using Neon.JsonConverters;
+using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Cluster
 {
@@ -39,7 +39,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE clusters deploy the <b>neon-node-agent</b> as a daemonset such that this is running on
+    /// NEONKUBE clusters deploy the <b>neon-node-agent</b> as a daemonset such that this is running on
     /// every node in the cluster.  This runs as a privileged pod and has full access to the host node's
     /// file system, network, and processes and is typically used for low-level node maintainance activities.
     /// </para>
@@ -199,21 +199,25 @@ namespace Neon.Kube.Resources.Cluster
             /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
             /// to <see cref="Pending"/> when it sees the task for the first time.
             /// </summary>
+            [EnumMember(Value = "new")]
             New = 0,
 
             /// <summary>
             /// The task is waiting to be executed by the <b>neon-node-agent</b>.
             /// </summary>
+            [EnumMember(Value = "pending")]
             Pending,
 
             /// <summary>
             /// The task is currently running.
             /// </summary>
+            [EnumMember(Value = "running")]
             Running,
 
             /// <summary>
             /// The task timed out while executing.
             /// </summary>
+            [EnumMember(Value = "timeout")]
             Timeout,
 
             /// <summary>
@@ -221,22 +225,26 @@ namespace Neon.Kube.Resources.Cluster
             /// crashed or was otherwise terminated and a newly scheduled pod detected
             /// this sutuation.
             /// </summary>
+            [EnumMember(Value = "orphaned")]
             Orphaned,
 
             /// <summary>
             /// The task did not execute before its <see cref="V1NeonNodeTask.TaskSpec.StartBeforeTimestamp"/>
             /// property.
             /// </summary>
+            [EnumMember(Value = "tardy")]
             Tardy,
 
             /// <summary>
             /// The task executed but failed with a non-zero exit code.
             /// </summary>
+            [EnumMember(Value = "failed")]
             Failed,
 
             /// <summary>
             /// The task executed successfully with a zero exit code.
             /// </summary>
+            [EnumMember(Value = "success")]
             Success
         }
 

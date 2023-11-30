@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+//-----------------------------------------------------------------------------
+// FILE:        NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube.Models
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Data models used to communicate with the neonKUBE Headend service.
+    /// <b>INTERNAL USE ONLY:</b> Data models used to communicate with the NEONKUBE Headend service.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

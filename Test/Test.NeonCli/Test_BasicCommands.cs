@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_BasicCommands.cs
+//-----------------------------------------------------------------------------
+// FILE:        Test_BasicCommands.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,14 +49,14 @@ namespace Test.NeonCli
             {
                 // Verify that base command returns some help.
 
-                var result = await runner.ExecuteAsync(Program.Main, "tool");
+                var result = await runner.ExecuteAsync(Program.Main, "login");
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("USAGE:", result.OutputText);
 
                 // Verify that we see an error for an unrecognized command.,
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "invalid-command");
+                result = await runner.ExecuteAsync(Program.Main, "bad-command", "invalid-command");
 
                 Assert.NotEqual(0, result.ExitCode);
             }
@@ -67,27 +67,27 @@ namespace Test.NeonCli
         {
             using (var runner = new ProgramRunner())
             {
-                var result = await runner.ExecuteAsync(Program.Main, "tool", "version");
+                var result = await runner.ExecuteAsync(Program.Main, "version");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal(KubeVersions.Kubernetes, result.OutputText.Trim());
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", "-n");
+                result = await runner.ExecuteAsync(Program.Main, "version", "-n");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal(KubeVersions.Kubernetes, result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", "-n", "--git");
+                result = await runner.ExecuteAsync(Program.Main, "version", "-n", "--git");
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal($"{KubeVersions.Kubernetes}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", $"--minimum={Program.Version}");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum={Program.Version}");
                 Assert.Equal(0, result.ExitCode);
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", $"--minimum=0");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum=0");
                 Assert.Equal(0, result.ExitCode);
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", $"--minimum=64000.0.0");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum=64000.0.0");
                 Assert.NotEqual(0, result.ExitCode);
 
                 var curVersion   = SemanticVersion.Parse(Program.Version);
@@ -95,7 +95,7 @@ namespace Test.NeonCli
 
                 Assert.True(newerVersion > curVersion);
 
-                result = await runner.ExecuteAsync(Program.Main, "tool", "version", $"--minimum={newerVersion}");
+                result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum={newerVersion}");
                 Assert.NotEqual(0, result.ExitCode);
             }
         }

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupClusterOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:        SetupClusterOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ using Neon.Tasks;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterSetupController(ClusterDefinition, bool, SetupClusterOptions)"/>.
+    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterSetupControllerAsync(ClusterDefinition, bool, SetupClusterOptions)"/>.
     /// </summary>
     public class SetupClusterOptions
     {
@@ -87,7 +87,7 @@ namespace Neon.Kube.Setup
         public bool UploadCharts { get; set; } = false;
 
         /// <summary>
-        /// Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
+        /// Optionally overrides the NEONCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
         /// </summary>
         public string NeonCloudHeadendUri { get; set; } = null;
 
@@ -98,7 +98,7 @@ namespace Neon.Kube.Setup
         public bool DisableConsoleOutput { get; set; } = false;
 
         /// <summary>
-        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
+        /// Optionally indicates that we're setting up a NEONDESKTOP cluster
         /// from a completely prebuilt desktop image.  In this case, the controller
         /// returned will fully deploy the cluster (so no setup controller needs to
         /// be created and run afterwards).

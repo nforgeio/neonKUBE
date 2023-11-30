@@ -23,6 +23,7 @@ spec:
       labels:
         k8s-app: calico-node
     spec:
+      enableServiceLinks: false
       nodeSelector:
         kubernetes.io/os: linux
       hostNetwork: true

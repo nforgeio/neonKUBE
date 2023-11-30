@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeClusterInfo.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeClusterInfo.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,22 +26,23 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
+
 namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Holds extended neonKUBE related cluster information.
+    /// Holds extended NEONKUBE related cluster information.
     /// </summary>
     public class KubeClusterInfo
     {
@@ -53,16 +54,23 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Set to a globally unique ID to identify the cluster.  This defaults to 
-        /// a generated unique value.
+        /// Specifies a UUID for the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Guid ClusterId { get; set; } = Guid.NewGuid();
+        public string ClusterId { get; set; }
 
         /// <summary>
-        /// Set to the cluster domain.
+        /// Specifies the cluster name.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterName", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// Specifies the cluster domain.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterDomain", ApplyNamingConventions = false)]
@@ -70,7 +78,15 @@ namespace Neon.Kube.Config
         public string ClusterDomain { get; set; } = null;
 
         /// <summary>
-        /// The single sign-on (SSO) cluster username.
+        /// Specifies the NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
+
+        /// <summary>
+        /// Specifies the SSO admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -78,7 +94,7 @@ namespace Neon.Kube.Config
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster password.
+        /// Specifies the SSO admin password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
@@ -86,7 +102,7 @@ namespace Neon.Kube.Config
         public string SsoPassword { get; set; }
 
         /// <summary>
-        /// The SSH root username.
+        /// Specifies the SSH admin username for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
@@ -94,7 +110,13 @@ namespace Neon.Kube.Config
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The SSH root password.
+        /// <para>
+        /// Specifies the SSH admin password for the cluster nodes.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
@@ -133,13 +155,5 @@ namespace Neon.Kube.Config
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubeSshKey SshKey { get; set; }
-
-        /// <summary>
-        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
-        [DefaultValue(KubeVersions.NeonKube)]
-        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
     }
 }

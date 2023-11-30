@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.1.3 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -24,16 +24,19 @@
 
 param 
 (
-    [switch]$all             = $false, # Rebuild all images
-    [switch]$base            = $false, # Rebuild base images
-    [switch]$test            = $false, # Rebuild test related images
-    [switch]$other           = $false, # Rebuild all other images (usually script based)
-    [switch]$services        = $false, # Rebuild all cluster service images
-    [switch]$nopush          = $false, # Don't push to the registry
-    [switch]$noprune         = $false, # Don't prune the local Docker cache
-    [switch]$allVersions     = $false, # Rebuild all image versions
-    [switch]$nobuildsolution = $false  # Don't clean or build the solution
-
+    [Parameter(Position=0, Mandatory=$false)]
+    [string]$config,                        # Identifies the build configuration
+    [switch]$all             = $false,      # Rebuild all images
+    [switch]$base            = $false,      # Rebuild base images
+    [switch]$test            = $false,      # Rebuild test related images
+    [switch]$other           = $false,      # Rebuild all other images (usually script based)
+    [switch]$services        = $false,      # Rebuild all cluster service images
+    [switch]$nopush          = $false,      # Don't push to the registry
+    [switch]$noprune         = $false,      # Don't prune the local Docker cache
+    [switch]$noclean         = $false,      # Don't clean before building
+    [switch]$allVersions     = $false,      # Rebuild all image versions
+    [switch]$rethrow         = $false,      # Rethrow any exceptions (used when called by other scripts)
+    [switch]$nobuildsolution = $false       # Don't clean or build the solution
 )
 
 #----------------------------------------------------------
@@ -42,8 +45,8 @@ $image_root = [System.IO.Path]::Combine($env:NK_ROOT, "Images")
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-# Take care to ensure that you order the image builds such that
-# dependant images are built before any dependancies.
+#------------------------------------------------------------------------------
+# Builds and publishes a container image, passing $config.
 
 function Publish
 {
@@ -61,22 +64,22 @@ function Publish
         {
             if ($nopush)
             {
-                ./publish.ps1 -config $config -all -nopush
+                Invoke-Program "pwsh -NonInteractive -f ./publish.ps1 -config $config -all -nopush"
             }
             else
             {
-                ./publish.ps1 -config $config -all
+                Invoke-Program "pwsh -NonInteractive -f ./publish.ps1 -config $config -all"
             }
         }
         else
         {
             if ($nopush)
             {
-                ./publish.ps1 -config $config -nopush
+                Invoke-Program "pwsh -NonInteractive -f ./publish.ps1 -config $config -nopush"
             }
             else
             {
-                ./publish.ps1 -config $config
+                Invoke-Program "pwsh -NonInteractive -f ./publish.ps1 -config $config"
             }
         }
     }
@@ -86,19 +89,50 @@ function Publish
     }
 }
 
+#------------------------------------------------------------------------------
+# Builds and publishes a container image, WITHOUT passing $config.
+
+function PublishWithoutConfig
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$path,
+        [Parameter(Position=1, Mandatory=$false)]
+        [string]$noBuildOption = $null
+    )
+
+    try
+    {
+        Push-Cwd "$path" | Out-Null
+
+        $noPushOption = ""
+    
+        if ($nopush)
+        {
+            $noPushOption = "-nopush"
+        }
+
+        Invoke-Program "pwsh -NonInteractive -f publish.ps1 $noPushOption $noBuildOption"
+    }
+    finally
+    {
+        Pop-Cwd | Out-Null
+    }
+}
+
+#------------------------------------------------------------------------------
+# Main
+
 try
 {
-    # Abort if Visual Studio is running because that can cause [pubcore] to
-    # fail due to locked files.
+    #--------------------------------------------------------------------------
+    # Process the command line arguments.
 
-    # $note(jefflill): 
-    #
-    # We don't currently need this check but I'm leaving it here commented
-    # out to make it easier to revive in the future, if necessary.
-
-    # Ensure-VisualStudioNotRunning
-
-    # Handle the command line arguments.
+    if ([System.String]::IsNullOrEmpty($config))
+    {
+        $config = "Debug"
+    }
 
     if ($all)
     {
@@ -117,8 +151,9 @@ try
         $services = $true
     }
 
+    #------------------------------------------------------------------------------
     # Verify that the user has the required environment variables.  These will
-    # be available only for maintainers and are intialized by the neonCLOUD
+    # be available only for maintainers and are intialized by the NEONCLOUD
     # [buildenv.cmd] script.
 
     if (-not (Test-Path env:NC_ROOT))
@@ -126,53 +161,37 @@ try
         "*** ERROR: This script is intended for use by maintainers only:"
         "           [NC_ROOT] environment variable is not defined."
         ""
-        "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+        "           Maintainers should re-run the NEONCLOUD [buildenv.cmd] script."
 
         return 1
     }
 
+    #------------------------------------------------------------------------------
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
-    
-    # $note(jefflill):
-    #
-    # We're currently building DEBUG code since our services don't really have tight
-    # inner loops and also to get better stack traces on failures, making it easier
-    # to debug any issues we encounter.
 
-    $config     = "Debug"
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
+
     $msbuild    = $env:MSBUILDPATH
+    $neonBuild  = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
     $nkRoot     = "$env:NK_ROOT"
     $nkSolution = "$nkRoot\neonKUBE.sln"
     $branch     = GitBranch $nkRoot
 
     if (-not $nobuildsolution)
     {
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                           RESTORE PACKAGES                               ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        & dotnet restore "$nkSolution"
-
-        if (-not $?)
+        if (-not $noclean)
         {
-            throw "ERROR: RESTORE FAILED"
-        }
+            Write-Info ""
+            Write-Info "********************************************************************************"
+            Write-Info "***                            CLEAN SOLUTION                                ***"
+            Write-Info "********************************************************************************"
+            Write-Info ""
 
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                            CLEAN SOLUTION                                ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        "neon-build clean $nkRoot"
-        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
+            Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
         }
 
         Write-Info  ""
@@ -181,13 +200,16 @@ try
         Write-Info  "*******************************************************************************"
         Write-Info  ""
 
-        & "$msbuild" "$nkSolution" -p:Configuration=$config -m -verbosity:quiet
+        & "$msbuild" "$nkSolution" -p:Configuration=$config -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet
 
         if (-not $?)
         {
             throw "ERROR: BUILD FAILED"
         }
     }
+
+    #------------------------------------------------------------------------------
+    # Build the container images.
 
     # Purge any local Docker images as well as the image build cache.
     # This also purges all other Docker assets as a side effect.  We
@@ -212,7 +234,6 @@ try
     {
         Publish "$image_root\neon-acme"
         Publish "$image_root\neon-cluster-operator"
-        Publish "$image_root\neon-dashboard"
         Publish "$image_root\neon-node-agent"
         Publish "$image_root\neon-sso-session-proxy"
     }
@@ -228,11 +249,15 @@ try
     {
         Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
-
-    "neon-build clean $nkRoot"
 }
 catch
 {
     Write-Exception $_
+
+    if ($rethrow)
+    {
+        throw
+    }
+
     exit 1
 }

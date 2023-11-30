@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    UnitTest1.cs
+// FILE:        UnitTest1.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ using k8s;
 using k8s.Models;
 using Moq;
 using Neon.Kube.Resources.Cluster;
-using Neon.Kube.Xunit.Operator;
+using Neon.Operator.Xunit;
 
 using NeonClusterOperator;
 using System.Collections.Generic;

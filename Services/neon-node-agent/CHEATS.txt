@@ -1,4 +1,4 @@
-﻿REM MAINTAINERS ONLY: Rebuild and install: neon-node-agent
+REM MAINTAINER ONLY: Rebuild and install: neon-node-agent
 
 set DEBUG_LOGLEVEL=debug
 set DEBUG_ORG=ghcr.io/neonkube-stage

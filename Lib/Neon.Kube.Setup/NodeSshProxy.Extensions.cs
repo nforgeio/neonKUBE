@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeSshProxy.Extensions.cs
+//-----------------------------------------------------------------------------
+// FILE:        NodeSshProxy.Extensions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 // limitations under the License.
 
 // This file includes node configuration methods executed while setting
-// up a neonKUBE cluster.
+// up a NEONKUBE cluster.
 
 using System;
 using System.Collections.Generic;
@@ -38,6 +38,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -49,7 +50,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.SSH
 {
     /// <summary>
     /// Extends the <see cref="NodeSshProxy{TMetadata}"/> class by adding cluster setup related methods.
@@ -58,7 +59,7 @@ namespace Neon.Kube
     {
         /// <summary>
         /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE node's Helm folder.
+        /// NEONKUBE node's Helm folder.
         /// </summary>
         /// <param name="node">The node instance.</param>
         /// <param name="controller">The setup controller.</param>

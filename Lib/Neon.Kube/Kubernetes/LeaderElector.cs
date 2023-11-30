@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    LeaderElector.cs
+//-----------------------------------------------------------------------------
+// FILE:        LeaderElector.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ using StockLeaderElector        = k8s.LeaderElection.LeaderElector;
 using StockLeaderElectionConfig = k8s.LeaderElection.LeaderElectionConfig;
 using StockLeaseLock            = k8s.LeaderElection.ResourceLock.LeaseLock;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/>

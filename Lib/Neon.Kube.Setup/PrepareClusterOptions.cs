@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    PrepareClusterOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:        PrepareClusterOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ using Neon.Kube.Hosting;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterPrepareController(ClusterDefinition, bool, PrepareClusterOptions)"/>.
+    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterPrepareControllerAsync(ClusterDefinition, bool, PrepareClusterOptions)"/>.
     /// </summary>
     public class PrepareClusterOptions
     {
@@ -114,11 +114,23 @@ namespace Neon.Kube.Setup
         public bool BuildDesktopImage { get; set; } = false;
 
         /// <summary>
-        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
+        /// Optionally indicates that we're setting up a NEONDESKTOP cluster
         /// from a completely prebuilt desktop image.  In this case, the controller
         /// returned will fully deploy the cluster (so no setup controller needs to
         /// be created and run afterwards).
         /// </summary>
         public bool DesktopReadyToGo { get; set; } = false;
+
+        /// <summary>
+        /// <para>
+        /// Optionally indicates that the cluster should not be secure nodes with a
+        /// generated secure password and also that we should allow SSH password
+        /// authentication, for cluster debugging purposes.
+        /// </para>
+        /// <note>
+        /// <b>WARNING!</b> This should never be used for production clusters.
+        /// </note>
+        /// </summary>
+        public bool Insecure { get; set; } = false;
     }
 }

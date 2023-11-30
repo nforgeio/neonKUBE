@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    HyperVProxy.cs
+//-----------------------------------------------------------------------------
+// FILE:        HyperVProxy.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,7 +106,13 @@ namespace Neon.Kube.Hosting.HyperV
             else
             {
                 desktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
-                desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+
+                if (desktopServiceChannel == null)
+                {
+                    throw new NeonKubeException("[neon-desktop-service] is not running.");
+                }
+
+                desktopService = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
 

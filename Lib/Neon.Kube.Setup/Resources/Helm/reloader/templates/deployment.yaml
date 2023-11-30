@@ -41,9 +41,10 @@ spec:
 {{ toYaml .Values.reloader.matchLabels | indent 8 }}
 {{- end }}
     spec:
-      {{- if .Values.reloader.deployment.nodeSelector }}
+      enableServiceLinks: false
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.reloader.deployment.nodeSelector | indent 8 }}
+        {{- include "reloader.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- if .Values.reloader.deployment.affinity }}
       affinity:

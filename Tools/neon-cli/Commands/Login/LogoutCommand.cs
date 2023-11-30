@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    LogoutCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        LogoutCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ namespace NeonCli
     public class LogoutCommand : CommandBase
     {
         private const string usage = @"
-Logs out of the current Kubernetes context.
+Logs out of the current NEONKUBE context by selecting no context.
 
 USAGE:
 
@@ -68,7 +68,7 @@ USAGE:
 
             if (KubeHelper.CurrentContext == null)
             {
-                Console.WriteLine($"You are not logged into a neonKUBE cluster.");
+                Console.WriteLine($"You are not logged into a NEONKUBE cluster.");
                 return;
             }
 

@@ -27,6 +27,7 @@ spec:
         {{ toYaml . | nindent 8  }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -134,9 +135,9 @@ spec:
           configMap:
             name: {{ .Values.nfsProvisioner.nfsHookConfigMap }}
         {{- end }}
-{{- if .Values.nfsProvisioner.nodeSelector }}
+{{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.nfsProvisioner.nodeSelector | indent 8 }}
+        {{- include "openebs-nfs-provisioner.nodeSelector" . | nindent 8 }}
 {{- end }}
 {{- if .Values.nfsProvisioner.tolerations }}
       tolerations:

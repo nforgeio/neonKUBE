@@ -151,8 +151,10 @@ spec:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
             memory: "{{ .Values.resources.proxy.requests.memory }}"
-      defaultNodeSelector: 
-        neonkube.io/istio: true
+      {{- if eq (include "defaultNodeSelectorEnabled" .) "true" }}
+      defaultNodeSelector:
+        {{- include "istio.defaultNodeSelector" . | nindent 8 }}
+      {{- end }}
     gateways:
       istio-ingressgateway:
         type: NodePort
@@ -160,7 +162,6 @@ spec:
     cni:
       excludeNamespaces:
        - {{.Release.Namespace}}
-       - kube-system
        - kube-node-lease
        - kube-public
       logLevel: info

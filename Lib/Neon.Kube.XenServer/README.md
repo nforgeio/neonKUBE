@@ -1,4 +1,4 @@
-﻿Neon.Kube.XenServer
+Neon.Kube.XenServer
 ===================
 
-**INTERNAL USE ONLY:** Core library used by neonKUBE related tooling.
+**INTERNAL USE ONLY:** Core library used by NEONKUBE related tooling.

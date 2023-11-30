@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetupState.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubeSetupState.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
+    /// NEONKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
     /// where preparing the cluster involves initializing infrastructure, including configuring
     /// the network and creating the virtual machines that will host the cluster.  Cluster
     /// setup is where we configure Kubernetes, install the necessary components, and then
@@ -226,8 +226,16 @@ namespace Neon.Kube
         public string ClusterId { get; set; }
 
         /// <summary>
+        /// The cluster name.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterName", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterName { get; set; }
+
+        /// <summary>
         /// <para>
-        /// Specifies the cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
+        /// Specifies the cluster DNS domain.  NEONKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
         /// </para>
         /// <note>
@@ -237,10 +245,10 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The idea here is that neonKUBE will be use the generated domain to deploy a fully
+        /// The idea here is that NEONKUBE will be use the generated domain to deploy a fully
         /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
-        /// This works even for clusters deployed behind a firewall or neonDESKTOP built-in
-        /// clusters running on a workstation or laptop.
+        /// This works even for clusters deployed behind a firewall or NEONDESKTOP clusters
+        /// running on a workstation or laptop.
         /// </para>
         /// <para>
         /// In the future, we plan to support custom DNS domains where these are pre-registered
@@ -262,7 +270,7 @@ namespace Neon.Kube
         public ClusterDefinition ClusterDefinition { get; set; }
 
         /// <summary>
-        /// Specifies the neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// Specifies the NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
@@ -304,7 +312,7 @@ namespace Neon.Kube
         public Dictionary<string, KubeFileDetails> ControlNodeFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
 
         /// <summary>
-        /// Holds the JWT used to authenticate with neonCLOUD headend services.
+        /// Holds the JWT used to authenticate with NEONCLOUD headend services.
         /// </summary>
         [JsonProperty(PropertyName = "NeonCloudToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "neonCloudToken", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
@@ -320,7 +328,7 @@ namespace Neon.Kube
         public string ContextName { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster username.
+        /// The SSO admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -328,7 +336,7 @@ namespace Neon.Kube
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster password.
+        /// The SSO admin password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
@@ -336,7 +344,7 @@ namespace Neon.Kube
         public string SsoPassword { get; set; }
 
         /// <summary>
-        /// The SSH root username.
+        /// The SSH admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
@@ -344,7 +352,13 @@ namespace Neon.Kube
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The SSH root password.
+        /// <para>
+        /// Specifies the SSH admin password.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
@@ -400,6 +414,26 @@ namespace Neon.Kube
             {
                 File.Delete(path);
             }
+        }
+
+        /// <summary>
+        /// Returns a <see cref="KubeClusterInfo"/> instance initialized from this instance.
+        /// </summary>
+        /// <returns>The <see cref="KubeClusterInfo"/>.</returns>
+        public KubeClusterInfo ToKubeClusterInfo()
+        {
+            return new KubeClusterInfo()
+            {
+                ClusterId      = this.ClusterId,
+                ClusterName    = this.ClusterName,
+                ClusterDomain  = this.ClusterDomain,
+                ClusterVersion = this.ClusterVersion,
+                SshUsername    = this.SshUsername,
+                SshPassword    = this.SshPassword,
+                SshKey         = this.SshKey,
+                SsoUsername    = this.SsoUsername,
+                SsoPassword    = this.SsoPassword
+            };
         }
     }
 }

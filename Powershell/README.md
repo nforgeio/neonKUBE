@@ -24,4 +24,4 @@ Note that you can include **includes.ps1** to import all of these files to your 
 
 **WARNING:**
 
-You need to manually pull the neonCLOUD repo on any jobrunners after making changes to any of these files.
+You need to manually pull the NEONCLOUD repo on any jobrunners after making changes to any of these files.

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubePort.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubePort.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,22 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines reserved neonKUBE ports.
+    /// Defines reserved NEONKUBE ports.
     /// </summary>
     public static class KubePort
     {
+        /// <summary>
+        /// <para>
+        /// <b>neon-node-agent</b> network port.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> <b>neon-node-agent</b> runs in the host node's network
+        /// namespace, so it's important that this port not conflict any other processes
+        /// running on the node.
+        /// </note>
+        /// </summary>
+        public const int NeonNodeAgent = 9000;
+
         /// <summary>
         /// The first port reserved by NeonKUBE SSO redirects.
         /// </summary>

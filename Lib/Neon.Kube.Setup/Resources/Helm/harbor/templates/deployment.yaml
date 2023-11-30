@@ -23,6 +23,7 @@ spec:
       labels:
         control-plane: harbor-operator
     spec:
+      enableServiceLinks: false
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - args:
@@ -77,8 +78,10 @@ spec:
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        neonkube.io/neon-system.registry: 'true'
+        {{- include "chart.nodeSelector" . | nindent 8 }}
+      {{- end }}
       {{- if .Values.tolerations }}
       {{- with .Values.tolerations }}
       tolerations:

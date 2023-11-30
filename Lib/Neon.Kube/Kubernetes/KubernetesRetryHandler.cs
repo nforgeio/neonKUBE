@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    KubernetesRetryHandler.cs
+//-----------------------------------------------------------------------------
+// FILE:        KubernetesRetryHandler.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,7 +32,7 @@ using k8s.Autorest;
 
 using Neon.Retry;
 
-namespace Neon.Kube
+namespace Neon.Kube.K8s
 {
     /// <summary>
     /// A <see cref="DelegatingHandler"/> optionally used to retry transient errors encountered
@@ -42,53 +43,78 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static IRetryPolicy defaultRetryPolicy = new ExponentialRetryPolicy(
-            transientDetector:
-                exception =>
+        /// <summary>
+        /// Implements default transient error detection.
+        /// </summary>
+        /// <param name="exception">Specifies the exception being tested.</param>
+        /// <returns><c>true</c> for exceptions considered to be transient.</returns>
+        public static bool DefaultTransientDetector(Exception exception)
+        {
+            Covenant.Requires<ArgumentNullException>(exception != null, nameof(exception));
+
+            var exceptionType = exception.GetType();
+
+            // Exceptions like this happen when a API server connection can't be established
+            // due to the server not running or ready.
+
+            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
+            {
+                return true;
+            }
+
+            var httpOperationException = exception as HttpOperationException;
+
+            if (httpOperationException != null)
+            {
+                var statusCode = httpOperationException.Response.StatusCode;
+
+                switch (statusCode)
                 {
-                    var exceptionType = exception.GetType();
+                    case HttpStatusCode.GatewayTimeout:
+                    case HttpStatusCode.InternalServerError:
+                    case HttpStatusCode.RequestTimeout:
+                    case HttpStatusCode.ServiceUnavailable:
+                    case (HttpStatusCode)423:   // Locked
+                    case (HttpStatusCode)429:   // Too many requests
 
-                    // Exceptions like this happen when a API server connection can't be established
-                    // due to the server not running or ready.
-
-                    if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
-                    {
                         return true;
-                    }
+                }
+            }
 
-                    var httpOperationException = exception as HttpOperationException;
+            // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
-                    if (httpOperationException != null)
-                    {
-                        var statusCode = httpOperationException.Response.StatusCode;
+            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
+            {
+                return true;
+            }
 
-                        switch (statusCode)
-                        {
-                            case HttpStatusCode.GatewayTimeout:
-                            case HttpStatusCode.InternalServerError:
-                            case HttpStatusCode.RequestTimeout:
-                            case HttpStatusCode.ServiceUnavailable:
-                            case (HttpStatusCode)423:   // Locked
-                            case (HttpStatusCode)429:   // Too many requests
+            return false;
+        }
 
-                                return true;
+        /// <summary>
+        /// Returns the default <see cref="KubernetesRetryHandler"/>'s retry policy.  This policy is
+        /// relatively conservative and will retry operations for up to <b>120 seconds</b>.  For situations
+        /// where you need to see errors before that, use <see cref="AggressiveRetryPolicy"/> or construct
+        /// your own retry policy using <see cref="DefaultTransientDetector(Exception)"/> (if you wish)
+        /// use that when constructing a <see cref="KubernetesRetryHandler"/>.
+        /// </summary>
+        public static IRetryPolicy DefaultRetryPolicy =
+            new ExponentialRetryPolicy(
+                transientDetector:    DefaultTransientDetector,
+                initialRetryInterval: TimeSpan.FromSeconds(1),
+                maxRetryInterval:     TimeSpan.FromSeconds(10),
+                timeout:              TimeSpan.FromSeconds(120));
 
-                        }
-                    }
-
-                    // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
-
-                    if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
-                    {
-                        return true;
-                    }
-
-                    return false;
-                },
-                maxAttempts:          int.MaxValue,
+        /// <summary>
+        /// Returns a more aggressive <see cref="KubernetesRetryHandler"/> retry policy.  This policy
+        /// will retry operations for up to <b>15 seconds</b>.
+        /// </summary>
+        public static IRetryPolicy AggressiveRetryPolicy =
+            new ExponentialRetryPolicy(
+                transientDetector:    DefaultTransientDetector,
                 initialRetryInterval: TimeSpan.FromSeconds(1),
                 maxRetryInterval:     TimeSpan.FromSeconds(5),
-                timeout:              TimeSpan.FromMinutes(5));
+                timeout:              TimeSpan.FromSeconds(15));
 
         //---------------------------------------------------------------------
         // Instance members
@@ -98,22 +124,22 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="retryPolicy">Optionally specifies anm overriding retry policy.</param>
+        /// <param name="retryPolicy">Optionally specifies a retry policy that overrides <see cref="DefaultRetryPolicy"/>.</param>
         public KubernetesRetryHandler(IRetryPolicy retryPolicy = null)
             : base()
         {
-            this.retryPolicy = retryPolicy ?? defaultRetryPolicy;
+            this.retryPolicy = retryPolicy ?? DefaultRetryPolicy;
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="innerHandler">Specifies an overriding HTTP handler.</param>
-        /// <param name="retryPolicy">Optionally specifies an overriding retry policy.</param>
+        /// <param name="retryPolicy">Optionally specifies a retry policy that overrides <see cref="DefaultRetryPolicy"/>.</param>
         public KubernetesRetryHandler(HttpMessageHandler innerHandler, IRetryPolicy retryPolicy = null)
             : base(innerHandler)
         {
-            this.retryPolicy = retryPolicy ?? defaultRetryPolicy;
+            this.retryPolicy = retryPolicy ?? DefaultRetryPolicy;
         }
 
         /// <inheritdoc/>
@@ -139,6 +165,7 @@ namespace Neon.Kube
                             {
                                 requestContent = await request.Content.ReadAsStringAsync();
                             }
+
                             throw new HttpOperationException()
                             {
                                 Body     = content,
@@ -154,8 +181,15 @@ namespace Neon.Kube
                 });
         }
 
+        /// <summary>
+        /// Creates a new exception with additional message details.
+        /// </summary>
+        /// <param name="e">The exception being augmented.</param>
+        /// <returns>The new augmented exception.</returns>
         private static HttpOperationException GetEnhancedHttpOperationException(HttpOperationException e)
         {
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+
             return new HttpOperationException($"{e.Message}\r\n\r\nRESPONSE.CONTENT:\r\n\r\n{e.Response.Content}", e.InnerException)
             {
                 Response = e.Response

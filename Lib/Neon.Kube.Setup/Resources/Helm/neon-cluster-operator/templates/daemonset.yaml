@@ -1,4 +1,4 @@
-﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -21,8 +21,11 @@ spec:
       {{- end }}
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
-      nodeSelector: 
-        neonkube.io/node.role: control-plane
+      enableServiceLinks: false
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
+      nodeSelector:
+        {{- include "neon-cluster-operator.nodeSelector" . | nindent 8 }}
+      {{- end }}
       serviceAccountName: neon-cluster-operator
       tolerations:
       - operator: Exists

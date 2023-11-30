@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    SessionTransformer.cs
+//-----------------------------------------------------------------------------
+// FILE:        SessionTransformer.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,11 +15,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -74,10 +81,10 @@ namespace NeonSsoSessionProxy
         /// <param name="cancellationToken"></param>
         /// <returns>Returns the tracking <see cref="ValueTask"/>.</returns>
         public override async ValueTask TransformRequestAsync(
-            HttpContext httpContext,
-            HttpRequestMessage proxyRequest,
-            string destinationPrefix,
-            CancellationToken cancellationToken = default)
+            HttpContext         httpContext,
+            HttpRequestMessage  proxyRequest,
+            string              destinationPrefix,
+            CancellationToken   cancellationToken = default)
         {
             logger.LogDebugEx(() => $"Transform request");
 

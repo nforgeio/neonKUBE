@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    LoginExportCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        LoginExportCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,23 +41,37 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports an extended Kubernetes context to standard output.
+Exports a NEONKUBE context to standard output or a file.
 
 USAGE:
 
-    neon login export --context=USER@CLUSTER[/NAMESPACE] ] [PATH]
+    neon login export [OPTIONS] [PATH]
 
 ARGUMENTS:
 
-    USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
-    PATH                        - Optional output file (defaults to STDOUT)
+    PATH                    - Optional output file (defaults to STDOUT)
+
+OPTIONS:
+
+    --context=CONTEXT-NAME  - Optionally identifies a specific context
+                              to be exported, rather than the current
+                              context
 
 REMARKS:
 
-    The output includes the Kubernetes context information along
-    with additional neonKUBE cluster login information.  This is 
-    intended to be used for distributing a login to other cluster 
-    login to their workstation.
+IMPORTANT: Exported NEONKUBE contexts include cluster credentials and
+           should be protected.
+
+This command is used to obtain a NEONKUBE context for a cluster so
+it can be saved (perhaps in a password manager) and possibly shared with
+other cluster users.  The current context (if there is one) is obtained
+by default, but you can use the [--context=CONTEXT-NAME] option to obtain
+a specific context.
+
+The context information is written to STDOUT by default.  Use the PATH
+argument to save to a file instead.
+
+Use the [neon login import] command to import an exported context.
 ";
 
         /// <inheritdoc/>
@@ -89,7 +103,7 @@ REMARKS:
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
                     Program.Exit(1);
                 }
             }
@@ -99,12 +113,12 @@ REMARKS:
 
                 if (contextName == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
                     Program.Exit(1);
                 }
             }
 
-            var context = KubeHelper.Config.GetContext(contextName);
+            var context = KubeHelper.KubeConfig.GetContext(contextName);
 
             if (context == null)
             {
@@ -112,8 +126,8 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var cluster = KubeHelper.Config.GetCluster(context.Config.Cluster);
-            var user    = KubeHelper.Config.GetUser(context.Config.User);
+            var cluster = KubeHelper.KubeConfig.GetCluster(context.Context.Cluster);
+            var user    = KubeHelper.KubeConfig.GetUser(context.Context.User);
 
             if (context == null)
             {
@@ -123,7 +137,7 @@ REMARKS:
 
             if (user == null)
             {
-                Console.Error.WriteLine($"*** ERROR: User [{context.Config.User}] not found.");
+                Console.Error.WriteLine($"*** ERROR: User [{context.Context.User}] not found.");
                 Program.Exit(1);
             }
 

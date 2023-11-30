@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonGrpcServices.cs
+//-----------------------------------------------------------------------------
+// FILE:        NeonGrpcServices.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto
 {
     /// <summary>
-    /// Creates clients for neonKUBE related gRPC services.
+    /// Creates clients for NEONKUBE related gRPC services.
     /// </summary>
     public static class NeonGrpcServices
     {
@@ -68,8 +68,6 @@ namespace Neon.Kube.GrpcProto
             // to manage Hyper-V.
             //
             // This is low risk, so we're not going to worry about it.
-
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
             var endPoint           = new UnixDomainSocketEndPoint(socketPath);
             var socketsHttpHandler = new SocketsHttpHandler()

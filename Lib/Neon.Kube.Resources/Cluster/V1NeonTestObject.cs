@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonTestObject.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1NeonTestObject.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 using k8s;
 using k8s.Models;
 
-using NJsonSchema.Annotations;
+using Neon.Operator.Attributes;
 
 namespace Neon.Kube.Resources.Cluster
 {
@@ -31,6 +29,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
+    [Ignore]
     public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<V1TestSpec>, IValidate
     {
         /// <summary>

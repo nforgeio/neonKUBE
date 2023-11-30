@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterPrepareCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterPrepareCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,10 +51,19 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Provisions local and/or cloud infrastructure required to host a neonKUBE cluster.
-This includes provisioning networks, load balancers, virtual machines, etc.  Once
-the infrastructure is ready, you'll use the [neon cluster setup ...] command to
-actually configure the cluster.
+MAINTAINER ONLY: Provisions local and/or cloud infrastructure required to host a
+NEONKUBE cluster.  This includes provisioning networks, load balancers, virtual
+machines, etc.  Once the infrastructure is ready, you'll use the [neon cluster setup ...]
+command to actually setup the cluster.
+
+NOTE: This command is used by maintainers while debugging cluster setup. 
+
+This is the first part of deploying a cluster in two stages, where you first
+prepare the cluster to provision any virtual machines ane network infrastructure
+and then you setup NEONKUBE on that, like:
+
+    neon cluster prepare CLUSTER-DEF
+    neon cluster setup root@CLUSTER-NAME
 
 USAGE:
 
@@ -62,53 +71,9 @@ USAGE:
 
 ARGUMENTS:
 
-    CLUSTER-DEF     - Path to the cluster definition file or ""WSL2"" to deploy
-                      the standard neonKUBE WSL2 distribution.
+    CLUSTER-DEF                 - Path to the cluster definition file.
 
 OPTIONS:
-
-    --node-image-uri            - Overrides the default node image URI.
-
-                                  NOTE: This is ignored for [--debug] mode.
-                                  NOTE: This is ignored when [--node-image-path] is present.
-
-    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
-                                  downloading the node image from GitHub Releases.  This
-                                  is useful for debugging node image changes.
-
-    --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
-                                  servers by hostname and port for use by the new cluster. 
-                                  Specify multiple servers by separating the endpoints 
-                                  with spaces.
-
-    --unredacted                - Runs commands with potential secrets without 
-                                  redacting logs.  This is useful for debugging 
-                                  cluster setup issues.  Do not use for production
-                                  clusters.
-
-    --max-parallel=#            - Specifies the maximum number of node related operations
-                                  to perform in parallel.  This defaults to [6].
-
-    --disable-pending           - Disable parallization of setup tasks across steps.
-                                  This is generally intended for use while debugging
-                                  cluster setup and may slow down setup substantially.
-
-    --remove-templates          - Removes any cached local virtual machine 
-                                  templates without actually setting up a 
-                                  cluster.  You can use this to ensure that 
-                                  cluster will be created from the most recent
-                                  template.
-
-    --debug                     - Implements cluster setup from the base rather
-                                  than the node image.  This mode is useful while
-                                  developing and debugging cluster setup.  This
-                                  implies [--upload-charts].
-
-                                  NOTE: This mode is not supported for cloud and
-                                        bare-metal environments.
-
-    --quiet                     - Only print the currently executing step rather than
-                                  displaying detailed setup status.
 
     --base-image-name           - Specifies the base image name to use when operating
                                   in [--debug] mode.  This will be the name of the base
@@ -120,18 +85,71 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged image 
+    --debug                     - Implements cluster setup from the base rather
+                                  than the node image.  This mode is useful while
+                                  developing and debugging cluster setup.
+
+                                  NOTE: This mode is not supported for cloud and
+                                        bare-metal environments.
+
+    --disable-pending           - Disable parallization of setup tasks across steps.
+                                  This is generally intended for use while debugging
+                                  cluster setup and may slow down setup substantially.
+
+    --insecure                  - MAINTAINER ONLY: Prevents the cluster node [sysadmin]
+                                  account from being set to a secure password and also
+                                  enables SSH password authentication.  Used for debugging.
+
+                                  WARNING: NEVER USE FOR PRODUCTION CLUSTERS!
+
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
+
+    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
+                                  downloading the node image.  This is useful for '
+                                  debugging node image changes locally.
+
+    --node-image-uri            - Overrides the default node image URI.
+
+                                  NOTE: This is ignored for [--debug] mode.
+                                  NOTE: This is ignored when [--node-image-path] is present.
+
+    --no-telemetry              - Disables whether telemetry for failed cluster deployment,
+                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment
+                                  variable.
+
+    --package-cache=HOST:PORT   - Optionally specifies one or more APT Package cache
+                                  servers by hostname and port for use by the new cluster. 
+                                  Specify multiple servers by separating the endpoints 
+                                  with commas.
+
+    --quiet                     - Only print the currently executing step rather than
+                                  displaying detailed setup status.
+
+    --unredacted                - Runs commands with potential secrets without 
+                                  redacting logs.  This is useful for debugging 
+                                  cluster setup issues.  Do not use for production
+                                  clusters.
+
+    --use-staged[=branch]       - MAINTAINER ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
-                                  the staged neonKUBE node image whose version is a 
-                                  combination of the neonKUBE version along with the 
-                                  name of the neonKUBE branch when the libraries were
+                                  the staged NEONKUBE node image whose version is a 
+                                  combination of the NEONKUBE version along with the 
+                                  name of the NEONKUBE branch when the libraries were
                                   built.
 
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
+
+REMARKS:
+
+Most users will use the deploy command that combines both commands.  The two
+stage process is typically used only by NEONKUBE maintainers.
+
+    neon cluster deploy CLUSTER-DEF
 
 ";
 
@@ -140,22 +158,20 @@ OPTIONS:
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] 
-        { 
-            "--node-image-uri", 
-            "--node-image-path",
-            "--package-caches",
-            "--unredacted", 
-            "--max-parallel", 
-            "--disable-pending", 
-            "--remove-templates", 
-            "--debug",
-            "--quiet",
+        {
             "--base-image-name",
+            "--debug",
+            "--disable-pending", 
+            "--insecure",
+            "--max-parallel", 
+            "--node-image-path",
+            "--node-image-uri", 
+            "--no-telemetry",
+            "--package-cache",
+            "--quiet",
+            "--unredacted",
             "--use-staged"
         };
-
-        /// <inheritdoc/>
-        public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -182,28 +198,24 @@ OPTIONS:
             // perform the lookups.
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-
-            // Handle the [--remove-templates] option.
-
-            if (commandLine.HasOption("--remove-templates"))
-            {
-                Console.WriteLine("Removing cached virtual machine templates.");
-
-                foreach (var fileName in Directory.GetFiles(KubeHelper.VmImageFolder, "*.*", SearchOption.TopDirectoryOnly))
-                {
-                    File.Delete(fileName);
-                }
-            }
            
-            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
-            var nodeImagePath     = commandLine.GetOption("--node-image-path");
-            var debug             = commandLine.HasOption("--debug");
-            var quiet             = commandLine.HasOption("--quiet");
             var baseImageName     = commandLine.GetOption("--base-image-name");
-            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var debug             = commandLine.HasOption("--debug");
             var disablePending    = commandLine.HasOption("--disable-pending");
+            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var insecure          = commandLine.HasOption("--insecure");
+            var nodeImagePath     = commandLine.GetOption("--node-image-path");
+            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
+            var noTelemetry       = commandLine.HasOption("--no-telemetry");
+            var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
-            var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
+            var unredacted        = commandLine.HasOption("--unredacted");
+
+            if (noTelemetry)
+            {
+                KubeEnv.IsTelemetryDisabled = true;
+            }
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
@@ -213,13 +225,13 @@ OPTIONS:
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
                 Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
                 Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Implement the command.
@@ -233,7 +245,7 @@ OPTIONS:
             if (commandLine.Arguments.Length == 0)
             {
                 Console.Error.WriteLine($"*** ERROR: CLUSTER-DEF expected.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Load the cluster definition.
@@ -248,7 +260,9 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has no conflicts
             // as well as enough resources (memory, disk,...) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(new HostingManagerFactory(), !useStaged, setupState: new KubeSetupState() { ClusterDefinition = clusterDefinition }))
+            var setupState = new KubeSetupState() { ClusterDefinition = clusterDefinition };
+
+            using (var cluster = ClusterProxy.Create(setupState, new HostingManagerFactory(), !useStaged))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 
@@ -282,23 +296,30 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    if (clusterDefinition.IsDesktop)
+                    {
+                        nodeImageUri = await KubeDownloads.GetDesktopImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    }
+                    else
+                    {
+                        nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    }
                 }
             }
 
             // Parse any specified package cache endpoints.
 
-            var packageCaches         = commandLine.GetOption("--package-caches", null);
+            var packageCaches         = commandLine.GetOption("--package-cache", null);
             var packageCacheEndpoints = new List<IPEndPoint>();
 
             if (!string.IsNullOrEmpty(packageCaches))
             {
-                foreach (var item in packageCaches.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var item in packageCaches.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (!NetHelper.TryParseIPv4Endpoint(item, out var endpoint))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{item}] is not a valid package cache IPv4 endpoint.");
-                        Program.Exit(1);
+                        Program.Exit(-1);
                     }
 
                     packageCacheEndpoints.Add(endpoint);
@@ -309,14 +330,15 @@ OPTIONS:
 
             var prepareOptions = new PrepareClusterOptions()
             {
-                NodeImageUri          = nodeImageUri,
-                NodeImagePath         = nodeImagePath,
-                MaxParallel           = maxParallel,
-                PackageCacheEndpoints = packageCacheEndpoints,
-                Unredacted            = commandLine.HasOption("--unredacted"),
-                DebugMode             = debug,
                 BaseImageName         = baseImageName,
-                DisableConsoleOutput  = quiet
+                DisableConsoleOutput  = quiet,
+                DebugMode             = debug,
+                Insecure              = insecure,
+                MaxParallel           = maxParallel,
+                NodeImagePath         = nodeImagePath,
+                NodeImageUri          = nodeImageUri,
+                PackageCacheEndpoints = packageCacheEndpoints,
+                Unredacted            = unredacted
             };
 
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV &&
@@ -325,7 +347,7 @@ OPTIONS:
                 prepareOptions.DesktopReadyToGo = true;
             }
 
-            var controller = KubeSetup.CreateClusterPrepareController(
+            var controller = await KubeSetup.CreateClusterPrepareControllerAsync(
                 clusterDefinition, 
                 cloudMarketplace: !useStaged,
                 options:          prepareOptions);
@@ -360,13 +382,13 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
-                        Console.WriteLine();
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.Error.WriteLine();
 
                         foreach (var groupName in pendingGroups)
                         {
-                            Console.WriteLine($"   {groupName}");
+                            Console.Error.WriteLine($"   {groupName}");
                         }
 
                         Program.Exit(1);
@@ -375,24 +397,23 @@ OPTIONS:
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");
                     Console.WriteLine();
-                    Program.Exit(0);
                     break;
 
                 case SetupDisposition.Cancelled:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 
                 case SetupDisposition.Failed:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: Cluster prepare has failed.  Examine the logs here:");
-                    Console.WriteLine();
-                    Console.WriteLine($" {KubeHelper.LogFolder}");
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** ERROR: Cluster prepare has failed.  Examine the logs here:");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($" {KubeHelper.LogFolder}");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 

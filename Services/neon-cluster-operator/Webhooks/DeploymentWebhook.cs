@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    DeploymentWebhook.cs
+//-----------------------------------------------------------------------------
+// FILE:        DeploymentWebhook.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -28,8 +28,8 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Webhook;
+using Neon.Operator;
+using Neon.Operator.Webhooks;
 using Neon.Tasks;
 
 using k8s;
@@ -41,7 +41,7 @@ using Octokit;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook to set istio injection on neonKUBE deployments.
+    /// Webhook to set istio injection on NEONKUBE deployments.
     /// </summary>
     [Webhook(
         name:                    "deployment-policy.neonkube.io",
@@ -53,11 +53,11 @@ namespace NeonClusterOperator
         operations:  AdmissionOperations.Create | AdmissionOperations.Update, 
         resources:   V1Deployment.KubePluralName,
         scope:       "*")]
-    public class DeploymentWebhook : IMutatingWebhook<V1Deployment>
+    public class DeploymentWebhook : MutatingWebhookBase<V1Deployment>
     {
-        private ILogger<IMutatingWebhook<V1Deployment>> logger { get; set; }
-        private bool                                    modified = false;
-        private readonly Service                        service;
+        private ILogger<DeploymentWebhook> logger { get; set; }
+        private bool                       modified = false;
+        private readonly Service           service;
 
         /// <summary>
         /// Constructor.
@@ -65,8 +65,8 @@ namespace NeonClusterOperator
         /// <param name="service">Specifies the parent neon-cluster-operator service.</param>
         /// <param name="logger">Optionally specifies a logger.</param>
         public DeploymentWebhook(
-            Service                                 service,
-            ILogger<IMutatingWebhook<V1Deployment>> logger = null)
+            Service                    service,
+            ILogger<DeploymentWebhook> logger = null)
             : base()
         {
             this.service = service;
@@ -74,7 +74,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
         {
             await SyncContext.Clear;
 
@@ -108,7 +108,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
+        public override async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
         {
             await SyncContext.Clear;
 

@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################=
 
@@ -89,16 +89,6 @@ GeneratedTypes.cs
 GeneratedUxTypes.cs
 /Test/**/TestResults/**
 
-###################
-# Neon.Kube.Setup #
-###################
-
-# All neonKUBE CRDs are defined in the [Neon.Kube] library and are generated
-# when [neon-cluster-operator] is built and copied into the [neon-cluster-operator]
-# Helm chart which will be used to install the CRDs as well as the operator.
-
-/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
-
 #############################
 ### Other generated files ###
 #############################
@@ -112,3 +102,6 @@ KubernetesWithRetry.cs
 /services/neon-dashboard/wwwroot/css/index.css
 /Services/neon-dashboard/wwwroot/css/isolated.css
 /Test/TestOperator/Manifests
+/Lib/Neon.Kube.Models/.buildComplete
+/Services/neon-dashboard/package-lock.json
+/Test/Test.Neon.Kube.Operator/**.yaml

@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    MinioBucketController.cs
+//-----------------------------------------------------------------------------
+// FILE:        MinioBucketController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,53 +16,34 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
+
+using Minio;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Minio;
 using Neon.Net;
-using Neon.Retry;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 using Neon.Tasks;
-using Neon.Time;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Prometheus;
-
-using Minio;
-using Minio.DataModel;
-using Minio.Exceptions;
 
 namespace NeonClusterOperator
 {
@@ -73,7 +54,8 @@ namespace NeonClusterOperator
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
-    public class MinioBucketController : IResourceController<V1MinioBucket>
+    [ResourceController(MaxConcurrentReconciles = 1)]
+    public class MinioBucketController : ResourceControllerBase<V1MinioBucket>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -104,28 +86,17 @@ namespace NeonClusterOperator
             ILogger<MinioBucketController> logger,
             Service                        service)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(service != null, nameof(service));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(service != null, nameof(service));
 
             this.k8s     = k8s;
             this.logger  = logger;
             this.service = service;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-        }
-
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource)
         {
             await SyncContext.Clear;
 
@@ -133,7 +104,7 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
                 
-                logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Namespace()}/{resource.Name()}].");
+                logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 var patch = OperatorHelper.CreatePatch<V1MinioBucket>();
 
@@ -145,15 +116,15 @@ namespace NeonClusterOperator
                     name:               resource.Name(),
                     namespaceParameter: resource.Namespace());
 
+                // $debug(jefflill): RESTORE THIS!
+
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);
 
                     // Create bucket if it doesn't exist.
 
-                    bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
-
-                    if (exists)
+                    if (await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name())))
                     {
                         logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] already exists.");
                     }
@@ -208,7 +179,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1MinioBucket resource)
+        public override async Task DeletedAsync(V1MinioBucket resource)
         {
             await SyncContext.Clear;
 
@@ -279,11 +250,9 @@ namespace NeonClusterOperator
                 await ExecuteMcCommandAsync(
                     new string[]
                     {
-                        "admin",
-                        "bucket",
                         "quota",
-                        $"{GetTenantAlias(resource)}/{resource.Name()}",
-                        "--clear"
+                        "clear",
+                        $"{GetTenantAlias(resource)}/{resource.Name()}"
                     });
             }
             else
@@ -291,11 +260,10 @@ namespace NeonClusterOperator
                 await ExecuteMcCommandAsync(
                     new string[]
                     {
-                        "admin",
-                        "bucket",
                         "quota",
+                        "set",
                         $"{GetTenantAlias(resource)}/{resource.Name()}",
-                        resource.Spec.Quota.Hard ? "--hard" : null,
+                        "--size",
                         resource.Spec.Quota.Limit
                     });
             }

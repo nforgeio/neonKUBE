@@ -1,0 +1,107 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neonclusteroperators.neonkube.io
+spec:
+  group: neonkube.io
+  names:
+    kind: NeonClusterJobs
+    plural: neonclusteroperators
+    shortNames: []
+    singular: neonclusterjobs
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              controlPlaneCertificates:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+              nodeCaCertificates:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+              securityPatches:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+              containerImages:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+              telemetry:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+              clusterCertificate:
+                properties:
+                  enabled:
+                    type: boolean
+                  schedule:
+                    type: string
+                type: object
+            type: object
+          status:
+            properties:
+              controlPlaneCertificates:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+              nodeCaCertificates:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+              securityPatches:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+              containerImages:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+              telemetry:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+              clusterCertificate:
+                properties:
+                  lastCompleted:
+                    format: date-time
+                    type: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

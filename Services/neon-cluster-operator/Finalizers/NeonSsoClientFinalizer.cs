@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    SsoClientFinalizer.cs
+//-----------------------------------------------------------------------------
+// FILE:        SsoClientFinalizer.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,29 +24,29 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Dex;
+
+using k8s;
+using k8s.Models;
+
+using Minio;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Resources;
+using Neon.Operator.Finalizers;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
-
-using Minio;
-using Dex;
-using Neon.Kube.Operator.Finalizer;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Finalizes deletion of <see cref="V1NeonSsoClient"/> resources.
     /// </summary>
-    public class NeonSsoClientFinalizer : IResourceFinalizer<V1NeonSsoClient>
+    public class NeonSsoClientFinalizer : ResourceFinalizerBase<V1NeonSsoClient>
     {
         private readonly IKubernetes                     k8s;
         private readonly ILogger<NeonSsoClientFinalizer> logger;
@@ -63,9 +63,9 @@ namespace NeonClusterOperator
             IKubernetes                     k8s,
             Dex.Dex.DexClient               dexClient)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(dexClient != null, nameof(dexClient));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(dexClient != null, nameof(dexClient));
 
             this.k8s       = k8s;
             this.logger    = logger;
@@ -73,7 +73,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1NeonSsoClient resource)
+        public override async Task FinalizeAsync(V1NeonSsoClient resource)
         {
             await SyncContext.Clear;
 

@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterResetOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterResetOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -125,7 +125,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// <para>
         /// Specifies namespaces to be excluded from those being removed during the reset operation.
-        /// Normally, all namespaces beside the internal neonKUBE namespaces will be removed with
+        /// Normally, all namespaces beside the internal NEONKUBE namespaces will be removed with
         /// the <b>default</b> being recreated as empty thereafter.
         /// </para>
         /// <note>
@@ -141,7 +141,7 @@ namespace Neon.Kube.Proxy
 
         /// <summary>
         /// <para>
-        /// Specifies the number of seconds to wait for the cluster to stablize after performing
+        /// Specifies the number of seconds to wait for the cluster to stabilize after performing
         /// the reset.  This defaults to <b>30 seconds</b>.
         /// </para>
         /// </summary>

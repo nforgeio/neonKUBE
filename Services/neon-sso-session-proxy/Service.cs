@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Service.cs
+// FILE:        Service.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Net;
-using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -32,6 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.PortForward;
 using Neon.Kube.Resources;
@@ -43,9 +48,6 @@ using Neon.Tasks;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry.Trace;
 using OpenTelemetry;
@@ -124,9 +126,9 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            KubeHelper.InitializeJson(); 
+            Neon.Kube.KubeHelper.InitializeJson(); 
             
-            k8s = KubeHelper.GetKubernetesClient();
+            k8s = Neon.Kube.KubeHelper.CreateKubernetesClient();
 
             if (NeonHelper.IsDevWorkstation)
             {
@@ -189,7 +191,9 @@ namespace NeonSsoSessionProxy
 
                             break;
                     }
-                });
+                },
+                retryDelay: TimeSpan.FromSeconds(30),
+                logger:     Logger);
 
             int port = 80;
 

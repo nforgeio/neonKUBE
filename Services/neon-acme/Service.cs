@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Service.cs
+// FILE:        Service.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ namespace NeonAcme
                     "Bearer",
                     GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
-            Kubernetes = KubeHelper.GetKubernetesClient();
+            Kubernetes = KubeHelper.CreateKubernetesClient();
             Resources  = new V1APIResourceList()
             {
                 ApiVersion   = "v1",
@@ -136,6 +136,7 @@ namespace NeonAcme
             };
 
             // Start the web service.
+
             var port = 443;
 
             if (NeonHelper.IsDevWorkstation)

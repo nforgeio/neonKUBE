@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonSsoClientController.cs
+//-----------------------------------------------------------------------------
+// FILE:        NeonSsoClientController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,56 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.JsonPatch.Helpers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Resources;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
 
 using Dex;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Util;
+using Microsoft.Extensions.Logging;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.K8s;
+using Neon.Kube;
+using Neon.Kube.Oauth2Proxy;
 using Neon.Kube.Resources.Cluster;
-
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-
-using Grpc.Core;
-using Grpc.Net.Client;
-
-using Prometheus;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Finalizers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
+using Neon.Tasks;
 
 namespace NeonClusterOperator
 {
@@ -77,7 +50,8 @@ namespace NeonClusterOperator
     /// </summary>
     [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "neon-sso-oauth2-proxy")]
-    public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
+    [ResourceController(MaxConcurrentReconciles = 1)]
+    public class NeonSsoClientController : ResourceControllerBase<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -108,10 +82,10 @@ namespace NeonClusterOperator
             ILogger<NeonSsoClientController>       logger,
             Dex.Dex.DexClient                      dexClient)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(manager != null, nameof(manager));
-            Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(dexClient != null, nameof(dexClient));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(manager != null, nameof(manager));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(dexClient != null, nameof(dexClient));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
@@ -119,19 +93,8 @@ namespace NeonClusterOperator
             this.dexClient        = dexClient;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-        }
-
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoClient resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoClient resource)
         {
             await SyncContext.Clear;
 
@@ -158,7 +121,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonSsoClient resource)
+        public override async Task DeletedAsync(V1NeonSsoClient resource)
         {
             await SyncContext.Clear;
 

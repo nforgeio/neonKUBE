@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterStopCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:        ClusterStopCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterStopCommand : CommandBase
     {
         private const string usage = @"
-Starts a stopped or paused cluster.  This is not supported by all environments.
+Stops the current NEONKUBE cluster.
 
 USAGE:
 
@@ -67,20 +67,20 @@ USAGE:
 
 OPTIONS:
 
-    --turnoff   - Turns the nodes off immediately without allowing
-                  a graceful shutdown.  This may cause data loss.
+    --force     - Don't prompt for permission or require the the cluster
+                  be unlocked before stopping
 
-    --force     - forces cluster stop without user confirmation
-                  or verifying unlocked status
+    --turnoff   - Turns the nodes off immediately without waiting for
+                  a graceful shutdown.  This may cause data loss.
 
 REMARKS:
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+NOTE: This command requires that the cluster be unlocked by default as
+a safety measure.
 
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
+All clusters besides NEONDESKTOP clusters are locked by default when
+they're deployed.  You can disable this by setting [IsLocked=false]
+in your cluster definition or by executing this command:
 
     neon cluster unlock
 
@@ -122,7 +122,7 @@ cluster definition or by executing this command on your cluster:
             var turnoff = commandLine.HasOption("--turnoff");
             var force   = commandLine.HasOption("--force");
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var capabilities = cluster.Capabilities;
 
