@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NeonAcme</RootNamespace>
 		<IsPackable>false</IsPackable>
@@ -19,8 +19,8 @@
 	<ItemGroup>
 		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 		<PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-		<PackageReference Include="prometheus-net" Version="8.0.0" />
-		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
+		<PackageReference Include="prometheus-net" Version="8.0.1" />
+		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 	</ItemGroup>
