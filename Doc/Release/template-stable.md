@@ -17,4 +17,4 @@ This release is **stable** and ready for production.
 
 # Details
 
-**TODO: DOCUMENT RELEASE DETAILS HERE!
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**

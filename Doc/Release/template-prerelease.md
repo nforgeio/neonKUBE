@@ -19,4 +19,4 @@ features may see breaking changes in future releases or be removed completely.
 
 # Details
 
-**TODO: DOCUMENT RELEASE DETAILS HERE!
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**
