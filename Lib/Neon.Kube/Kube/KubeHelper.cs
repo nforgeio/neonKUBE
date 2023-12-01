@@ -3470,7 +3470,8 @@ TCPKeepAlive yes
                 {
                     neonPath = Path.Combine(neonInstallFolder, "neon.exe");
                 }
-                else if (!string.IsNullOrEmpty(ncRoot))
+
+                if (!string.IsNullOrEmpty(ncRoot) && (neonPath == null || !File.Exists(neonPath)))
                 {
                     neonPath = Path.Combine(ncRoot, "Build", "neon-cli", "neon.exe");
                 }
