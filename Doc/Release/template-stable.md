@@ -1,7 +1,7 @@
 # PRODUCTION
 
-NEONKUBE: v$<neonkube.version>
-KUBERNETES: v$<kubernetes.version>
+| **NEONKUBE**    | v$<neonkube.version>   |
+| **KUBERNETES**  | v$<kubernetes.version> |
 
 This release is **stable** and ready for production.
 
