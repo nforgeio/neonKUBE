@@ -1,7 +1,7 @@
 # PRODUCTION
 
 | Component       | Version                 |
-| :-------------- | :---------------------- |
+| --------------- | :---------------------- |
 | **NEONKUBE**    | v$<neonkube.version>    |
 | **KUBERNETES**  | v$<kubernetes.version>  |
 
