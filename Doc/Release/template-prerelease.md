@@ -1,7 +1,9 @@
 # PRERELEASE
 
-| **NEONKUBE**    | v$<neonkube.version>   |
-| **KUBERNETES**  | v$<kubernetes.version> |
+| Component       | Version                 |
+| :-------------- | :---------------------- |
+| **NEONKUBE**    | v$<neonkube.version>    |
+| **KUBERNETES**  | v$<kubernetes.version>  |
 
 This release is **not a production ready** and is intended to introduce new features and fixes.  This release is suitable for testing purposes but be advised that prerelease  features may see breaking changes in future releases or be removed completely.
 
