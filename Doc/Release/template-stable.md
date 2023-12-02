@@ -1,9 +1,9 @@
 # PRODUCTION
 
-| Component       | Version                 |
-| --------------- | :---------------------- |
-| **NEONKUBE**    | v$<neonkube.version>    |
-| **KUBERNETES**  | v$<kubernetes.version>  |
+| Component       | Version                |
+| --------------- | :--------------------- |
+| **NEONKUBE**    | $<neonkube.version>    |
+| **KUBERNETES**  | $<kubernetes.version>  |
 
 This release is **stable** and is ready for production.
 
