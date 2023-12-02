@@ -3,7 +3,7 @@
 | **NEONKUBE**    | v$<neonkube.version>   |
 | **KUBERNETES**  | v$<kubernetes.version> |
 
-This release is **stable** and ready for production.
+This release is **stable** and is ready for production.
 
 # Release Taxonomy:
 
