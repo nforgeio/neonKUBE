@@ -52,7 +52,7 @@
         <PackageReference Include="DNS" Version="7.0.0" />
         <PackageReference Include="KubernetesClient" Version="12.0.16" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.5" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
