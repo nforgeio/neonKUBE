@@ -218,7 +218,7 @@
         </When>
         <Otherwise>
             <PropertyGroup>
-                <ModelGeneratorPath>$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\net7.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+                <ModelGeneratorPath>$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\net8.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
             </PropertyGroup>
         </Otherwise>
     </Choose>

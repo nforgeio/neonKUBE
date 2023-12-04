@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <RootNamespace>TestNeonNodeAgent</RootNamespace>
         <IsPackable>false</IsPackable>
         <AssemblyName>Test.neon-node-agent</AssemblyName>
@@ -33,16 +33,16 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.7.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
         <PackageReference Include="Moq" Version="4.20.69" />
-        <PackageReference Include="xunit" Version="2.5.0" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
+        <PackageReference Include="xunit" Version="2.6.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

@@ -1,20 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <RootNamespace>Neon.Kube.Hosting</RootNamespace>
-        <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: NEONKUBE hosting manager common classes.</Description>
-        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube.Hosting/README.md</PackageProjectUrl>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-        <Configurations>Debug;Release</Configurations>
-        <PackageIcon>nuget-icon.png</PackageIcon>
-        <PackageTags>kubernetes</PackageTags>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Hosting</RootNamespace>
+		<Version>0.9.2-alpha</Version>
+		<Description>INTERNAL USE ONLY: neonKUBE hosting manager common classes.</Description>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Hosting/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<Configurations>Debug;Release</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+	</PropertyGroup>
 
     <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />

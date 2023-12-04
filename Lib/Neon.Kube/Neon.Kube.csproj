@@ -1,21 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube</RootNamespace>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: Common library used by NEONKUBE related projects.</Description>
+        <Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
         <IsPackable>true</IsPackable>
-        <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube/README.md</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube/README.md</PackageProjectUrl>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
         <Configurations>Debug;Release</Configurations>
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>kubernetes</PackageTags>
         <NoDefaultExcludes>true</NoDefaultExcludes>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -52,9 +53,9 @@
         <PackageReference Include="DNS" Version="7.0.0" />
         <PackageReference Include="KubernetesClient" Version="12.0.16" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.5" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="prometheus-net" Version="8.0.1" />
         <PackageReference Include="SharpCompress" Version="0.33.0" />

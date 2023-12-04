@@ -32,7 +32,6 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
-using Windows.Gaming.Input.Custom;
 
 namespace NeonCli
 {

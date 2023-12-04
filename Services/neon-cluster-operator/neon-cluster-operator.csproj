@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonClusterOperator</RootNamespace>
         <IsPackable>false</IsPackable>
         <ServerGarbageCollection>true</ServerGarbageCollection>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
         <AssemblyName>neon-cluster-operator</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <NoWarn>$(NoWarn);CS2002;CS8034</NoWarn>
@@ -70,8 +71,8 @@
         <PackageReference Include="OpenTelemetry" Version="1.6.0" />
         <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
-        <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />
+        <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Quartz" Version="3.7.0" />
     </ItemGroup>
