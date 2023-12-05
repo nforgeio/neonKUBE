@@ -266,13 +266,13 @@ namespace NeonNodeAgent
                 .AddAspNetCoreInstrumentation()
                 .AddKubernetesOperatorInstrumentation()
                 .AddOtlpExporter(
-                options =>
-                {
-                    options.ExportProcessorType         = ExportProcessorType.Batch;
-                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
-                });
+                    options =>
+                    {
+                        options.ExportProcessorType         = ExportProcessorType.Batch;
+                        options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                        options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
 
             return true;
         }
@@ -286,7 +286,7 @@ namespace NeonNodeAgent
 
                 options.AddConsoleTextExporter(options =>
                 {
-                    options.Format = (record) => $"[{record.LogLevel}][{record.CategoryName}] {record.FormattedMessage}";
+                    options.Format = (record) => $"[{record.Severity}][{record.CategoryName}] {record.FormattedMessage}";
                 });
 
                 return true;
