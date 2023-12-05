@@ -47,5 +47,5 @@ using System.Reflection;
 #elif NET48
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.8", FrameworkDisplayName = ".NET Framework 4.8")]
 #else
-#error Current framework is not supported.  You'll need to add support here.
+#error Current framework is not supported.  You'll need to add support above.
 #endif
