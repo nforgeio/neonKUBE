@@ -57,7 +57,7 @@
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="prometheus-net" Version="8.0.1" />
+        <PackageReference Include="prometheus-net" Version="8.2.0" />
         <PackageReference Include="SharpCompress" Version="0.33.0" />
         <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
         <PackageReference Include="SSH.NET" Version="2020.0.2" />
