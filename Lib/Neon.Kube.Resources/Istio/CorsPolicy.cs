@@ -26,6 +26,8 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+using Neon.Kube.Resources.JsonConverters;
+
 using Newtonsoft.Json;
 
 namespace Neon.Kube.Resources.Istio
@@ -58,7 +60,7 @@ namespace Neon.Kube.Resources.Istio
         /// </summary>
         [JsonProperty(PropertyName = "allowMethods", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<HTTPMethod, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
         public List<HTTPMethod> AllowMethods { get; set; }
 
         /// <summary>
