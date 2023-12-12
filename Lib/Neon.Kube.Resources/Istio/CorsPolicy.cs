@@ -26,8 +26,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Neon.Kube.Resources.JsonConverters;
-
 using Newtonsoft.Json;
 
 namespace Neon.Kube.Resources.Istio
@@ -36,7 +34,7 @@ namespace Neon.Kube.Resources.Istio
     /// Describes the Cross-Origin Resource Sharing (CORS) policy, for a given service. Refer to CORS for further details about cross 
     /// origin resource sharing. For example, the following rule restricts cross origin requests to those originating from example.com domain 
     /// using HTTP POST/GET, and sets the Access-Control-Allow-Credentials header to false. In addition, it only exposes X-Foo-bar header and 
-    /// sets an expiry period of 1 day.Describes the CorsPolicy V1VirtualService.
+    /// sets an expiry period of one day.
     /// </summary>
     public class CorsPolicy : IValidate
     {
@@ -60,8 +58,7 @@ namespace Neon.Kube.Resources.Istio
         /// </summary>
         [JsonProperty(PropertyName = "allowMethods", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<HTTPMethod, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
-        public List<HTTPMethod> AllowMethods { get; set; }
+        public List<string> AllowMethods { get; set; }
 
         /// <summary>
         /// List of HTTP headers that can be used when requesting the resource. Serialized to Access-Control-Allow-Headers header.
