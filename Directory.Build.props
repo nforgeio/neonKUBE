@@ -72,23 +72,13 @@
         <Optimize>true</Optimize>
     </PropertyGroup>
 
-    <!--
-    Projects targeting .NET 7.0 and earlier need these packages.
-
-    WARNING: Do not reference this when targeting .NET 8.0+ unless you
-             want to debug strange "GenerateDepsFile" build problems.
-
-             We'll need to add another ItemGroup/condition when we
-             upgrade to .NET 9.0 and beyond in the future.
-    -->
-
-    <ItemGroup Condition="'$(TargetFramework)' != 'net8.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     </ItemGroup>
 
-    <Target Name="CheckBclPackageRefs" BeforeTargets="Compile" Condition="'$(TargetFramework)' == 'net9.0'">
-        <Error Text="Add a new [Microsoft.Bcl.AsyncInterfaces] package reference exclusion for .net9.0 and update this target condition to net10.0." />
-    </Target>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+    </ItemGroup>
 
     <!-- 
     We have a somewhat complex build environment.  The NEONCLOUD repo is private and
