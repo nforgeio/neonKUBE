@@ -26,6 +26,8 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+using Neon.Kube.Resources.JsonConverters;
+
 using Newtonsoft.Json;
 
 namespace Neon.Kube.Resources.Istio
@@ -34,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
     /// Describes the Cross-Origin Resource Sharing (CORS) policy, for a given service. Refer to CORS for further details about cross 
     /// origin resource sharing. For example, the following rule restricts cross origin requests to those originating from example.com domain 
     /// using HTTP POST/GET, and sets the Access-Control-Allow-Credentials header to false. In addition, it only exposes X-Foo-bar header and 
-    /// sets an expiry period of one day.
+    /// sets an expiry period of 1 day.Describes the CorsPolicy V1VirtualService.
     /// </summary>
     public class CorsPolicy : IValidate
     {
@@ -54,28 +56,29 @@ namespace Neon.Kube.Resources.Istio
         public List<StringMatch> AllowOrigins { get; set; }
 
         /// <summary>
-        /// List of HTTP methods allowed to access the resource. The content will be serialized into the Access-Control-Allow-Methods header.
+        /// List of HTTP methods allowed to access the resource. The content will be serialized as the <b>Access-Control-Allow-Methods</b> header.
         /// </summary>
         [JsonProperty(PropertyName = "allowMethods", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<string> AllowMethods { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<HTTPMethod, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
+        public IEnumerable<HTTPMethod> AllowMethods { get; set; }
 
         /// <summary>
-        /// List of HTTP headers that can be used when requesting the resource. Serialized to Access-Control-Allow-Headers header.
+        /// List of HTTP headers that can be used when requesting the resource. Serialized as the <b>Access-Control-Allow-Headers</b> header.
         /// </summary>
         [JsonProperty(PropertyName = "allowHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> AllowHeaders { get; set; }
 
         /// <summary>
-        /// A list of HTTP headers that the browsers are allowed to access. Serialized into Access-Control-Expose-Headers header.
+        /// A list of HTTP headers that the browsers are allowed to access. Serialized as the <b>Access-Control-Expose-Headers</b> header.
         /// </summary>
         [JsonProperty(PropertyName = "exposeHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> ExposeHeaders { get; set; }
 
         /// <summary>
-        /// Specifies how long the results of a preflight request can be cached. Translates to the Access-Control-Max-Age header.
+        /// Specifies how long the results of a preflight request can be cached. Serializes as the <b>Access-Control-Max-Age</b> header.
         /// </summary>
         [JsonProperty(PropertyName = "maxAge", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -83,7 +86,7 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// Indicates whether the caller is allowed to send the actual request (not the preflight) using credentials. 
-        /// Translates to Access-Control-Allow-Credentials header.
+        /// Serialized as the <b>Access-Control-Allow-Credentials</b> header.
         /// </summary>
         [JsonProperty(PropertyName = "allowCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
