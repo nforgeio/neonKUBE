@@ -72,12 +72,7 @@
         <Optimize>true</Optimize>
     </PropertyGroup>
 
-    <!--
-    Projects targeting .NET 7.0 and earlier need these packages.
-
-    WARNING: Do not reference this when targeting .NET 8.0+ unless you
-             want to debug strange "GenerateDepsFile" build problems.
-    -->
+    <!-- $hack(jefflill): We started needing these references after upgrading to .NET 8.0 for some reason. -->
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
