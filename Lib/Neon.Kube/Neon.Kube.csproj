@@ -16,7 +16,6 @@
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>kubernetes</PackageTags>
         <NoDefaultExcludes>true</NoDefaultExcludes>
-        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

@@ -87,6 +87,10 @@
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    </ItemGroup>
+
     <!-- 
     We have a somewhat complex build environment.  The NEONCLOUD repo is private and
     our solution there actually includes references to all NEONSDK and NEONKUBE projects
@@ -164,10 +168,9 @@
         <CopyRetryDelayMilliseconds>50</CopyRetryDelayMilliseconds>
     </PropertyGroup>
 
-    <!-- 
-    $hack(jefflill):
+    <!-- $hack(jefflill):
     
-    We've had a lot of trouble with auto generated source files generated for:
+    We've had a lot of trouble with auto generated source files for:
     
         * GitInfo
         * AssemblyInfoAttribute
