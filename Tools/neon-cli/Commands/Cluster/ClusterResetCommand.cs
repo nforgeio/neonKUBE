@@ -244,7 +244,7 @@ definition or by executing this command on your cluster:
                             },
                             progress: progressMessage => Console.WriteLine(progressMessage));
 
-                        Console.WriteLine($"RESET: {cluster.Name}");
+                        Console.WriteLine($"Reset: {cluster.Name}");
                         break;
 
                     default:

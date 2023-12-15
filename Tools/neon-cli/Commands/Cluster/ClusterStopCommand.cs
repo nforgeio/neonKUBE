@@ -173,7 +173,7 @@ in your cluster definition or by executing this command:
                             }
 
                             await cluster.StopAsync(turnoff ? StopMode.TurnOff : StopMode.Graceful);
-                            Console.WriteLine($"STOPPED:  {cluster.Name}");
+                            Console.WriteLine($"Stopped:  {cluster.Name}");
                         }
                         catch (TimeoutException)
                         {

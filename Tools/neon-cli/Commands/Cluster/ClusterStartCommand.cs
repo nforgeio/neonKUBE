@@ -118,7 +118,7 @@ USAGE:
                         try
                         {
                             await cluster.StartAsync();
-                            Console.WriteLine($"STARTED:  {cluster.Name}");
+                            Console.WriteLine($"Started:  {cluster.Name}");
                         }
                         catch (TimeoutException)
                         {
