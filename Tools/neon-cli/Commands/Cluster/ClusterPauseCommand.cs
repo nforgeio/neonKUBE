@@ -164,7 +164,7 @@ definition or by executing this command on your cluster:
                         try
                         {
                             await cluster.StopAsync(StopMode.Pause);
-                            Console.WriteLine($"PAUSED:  {cluster.Name}");
+                            Console.WriteLine($"Paused:  {cluster.Name}");
                         }
                         catch (TimeoutException)
                         {

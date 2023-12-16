@@ -118,7 +118,7 @@ definition.
                     case ClusterState.Unhealthy:
 
                         await cluster.UnlockAsync();
-                        Console.WriteLine($"{cluster.Name}: is UNLOCKED");
+                        Console.WriteLine($"{cluster.Name}: UNLOCKED");
                         break;
 
                     default:

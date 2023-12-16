@@ -205,6 +205,22 @@ definition or by executing this command on your cluster:
 
             if (!force)
             {
+                var status = await cluster.GetClusterHealthAsync();
+
+                switch (status.State)
+                {
+                    case ClusterState.Healthy:
+                    case ClusterState.Unhealthy:
+
+                        break;
+
+                    default:
+
+                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
+                        Program.Exit(1);
+                        break;
+                }
+
                 var isLocked = await cluster.IsLockedAsync();
 
                 if (!isLocked.HasValue)
@@ -227,7 +243,7 @@ definition or by executing this command on your cluster:
 
             try
             {
-                Console.WriteLine($"Removing: {cluster.Name}...");
+                Console.WriteLine($"Deleting: {cluster.Name}...");
                 await cluster.DeleteClusterAsync();
 
                 // Remove all contexts that reference the cluster.
@@ -240,7 +256,7 @@ definition or by executing this command on your cluster:
                 }
 
                 KubeHelper.KubeConfig.Save();
-                Console.WriteLine($"REMOVED:  {cluster.Name}");
+                Console.WriteLine($"Deleted:  {cluster.Name}");
             }
             catch (TimeoutException)
             {
