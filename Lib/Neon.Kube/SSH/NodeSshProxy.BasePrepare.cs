@@ -79,7 +79,7 @@ namespace Neon.Kube.SSH
             BaseInstallPackages(controller);
             BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
-            BaseConfigureBashEnvironment(controller);
+            BaseConfigureEnvironmentVariables(controller);
             BaseConfigureDnsIPv4Preference(controller);
             BaseRemoveSnap(controller);
             BaseRemovePackages(controller);
@@ -202,21 +202,22 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
         }
 
         /// <summary>
-        /// Configures the Debian frontend terminal to non-interactive.
+        /// Configures the additional node environment variables.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void BaseConfigureBashEnvironment(ISetupController controller)
+        public void BaseConfigureEnvironmentVariables(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "environment variables");
+                    controller.LogProgress(this, verb: "configure", message: "base/environment-vars");
 
                     var script =
 @"
 set -euo pipefail
+echo 'KUBECONFIG=/home/sysadmin/.kube/config' >>  /etc/environment
 echo '. /etc/environment' > /etc/profile.d/env.sh
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -240,7 +241,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
                     SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat vim zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // $note(jefflill):
                     //

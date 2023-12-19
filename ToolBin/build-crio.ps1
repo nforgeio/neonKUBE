@@ -51,7 +51,7 @@ $buildScript =
 set -euo pipefail
 
 export CRIO_VERSION=$<CRIO-VERSION>
-export GO_VERSION=17.5
+export GO_VERSION=1.20
 
 # Install the package dependencies.
 

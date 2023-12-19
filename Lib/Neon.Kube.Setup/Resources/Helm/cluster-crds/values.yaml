@@ -1,3 +1,3 @@
-# Default values for crd-cluster.
+# Default values for cluster-crds.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.

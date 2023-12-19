@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         utility.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -808,4 +808,18 @@ function Pop-Cwd
 {
     Pop-Location | Out-Null
     [System.Environment]::CurrentDirectory = Get-Location
+}
+
+#------------------------------------------------------------------------------
+# Returns a named string constant value from: $NF_ROOT\Lib\Neon.Kube\KubeVersions.cs
+
+function Get-KubeVersion
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name
+    )
+
+    return $(& neon-build read-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" $name)
 }

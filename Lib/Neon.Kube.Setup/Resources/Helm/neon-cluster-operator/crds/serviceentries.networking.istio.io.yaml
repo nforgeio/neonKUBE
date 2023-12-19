@@ -1,0 +1,121 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: serviceentries.networking.istio.io
+spec:
+  group: networking.istio.io
+  names:
+    kind: ServiceEntry
+    plural: serviceentries
+    shortNames: []
+    singular: serviceentry
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns: []
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              hosts:
+                items:
+                  type: string
+                type: array
+              addresses:
+                items:
+                  type: string
+                type: array
+              ports:
+                items:
+                  properties:
+                    number:
+                      format: int32
+                      type: integer
+                    protocol:
+                      type: string
+                    name:
+                      type: string
+                    targetPort:
+                      format: int32
+                      type: integer
+                  type: object
+                type: array
+              location:
+                properties:
+                  hasValue:
+                    type: boolean
+                  value:
+                    type: string
+                type: object
+              resolution:
+                type: string
+              endpoints:
+                items:
+                  properties:
+                    address:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            format: int32
+                            type: integer
+                        type: object
+                      type: array
+                    labels:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        type: object
+                      type: array
+                    network:
+                      type: string
+                    locality:
+                      type: string
+                    weight:
+                      format: int32
+                      type: integer
+                    serviceAccount:
+                      type: string
+                  type: object
+                type: array
+              workloadSelector:
+                properties:
+                  labels:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                  matchLabels:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              exportTo:
+                items:
+                  type: string
+                type: array
+              subjectAltNames:
+                items:
+                  type: string
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources: {}

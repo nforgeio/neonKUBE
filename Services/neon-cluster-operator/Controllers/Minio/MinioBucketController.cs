@@ -116,8 +116,6 @@ namespace NeonClusterOperator
                     name:               resource.Name(),
                     namespaceParameter: resource.Namespace());
 
-                // $debug(jefflill): RESTORE THIS!
-
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);

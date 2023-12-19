@@ -1399,11 +1399,29 @@ EOF
                         imageHighGcThreshold = 95;
                     }
 
+
+                    var sbFeatures = new StringBuilder();
+
+                    foreach (var featureGate in cluster.SetupState.ClusterDefinition.Kubernetes.FeatureGates
+                        .Where(featureGate => KubeHelper.IsValidFeatureGate(featureGate.Key)))
+                    {
+                        sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
+                    }
+
                     var script =
 $@"
 set -euo pipefail
 
-echo KUBELET_EXTRA_ARGS=--feature-gates=\""AllAlpha=false\"" --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf --image-gc-low-threshold={imageLowGcThreshold} --image-gc-high-threshold={imageHighGcThreshold} > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS= \
+    --cgroup-driver=systemd \
+    --container-runtime-endpoint='unix:///var/run/crio/crio.sock' \
+    --runtime-request-timeout=5m \
+    --resolv-conf=/run/systemd/resolve/resolv.conf \
+    --image-gc-low-threshold={imageLowGcThreshold} \
+    --image-gc-high-threshold={imageHighGcThreshold} \
+    --feature-gates={sbFeatures} \
+    > /etc/default/kubelet
+
 systemctl daemon-reload
 systemctl restart kubelet
 systemctl enable kubelet
@@ -1675,10 +1693,212 @@ done
                         var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
 
                         controller.LogProgressError(status.AllText);
-
                         throw;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Fixes any problems with the Kubernetes static pod manifests.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void UpdateKubernetesStaticManifests(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+
+            controller.LogProgress(this, verb: "fix", message: "kubernetes static pod manifests");
+
+            try
+            {
+                // $hack(jefflill):
+                //
+                // We need to remove the [--pod-eviction-timeout] line in the [kube-controller-manager] manifest
+                // file.  [kubeadm init] generated the manifest file with this option but [kube-controller-manager]
+                // complains that this is an unknown option.
+
+                var manifestText = DownloadText("/etc/kubernetes/manifests/kube-controller-manager.yaml");
+                var sb           = new StringBuilder();
+
+                foreach (var line in new StringReader(manifestText).Lines())
+                {
+                    if (!line.Contains("--pod-eviction-time"))
+                    {
+                        sb.AppendLineLinux(line);
+                    }
+                }
+
+                UploadText("/etc/kubernetes/manifests/kube-controller-manager.yaml", sb.ToString(), permissions: "600", owner: "root");
+
+                // $hack(jefflill):
+                //
+                // For control-plane nodes, We need to update the API Server manifest's [--enable-admission-plugins]
+                // line the to include the default [NodeRestriction] plugin as well as the other plugins required
+                // for NEONKUBE SSO.
+                //
+                // WE also need to search for a [--feature-gates] command line argument.  If one is present,
+                // we'll replace it, otherwise we'll append a new one with any feature gates enabled in the
+                // cluster definition.
+                //
+                // Finally, we're going to add the [--v=LOG_LEVEL] option specifying the log level from the
+                // cluster definition and we're going to set the [GOGC=25] environment variable to enable
+                // more aggressive GC.
+
+                if (this.Role == NodeRole.ControlPlane)
+                {
+                    manifestText = DownloadText("/etc/kubernetes/manifests/kube-apiserver.yaml");
+
+                    // Update the features gates.
+
+                    sb.Clear();
+                    foreach (var line in new StringReader(manifestText).Lines())
+                    {
+                        if (!line.Contains("--enable-admission-plugins"))
+                        {
+                            sb.AppendLineLinux($"{line},NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota");
+                        }
+                    }
+
+                    var manifest   = NeonHelper.YamlDeserialize<dynamic>(manifestText);
+                    var spec       = manifest["spec"];
+                    var containers = spec["containers"];
+                    var container  = containers[0];
+                    var command    = (List<object>)container["command"];
+                    var sbFeatures = new StringBuilder();
+
+                    foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates
+                        .Where(featureGate => KubeHelper.IsValidFeatureGate(featureGate.Key)))
+                    {
+                        sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
+                    }
+
+                    if (sbFeatures.Length > 0)
+                    {
+                        var featureGateOption = $"--feature-gates={sbFeatures}";
+                        var existingArgIndex  = -1;
+
+                        for (int i = 0; i < command.Count; i++)
+                        {
+                            var arg = (string)command[i];
+
+                            if (arg.StartsWith("--feature-gates="))
+                            {
+                                existingArgIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (existingArgIndex >= 0)
+                        {
+                            command[existingArgIndex] = featureGateOption;
+                        }
+                        else
+                        {
+                            command.Add(featureGateOption);
+                        }
+                    }
+
+                    // Add the GOGC environment variable.
+
+                    var env = (List<Dictionary<string, string>>)null;
+
+                    foreach (var item in container)
+                    {
+                        if (item.Key == "env")
+                        {
+                            env = (List<Dictionary<string, string>>)item.Value;
+                            break;
+                        }
+                    }
+
+                    if (env == null)
+                    {
+                        container.Add("env", env = new List<Dictionary<string, string>>());
+                    }
+
+                    env.Add(
+                        new Dictionary<string, string>()
+                        {
+                            { "name", "GOGC" },
+                            { "value", "25" }
+                        });
+
+                    // $hack(jefflill):
+                    //
+                    // For some reason, the API server fails when the [GOGC] environment variable
+                    // value is not surrounded by double quotes which [NeonHelper.YamlSerialize()]
+                    // doesn't do for dynamic properties.  We could deserailize the manifest into
+                    // a proper type and use the:
+                    //
+                    //      [YamlMember(ScalarStyle = ScalarStyle.DoubleQuoted)]
+                    //
+                    // attribute but I don't want to mess with that right now.
+                    //
+                    // We're going to fix this with code that adds double quotes to any [env] values
+                    // that don't already have them.  This is a bit fragile because it assumes that
+                    // there's a maximum of only one "env:" property section in the manifest.
+
+                    var manifestYaml      = (string)NeonHelper.YamlSerialize(manifest);
+                    var manifestYamlLines = manifestYaml.ToLines().ToArray();
+                    var envLineIndex      = -1;
+
+                    for (int i = 0; i < manifestYamlLines.Length; i++)
+                    {
+                        if (manifestYamlLines[i].Trim().StartsWith("env:"))
+                        {
+                            envLineIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (envLineIndex >= 0)
+                    {
+                        var i = envLineIndex + 1;
+
+                        while (i + 1 < manifestYamlLines.Length)
+                        {
+                            // The [i] and [1+1] lines are expected to be the name/value properties.
+
+                            if (!manifestYamlLines[i].Trim().StartsWith("- name:") ||
+                                !manifestYamlLines[i + 1].Trim().StartsWith("value:"))
+                            {
+                                break;
+                            }
+
+                            var valueLine = manifestYamlLines[i + 1];
+                            var colonPos  = valueLine.IndexOf(':');
+                            var value     = valueLine.Substring(colonPos + 1).Trim();
+
+                            if (!value.StartsWith("\"") && !value.EndsWith("\""))
+                            {
+                                valueLine = $"{valueLine.Substring(0, colonPos)}: \"{value}\"";
+                                manifestYamlLines[i + 1] = valueLine;
+                            }
+
+                            i += 2;
+                        }
+
+                        var sbManifest = new StringBuilder();
+
+                        foreach (var line in manifestYamlLines)
+                        {
+                            sbManifest.AppendLineLinux(line);
+                        }
+
+                        manifestYaml = sbManifest.ToString();
+                    }
+
+                    // Upload the manifest; the pod will restart automatically.
+
+                    UploadText("/etc/kubernetes/manifests/kube-apiserver.yaml", manifestYaml, permissions: "600", owner: "root");
+                }
+
+            }
+            catch (Exception e)
+            {
+                controller.LogProgressError(NeonHelper.ExceptionError(e));
+            }
         }
     }
 }

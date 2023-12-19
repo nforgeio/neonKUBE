@@ -6,16 +6,16 @@ images:
   registry: registry.neon.local/neonkube
   node:
     repository: calico-node
-    tag: v3.22.2
+    tag: $<KubeVersions.Calico>
   cni:
     repository: calico-cni
-    tag: v3.22.2
+    tag: $<KubeVersions.Calico>
   kubeControllers:
     repository: calico-kube-controllers
-    tag: v3.22.2
+    tag: $<KubeVersions.Calico>
   pod2Daemon:
     repository: calico-pod2daemon-flexvol
-    tag: v3.22.2
+    tag: $<KubeVersions.Calico>
 
 ipv4PoolCidr: "10.254.0.0/16"
 vEthMtu: "1440"

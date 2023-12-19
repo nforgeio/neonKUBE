@@ -63,7 +63,15 @@ namespace Neon.Kube.SSH
         /// </summary>
         /// <param name="node">The node instance.</param>
         /// <param name="controller">The setup controller.</param>
-        public static void NodeInstallHelmArchive(this ILinuxSshProxy node, ISetupController controller)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method replaces any <b>$&lt;KubeVersions.NAME&gt;</b> references
+        /// within the Helm chart files with the corresponding public constant,
+        /// field, or property value from <see cref="KubeVersions"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task NodeInstallHelmArchiveAsync(this ILinuxSshProxy node, ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -71,9 +79,23 @@ namespace Neon.Kube.SSH
             {
                 controller.LogProgress(node, verb: "setup", message: "helm charts (zip)");
 
-                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                var helmFolder   = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                var preprocessor = new ZipPreprocessor(
+                    async (path, input) =>
+                    {
+                        var preprocessor = KubeVersions.CreatePreprocessor(new StreamReader(input));
+                        var output       = new MemoryStream();
 
-                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
+                        foreach (var line in preprocessor.Lines())
+                        {
+                            output.Write(Encoding.UTF8.GetBytes(line));
+                            output.WriteByte(NeonHelper.LF);    // Using Linux line endings
+                        }
+
+                        return await Task.FromResult(output);
+                    });
+
+                await helmFolder.ZipAsync(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings, preprocessor: preprocessor);
 
                 ms.Seek(0, SeekOrigin.Begin);
                 node.Upload(LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip"), ms, permissions: "660");

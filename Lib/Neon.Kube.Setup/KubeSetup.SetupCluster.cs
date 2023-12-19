@@ -146,8 +146,9 @@ namespace Neon.Kube.Setup
                     var logWriter      = new StreamWriter(logStream);
                     var context        = KubeHelper.CurrentContext;
                     var sshCredentials = setupState.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var nodeRole       = clusterDefinition.Nodes.Single(node => node.Name == nodeName).Role;
 
-                    return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
+                    return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, role: nodeRole, logWriter: logWriter);
                 });
 
             if (options.Unredacted)
@@ -229,7 +230,7 @@ namespace Neon.Kube.Setup
 
             controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
-            controller.AddNodeStep("root certificates", (controller, node) => node.UpdateRootCertificates());
+            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates());
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
             controller.AddNodeStep("cluster manifest", ConfigureMetadataAsync);
 
@@ -271,10 +272,10 @@ namespace Neon.Kube.Setup
             if (options.UploadCharts || options.DebugMode)
             {
                 controller.AddNodeStep("upload helm charts",
-                    (controller, node) =>
+                    async (controller, node) =>
                     {
                         cluster.DeploymentControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
-                        cluster.DeploymentControlNode.NodeInstallHelmArchive(controller);
+                        await cluster.DeploymentControlNode.NodeInstallHelmArchiveAsync(controller);
 
                         var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 

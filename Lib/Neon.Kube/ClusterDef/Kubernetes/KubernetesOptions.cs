@@ -91,28 +91,6 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
         /// </para>
-        /// <note>
-        /// Your NEONKUBE cluster may be somewhat older than the current Kubernetes version,
-        /// so some of the features listed may not apply to your cluster.
-        /// </note>
-        /// <para>
-        /// NEONKUBE clusters enables specific features by default when you you haven't
-        /// explicitly disabled them via this property.  Note that some features are 
-        /// required and cannot be disabled.
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>EphemeralContainers</b></term>
-        ///     <description>
-        ///     <para>
-        ///     Enables the ability to add ephemeral containers to running pods.
-        ///     </para>
-        ///     <para>
-        ///     This is very handy for debugging pods.
-        ///     </para>
-        ///     </description>
-        /// </item>
-        /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
@@ -121,7 +99,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// The version of Helm to be installed.  This defaults to <b>default</b> which
-        /// will install a reasonable version for the Kubernetes release being inbstalled.
+        /// will install a reasonable version for the Kubernetes release being installed.
         /// </summary>
         [JsonProperty(PropertyName = "HelmVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "helmVersion", ApplyNamingConventions = false)]
@@ -379,9 +357,16 @@ namespace Neon.Kube.ClusterDef
 
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
 
-            if (!FeatureGates.ContainsKey("EphemeralContainers"))
+            var requiredFeatures = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase)
             {
-                FeatureGates["EphemeralContainers"] = true;
+            };
+
+            foreach (var feature in requiredFeatures)
+            {
+                if (!FeatureGates.ContainsKey(feature.Key) || FeatureGates[feature.Key] != feature.Value)
+                {
+                    FeatureGates[feature.Key] = feature.Value;
+                }
             }
 
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))

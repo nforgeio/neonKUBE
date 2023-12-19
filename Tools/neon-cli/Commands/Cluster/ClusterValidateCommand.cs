@@ -77,9 +77,36 @@ ARGUMENTS:
 
             // Parse and validate the cluster definition.
 
-            ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
+            var clusterDefinition   = ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
+            var featureGateWarnings = new List<string>();
 
-            Console.WriteLine("The cluster definition is OK.");
+            if (clusterDefinition.Kubernetes.FeatureGates != null && clusterDefinition.Kubernetes.FeatureGates.Count > 0)
+            {
+                foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates
+                    .Where(featureGate => !KubeHelper.IsValidFeatureGate(featureGate.Key)))
+                {
+                    featureGateWarnings.Add($"WARNING: [{featureGate.Key}] kubernetes feature gate is not supported");
+                }
+            }
+
+            if (featureGateWarnings.Count == 0)
+            {
+                Console.WriteLine("Cluster definition is OK");
+            }
+            else
+            {
+                Console.WriteLine($"[{featureGateWarnings.Count}] feature gates are not supported by Kubernetes v{KubeVersions.Kubernetes}");
+                Console.WriteLine($"These feature gates will be ignored:");
+                Console.WriteLine();
+
+                foreach (var warning in featureGateWarnings)
+                {
+                    Console.WriteLine(warning);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Cluster definition is OK with warnings");
+            }
 
             await Task.CompletedTask;
         }

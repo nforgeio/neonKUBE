@@ -74,32 +74,33 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static Guid                 clientId;
-        private static KubeConfig           cachedConfig;
-        private static string               cachedNeonKubeUserFolder;
-        private static string               cachedRunFolder;
-        private static string               cachedLogFolder;
-        private static string               cachedLogDetailsFolder;
-        private static string               cachedTempFolder;
-        private static string               cachedSetupFolder;
-        private static string               cachedPasswordsFolder;
-        private static string               cachedCacheFolder;
-        private static string               cachedDesktopCommonFolder;
-        private static string               cachedDesktopFolder;
-        private static string               cachedDesktopLogFolder;
-        private static string               cachedDesktopHypervFolder;
-        private static KubeClientConfig     cachedClientConfig;
-        private static string               cachedInstallFolder;
-        private static string               cachedToolsFolder;
-        private static string               cachedDevopmentFolder;
-        private static string               cachedNodeContainerImagesFolder;
-        private static IStaticDirectory     cachedResources;
-        private static string               cachedVmImageFolder;
-        private static string               cachedUserSshFolder;
-        private static string               cachedNeonCliPath;
-        private static object               jsonConverterLock = new object();
+        private static Guid                                 clientId;
+        private static KubeConfig                           cachedConfig;
+        private static string                               cachedNeonKubeUserFolder;
+        private static string                               cachedRunFolder;
+        private static string                               cachedLogFolder;
+        private static string                               cachedLogDetailsFolder;
+        private static string                               cachedTempFolder;
+        private static string                               cachedSetupFolder;
+        private static string                               cachedPasswordsFolder;
+        private static string                               cachedCacheFolder;
+        private static string                               cachedDesktopCommonFolder;
+        private static string                               cachedDesktopFolder;
+        private static string                               cachedDesktopLogFolder;
+        private static string                               cachedDesktopHypervFolder;
+        private static KubeClientConfig                     cachedClientConfig;
+        private static string                               cachedInstallFolder;
+        private static string                               cachedToolsFolder;
+        private static string                               cachedDevopmentFolder;
+        private static string                               cachedNodeContainerImagesFolder;
+        private static IStaticDirectory                     cachedResources;
+        private static string                               cachedVmImageFolder;
+        private static string                               cachedUserSshFolder;
+        private static string                               cachedNeonCliPath;
+        private static List<KeyValuePair<string, object>>   cachedTelemetryTags;
 
-        private static List<KeyValuePair<string, object>> cachedTelemetryTags;
+        private static object                               jsonConverterLock = new object();
+        private static HashSet<string>                      validFeatureGates = null;
 
         /// <summary>
         /// CURL command common options.
@@ -3582,6 +3583,164 @@ TCPKeepAlive yes
             EnsureNeonKubectl();
 
             return NeonHelper.ExecuteCapture(NeonCliPath, args);
+        }
+
+        /// <summary>
+        /// Determines whether a Kubernetes feature gate is valid for the current Kubernetes version.
+        /// </summary>
+        /// <param name="feature">Specifies the feature.</param>
+        /// <returns><c>true</c> for valid features.</returns>
+        public static bool IsValidFeatureGate(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            // $note(jefflill):
+            //
+            // The set of valid feature gates is currently managed manually
+            // by maintainers.  I did this by copy/pasting the Alpha/Beta
+            // features table from here into Excel:
+            //
+            //      https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+            //
+            // and then sorting the table by the [Until] column.  Features
+            // with the [Since] column greater or equal to the target Kubernetes
+            // versions and a blank [Until] column or Kubernetes version less than
+            // the [Until] column are valid for the current target Kubernetes version.
+            //
+            // We're going to check the target Kubernetes version to ensure that the
+            // table is up-to-date.  You'll need to update the target versioin in the
+            // assertion below after updating the valid feature gates.
+
+            Covenant.Assert(KubeVersions.Kubernetes == "1.29.0", $"MAINTAINER: Valid feature gates may not match Kubernetes version [{KubeVersions.Kubernetes}].  Please update.");
+
+            if (validFeatureGates == null)
+            {
+                validFeatureGates = new HashSet<string>()
+                {
+                    "AdmissionWebhookMatchConditions",
+                    "AggregatedDiscoveryEndpoint",
+                    "AnyVolumeDataSource",
+                    "APIPriorityAndFairness",
+                    "APIResponseCompression",
+                    "APIServerIdentity",
+                    "APIServerTracing",
+                    "AppArmor",
+                    "CloudControllerManagerWebhook",
+                    "CloudDualStackNodeIPs",
+                    "ClusterTrustBundle",
+                    "ClusterTrustBundleProjection",
+                    "ComponentSLIs",
+                    "ConsistentListFromCache",
+                    "ContainerCheckpoint",
+                    "ContextualLogging",
+                    "CPUManagerPolicyAlphaOptions",
+                    "CPUManagerPolicyBetaOptions",
+                    "CPUManagerPolicyOptions",
+                    "CRDValidationRatcheting",
+                    "CronJobsScheduledAnnotation",
+                    "CrossNamespaceVolumeDataSource",
+                    "CSIMigrationPortworx",
+                    "CSIVolumeHealth",
+                    "CustomCPUCFSQuotaPeriod",
+                    "DevicePluginCDIDevices",
+                    "DisableCloudProviders",
+                    "DisableKubeletCloudCredentialProviders",
+                    "DisableNodeKubeProxyVersion",
+                    "DynamicResourceAllocation",
+                    "ElasticIndexedJob",
+                    "EventedPLEG",
+                    "GracefulNodeShutdown",
+                    "GracefulNodeShutdownBasedOnPodPriority",
+                    "HonorPVReclaimPolicy",
+                    "HPAContainerMetrics",
+                    "HPAScaleToZero",
+                    "InPlacePodVerticalScaling",
+                    "InTreePluginAWSUnregister",
+                    "InTreePluginAzureDiskUnregister",
+                    "InTreePluginAzureFileUnregister",
+                    "InTreePluginGCEUnregister",
+                    "InTreePluginOpenStackUnregister",
+                    "InTreePluginPortworxUnregister",
+                    "InTreePluginvSphereUnregister",
+                    "JobBackoffLimitPerIndex",
+                    "JobPodFailurePolicy",
+                    "JobPodReplacementPolicy",
+                    "KubeletCgroupDriverFromCRI",
+                    "KubeletInUserNamespace",
+                    "KubeletPodResourcesDynamicResources",
+                    "KubeletPodResourcesGet",
+                    "KubeletTracing",
+                    "KubeProxyDrainingTerminatingNodes",
+                    "LegacyServiceAccountTokenCleanUp",
+                    "LoadBalancerIPMode",
+                    "LocalStorageCapacityIsolationFSQuotaMonitoring",
+                    "LogarithmicScaleDown",
+                    "LoggingAlphaOptions",
+                    "LoggingBetaOptions",
+                    "MatchLabelKeysInPodAffinity",
+                    "MatchLabelKeysInPodTopologySpread",
+                    "MaxUnavailableStatefulSet",
+                    "MemoryManager",
+                    "MemoryQoS",
+                    "MinDomainsInPodTopologySpread",
+                    "MultiCIDRServiceAllocator",
+                    "NewVolumeManagerReconstruction",
+                    "NodeInclusionPolicyInPodTopologySpread",
+                    "NodeLogQuery",
+                    "NodeSwap",
+                    "OpenAPIEnums",
+                    "PDBUnhealthyPodEvictionPolicy",
+                    "PersistentVolumeLastPhaseTransistionTime",
+                    "PodAndContainerStatsFromCRI",
+                    "PodDeletionCost",
+                    "PodDisruptionConditions",
+                    "PodHostIPs",
+                    "PodIndexLabel",
+                    "PodLifecycleSleepAction",
+                    "PodReadyToStartContainersCondition",
+                    "PodSchedulingReadiness",
+                    "ProcMountType",
+                    "QOSReserved",
+                    "RecoverVolumeExpansionFailure",
+                    "RemainingItemCount",
+                    "RotateKubeletServerCertificate",
+                    "RuntimeClassInImageCriApi",
+                    "SchedulerQueueingHints",
+                    "SecurityContextDeny",
+                    "SELinuxMountReadWriteOncePod",
+                    "SeparateTaintEvictionController",
+                    "ServiceAccountTokenJTI",
+                    "ServiceAccountTokenNodeBinding",
+                    "ServiceAccountTokenNodeBindingValidation",
+                    "ServiceAccountTokenPodNodeInfo",
+                    "SidecarContainers",
+                    "SizeMemoryBackedVolumes",
+                    "StableLoadBalancerNodeSet",
+                    "StatefulSetAutoDeletePVC",
+                    "StatefulSetStartOrdinal",
+                    "StorageVersionAPI",
+                    "StorageVersionHash",
+                    "TopologyAwareHints",
+                    "TopologyManagerPolicyAlphaOptions",
+                    "TopologyManagerPolicyBetaOptions",
+                    "TopologyManagerPolicyOptions",
+                    "TranslateStreamCloseWebsocketRequests",
+                    "UnauthenticatedHTTP2DOSMitigation",
+                    "UnauthenticatedHTTP2DOSMitigation",
+                    "UnknownVersionInteroperabilityProxy",
+                    "UserNamespacesPodSecurityStandards",
+                    "UserNamespacesSupport",
+                    "ValidatingAdmissionPolicy",
+                    "VolumeAttributesClass",
+                    "VolumeCapacityPriority",
+                    "WatchList",
+                    "WindowsHostNetwork",
+                    "WinDSR",
+                    "WinOverlay",
+                };
+            }
+
+            return validFeatureGates.Contains(feature);
         }
     }
 }

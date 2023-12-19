@@ -993,11 +993,11 @@ systemctl start crio
                     sbPinnedImages.AppendLine(image.InternalDigestRef);
 
                     // We need to extract the image ID from the internal digest reference which
-                    // look something like this:
+                    // looks something like this:
                     //
                     //      registry.neon.local/redis@sha256:561AABD123...
                     //
-                    // where we need to extract the HEX bytes after the [@sha256:] prefix
+                    // We need to extract the HEX bytes after the [@sha256:] prefix
 
                     var idPrefix    = "@sha256:";
                     var idPrefixPos = image.InternalDigestRef.IndexOf(idPrefix);
@@ -1052,8 +1052,8 @@ $@"
 set -euo pipefail
 
 {KubeNodeFolder.Bin}/safe-apt-get update -q
-set +e                                                                                          # <--- HACK: disable error checks
-{KubeNodeFolder.Bin}/safe-apt-get install -yq podman -o Dpkg::Options::=""--force-overwrite""   # <--- HACK: ignore overwrite errors
+set +e
+{KubeNodeFolder.Bin}/safe-apt-get install -yq podman -o Dpkg::Options::=""--force-overwrite""
 {KubeNodeFolder.Bin}/safe-apt-get install -yq skopeo
 ln -s /usr/bin/podman /bin/docker
 
@@ -1062,6 +1062,59 @@ ln -s /usr/bin/podman /bin/docker
 set +e      # Don't exit if the next command fails
 apt-mark hold podman 
 apt-mark hold skopeo 
+
+# podman installs a config files with the CNI version set to 1.0.0 which is not compatible
+# with Kubernetes 1.28 which expects the CNI version to be 0.4.0.  We're going to replace
+# these files and then and reset podman.
+
+rm /etc/cni/net.d/*
+
+cat <<EOF > /etc/cni/net.d/100-crio-bridge.conflist
+{{
+  ""cniVersion"": ""0.4.0"",
+  ""name"": ""crio"",
+  ""plugins"": [
+    {{
+      ""type"": ""bridge"",
+      ""bridge"": ""cni0"",
+      ""isGateway"": true,
+      ""ipMasq"": true,
+      ""hairpinMode"": true,
+      ""ipam"": {{
+        ""type"": ""host-local"",
+        ""routes"": [
+            {{ ""dst"": ""0.0.0.0/0"" }},
+            {{ ""dst"": ""::/0"" }}
+        ],
+        ""ranges"": [
+            [{{ ""subnet"": ""10.85.0.0/16"" }}],
+            [{{ ""subnet"": ""1100:200::/24"" }}]
+        ]
+      }}
+    }}
+  ]
+}}
+EOF
+
+cat <<EOF > 200-loopback.conflist
+{{
+    ""cniVersion"": ""1.0.0"",
+    ""name"": ""loopback"",
+    ""plugins"": [
+        {{
+            ""type"": ""loopback""
+        }}
+    ]
+}}
+EOF
+
+# podman complains about this config file so we'll remove it before
+# resetting podman.
+
+/etc/containers/storage.conf
+
+chmod 644 /etc/cni/net.d/*
+podman system reset --force
 ";
                     // The PODMAN apt package mirror has been quite unreliable over the years, 
                     // so we're going to retry the operation in the hope that it may work

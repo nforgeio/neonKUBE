@@ -356,10 +356,6 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    ConfigureKubelet(controller, cluster.ControlNodes);
-
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelled();
                     ConfigureWorkstation(controller, cluster.DeploymentControlNode);
 
                     controller.ClearStatus();
@@ -400,7 +396,7 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallCrdsAsync(controller, controlNode);
+                    await InstallClusterCrdsAsync(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
@@ -598,8 +594,8 @@ apiServer:
     bind-address: 0.0.0.0
     advertise-address: 0.0.0.0
     logging-format: json
-    default-not-ready-toleration-seconds: ""30"" # default 300
-    default-unreachable-toleration-seconds: ""30"" #default  300
+    default-not-ready-toleration-seconds: ""30""    # default 300
+    default-unreachable-toleration-seconds: ""30""  # default 300
     allow-privileged: ""true""
     api-audiences: api
     service-account-issuer: https://kubernetes.default.svc
@@ -621,9 +617,9 @@ networking:
 controllerManager:
   extraArgs:
     logging-format: json
-    node-monitor-grace-period: 15s #default 40s
-    node-monitor-period: 5s #default 5s
-    pod-eviction-timeout: 30s #default 5m0s
+    node-monitor-grace-period: 15s                  # default 40s
+    node-monitor-period: 5s                         # default 5s
+    pod-eviction-timeout: 30s                       # default 300s
 scheduler:
   extraArgs:
     logging-format: json");
@@ -635,6 +631,9 @@ kind: KubeletConfiguration
 logging:
   format: json
 nodeStatusReportFrequency: 4s
+nodeStatusUpdateFrequency: 10s
+nodeStatusReportFrequency: 5m
+nodeLeaseDurationSeconds: 40
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
@@ -642,8 +641,7 @@ maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
 shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
 shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
 rotateCertificates: true
-{kubeletFailSwapOnLine}
-");
+{kubeletFailSwapOnLine}");
 
             clusterConfig.AppendLine($"systemReserved:");
 
@@ -736,9 +734,16 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
                             controller.LogProgress(firstControlNode, verb: "reset", message: "kubernetes");
 
                             // It's possible that a previous cluster initialization operation
-                            // was interrupted.  This command resets the state.
+                            // was interrupted.  This command resets the state.  We also need
+                            // to remove any kubeconfig andclear IPVS and other CNI network state.
 
-                            firstControlNode.SudoCommand("kubeadm reset --force");
+                            firstControlNode.SudoCommand("kubeadm reset --force", RunOptions.None);
+                            firstControlNode.SudoCommand("rm -r /root/.kube", RunOptions.None);
+                            firstControlNode.SudoCommand($"rm -r /home/{KubeConst.SysAdminUser}/.kube", RunOptions.None);
+                            firstControlNode.SudoCommand("ipvsadm --clear", RunOptions.None);
+                            firstControlNode.SudoCommand("rm -r /etc/cni/net.d", RunOptions.None);
+
+                            // Configure etcd.
 
                             SetupEtcdHaProxy(controller, firstControlNode);
 
@@ -851,7 +856,7 @@ exit 1
                             }
 
                             cluster.SaveSetupState();
-
+                            firstControlNode.UpdateKubernetesStaticManifests(controller);
                             controller.LogProgress(firstControlNode, verb: "created", message: "cluster");
                         });
 
@@ -967,8 +972,11 @@ exit 1
                                             }
 
                                             controller.ThrowIfCancelled();
-                                            controlNode.SudoCommand("docker kill neon-etcd-proxy");
-                                            controlNode.SudoCommand("docker rm neon-etcd-proxy");
+                                            controlNode.SudoCommand("podman kill neon-etcd-proxy");
+                                            controlNode.SudoCommand("podman rm neon-etcd-proxy");
+
+                                            controller.ThrowIfCancelled();
+                                            controlNode.UpdateKubernetesStaticManifests(controller);
                                         });
                                 });
                         }
@@ -982,34 +990,6 @@ exit 1
                     }
 
                     cluster.ClearNodeStatus();
-
-                    // Configure [kube-apiserver] on all the control-plane nodes.
-
-                    foreach (var controlNode in cluster.ControlNodes)
-                    {
-                        try
-                        {
-                            controller.ThrowIfCancelled();
-                            controlNode.InvokeIdempotent("setup/kubernetes-apiserver",
-                                () =>
-                                {
-                                    controller.LogProgress(controlNode, verb: "configure", message: "api-server");
-
-                                    controlNode.SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
-"));
-                                });
-                        }
-                        catch (Exception e)
-                        {
-                            controlNode.Fault(NeonHelper.ExceptionError(e));
-                            controlNode.LogException(e);
-                        }
-
-                        controlNode.Status = string.Empty;
-                    }
 
                     //---------------------------------------------------------
                     // Join the remaining workers to the cluster:
@@ -1068,8 +1048,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         }
 
                                         controller.ThrowIfCancelled();
-                                        worker.SudoCommand("docker kill neon-etcd-proxy");
-                                        worker.SudoCommand("docker rm neon-etcd-proxy");
+                                        worker.SudoCommand("podman kill neon-etcd-proxy");
+                                        worker.SudoCommand("podman rm neon-etcd-proxy");
                                     });
                             }
                             catch (Exception e)
@@ -1083,208 +1063,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 });
 
             cluster.ClearNodeStatus();
-        }
-
-        /// <summary>
-        /// Configures the Kubernetes feature gates specified by the <see cref="KubernetesOptions.FeatureGates"/> dictionary.
-        /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
-        /// on the control-plane nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNodes">The target control-plane nodes.</param>
-        public static void ConfigureKubelet(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> controlNodes)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNodes != null, nameof(controlNodes));
-            Covenant.Requires<ArgumentException>(controlNodes.Count() > 0, nameof(controlNodes));
-
-            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition = cluster.SetupState.ClusterDefinition;
-
-            // We need to generate a "--feature-gates=..." command line option and add it to the end
-            // of the command arguments in the API server static pod manifest at: 
-            //
-            //      /etc/kubernetes/manifests/kube-apiserver.yaml
-            //
-            // and while we're at it, we need to modify the [--service-account-issuer] option to
-            // pass the Kubernetes compliance tests.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1385
-            //
-            // Here's what the static pod manifest looks like:
-            //
-            //  apiVersion: v1
-            //  kind: Pod
-            //  metadata:
-            //  annotations:
-            //      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 100.64.0.2:6443
-            //    creationTimestamp: null
-            //    labels:
-            //      component: kube-apiserver
-            //      tier: control-plane
-            //    name: kube-apiserver
-            //    namespace: kube-system
-            //  spec:
-            //    containers:
-            //    - command:
-            //      - kube-apiserver
-            //      - --advertise-address=0.0.0.0
-            //      - --allow-privileged=true
-            //      - --api-audiences=api
-            //      - --authorization-mode=Node,RBAC
-            //      - --bind-address=0.0.0.0
-            //      - --client-ca-file=/etc/kubernetes/pki/ca.crt
-            //      - --default-not-ready-toleration-seconds=30
-            //      - --default-unreachable-toleration-seconds=30
-            //      - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
-            //      - --enable-bootstrap-token-auth=true
-            //      - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
-            //      - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
-            //      - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
-            //      - --etcd-servers=https://127.0.0.1:2379
-            //      - --insecure-port=0
-            //      - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
-            //      - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
-            //      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-            //      - --logging-format=json
-            //      - --oidc-client-id=kubernetes
-            //      - --oidc-groups-claim=groups
-            //      - --oidc-groups-prefix=
-            //      - --oidc-issuer-url=https://neon-sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
-            //      - --oidc-username-claim=email
-            //      - --oidc-username-prefix=-
-            //      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
-            //      - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
-            //      - --requestheader-allowed-names=front-proxy-client
-            //      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
-            //      - --requestheader-extra-headers-prefix=X-Remote-Extra-
-            //      - --requestheader-group-headers=X-Remote-Group
-            //      - --requestheader-username-headers=X-Remote-User
-            //      - --secure-port=6443
-            //      - --service-account-issuer=https://kubernetes.default.svc                   <--- WE NEED TO REPLACE THE ORIGINAL SETTING WITH THIS TO PASS KUBERNETES COMPLIANCE TESTS
-            //      - --service-account-key-file=/etc/kubernetes/pki/sa.key
-            //      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
-            //      - --service-cluster-ip-range=10.253.0.0/16
-            //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
-            //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
-            //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
-            //      image: registry.neon.local/neonkube/kube-apiserver:v1.21.4
-            //      imagePullPolicy: IfNotPresent
-            //      livenessProbe:
-            //        failureThreshold: 8
-            //        httpGet:
-            //          host: 100.64.0.2
-            //          path: /livez
-            //          port: 6443
-            //          scheme: HTTPS
-            //        initialDelaySeconds: 10
-            //        periodSeconds: 10
-            //        timeoutSeconds: 15
-            //      name: kube-apiserver
-            //      ...
-            //
-            // Note that Kubelet will automatically restart the API server's static pod when it
-            // notices that that static pod manifest has been modified.
-
-            const string manifestPath = "/etc/kubernetes/manifests/kube-apiserver.yaml";
-
-            foreach (var controlNode in controlNodes)
-            {
-                controller.ThrowIfCancelled();
-                controlNode.InvokeIdempotent("setup/feature-gates",
-                    () =>
-                    {
-                        controller.LogProgress(controlNode, verb: "configure", message: "feature-gates");
-
-                        var manifestText = controlNode.DownloadText(manifestPath);
-                        var manifest     = NeonHelper.YamlDeserialize<dynamic>(manifestText);
-                        var spec         = manifest["spec"];
-                        var containers   = spec["containers"];
-                        var container    = containers[0];
-                        var command      = (List<object>)container["command"];
-                        var sbFeatures   = new StringBuilder();
-
-                        foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates)
-                        {
-                            sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
-                        }
-
-                        // Search for a [--feature-gates] command line argument.  If one is present,
-                        // we'll replace it, otherwise we'll append a new one.
-
-                        var featureGateOption = $"--feature-gates={sbFeatures}";
-                        var existingArgIndex = -1;
-
-                        for (int i = 0; i < command.Count; i++)
-                        {
-                            var arg = (string)command[i];
-
-                            if (arg.StartsWith("--feature-gates="))
-                            {
-                                existingArgIndex = i;
-                                break;
-                            }
-                        }
-
-                        if (existingArgIndex >= 0)
-                        {
-                            command[existingArgIndex] = featureGateOption;
-                        }
-                        else
-                        {
-                            command.Add(featureGateOption);
-                        }
-
-                        // Update the [---service-account-issuer] command option as well.
-
-                        for (int i = 0; i < command.Count; i++)
-                        {
-                            var arg = (string)command[i];
-
-                            if (arg.StartsWith("--service-account-issuer="))
-                            {
-                                command[i] = "--service-account-issuer=https://kubernetes.default.svc";
-                                break;
-                            }
-                        }
-
-                        // Configure the log level.
-
-                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServer.Verbosity}");
-
-                        // Set GOGC so that GC happens more frequently, reducing memory usage.
-
-                        // This is a bit of a 2 part hack because the environment variable needs to be
-                        // a string, and YamlDotNet doesn't serialise it as such.
-
-                        var env = new List<Dictionary<string, string>>();
-
-                        env.Add(new Dictionary<string, string>() { 
-                            { "name", "GOGC"},
-                        });
-
-                        container["env"] = env;
-
-                        manifestText = NeonHelper.YamlSerialize(manifest);
-
-                        var sbManifest = new StringBuilder();
-
-                        using (var reader = new StringReader(manifestText))
-                        {
-                            foreach (var line in reader.Lines())
-                            {
-                                sbManifest.AppendLine(line);
-
-                                if (line.Contains("- name: GOGC"))
-                                {
-                                    sbManifest.AppendLine(line.Replace("- name: GOGC", @"  value: ""25"""));
-                                }
-                            }
-                        }
-
-                        controlNode.UploadText(manifestPath, sbManifest, permissions: "600", owner: "root");
-                    });
-            }
         }
 
         /// <summary>
@@ -1456,37 +1234,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
 
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/dns",
-                async () =>
-                {
-                    var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
-                    var spec              = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
-                    var coreDnsDaemonset  = new V1DaemonSet()
-                    {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name              = "coredns",
-                            NamespaceProperty = KubeNamespace.KubeSystem,
-                            Labels            = coreDnsDeployment.Metadata.Labels
-                        },
-                        Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
-                    };
-
-                    coreDnsDaemonset.Spec.Template.Spec.Tolerations = new List<V1Toleration>()
-                    {
-                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                    };
-
-                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
-                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
-
-                    await k8s.AppsV1.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
-                    await k8s.AppsV1.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
-
-                });
-
             if (cluster.Hosting.Environment == HostingEnvironment.Azure)
             {
                 // In Azure Calico needs to run in VXLAN mode.
@@ -1539,14 +1286,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "calico-node",
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
+                        timeout: clusterOpTimeout,
+                        pollInterval: clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
+                        timeout: clusterOpTimeout,
+                        pollInterval: clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     // Spin up a [dnsutils] pod and then exec into it to confirm that
@@ -1563,9 +1310,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 {
                                     Metadata = new V1ObjectMeta()
                                     {
-                                        Name = "dnsutils",
+                                        Name              = "dnsutils",
                                         NamespaceProperty = KubeNamespace.NeonSystem,
-                                        Labels = new Dictionary<string, string>()
+                                        Labels            = new Dictionary<string, string>()
                                         {
                                             { "neonkube.io/setup-pod", "dnsutils" }
                                         }
@@ -1593,12 +1340,57 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 KubeNamespace.NeonSystem);
 
                             await k8s.CoreV1.WaitForPodAsync(
-                                name:               pod.Name(),
+                                name: pod.Name(),
                                 namespaceParameter: pod.Namespace(),
-                                timeout:            clusterOpTimeout,
-                                pollInterval:       clusterOpPollInterval,
-                                cancellationToken:  controller.CancellationToken);
+                                timeout: clusterOpTimeout,
+                                pollInterval: clusterOpPollInterval,
+                                cancellationToken: controller.CancellationToken);
                         });
+
+
+                    controller.ThrowIfCancelled();
+                    await controlNode.InvokeIdempotentAsync("setup/dns",
+                        async () =>
+                        {
+                            var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
+                            var spec              = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                            var coreDnsDaemonset  = new V1DaemonSet()
+                            {
+                                Metadata = new V1ObjectMeta()
+                                {
+                                    Name              = "coredns",
+                                    NamespaceProperty = KubeNamespace.KubeSystem,
+                                    Labels            = coreDnsDeployment.Metadata.Labels
+                                },
+                                Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
+                            };
+
+                            coreDnsDaemonset.Spec.Template.Spec.Tolerations = new List<V1Toleration>()
+                            {
+                                { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                    };
+
+                            coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
+                            coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+
+                            await k8s.AppsV1.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
+                            await k8s.AppsV1.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
+                        });
+
+                    if (cluster.Hosting.Environment == HostingEnvironment.Azure)
+                    {
+                        controller.ThrowIfCancelled();
+                        await controlNode.InvokeIdempotentAsync("setup/dns-service",
+                            async () =>
+                            {
+                                var kubeDns = await k8s.CoreV1.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
+
+                                kubeDns.Spec.InternalTrafficPolicy = "Local";
+
+                                await k8s.CoreV1.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
+                            });
+                    }
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/dns-verify",
@@ -1778,7 +1570,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
-                        var nodes = new V1NodeList();
+                        var nodes = (V1NodeList)null;
                         var retry = new LinearRetryPolicy(
                             transientDetector: null,
                             retryInterval:     clusterOpPollInterval,
@@ -2626,12 +2418,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Installs CRDs used later on in setup by various helm charts.
+        /// Installs cluster CRDs used later on in setup by various helm charts.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task InstallClusterCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
 
@@ -2640,13 +2432,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/install-crds",
+            await controlNode.InvokeIdempotentAsync("setup/cluster-crds",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "Install", message: "CRDs");
+                    controller.LogProgress(controlNode, verb: "Install", message: "Cluster CRDs");
 
-                    await controlNode.InstallHelmChartAsync(controller, "crd-cluster",
-                        releaseName: "crd-cluster",
+                    await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
+                        releaseName: "cluster-crds",
                         @namespace:  KubeNamespace.NeonSystem);
                 });
         }

@@ -401,8 +401,8 @@ namespace Neon.Kube.SSH
         /// <summary>
         /// <para>
         /// Returns a clone of the SSH proxy.  This can be useful for situations where you
-        /// need to be able to perform multiple SSH/SCP operations against the same
-        /// machine in parallel.
+        /// need to be able to perform multiple SSH/SCP operations against the same machine
+        /// in parallel.
         /// </para>
         /// <note>
         /// This does not clone any attached log writer.
@@ -447,7 +447,7 @@ namespace Neon.Kube.SSH
             }
 
             var stateFolder = KubeNodeFolder.State;
-            var slashPos = actionId.LastIndexOf('/');
+            var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
             {

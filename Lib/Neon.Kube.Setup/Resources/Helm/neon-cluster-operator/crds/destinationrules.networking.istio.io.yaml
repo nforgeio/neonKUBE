@@ -1,0 +1,52 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: destinationrules.networking.istio.io
+spec:
+  group: networking.istio.io
+  names:
+    kind: DestinationRule
+    plural: destinationrules
+    shortNames: []
+    singular: destinationrule
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns: []
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              host:
+                type: string
+              trafficPolicy:
+                properties:
+                  loadBalancer:
+                    properties: {}
+                    type: object
+                  connectionPool:
+                    properties: {}
+                    type: object
+                  outlierDetection:
+                    properties: {}
+                    type: object
+                  tls:
+                    properties:
+                      mode:
+                        type: string
+                      insecureSkipVerify:
+                        type: boolean
+                    type: object
+                  portLevelSettings:
+                    properties: {}
+                    type: object
+                  tunnel:
+                    properties: {}
+                    type: object
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources: {}
