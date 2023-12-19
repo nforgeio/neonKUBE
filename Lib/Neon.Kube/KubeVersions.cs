@@ -221,6 +221,13 @@ namespace Neon.Kube
         public const string KubernetesNoPatch = "1.29";
 
         /// <summary>
+        /// Returns the version of the GOLANG compiler to use for building Kubernetes
+        /// related components like <b>CRI-O</b>.
+        /// </summary>
+        [KubeVersion]
+        public const string GoLang = "1.21.3";
+
+        /// <summary>
         /// Returns the version of the Kubernetes dashboard to be installed.
         /// </summary>
         [KubeVersion]
