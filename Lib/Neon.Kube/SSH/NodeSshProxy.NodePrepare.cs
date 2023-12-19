@@ -461,44 +461,40 @@ if [ ""{install}"" = ""true"" ]; then
     # Initialize the OS and VERSION environment variables.
 
     OS=xUbuntu_22.04
-    VERSION={crioVersionNoPatch}
+    CRIO_VERSION_NOPATCH={crioVersionNoPatch}
 
-    # $hack(jefflill):
+    # Install the packaging dependencies.
+
+`   apt-get update
+    apt-get install -y curl software-properties-common
+
+    # Configure Kubernetes repository.  Here are some links discussing this:
     #
-    # The CRI-O GPG key has expired and we're waiting on [haircommander] to fix it.
-    #
-    #       https://github.com/cri-o/cri-o/issues/6432
-    #
-    # In the meantime, we're going to disable the GPG check for this as described here:
-    #
-    #       https://github.com/nforgeio/neonKUBE/issues/1723
-    #
-    # I'm going to retain this code here in case we need it again in the future, but we
-    # should come back and set [TRUST_HACK=false] after Red Hat fixes this.
+    #       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#deb-based-distributions
 
-    TRUST_HACK=false
+    mkdir -p /etc/apt/keyrings
+    rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    rm -f /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    rm -f /etc/apt/sources.list.d/kubernetes.list
+    rm -f /etc/apt/sources.list.d/cri-o.list
 
-    if [ ""$TRUST_HACK"" == ""true"" ] ; then 
-        TRUSTED=""trusted=yes ""
-    else
-        TRUSTED=
-    fi
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v$<CRIO_VERSION_NOPATCH>/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$<CRIO_VERSION_NOPATCH>/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
 
-    # Install the CRI-O packages.
+    # Configure the CRI-O repository.
 
-    echo ""deb [${{TRUSTED}}signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-    echo ""deb [${{TRUSTED}}signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
+    curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    echo ""deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /"" | tee /etc/apt/sources.list.d/cri-o.list
 
-    mkdir -p /usr/share/keyrings
+    # Configure the CRI-O repository.
 
-    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key > /tmp/key.txt
-    cat /tmp/key.txt | gpg --dearmor --yes -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
-    rm /tmp/key.txt
+    curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    echo ""deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /"" | tee /etc/apt/sources.list.d/cri-o.list
 
-    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key > /tmp/key.txt
-    cat /tmp/key.txt | gpg --dearmor --yes -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
-    rm /tmp/key.txt
+    # Remove containers-common (because it conflicts) and then install CRI-O and CRI-O-RUNC
 
+    apt-get update
+    apt-get remove -y containers-common
     {KubeNodeFolder.Bin}/safe-apt-get update -y
     {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o cri-o-runc
 fi
