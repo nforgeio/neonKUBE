@@ -292,7 +292,7 @@ namespace Neon.Kube
         /// Returns the version of Etcd to install.
         /// </summary>
         [KubeVersion]
-        public const string Etcd = "3.5.9-0";
+        public const string Etcd = "3.5.11-0";
 
         /// <summary>
         /// Returns the version of Calico to install.
