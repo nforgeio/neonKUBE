@@ -496,7 +496,7 @@ namespace Neon.Kube.SSH
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId = actionId.Substring(slashPos + 1);
+                actionId    = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }

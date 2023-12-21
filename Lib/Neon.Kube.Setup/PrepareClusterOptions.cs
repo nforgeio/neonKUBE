@@ -40,6 +40,8 @@ namespace Neon.Kube.Setup
     /// </summary>
     public class PrepareClusterOptions
     {
+        private bool    insecure = false;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -128,9 +130,16 @@ namespace Neon.Kube.Setup
         /// authentication, for cluster debugging purposes.
         /// </para>
         /// <note>
+        /// This also returns <c>false</c> when <see cref="DebugMode"/> is <c>true</c>.
+        /// </note>
+        /// <note>
         /// <b>WARNING!</b> This should never be used for production clusters.
         /// </note>
         /// </summary>
-        public bool Insecure { get; set; } = false;
+        public bool Insecure
+        {
+            get => insecure || DebugMode;
+            set => insecure = value;
+        }
     }
 }

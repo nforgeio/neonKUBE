@@ -1102,10 +1102,10 @@ namespace Neon.Kube
                 
                 RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
 
-                var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-                var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
-
+                var member     = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+                var options    = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
                 var converters = options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
+
                 if (!converters.Any())
                 {
                     options.Converters.Insert(0, new JsonStringEnumMemberConverter());

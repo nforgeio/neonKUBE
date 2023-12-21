@@ -332,13 +332,13 @@ namespace Neon.Kube.Setup
                     }
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
-                    // manager's provisioner.  We need to do this up front because some hosting environment
+                    // manager's provisioner.  We need to do this up front because some hosting environments
                     // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
                     //
                     // NOTE: All build-in NEONDESKTOP clusters share the same SSH keys.  This isn't really
                     //       a security issue because these clusters are not reachable from outside the host
-                    //       machine and are also not intended for production workloads.
+                    //       machine and these are also not intended for production workloads.
 
                     if (desktopReadyToGo || clusterDefinition.IsDesktop)
                     {

@@ -453,7 +453,8 @@ location = ""{KubeConst.LocalClusterRegistryHostName}""
             var install            = reconfigureOnly ? "false" : "true";
 
             var setupScript =
-$@"
+$@"#!/bin/bash
+
 if [ ""{install}"" = ""true"" ]; then
 
     set -euo pipefail
@@ -465,7 +466,7 @@ if [ ""{install}"" = ""true"" ]; then
 
     # Install the packaging dependencies.
 
-`   apt-get update
+    apt-get update
     apt-get install -y curl software-properties-common
 
     # Configure Kubernetes repository.  Here are some links discussing this:
@@ -910,7 +911,7 @@ set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
             // The CRI-O apt package mirror has been quite unreliable over the years, 
-            // so we're going to retry the operation in the hope that it may work
+            // so we're going to retry the operation in the hope that it will work
             // eventually.
 
             try
@@ -1216,7 +1217,7 @@ rm -rf linux-amd64
                         {
                             Covenant.Assert(File.Exists(importPath));
 
-                            targetTag = $"neonkube-{KubeVersions.NeonKube}";
+                            targetTag = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
                         }
 
                         var sourceImage = $"{registry}/{imageName}:{targetTag}";
