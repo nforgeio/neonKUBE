@@ -172,7 +172,9 @@ namespace Neon.Kube.Setup
             var desktopServiceProxy = new DesktopServiceProxy();
 
             // Configure the setup controller state.
+            
             var headendClient = HeadendClient.Create();
+
             headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
 
             controller.Add(KubeSetupProperty.Preparing, false);

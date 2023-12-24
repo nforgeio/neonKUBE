@@ -209,32 +209,32 @@ namespace Neon.Kube
         public static string NeonKubeContainerImageTag => $"{NeonKubeContainerImageTagPrefix}{NeonKube}{BranchPart}";
 
         /// <summary>
-        /// Returns the version of Kubernetes to be installed.
+        /// Specifies the version of Kubernetes to be installed.
         /// </summary>
         [KubeVersion]
         public const string Kubernetes = "1.29.0";
 
         /// <summary>
-        /// Returns the version of Kubernetes to be installed, without the patch component.
+        /// Specifies the version of Kubernetes to be installed, without the patch component.
         /// </summary>
         [KubeVersion]
         public const string KubernetesNoPatch = "1.29";
 
         /// <summary>
-        /// Returns the version of the GOLANG compiler to use for building Kubernetes
+        /// Specifies the version of the GOLANG compiler to use for building Kubernetes
         /// related components like <b>CRI-O</b>.
         /// </summary>
         [KubeVersion]
         public const string GoLang = "1.21.3";
 
         /// <summary>
-        /// Returns the version of the Kubernetes dashboard to be installed.
+        /// Specifies the version of the Kubernetes dashboard to be installed.
         /// </summary>
         [KubeVersion]
         public const string KubernetesDashboard = "2.5.1";
 
         /// <summary>
-        /// Returns the version of the Kubernetes dashboard metrics scraper to be installed.
+        /// Specifies the version of the Kubernetes dashboard metrics scraper to be installed.
         /// </summary>
         [KubeVersion]
         public const string KubernetesDashboardMetrics = "v1.0.6";
@@ -246,7 +246,7 @@ namespace Neon.Kube
         public const string KubeAdminPackage = Kubernetes + "-00";
 
         /// <summary>
-        /// Returns the version of the Kubernetes client tools to be installed with NEONDESKTOP.
+        /// Specifies the version of the Kubernetes client tools to be installed with NEONDESKTOP.
         /// </summary>
         [KubeVersion]
         public const string Kubectl = Kubernetes;
@@ -265,7 +265,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the version of CRI-O container runtime to be installed.
+        /// Specifies the version of CRI-O container runtime to be installed.
         /// </para>
         /// <note>
         /// <para>
@@ -283,79 +283,89 @@ namespace Neon.Kube
         public static readonly string Crio = PatchVersion(Kubernetes, 0);
 
         /// <summary>
-        /// Returns the version of Podman to be installed.
+        /// Specifies the version of Podman to be installed.
         /// </summary>
         [KubeVersion]
         public const string Podman = "3.4.4+ds1-1ubuntu1.22.04.2";
 
         /// <summary>
-        /// Returns the version of Etcd to install.
+        /// Specifies the version of Etcd to install.
         /// </summary>
         [KubeVersion]
         public const string Etcd = "3.5.11-0";
 
         /// <summary>
-        /// Returns the version of Calico to install.
+        /// Specifies the version of Calico to install.
         /// </summary>
         [KubeVersion]
         public const string Calico = "v3.23.5";
 
         /// <summary>
-        /// Returns the version of dnsutils to install.
+        /// Specifies the version of Cilium to install.
+        /// </summary>
+        public const string Cilium = "v1.14.4";
+
+        /// <summary>
+        /// Specifies the version of Cilium CLI to install.
+        /// </summary>
+        public const string CiliumCli = "v0.15.19";
+
+        /// <summary>
+        /// Specifies the version of dnsutils to install.
         /// </summary>
         [KubeVersion]
         public const string DnsUtils = "1.3";
 
         /// <summary>
-        /// Returns the version of HaProxy to install.
+        /// Specifies the version of HaProxy to install.
         /// </summary>
         [KubeVersion]
         public const string Haproxy = "1.9.2-alpine";
 
         /// <summary>
-        /// Returns the version of Istio to install.
+        /// Specifies the version of Istio to install.
         /// </summary>
         [KubeVersion]
         public const string Istio = "1.14.1-distroless";
 
         /// <summary>
-        /// Returns the version of Helm to be installed.
+        /// Specifies the version of Helm to be installed.
         /// </summary>
         [KubeVersion]
         public const string Helm = "3.12.0";
 
         /// <summary>
-        /// Returns the version of CoreDNS to be installed.
+        /// Specifies the version of CoreDNS to be installed.
         /// </summary>
         [KubeVersion]
         public const string CoreDNS = "v1.10.1";
 
         /// <summary>
-        /// Returns the version of CoreDNS plugin to be installed.
+        /// Specifies the version of CoreDNS plugin to be installed.
         /// </summary>
         [KubeVersion]
         public const string CoreDNSPlugin = "0.2-istio-1.1";
 
         /// <summary>
-        /// Returns the version of Prometheus to be installed.
+        /// Specifies the version of Prometheus to be installed.
         /// </summary>
         [KubeVersion]
         public const string Prometheus = "v2.22.1";
 
         /// <summary>
-        /// Returns the version of AlertManager to be installed.
+        /// Specifies the version of AlertManager to be installed.
         /// </summary>
         [KubeVersion]
         public const string AlertManager = "v0.21.0";
 
         /// <summary>
-        /// Returns the version of pause image to be installed.
+        /// Specifies the version of pause image to be installed.
         /// </summary>
         [KubeVersion]
         public const string Pause = "3.9";
 
         /// <summary>
-        /// Returns the version of busybox image to be installed.
+        /// Specifies the version of busybox image to be installed.
         /// </summary>
         [KubeVersion]
         public const string Busybox = "1.32.0";
