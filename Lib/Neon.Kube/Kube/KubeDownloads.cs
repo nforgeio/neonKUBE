@@ -93,6 +93,39 @@ namespace Neon.Kube
         public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKubeWithBranchPart}.json";
 
         /// <summary>
+        /// Returns the URI of the download for NEONUBE base images.
+        /// </summary>
+        /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
+        /// <param name="architecture">Specifies the target CPU architecture.</param>
+        /// <returns>The image URI.</returns>
+        public static async Task<string> GetBaseImageUri(
+            HostingEnvironment  hostingEnvironment,
+            CpuArchitecture     architecture = CpuArchitecture.amd64)
+        {
+            await SyncContext.Clear;
+
+            // $todo(jefflill):
+            //
+            // This is hardcoded to our S3 bucket for now.  We should probably
+            // change this to hit the headend as well.
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+
+                    return $"https://neonkube-stage.s3.us-west-2.amazonaws.com/images/hyperv/base/ubuntu-22.04.hyperv.{architecture}.vhdx.gz.manifest";
+
+                case HostingEnvironment.XenServer:
+
+                    return $"https://neonkube-stage.s3.us-west-2.amazonaws.com/images/xenserver/base/ubuntu-22.04.xenserver.{architecture}.xva.gz.manifest";
+
+                default:
+
+                    throw new ArgumentException($"Hosting environment [{hostingEnvironment}] does not support base image downloads.", nameof(hostingEnvironment));
+            }
+        }
+
+        /// <summary>D
         /// Returns the URI of the download manifest for a NEONKUBE node image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
@@ -104,7 +137,7 @@ namespace Neon.Kube
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.
         /// </param>
-        /// <returns>The action result.</returns>
+        /// <returns>The image URI.</returns>
         public static async Task<string> GetNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
             CpuArchitecture     architecture = CpuArchitecture.amd64,
@@ -130,7 +163,7 @@ namespace Neon.Kube
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.
         /// </param>
-        /// <returns>The action result.</returns>
+        /// <returns>The image URI.</returns>
         public static async Task<string> GetDesktopImageUriAsync(
             HostingEnvironment  hostingEnvironment,
             CpuArchitecture     architecture = CpuArchitecture.amd64,

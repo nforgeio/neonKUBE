@@ -92,6 +92,38 @@ namespace Neon.Kube.Hosting
 
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for provisioning a cluster using
+        /// <b>debug mode</b>.
+        /// </summary>
+        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only NEONFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
+        /// <param name="logFolder">
+        /// <para>
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </para>
+        /// <note>
+        /// Specific hosting managers may choose to ignore this when it doesn't make sense.
+        /// </note>
+        /// </param>
+        /// <returns>
+        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
+        /// could be located for the specified cluster environment.
+        /// </returns>
+        /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        HostingManager GetManagerForDebugMode(ClusterProxy cluster, bool cloudMarketplace, string logFolder = null);
+
+        /// <summary>
+        /// Returns the <see cref="HostingManager"/> for provisioning a cluster using
         /// a node image specified by HTTP/HTTPS URI.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>

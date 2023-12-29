@@ -91,6 +91,7 @@ namespace Neon.Kube.Hosting.Google
 
         private bool                                cloudMarketplace;
         private ClusterProxy                        cluster;
+        private bool                                debugMode;
         private string                              nodeImageUri;
         private string                              nodeImagePath;
         private SetupController<NodeDefinition>     controller;
@@ -126,7 +127,7 @@ namespace Neon.Kube.Hosting.Google
         /// </param>
         /// <remarks>
         /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// <b>debug mode</b> is implied when both <paramref name="nodeImageUri"/> and <paramref name="nodeImagePath"/> are <c>null</c> or empty.
         /// </note>
         /// </remarks>
         public GoogleHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
@@ -137,6 +138,7 @@ namespace Neon.Kube.Hosting.Google
 
             this.cloudMarketplace = cloudMarketplace;
             this.cluster          = cluster;
+            this.debugMode        = string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath);
             this.nodeImageUri     = nodeImageUri;
             this.nodeImagePath    = nodeImagePath;
         }

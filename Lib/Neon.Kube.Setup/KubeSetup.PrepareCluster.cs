@@ -82,7 +82,7 @@ namespace Neon.Kube.Setup
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
+            if (!options.DebugMode && KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.NodeImageUri) || !string.IsNullOrEmpty(options.NodeImagePath), $"{nameof(options.NodeImageUri)}/{nameof(options.NodeImagePath)}");
             }
@@ -132,7 +132,8 @@ namespace Neon.Kube.Setup
                                                                   : SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
-                });
+                },
+                debugMode: options.DebugMode);
             
             if (options.Unredacted)
             {
@@ -410,31 +411,41 @@ namespace Neon.Kube.Setup
 
                     var imageType = node.ImageType;
 
-                    if (options.DesktopReadyToGo)
+                    if (options.DebugMode)
                     {
-                        if (node.ImageType != KubeImageType.Desktop)
+                        if (imageType != KubeImageType.Base)
                         {
-                            throw new Exception($"Node is not a pre-built desktop cluster.");
+                            throw new Exception($"VM image is not the NEONKUBE base image.");
                         }
                     }
                     else
                     {
-                        if (node.ImageType != KubeImageType.Node)
+                        if (options.DesktopReadyToGo)
                         {
-                            throw new Exception($"Node image type is [{node.ImageType}], expected: [{KubeImageType.Node}]");
+                            if (node.ImageType != KubeImageType.Desktop)
+                            {
+                                throw new Exception($"VM image is not a pre-built desktop cluster.");
+                            }
                         }
-                    }
+                        else
+                        {
+                            if (node.ImageType != KubeImageType.Node)
+                            {
+                                throw new Exception($"VM image type is [{node.ImageType}], expected: [{KubeImageType.Node}]");
+                            }
+                        }
 
-                    var imageVersion = node.ImageVersion;
+                        var imageVersion = node.ImageVersion;
 
-                    if (imageVersion == null)
-                    {
-                        throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
-                    }
+                        if (imageVersion == null)
+                        {
+                            throw new Exception($"VM image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
+                        }
 
-                    if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
-                    {
-                        throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                        if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
+                        {
+                            throw new Exception($"VM image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                        }
                     }
                 });
 

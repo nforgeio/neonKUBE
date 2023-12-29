@@ -149,7 +149,8 @@ namespace Neon.Kube.Setup
                     var nodeRole       = clusterDefinition.Nodes.Single(node => node.Name == nodeName).Role;
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, role: nodeRole, logWriter: logWriter);
-                });
+                },
+                debugMode: options.DebugMode);
 
             if (options.Unredacted)
             {

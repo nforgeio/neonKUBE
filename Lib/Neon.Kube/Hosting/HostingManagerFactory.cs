@@ -84,6 +84,17 @@ namespace Neon.Kube.Hosting
         }
 
         /// <inheritdoc/>
+        public HostingManager GetManagerForDebugMode(ClusterProxy cluster, bool cloudMarketplace, string logFolder = null)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.Hosting.Environment) || cloudMarketplace, $"[{nameof(cloudMarketplace)}=true] is not allowed for on-premise hosting environments.");
+
+            CheckInitialized();
+
+            return Loader.GetManagerForDebugMode(cluster, cloudMarketplace, logFolder);
+        }
+
+        /// <inheritdoc/>
         public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));

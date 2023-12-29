@@ -289,10 +289,12 @@ stage process is typically used only by NEONKUBE maintainers.
                 }
             }
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment) && !debug)
             {
                 // Use the default node image for the hosting environment unless [--node-image-uri]
                 // or [--node-image-path] was specified.
+                //
+                // NOTE: We'll ignore all this for DEBUG mode.
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {

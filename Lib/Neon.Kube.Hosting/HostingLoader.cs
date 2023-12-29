@@ -186,6 +186,20 @@ namespace Neon.Kube.Hosting
         }
 
         /// <inheritdoc/>
+        public HostingManager GetManagerForDebugMode(ClusterProxy cluster, bool cloudMarketplace, string logFolder = null)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
+
+            if (environmentToHostingManager.TryGetValue(cluster.Hosting.Environment, out var managerType))
+            {
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, null, (string)null, logFolder);
+            }
+
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Hosting.Environment}]");
+        }
+
+        /// <inheritdoc/>
         public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));

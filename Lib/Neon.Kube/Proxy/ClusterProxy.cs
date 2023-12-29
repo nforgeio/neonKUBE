@@ -123,6 +123,7 @@ namespace Neon.Kube.Proxy
         /// <c>true</c> and can be passed as <c>false</c> for situations where co current context
         /// is required, like having the hosting manager check for resource availability.
         /// </param>
+        /// <param name="debugMode">Optionally specifies that we're using debug mode for cluster deployment.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         public static ClusterProxy Create(
             KubeConfig              kubeConfig,
@@ -130,7 +131,8 @@ namespace Neon.Kube.Proxy
             Operation               operation           = Operation.LifeCycle,
             NodeProxyCreator        nodeProxyCreator    = null,
             RunOptions              defaultRunOptions   = RunOptions.None,
-            bool                    needsCurrentContext = true)
+            bool                    needsCurrentContext = true,
+            bool                    debugMode           = false)
         {
             Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
@@ -152,7 +154,8 @@ namespace Neon.Kube.Proxy
             cluster.Name           = kubeConfig.Cluster.Name;
             cluster.Id             = kubeConfig.Cluster.ClusterInfo.ClusterId;
             cluster.Domain         = kubeConfig.Cluster.ClusterInfo.ClusterDomain;
-            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace: false, operation: operation, logFolder: KubeHelper.LogFolder);
+            cluster.DebugMode      = debugMode;
+            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace: false, operation: operation, logFolder: KubeHelper.LogFolder, debugMode: debugMode);
 
             return cluster;
         }
@@ -174,6 +177,7 @@ namespace Neon.Kube.Proxy
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
+        /// <param name="debugMode">Optionally specifies that we're using debug mode for cluster deployment.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         public static ClusterProxy Create(
             KubeConfig              kubeConfig,
@@ -181,7 +185,8 @@ namespace Neon.Kube.Proxy
             IHostingManagerFactory  hostingManagerFactory,
             Operation               operation         = Operation.LifeCycle,
             NodeProxyCreator        nodeProxyCreator  = null,
-            RunOptions              defaultRunOptions = RunOptions.None)
+            RunOptions              defaultRunOptions = RunOptions.None,
+            bool                    debugMode         = false)
         {
             Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
@@ -189,7 +194,7 @@ namespace Neon.Kube.Proxy
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
             kubeConfig.Validate(needsCurrentCluster: false);
 
-            return Create(kubeConfig.CloneAndSetContext(context.Name), hostingManagerFactory, operation, nodeProxyCreator, defaultRunOptions);
+            return Create(kubeConfig.CloneAndSetContext(context.Name), hostingManagerFactory, operation, nodeProxyCreator, defaultRunOptions, debugMode: debugMode);
         }
 
         /// <summary>
@@ -221,11 +226,12 @@ namespace Neon.Kube.Proxy
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
+        /// <param name="debugMode">Optionally specifies that we're using debug mode for cluster deployment.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string, bool)"/> to work.
         /// </para>
         /// <para>set
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -243,7 +249,8 @@ namespace Neon.Kube.Proxy
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
-            RunOptions              defaultRunOptions = RunOptions.None)
+            RunOptions              defaultRunOptions = RunOptions.None,
+            bool                    debugMode         = false)
         {
             Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
@@ -262,7 +269,7 @@ namespace Neon.Kube.Proxy
             cluster.Id             = setupState.ClusterId;
             cluster.Domain         = setupState.ClusterDomain;
             cluster.Hosting        = setupState.ClusterDefinition.Hosting;
-            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
+            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder, debugMode: debugMode);
 
             return cluster;
         }
@@ -339,7 +346,7 @@ namespace Neon.Kube.Proxy
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string, bool)"/> to work.
         /// </para>
         /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -505,6 +512,11 @@ namespace Neon.Kube.Proxy
         public KubeConfig KubeConfig { get; set; }
 
         /// <summary>
+        /// Returns <c>true</c> for <b>debug mode</b> cluster deployment.
+        /// </summary>
+        public bool DebugMode { get; private set; }
+
+        /// <summary>
         /// Returns a read-only list of cluster node proxies.  This property is
         /// available only when the <see cref="ClusterProxy"/> is being used to
         /// deploy a cluster.
@@ -632,6 +644,7 @@ namespace Neon.Kube.Proxy
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
+        /// <param name="debugMode">Optionally specifies that we're using debug mode for cluster deployment.</param>
         /// <returns>The <see cref="IHostingManager"/>.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if no valid node image URI or path were passed to the constructor when required for
@@ -643,7 +656,7 @@ namespace Neon.Kube.Proxy
         /// this to work.
         /// </note>
         /// </remarks>
-        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, bool cloudMarketplace, Operation operation = Operation.LifeCycle, string logFolder = null)
+        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, bool cloudMarketplace, Operation operation = Operation.LifeCycle, string logFolder = null, bool debugMode = false)
         {
             Covenant.Assert(Hosting.Environment != HostingEnvironment.Unknown);
 
@@ -651,9 +664,23 @@ namespace Neon.Kube.Proxy
 
             HostingManager hostingManager;
 
+            if (KubeHelper.IsCloudEnvironment(Hosting.Environment) && debugMode)
+            {
+                throw new InvalidOperationException($"[debug mode] is not supported for cloud cluster deployments.");
+            }
+
             if (KubeHelper.IsOnPremiseHypervisorEnvironment(Hosting.Environment))
             {
-                if (!string.IsNullOrEmpty(nodeImageUri))
+                if (debugMode)
+                {
+                    if (!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath))
+                    {
+                        throw new InvalidOperationException($"[{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] must be NULL when [{nameof(debugMode)}] is passed to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to support [{operation}].");
+                    }
+
+                    hostingManager = hostingManagerFactory.GetManagerForDebugMode(this, cloudMarketplace, logFolder: logFolder);
+                }
+                else if (!string.IsNullOrEmpty(nodeImageUri))
                 {
                     hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, cloudMarketplace, nodeImageUri, logFolder: logFolder);
                 }

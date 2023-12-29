@@ -96,7 +96,7 @@ namespace Neon.Kube.Hosting.HyperV
                 Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-                this.Machine = machine;
+                this.Machine  = machine;
                 this.NodeName = nodeName;
             }
 
@@ -139,6 +139,7 @@ namespace Neon.Kube.Hosting.HyperV
         private const string defaultSwitchName = "external";
 
         private ClusterProxy                        cluster;
+        private bool                                debugMode;
         private string                              nodeImageUri;
         private string                              nodeImagePath;
         private SetupController<NodeDefinition>     controller;
@@ -169,8 +170,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// </param>
         /// <remarks>
         /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified to be able
-        /// to provision a cluster but these can be <c>null</c> when you need to manage a cluster lifecycle.
+        /// <b>debug mode</b> is implied when both <paramref name="nodeImageUri"/> and <paramref name="nodeImagePath"/> are <c>null</c> or empty.
         /// </note>
         /// </remarks>
         public HyperVHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
@@ -180,6 +180,7 @@ namespace Neon.Kube.Hosting.HyperV
             cluster.HostingManager = this;
 
             this.cluster        = cluster;
+            this.debugMode      = string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath);
             this.nodeImageUri   = nodeImageUri;
             this.nodeImagePath  = nodeImagePath;
             this.hostingOptions = cluster.Hosting.HyperV;
@@ -327,48 +328,82 @@ namespace Neon.Kube.Hosting.HyperV
                     }
                 });
 
-            if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
+            // Download and start the base image for debug mode, otherwise download and
+            // start the node image.
+
+            if (debugMode)
             {
                 controller.AddGlobalStep($"hyper-v node image",
                     async state =>
                     {
-                        // Download the GZIPed VHDX template if it's not already present and has a valid
-                        // MD5 hash file.
+                        // Download the GZIPed base image VHDX template if it's not already present and
+                        // has a valid MD5 hash file.
                         //
                         // Note that we're going to name the file the same as the file name from the URI.
 
                         string driveTemplateName;
 
-                        if (!string.IsNullOrEmpty(nodeImageUri))
-                        {
-                            var driveTemplateUri = new Uri(nodeImageUri);
+                        nodeImageUri = await KubeDownloads.GetBaseImageUri(HostingEnvironment.HyperV);
 
-                            driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
-                            driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
+                        var driveTemplateUri = new Uri(nodeImageUri);
 
-                            await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                                (progressType, progress) =>
-                                {
-                                    controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
+                        driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
+                        driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
 
-                                    return !controller.IsCancelPending;
-                                });
-                        }
-                        else
-                        {
-                            Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                            (progressType, progress) =>
+                            {
+                                controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
-                            driveTemplateName = Path.GetFileName(nodeImagePath);
-                            driveTemplatePath = nodeImagePath;
-                        }
+                                return !controller.IsCancelPending;
+                            });
                     });
             }
             else
             {
-                Covenant.Assert(!string.IsNullOrEmpty(nodeImagePath), $"[{nameof(nodeImagePath)}] must be specified when node image download is disabled.");
-                Covenant.Assert(File.Exists(nodeImagePath), () => $"Missing file: {nodeImagePath}");
+                if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
+                {
+                    controller.AddGlobalStep($"hyper-v node image",
+                        async state =>
+                        {
+                            // Download the GZIPed VHDX node image template if it's not already present and has a valid
+                            // MD5 hash file.
+                            //
+                            // Note that we're going to name the file the same as the file name from the URI.
 
-                driveTemplatePath = nodeImagePath;
+                            string driveTemplateName;
+
+                            if (!string.IsNullOrEmpty(nodeImageUri))
+                            {
+                                var driveTemplateUri = new Uri(nodeImageUri);
+
+                                driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
+                                driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
+
+                                await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                                    (progressType, progress) =>
+                                    {
+                                        controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
+
+                                        return !controller.IsCancelPending;
+                                    });
+                            }
+                            else
+                            {
+                                Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                                driveTemplateName = Path.GetFileName(nodeImagePath);
+                                driveTemplatePath = nodeImagePath;
+                            }
+                        });
+                }
+                else
+                {
+                    Covenant.Assert(!string.IsNullOrEmpty(nodeImagePath), $"[{nameof(nodeImagePath)}] must be specified when node image download is disabled.");
+                    Covenant.Assert(File.Exists(nodeImagePath), () => $"Missing file: {nodeImagePath}");
+
+                    driveTemplatePath = nodeImagePath;
+                }
             }
 
             var typedController = (SetupController<NodeDefinition>)controller;

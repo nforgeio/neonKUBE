@@ -165,6 +165,7 @@ namespace Neon.Kube.Hosting.XenServer
         // Instance members
 
         private ClusterProxy                cluster;
+        private bool                        debugMode;
         private string                      nodeImageUri;
         private string                      nodeImagePath;
         private SetupController<XenClient>  xenController;
@@ -195,7 +196,7 @@ namespace Neon.Kube.Hosting.XenServer
         /// </param>
         /// <remarks>
         /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// <b>debug mode</b> is implied when both <paramref name="nodeImageUri"/> and <paramref name="nodeImagePath"/> are <c>null</c> or empty.
         /// </note>
         /// </remarks>
         public XenServerHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
@@ -203,6 +204,7 @@ namespace Neon.Kube.Hosting.XenServer
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             this.cluster                = cluster;
+            this.debugMode              = string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath);
             this.nodeImageUri           = nodeImageUri;
             this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
@@ -468,7 +470,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
+                xenController.AddNodeStep($"xenserver {(debugMode ? "base" : "node")} image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
             }
 
             var createVmLabel = "create virtual machine";
@@ -751,9 +753,9 @@ namespace Neon.Kube.Hosting.XenServer
             await SyncContext.Clear;
 
             var xenClient    = xenSshProxy.Metadata;
-            var templateName = $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
+            var templateName = debugMode ? $"neonkube-base" : $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
 
-            // Download the node template to the workstation if it's not already present.
+            // Download the base/node template to the workstation if it's not already present.
 
             if (nodeImagePath != null)
             {
@@ -763,7 +765,15 @@ namespace Neon.Kube.Hosting.XenServer
             }
             else
             {
-                xenSshProxy.Status = $"download: node image [{templateName}]";
+                if (debugMode)
+                {
+                    xenSshProxy.Status = $"download: base image [{templateName}]";
+                    nodeImageUri       = await KubeDownloads.GetBaseImageUri(HostingEnvironment.XenServer, CpuArchitecture.amd64);
+                }
+                else
+                {
+                    xenSshProxy.Status = $"download: node image [{templateName}]";
+                }
 
                 xenController.SetGlobalStepStatus();
 
