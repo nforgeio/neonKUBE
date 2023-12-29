@@ -48,13 +48,13 @@ namespace Neon.Kube
         public const string Dex = "neon-sso-dex";
 
         /// <summary>
-        /// Neon cluster operator.  This implements several control loops that help
-        /// manage the cluster.
+        /// Neon cluster operator.  This operator implements several control loops
+        /// that manage the cluster.
         /// </summary>
         public const string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Neon node agent.  This is an operator provisioned on each cluster node as
+        /// Neon Node Agent.  This operator is provisioned on each cluster node as
         /// a daemonset that performs node managment tasks.
         /// </summary>
         public const string NeonNodeAgent = "neon-node-agent";
@@ -65,7 +65,7 @@ namespace Neon.Kube
         public const string NeonSsoSessionProxy = "neon-sso-session-proxy";
 
         /// <summary>
-        /// Neon system database.
+        /// Neon System Database.
         /// </summary>
         public const string NeonSystemDb = "neon-system-db";
     }

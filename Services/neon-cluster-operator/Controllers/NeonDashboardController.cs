@@ -38,9 +38,7 @@ using Task = System.Threading.Tasks.Task;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// <para>
     /// Manages <see cref="V1NeonDashboard"/> resources.
-    /// </para>
     /// </summary>
     [RbacRule<V1NeonDashboard>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [ResourceController(MaxConcurrentReconciles = 5)]
