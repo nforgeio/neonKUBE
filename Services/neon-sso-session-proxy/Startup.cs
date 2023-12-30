@@ -145,10 +145,11 @@ namespace NeonSsoSessionProxy
         /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (Service.InDevelopment || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
+            if (Program.Service.DebugMode)
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseSsoSessionMiddleware();

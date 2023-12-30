@@ -235,7 +235,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
         {
-            if (NeonHelper.IsDevWorkstation || !string.IsNullOrEmpty(GetEnvironmentVariable("DEBUG")))
+            if (Program.Service.DebugMode)
             {
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
 
