@@ -153,8 +153,8 @@ namespace Neon.Kube.Proxy
 
             cluster.Name           = kubeConfig.Cluster.Name;
             cluster.Id             = kubeConfig.Cluster.ClusterInfo.ClusterId;
-            cluster.Domain         = kubeConfig.Cluster.ClusterInfo.ClusterDomain;
             cluster.DebugMode      = debugMode;
+            cluster.Domain         = kubeConfig.Cluster.ClusterInfo.ClusterDomain;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace: false, operation: operation, logFolder: KubeHelper.LogFolder, debugMode: debugMode);
 
             return cluster;
@@ -267,6 +267,7 @@ namespace Neon.Kube.Proxy
 
             cluster.Name           = setupState.ClusterDefinition.Name;
             cluster.Id             = setupState.ClusterId;
+            cluster.DebugMode      = debugMode;
             cluster.Domain         = setupState.ClusterDomain;
             cluster.Hosting        = setupState.ClusterDefinition.Hosting;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder, debugMode: debugMode);

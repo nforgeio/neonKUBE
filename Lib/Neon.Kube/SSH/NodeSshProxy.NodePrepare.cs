@@ -23,34 +23,17 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Collections;
 using Neon.Common;
-using Neon.Cryptography;
-using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
-using Neon.Net;
-using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Time;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
 
 namespace Neon.Kube.SSH
 {
@@ -373,7 +356,7 @@ set -euo pipefail
             Covenant.Requires<ArgumentNullException>(clusterManifest != null, nameof(clusterManifest));
 
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true);
+            var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true) && !cluster.DebugMode;
 
             controller.LogProgress(this, verb: "setup", message: "cri-o");
 
@@ -388,7 +371,6 @@ set -euo pipefail
             {
                 var moduleScript =
 @"
-set -x
 set -euo pipefail
 
 # Create the .conf file to load required modules during boot.
@@ -455,21 +437,20 @@ location = ""{KubeConst.LocalClusterRegistryHostName}""
             var setupScript =
 $@"#!/bin/bash
 
-if [ ""{install}"" = ""true"" ]; then
+set -euo pipefail
 
-    set -euo pipefail
+if [ ""{install}"" = ""true"" ]; then
 
     # Initialize the OS and VERSION environment variables.
 
-    OS=xUbuntu_22.04
-    CRIO_VERSION_NOPATCH={crioVersionNoPatch}
+    VERSION={crioVersionNoPatch}
 
     # Install the packaging dependencies.
 
     apt-get update
     apt-get install -y curl software-properties-common
 
-    # Configure Kubernetes repository.  Here are some links discussing this:
+    # Configure Kubernetes repository:
     #
     #       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#deb-based-distributions
 
@@ -479,28 +460,19 @@ if [ ""{install}"" = ""true"" ]; then
     rm -f /etc/apt/sources.list.d/kubernetes.list
     rm -f /etc/apt/sources.list.d/cri-o.list
 
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v$<CRIO_VERSION_NOPATCH>/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$<CRIO_VERSION_NOPATCH>/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
 
     # Configure the CRI-O repository.
 
     curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
     echo ""deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /"" | tee /etc/apt/sources.list.d/cri-o.list
 
-    # Configure the CRI-O repository.
+    # Install CRI-O.
 
-    curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
-    echo ""deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /"" | tee /etc/apt/sources.list.d/cri-o.list
-
-    # Remove containers-common (because it conflicts) and then install CRI-O and CRI-O-RUNC
-
-    apt-get update
-    apt-get remove -y containers-common
-    {KubeNodeFolder.Bin}/safe-apt-get update -y
-    {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o cri-o-runc
+    {KubeNodeFolder.Bin}/safe-apt-get update
+    {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o --allow-change-held-packages
 fi
-
-set -euo pipefail
 
 # Generate the CRI-O configuration.
 
@@ -908,7 +880,7 @@ systemctl restart crio
 # Prevent the package manager from automatically upgrading these components.
 
 set +e      # Don't exit if the next command fails
-apt-mark hold cri-o cri-o-runc
+apt-mark hold cri-o
 ";
             // The CRI-O apt package mirror has been quite unreliable over the years, 
             // so we're going to retry the operation in the hope that it will work

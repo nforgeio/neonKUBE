@@ -213,12 +213,14 @@ namespace Neon.Kube.Setup
                     node.VerifyNodeOS();
                 });
 
-            controller.AddNodeStep("check image version",
-                (controller, node) =>
-                {
-                    // Ensure that the node image version matches the current NEONKUBE (build) version.
+            if (!cluster.DebugMode)
+            {
+                controller.AddNodeStep("check image version",
+                    (controller, node) =>
+                    {
+                        // Ensure that the node image version matches the current NEONKUBE (build) version.
 
-                    var imageVersion = node.ImageVersion;
+                        var imageVersion = node.ImageVersion;
 
                         if (imageVersion == null)
                         {
@@ -229,7 +231,8 @@ namespace Neon.Kube.Setup
                         {
                             throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                         }
-                });
+                    });
+            }
 
             controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
@@ -427,26 +430,36 @@ namespace Neon.Kube.Setup
             // Capture logs from all pods, adding "(not-ready)" to the log file name for
             // pods with containers that aren't ready yet.
 
-            using (var k8s = KubeHelper.CreateKubernetesClient())
+            try
             {
-                var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");
-
-                Directory.CreateDirectory(podLogsFolder);
-
-                foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
+                using (var k8s = KubeHelper.CreateKubernetesClient())
                 {
-                    var notReady = string.Empty;
+                    var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");
 
-                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                    Directory.CreateDirectory(podLogsFolder);
+
+                    foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
                     {
-                        notReady = " (not-ready)";
-                    }
+                        var notReady = string.Empty;
 
-                    var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
+                        if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                        {
+                            notReady = " (not-ready)";
+                        }
+
+                        var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
                         .EnsureSuccess();
 
-                    File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
+                        File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
+                    }
                 }
+            }
+            catch
+            {
+                // Intentionally ignorning this.
+                //
+                // It's possible that cluster setup hasn't proceeded far enough to be able
+                // to perform Kubernetes options.  We're just going to ignore this.
             }
         }
     }

@@ -50,7 +50,7 @@ namespace Neon.Kube
         /// This mode is useful when debugging cluster setup or adding new features.
         /// </para>
         /// </summary>
-        public const string DebugMode = "debug-setup";
+        public const string DebugMode = "debug-mode";
 
         /// <summary>
         /// <para>
