@@ -1277,7 +1277,6 @@ EOF
         public void SetupNode(ISetupController controller, ClusterManifest clusterManifest)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(clusterManifest != null, nameof(clusterManifest));
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
             var clusterDefinition = Cluster.SetupState.ClusterDefinition;
@@ -1286,16 +1285,41 @@ EOF
             InvokeIdempotent("setup/node",
                 () =>
                 {
+                    controller.ThrowIfCancelled();
                     PrepareNode(controller);
+
+                    controller.ThrowIfCancelled();
                     ConfigureEnvironmentVariables(controller);
-                    SetupPackageProxy(controller);
+
+                    controller.ThrowIfCancelled();
                     ConfigureLocalHosts(controller);
+
+                    controller.ThrowIfCancelled();
+                    BaseCreateKubeFolders(controller);
+
+                    controller.ThrowIfCancelled();
+                    SetupPackageProxy(controller);
+
+                    controller.ThrowIfCancelled();
                     NodeInitialize(controller);
+
+                    controller.ThrowIfCancelled();
                     NodeInstallCriO(controller, clusterManifest);
-                    NodeInstallIPVS(controller);
+
+                    controller.ThrowIfCancelled();
                     NodeInstallPodman(controller);
+
+                    controller.ThrowIfCancelled();
                     NodeInstallKubernetes(controller);
+
+                    controller.ThrowIfCancelled();
+                    NodeInstallHelm(controller);
+
+                    controller.ThrowIfCancelled();
                     SetupKubelet(controller);
+
+                    controller.ThrowIfCancelled();
+                    InstallCiliumCli(controller);
                 });
         }
 

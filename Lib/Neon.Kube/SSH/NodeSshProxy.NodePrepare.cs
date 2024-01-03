@@ -43,7 +43,7 @@ namespace Neon.Kube.SSH
         /// <summary>
         /// Removes the Linux swap file if present.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void RemoveSwapFile(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -58,7 +58,7 @@ namespace Neon.Kube.SSH
         /// <summary>
         /// Installs the NEONKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallTools(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -85,7 +85,7 @@ namespace Neon.Kube.SSH
         /// Configures a node's host public SSH key during node provisioning.
         /// </para>
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void ConfigureSshKey(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -180,7 +180,7 @@ systemctl restart ssh
         /// <summary>
         /// Disables the <b>snapd</b> service.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void DisableSnap(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -212,7 +212,7 @@ fi
         /// <summary>
         /// Installs NFS.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void InstallNFS(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -239,7 +239,7 @@ set -euo pipefail
         /// <summary>
         /// Configures <b>journald</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void ConfigureJournald(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -264,10 +264,42 @@ systemctl restart rsyslog.service
         }
 
         /// <summary>
+        /// Installs the Cilium CLI.
+        /// </summary>
+        /// <param name="controller"></param>
+        public void InstallCiliumCli(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/cilium-cli",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "configure", message: "journald filters");
+
+                    var script =
+$@"
+set -euo pipefail
+pushd /tmp
+
+CILIUM_CLI_VERSION={KubeVersions.CiliumCli}
+OS=linux
+ARCH=amd64
+curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/download/$CILIUM_CLI_VERSION/cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
+sha256sum --check cilium-$OS-$ARCH.tar.gz.sha256sum
+tar -C /usr/local/bin -xzvf cilium-$OS-$ARCH.tar.gz
+rm cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
+
+popd
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
         /// for a cluster node.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void PrepareNode(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -279,6 +311,9 @@ systemctl restart rsyslog.service
                 () =>
                 {
                     controller.LogProgress(this, verb: "prepare", message: "node");
+
+                    controller.ThrowIfCancelled();
+                    UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}");
 
                     controller.ThrowIfCancelled();
                     RemoveSwapFile(controller);
@@ -305,7 +340,7 @@ systemctl restart rsyslog.service
         /// longer necessary after the node first boots and its credentials and network
         /// settings have been configured.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeDisableNeonInit(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
@@ -322,7 +357,7 @@ systemctl restart rsyslog.service
         /// <summary>
         /// Installs the necessary packages and configures setup for <b>IPVS</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallIPVS(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -348,8 +383,8 @@ set -euo pipefail
         /// <summary>
         /// Installs the <b>CRI-O</b> container runtime.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="clusterManifest">The cluster manifest.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="clusterManifest">Specifies the cluster manifest.</param>
         public void NodeInstallCriO(ISetupController controller, ClusterManifest clusterManifest)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -976,7 +1011,7 @@ systemctl start crio
         /// <summary>
         /// Installs the <b>podman</b> CLI for managing <b>CRI-O</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallPodman(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1099,7 +1134,7 @@ podman system reset --force
         /// <summary>
         /// Installs the <b>Helm</b> client.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallHelm(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1128,9 +1163,9 @@ rm -rf linux-amd64
         /// <summary>
         /// Loads the docker images onto the node. This is used for debug mode only.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="downloadParallel">The optional limit for parallelism when downloading images from GitHub registry.</param>
-        /// <param name="loadParallel">The optional limit for parallelism when loading images into the cluster.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="downloadParallel">Optionally specifies the limit for parallelism when downloading images from GitHub registry.</param>
+        /// <param name="loadParallel">Optionally specifies the limit for parallelism when loading images into the cluster.</param>
         public async Task NodeLoadImagesAsync(
             ISetupController    controller, 
             int                 downloadParallel = 5, 
@@ -1266,7 +1301,7 @@ rm -rf linux-amd64
         /// <summary>
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kubelet</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallKubernetes(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));

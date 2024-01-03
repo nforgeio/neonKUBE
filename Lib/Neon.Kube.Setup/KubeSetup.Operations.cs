@@ -408,7 +408,8 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallCalicoCniAsync(controller, controlNode);
+                    //await InstallCalicoAsync(controller, controlNode);
+                    await InstallCiliumAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallMetricsServerAsync(controller, controlNode);
@@ -1216,12 +1217,12 @@ exit 1
         }
 
         /// <summary>
-        /// Installs the Calico CNI.
+        /// Installs Calico.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task InstallCalicoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
 
@@ -1522,6 +1523,27 @@ exit 1
                             namespaceParameter: serviceMonitor.Namespace());
                     });
             }
+        }
+
+        /// <summary>
+        /// Installs Cilium.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallCiliumAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster       = controlNode.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
 
         /// <summary>
