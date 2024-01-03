@@ -292,7 +292,7 @@ namespace Neon.Kube
         /// Specifies the version of Etcd to install.
         /// </summary>
         [KubeVersion]
-        public const string Etcd = "3.5.11-0";
+        public const string Etcd = "3.5.10-0";
 
         /// <summary>
         /// Specifies the version of Calico to install.
@@ -338,7 +338,7 @@ namespace Neon.Kube
         /// Specifies the version of CoreDNS to be installed.
         /// </summary>
         [KubeVersion]
-        public const string CoreDNS = "v1.10.1";
+        public const string CoreDNS = "v1.11.1";
 
         /// <summary>
         /// Specifies the version of CoreDNS plugin to be installed.

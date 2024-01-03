@@ -75,7 +75,7 @@ namespace Neon.Kube.SSH
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);
-            UpdateRootCertificates();
+            UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}");
             BaseInstallPackages(controller);
             BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
@@ -240,8 +240,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat vim zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeConst.SafeAptGetTool} update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeConst.SafeAptGetTool} install -yq apt-cacher-ng ntp secure-delete sysstat vim zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // $note(jefflill):
                     //
@@ -287,7 +287,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
 
                     if (this.KernelVersion < new Version(5, 6, 0))
                     {
-                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                        SudoCommand($"{KubeConst.SafeAptGetTool} install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                     }
                 });
         }
@@ -304,7 +304,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     controller.LogProgress(this, verb: "patch", message: "linux");
-                    PatchLinux();
+                    PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetTool}");
                 });
         }
 
@@ -464,10 +464,10 @@ touch /etc/cloud/cloud-init.disabled
                     controller.LogProgress(this, verb: "remove", message: "snap");
 
                     var script =
-@"
+$@"
 set -euo pipefail
 
-safe-apt-get purge snapd -yq
+{KubeConst.SafeAptGetTool} purge snapd -yq
 
 rm -rf ~/snap
 rm -rf /var/cache/snapd
@@ -496,7 +496,7 @@ var removePackagesScript =
 $@"
 set -euo pipefail
 
-{KubeNodeFolder.Bin}/safe-apt-get purge -y \
+{KubeConst.SafeAptGetTool} purge -y \
     git git-man \
     iso-codes \
     locales \
@@ -505,7 +505,7 @@ set -euo pipefail
     snapd \
     vim vim-runtime vim-tiny
 
-{KubeNodeFolder.Bin}/safe-apt-get autoremove -y
+{KubeConst.SafeAptGetTool} autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

@@ -226,11 +226,11 @@ fi
                     // We need to install nfs-common tools for NFS to work.
 
                     var InstallNfsScript =
-@"
+$@"
 set -euo pipefail
 
-safe-apt-get update -y
-safe-apt-get install -y nfs-common
+{KubeConst.SafeAptGetTool} update -y
+{KubeConst.SafeAptGetTool} install -y nfs-common
 ";
                     SudoCommand(CommandBundle.FromScript(InstallNfsScript), RunOptions.FaultOnError);
                 });
@@ -338,8 +338,8 @@ systemctl restart rsyslog.service
 $@"
 set -euo pipefail
 
-{KubeNodeFolder.Bin}/safe-apt-get update -y
-{KubeNodeFolder.Bin}/safe-apt-get install -y ipset ipvsadm
+{KubeConst.SafeAptGetTool} update -y
+{KubeConst.SafeAptGetTool} install -y ipset ipvsadm
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -423,15 +423,8 @@ location = ""{KubeConst.LocalClusterRegistryHostName}""
             //-----------------------------------------------------------------
             // Install and configure CRI-O.
 
-            // $note(jefflill):
-            //
-            // Version pinning doesn't seem to work:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1563
-
             var crioVersionFull    = Version.Parse(KubeVersions.Crio);
             var crioVersionNoPatch = new Version(crioVersionFull.Major, crioVersionFull.Minor);
-            var crioVersionPinned  = $"{crioVersionNoPatch}:{crioVersionFull}";
             var install            = reconfigureOnly ? "false" : "true";
 
             var setupScript =
@@ -441,37 +434,35 @@ set -euo pipefail
 
 if [ ""{install}"" = ""true"" ]; then
 
-    # Initialize the OS and VERSION environment variables.
+    # Install the packaging dependencies.
+
+    {KubeConst.SafeAptGetTool} update
+    {KubeConst.SafeAptGetTool} install -y curl software-properties-common
+
+    # Configure Kubernetes and CRI-O repositories:
+    #
+    #       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#add-the-cri-o-repository
 
     VERSION={crioVersionNoPatch}
 
-    # Install the packaging dependencies.
-
-    apt-get update
-    apt-get install -y curl software-properties-common
-
-    # Configure Kubernetes repository:
-    #
-    #       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#deb-based-distributions
-
     mkdir -p /etc/apt/keyrings
+
     rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    rm -f /etc/apt/keyrings/cri-o-apt-keyring.gpg
     rm -f /etc/apt/sources.list.d/kubernetes.list
-    rm -f /etc/apt/sources.list.d/cri-o.list
 
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
 
-    # Configure the CRI-O repository.
+    rm -f /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    rm -f /etc/apt/sources.list.d/cri-o.list
 
     curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
     echo ""deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /"" | tee /etc/apt/sources.list.d/cri-o.list
 
     # Install CRI-O.
 
-    {KubeNodeFolder.Bin}/safe-apt-get update
-    {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o --allow-change-held-packages
+    {KubeConst.SafeAptGetTool} update
+    {KubeConst.SafeAptGetTool} install -y cri-o --allow-change-held-packages
 fi
 
 # Generate the CRI-O configuration.
@@ -1020,10 +1011,10 @@ $@"
 
 set -euo pipefail
 
-{KubeNodeFolder.Bin}/safe-apt-get update -q
+{KubeConst.SafeAptGetTool} update -q
 set +e
-{KubeNodeFolder.Bin}/safe-apt-get install -yq podman -o Dpkg::Options::=""--force-overwrite""
-{KubeNodeFolder.Bin}/safe-apt-get install -yq skopeo
+{KubeConst.SafeAptGetTool} install -yq podman -o Dpkg::Options::=""--force-overwrite""
+{KubeConst.SafeAptGetTool} install -yq skopeo
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
@@ -1303,29 +1294,11 @@ rm -rf linux-amd64
                         {
                             // Perform the install.
 
+                            var kubernetesFullVersion    = SemanticVersion.Parse(KubeVersions.Kubernetes);
+                            var kubernetesVersionNoPatch = new Version(kubernetesFullVersion.Major, kubernetesFullVersion.Minor);
+
                             var mainScript =
 $@"
-# $todo(jefflill):
-#
-# [kubeadm] installation is having some trouble with a couple package depedencies,
-# which causes the install command to return a non-zero exit code.  This appears
-# to be a problem with two package dependencies trying to update the same file.
-#
-# We're going to use an option to force the file overwrite and then ignore any
-# errors for now and hope for the best.  This isn't as bad as it sounds because 
-# for NEONKUBE we're only calling this method while creating node images, so we'll
-# should be well aware of any problems while completing the node image configuration
-# and then deploying test clusters.
-#
-#       https://github.com/nforgeio/neonKUBE/issues/1571
-#       https://github.com/containers/podman/issues/14367
-#
-# I'm going to hack this for now by using this option:
-#
-#   -o Dpkg::Options::=""--force-overwrite""
-#
-# and ignoring errors from the command.
-
 set -euo pipefail
 
 set +e
@@ -1343,14 +1316,22 @@ fi
 set -e
 
 # Configure the APT signing key and configure the Kubernetes APT repository.
+#
+#       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#add-the-kubernetes-repository
 
-curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+VERSION={kubernetesVersionNoPatch}
+
+mkdir -p /etc/apt/keyrings
+rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+rm -f /etc/apt/sources.list.d/kubernetes.list
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
 
 # Install: kubelet, kubeadm, and kubectl.
 
-{KubeNodeFolder.Bin}/safe-apt-get update
-{KubeNodeFolder.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeAdminPackage} kubeadm={KubeVersions.KubeAdminPackage} kubectl={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
+{KubeConst.SafeAptGetTool} update
+{KubeConst.SafeAptGetTool} install -yq kubelet kubeadm kubectl
 
 # Prevent the package manager from upgrading these components.
 
@@ -1358,8 +1339,12 @@ set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
 
+# We need to restart CRI-O here.  I'm not entirely sure why.
+
+systemctl restart cri-o
+
 # Pull the core Kubernetes container images (kube-scheduler, kube-proxy,...) to ensure they'll 
-# be present on all node images.  Note that we needs to use a config file to ensure that container
+# be present on all node images.  Note that we need to use a config file to ensure that container
 # images are pulled from [registry.k8s.io] rather than [k8s.gcr.io] which used to be the default
 # but was depreciated in 2022 and stopped receiving updates in 2023.
 
@@ -1381,7 +1366,7 @@ mkdir -p /etc/cni/net.d
 
 echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
 
-# Stop and disable [kubelet] for now.  We'll enable this later during cluster setup.
+# Stop and disable [kubelet] for now.  We'll re-enable this later during cluster setup.
 
 systemctl daemon-reload
 systemctl stop kubelet

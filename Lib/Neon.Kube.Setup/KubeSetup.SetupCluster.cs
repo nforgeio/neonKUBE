@@ -236,7 +236,7 @@ namespace Neon.Kube.Setup
 
             controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
-            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates());
+            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}"));
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
             controller.AddNodeStep("cluster manifest", ConfigureMetadataAsync);
 

@@ -630,7 +630,6 @@ apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 logging:
   format: json
-nodeStatusReportFrequency: 4s
 nodeStatusUpdateFrequency: 10s
 nodeStatusReportFrequency: 5m
 nodeLeaseDurationSeconds: 40
@@ -717,7 +716,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.ThrowIfCancelled();
-            firstControlNode.InvokeIdempotent("setup/cluster-init",
+            firstControlNode.InvokeIdempotent("setup/init-kubernetes",
                 () =>
                 {
                     //---------------------------------------------------------
@@ -817,7 +816,7 @@ done
 echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
-                            controller.LogProgress(firstControlNode, verb: "initialize", message: "kubernetes");
+                            controller.LogProgress(firstControlNode, verb: "init", message: "kubernetes");
 
                             var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 

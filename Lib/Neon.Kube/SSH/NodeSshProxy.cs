@@ -559,7 +559,7 @@ namespace Neon.Kube.SSH
             var trim = HostingManager.SupportsFsTrim(hostingEnvironment);
             var zero = HostingManager.SupportsFsZero(hostingEnvironment);
 
-            Clean(trim: trim, zero: zero);
+            Clean(trim: trim, zero: zero, aptGetTool: $"{KubeConst.SafeAptGetTool}");
         }
 
         /// <summary>
@@ -588,12 +588,12 @@ namespace Neon.Kube.SSH
                     if (fullUpgrade)
                     {
                         Status         = "upgrade: full";
-                        rebootRequired = PatchLinux();
+                        rebootRequired = PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetTool}");
                     }
                     else
                     {
                         Status         = "upgrade: partial";
-                        rebootRequired = UpgradeLinuxDistribution();
+                        rebootRequired = UpgradeLinuxDistribution(aptGetTool: $"{KubeConst.SafeAptGetTool}");
                     }
 
                     // Check to see whether the upgrade requires a reboot and
@@ -608,7 +608,7 @@ namespace Neon.Kube.SSH
                     // Clean up any cached APT files.
 
                     Status = "clean up";
-                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get clean -yq");
+                    SudoCommand($"{KubeConst.SafeAptGetTool} clean -yq");
                     SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }
