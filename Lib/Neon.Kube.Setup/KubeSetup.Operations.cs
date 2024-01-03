@@ -1235,7 +1235,7 @@ exit 1
 
             if (cluster.Hosting.Environment == HostingEnvironment.Azure)
             {
-                // In Azure Calico needs to run in VXLAN mode.
+                // On Azure, Calico needs to run in VXLAN mode.
 
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/dns-service",
@@ -1339,11 +1339,11 @@ exit 1
                                 KubeNamespace.NeonSystem);
 
                             await k8s.CoreV1.WaitForPodAsync(
-                                name: pod.Name(),
+                                name:               pod.Name(),
                                 namespaceParameter: pod.Namespace(),
-                                timeout: clusterOpTimeout,
-                                pollInterval: clusterOpPollInterval,
-                                cancellationToken: controller.CancellationToken);
+                                timeout:            clusterOpTimeout,
+                                pollInterval:       clusterOpPollInterval,
+                                cancellationToken:  controller.CancellationToken);
                         });
 
 
