@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Builds the Neon [neon-sso-session-proxy] image.
 #

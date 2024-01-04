@@ -1,2 +1,2 @@
-Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 NeonKube™, NeonDesktop™, and NeonCli™ are trademarked by NEONFORGE LLC.

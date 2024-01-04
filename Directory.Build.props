@@ -4,7 +4,7 @@
         <Product>NEONKUBE</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
-        <Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
+        <Copyright>Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.</Copyright>
         <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <LangVersion>latest</LangVersion>

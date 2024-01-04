@@ -2,7 +2,7 @@
 REM ---------------------------------------------------------------------------
 REM FILE:         neonkube-nuget-dev.cmd
 REM CONTRIBUTOR:  Jeff Lill
-REM COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+REM COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 REM
 REM Licensed under the Apache License, Version 2.0 (the "License");
 REM you may not use this file except in compliance with the License.

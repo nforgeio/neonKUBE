@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:        KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2276,7 +2276,7 @@ passphrase:
         public static string OpenSshConfig =>
 @"# FILE:          sshd_config
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -2453,7 +2453,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             return
 $@"# FILE:         /etc/ssh/sshd_config.d/50-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
