@@ -218,6 +218,8 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
 @"
 set -euo pipefail
 echo 'KUBECONFIG=/home/sysadmin/.kube/config' >>  /etc/environment
+echo 'KUBE_EDITOR=nano'                       >>  /etc/environment
+
 echo '. /etc/environment' > /etc/profile.d/env.sh
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
