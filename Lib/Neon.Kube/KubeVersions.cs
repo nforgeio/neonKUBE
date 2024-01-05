@@ -303,12 +303,19 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the version of Cilium to install.
         /// </summary>
+        [KubeVersion]
         public const string Cilium = "v1.14.4";
 
         /// <summary>
         /// Specifies the version of Cilium CLI to install.
         /// </summary>
+        [KubeVersion]
         public const string CiliumCli = "v0.15.19";
+
+        /// <summary>
+        /// Specifies the version of the Hubble CLI to install.
+        /// </summary>
+        public const string HubbleCli = "v0.12.3";
 
         /// <summary>
         /// Specifies the version of dnsutils to install.

@@ -264,7 +264,7 @@ systemctl restart rsyslog.service
         }
 
         /// <summary>
-        /// Installs the Cilium CLI.
+        /// Installs the Cilium and Hubble CLIs.
         /// </summary>
         /// <param name="controller"></param>
         public void InstallCiliumCli(ISetupController controller)
@@ -281,17 +281,31 @@ $@"
 set -euo pipefail
 pushd /tmp
 
-CILIUM_CLI_VERSION={KubeVersions.CiliumCli}
+# Configure download details.
+
 OS=linux
 ARCH=amd64
+
+# Install the Cilium CLI.
+
+CILIUM_CLI_VERSION={KubeVersions.CiliumCli}
 curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/download/$CILIUM_CLI_VERSION/cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
 sha256sum --check cilium-$OS-$ARCH.tar.gz.sha256sum
 tar -C /usr/local/bin -xzvf cilium-$OS-$ARCH.tar.gz
 rm cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
 
+# Install the Hubble CLI.
+
+HUBBLE_CLI_VERSION={KubeVersions.HubbleCli}
+curl -L --fail --remote-name-all https://github.com/cilium/hubble/releases/download/$HUBBLE_CLI_VERSION/hubble-$OS-$ARCH.tar.gz{{,.sha256sum}}
+sha256sum --check hubble-$OS-$ARCH.tar.gz.sha256sum
+tar xzvfC hubble-$OS-$ARCH.tar.gz /usr/local/bin
+rm hubble-$OS-$ARCH.tar.gz{{,.sha256sum}}
+
 popd
 ";
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(script))
+                        .EnsureSuccess();
                 });
         }
 

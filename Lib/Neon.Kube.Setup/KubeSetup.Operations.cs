@@ -1526,7 +1526,7 @@ exit 1
         }
 
         /// <summary>
-        /// Installs Cilium.
+        /// Installs Cilium
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
@@ -1538,10 +1538,35 @@ exit 1
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster       = controlNode.Cluster;
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+            var cluster          = controlNode.Cluster;
+            var firstControlNode = cluster.ControlNodes.First();
+            var k8s              = GetK8sClient(controller);
+            var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+
+            var script =
+$@"
+set -euo pipefail
+set -x
+
+# Install Cilium using the CLI.
+
+cilium install --version {KubeVersions.Cilium} \
+    --set ipam.mode=Kubernetes
+
+# We need to restart CRI-O.
+
+systemctl restart cri-o
+
+# Validate the Cilium install.
+
+cilium status --wait
+
+
+";
+
+            firstControlNode.SudoCommand(script)
+                .EnsureSuccess();
 
             throw new NotImplementedException("$todo(jefflill)");
         }

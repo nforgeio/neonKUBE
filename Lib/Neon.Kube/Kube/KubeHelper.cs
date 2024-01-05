@@ -1302,222 +1302,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// <para>
-        /// Ensures that <b>kubectl</b> tool whose version is at least as great as the Kubernetes
-        /// cluster version is installed to the <b>NEONKUBE</b> programs folder by copying the
-        /// tool from the cache if necessary.
-        /// </para>
-        /// <note>
-        /// This will probably require elevated privileges.
-        /// </note>
-        /// <note>
-        /// This assumes that <b>kubectl</b> has already been downloaded and cached and also that 
-        /// more recent <b>kubectl</b> releases are backwards compatible with older deployed versions
-        /// of Kubernetes.
-        /// </note>
-        /// </summary>
-        public static void InstallKubeCtl()
-        {
-            var hostPlatform      = KubeHelper.HostPlatform;
-            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.Kubernetes);
-            var targetPath        = Path.Combine(KubeHelper.InstallFolder);
-
-            switch (hostPlatform)
-            {
-                case KubeClientPlatform.Windows:
-
-                    targetPath = Path.Combine(targetPath, "kubectl.exe");
-
-                    // Ensure that the KUBECONFIG environment variable exists and includes
-                    // the path to the user's [.neonkube] configuration.
-
-                    var kubeConfigVar = Environment.GetEnvironmentVariable("KUBECONFIG");
-
-                    if (string.IsNullOrEmpty(kubeConfigVar))
-                    {
-                        // The [KUBECONFIG] environment variable doesn't exist so we'll set it.
-
-#pragma warning disable CA1416
-                        Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", KubeConfigPath, RegistryValueKind.ExpandString);
-#pragma warning restore CA1416
-                        Environment.SetEnvironmentVariable("KUBECONFIG", KubeConfigPath);
-                    }
-                    else
-                    {
-                        // The [KUBECONFIG] environment variable exists.  We need to ensure that the
-                        // path to our [USER/.neonkube] config is present.  We're also going to ensure
-                        // that no paths are duplicated within the variable.
-
-                        var sb    = new StringBuilder();
-                        var paths = new HashSet<string>();
-                        var found = false;
-
-                        foreach (var path in kubeConfigVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            if (paths.Contains(path))
-                            {
-                                // Ignore duplicate paths.
-
-                                continue;
-                            }
-
-                            if (path == KubeConfigPath)
-                            {
-                                found = true;
-                            }
-
-                            sb.AppendWithSeparator(path, ";");
-                            paths.Add(path);
-                        }
-
-                        if (!found)
-                        {
-                            sb.AppendWithSeparator(KubeConfigPath, ";");
-                        }
-
-                        var newKubeConfigVar = sb.ToString();
-
-                        if (newKubeConfigVar != kubeConfigVar)
-                        {
-#pragma warning disable CA1416
-                            Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", newKubeConfigVar, RegistryValueKind.ExpandString);
-#pragma warning restore CA1416
-                            Environment.SetEnvironmentVariable("KUBECONFIG", newKubeConfigVar);
-                        }
-                    }
-
-                    if (!File.Exists(targetPath))
-                    {
-                        File.Copy(cachedKubeCtlPath, targetPath);
-                    }
-                    else
-                    {
-                        // Execute the existing target to obtain its version and update it
-                        // to the cached copy if the cluster installed a more recent version
-                        // of Kubernetes.
-
-                        // $hack(jefflill): Simple client version extraction
-
-                        var pattern  = "GitVersion:\"v";
-                        var response = NeonHelper.ExecuteCapture(targetPath, "version");
-                        var pStart   = response.OutputText.IndexOf(pattern);
-                        var error    = "Cannot identify existing [kubectl] version.";
-
-                        if (pStart == -1)
-                        {
-                            throw new NeonKubeException(error);
-                        }
-
-                        pStart += pattern.Length;
-
-                        var pEnd = response.OutputText.IndexOf("\"", pStart);
-
-                        if (pEnd == -1)
-                        {
-                            throw new NeonKubeException(error);
-                        }
-
-                        var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
-
-                        if (!Version.TryParse(currentVersionString, out var currentVersion))
-                        {
-                            throw new NeonKubeException(error);
-                        }
-
-                        if (Version.Parse(KubeVersions.Kubernetes) > currentVersion)
-                        {
-                            // We need to copy the latest version.
-
-                            NeonHelper.DeleteFile(targetPath);
-                            File.Copy(cachedKubeCtlPath, targetPath);
-                        }
-                    }
-                    break;
-
-                case KubeClientPlatform.Linux:
-                case KubeClientPlatform.Osx:
-                default:
-
-                    throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
-            }
-        }
-
-        /// <summary>
-        /// <para>
-        /// Ensures that <b>helm</b> client installed on the workstation version is at least as
-        /// great as the requested cluster version is installed to the <b>NEONKUBE</b> programs 
-        /// folder by copying the tool from the cache if necessary.
-        /// </para>
-        /// <note>
-        /// This will probably require elevated privileges.
-        /// </note>
-        /// <note>
-        /// This assumes that <b>Helm</b> has already been downloaded and cached and also that 
-        /// more recent <b>Helm</b> releases are backwards compatible with older deployed versions
-        /// of Tiller.
-        /// </note>
-        /// </summary>
-        public static void InstallWorkstationHelm()
-        {
-            var hostPlatform   = KubeHelper.HostPlatform;
-            var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.Helm);
-            var targetPath     = Path.Combine(KubeHelper.InstallFolder);
-
-            switch (hostPlatform)
-            {
-                case KubeClientPlatform.Windows:
-
-                    targetPath = Path.Combine(targetPath, "helm.exe");
-
-                    if (!File.Exists(targetPath))
-                    {
-                        File.Copy(cachedHelmPath, targetPath);
-                    }
-                    else
-                    {
-                        // Execute the existing target to obtain its version and update it
-                        // to the cached copy if the cluster installed a more recent version
-                        // of Kubernetes.
-
-                        // $hack(jefflill): Simple client version extraction
-
-                        var pattern  = "Version:\"v";
-                        var response = NeonHelper.ExecuteCapture(targetPath, "version");
-                        var pStart   = response.OutputText.IndexOf(pattern);
-                        var error    = "Cannot identify existing [helm] version.";
-
-                        if (pStart == -1)
-                        {
-                            throw new NeonKubeException(error);
-                        }
-
-                        pStart += pattern.Length;
-
-                        var pEnd = response.OutputText.IndexOf("\"", pStart);
-
-                        if (pEnd == -1)
-                        {
-                            throw new NeonKubeException(error);
-                        }
-
-                        var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
-
-                        if (!Version.TryParse(currentVersionString, out var currentVersion))
-                        {
-                            throw new NeonKubeException(error);
-                        }
-                    }
-                    break;
-
-                case KubeClientPlatform.Linux:
-                case KubeClientPlatform.Osx:
-                default:
-
-                    throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
-            }
-        }
-
-        /// <summary>
         /// Executes a <b>kubectl</b> command on the local workstation.
         /// </summary>
         /// <param name="args">The command arguments.</param>
@@ -2599,7 +2383,7 @@ TCPKeepAlive yes
         /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
         /// </para>
         /// </remarks>
-        public static string GetToolPath(string installFolder, string toolName, Func<string, bool> toolChecker, Func<string> toolUriRetriever, bool userToolsFolder = false)
+        private static string GetToolPath(string installFolder, string toolName, Func<string, bool> toolChecker, Func<string> toolUriRetriever, bool userToolsFolder = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(toolName), nameof(toolName));
@@ -2630,7 +2414,7 @@ TCPKeepAlive yes
             var toolFile = $"{toolName}{extension}";
 
             // If the tool exists in the standard install location, then simply return its
-            // path.  We're going to assume that the tool version is correct in this case
+            // path.  We're going to assume that the tool version is correct in when
             // [userToolsFolder=true].
             //
             // If the tool exists and [userToolsFolder==false], we're going to verify its
@@ -2639,7 +2423,7 @@ TCPKeepAlive yes
             // Otherwise if the tool doesn't exist or its version is incorrect, we're
             // going to drop thru to download the binaries to [installFolder] when
             // [userToolsFolder=false] or to [KubeHelper.ToolsFolder] when
-            // [userToolsFolder=false].
+            // [userToolsFolder=true].
 
             var toolPath = Path.Combine(installFolder, toolFile);
 
@@ -2672,12 +2456,14 @@ TCPKeepAlive yes
             //
             // NOTE: We're going to require that the URI being downloaded is a TAR.GZ or a .ZIP file.
 
-            var toolUri      = new Uri(toolUriRetriever());
-            var downloadPath = Path.Combine(KubeHelper.TempFolder, $"download-{Guid.NewGuid().ToString("d")}.tar.gz");
+            var toolUri = new Uri(toolUriRetriever());
+            var isZip   = toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase);
+            var isTarGz = toolUri.AbsolutePath.EndsWith(".tar.gz", StringComparison.InvariantCultureIgnoreCase);
 
-            Covenant.Assert(toolUri.AbsolutePath.EndsWith(".tar.gz", StringComparison.InvariantCultureIgnoreCase) ||
-                            toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase), 
-                            "Expecting a TAR.GZ or .ZIP file.");
+            Covenant.Assert(isZip || isTarGz, "Expecting a [TAR.GZ] or [.ZIP] file.");
+
+            var archiveExtension = isZip ? "zip" : "tar.gz";
+            var archivePath      = Path.Combine(KubeHelper.TempFolder, $"download-{Guid.NewGuid().ToString("d")}.{archiveExtension}");
 
             NeonHelper.DeleteFile(toolPath);
 
@@ -2687,7 +2473,7 @@ TCPKeepAlive yes
 
                 using (var download = response.Content.ReadAsStreamAsync().Result)
                 {
-                    using (var output = new FileStream(downloadPath, FileMode.Create, FileAccess.ReadWrite))
+                    using (var output = new FileStream(archivePath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         download.CopyTo(output);
                     }
@@ -2705,49 +2491,67 @@ TCPKeepAlive yes
 
             try
             {
-                using (var download = File.OpenRead(downloadPath))
+                if (isZip)
                 {
-                    using (var reader = ReaderFactory.Open(download))
+                    using (var download = File.OpenRead(archivePath))
                     {
-                        while (reader.MoveToNextEntry())
+                        using (var reader = ReaderFactory.Open(download))
                         {
-                            var entry = reader.Entry;
-
-                            if (entry.IsDirectory)
+                            while (reader.MoveToNextEntry())
                             {
-                                continue;
-                            }
+                                var entry = reader.Entry;
 
-                            using (var entryStream = reader.OpenEntryStream())
-                            {
-                                var lastSlashPos = entry.Key.LastIndexOfAny(new char[] { '/', '\\' });
-
-                                Covenant.Assert(lastSlashPos >= 0);
-
-                                var filename = entry.Key.Substring(lastSlashPos + 1);
-
-                                // Ignore unnecessary files.
-
-                                switch (filename)
+                                if (entry.IsDirectory)
                                 {
-                                    case "LICENSE":
-                                    case "README.md":
-
-                                        continue;
+                                    continue;
                                 }
 
-                                using (var output = File.OpenWrite(Path.Combine(installFolder, filename)))
+                                using (var entryStream = reader.OpenEntryStream())
                                 {
-                                    entryStream.CopyTo(output);
+                                    var lastSlashPos = entry.Key.LastIndexOfAny(new char[] { '/', '\\' });
+
+                                    Covenant.Assert(lastSlashPos >= 0);
+
+                                    var filename = entry.Key.Substring(lastSlashPos + 1);
+
+                                    // Ignore unnecessary files.
+
+                                    switch (filename)
+                                    {
+                                        case "LICENSE":
+                                        case "README.md":
+
+                                            continue;
+                                    }
+
+                                    using (var output = File.OpenWrite(Path.Combine(installFolder, filename)))
+                                    {
+                                        entryStream.CopyTo(output);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                else if (isTarGz)
+                {
+                    NeonHelper.ExecuteCapture("tar",
+                        new object[]
+                        {
+                            "xzvfC",
+                            archivePath,
+                            installFolder
+                        })
+                        .EnsureSuccess();
+                }
+                else
+                {
+                    Covenant.Assert(false);
+                }
             }
             finally
             {
-                NeonHelper.DeleteFile(downloadPath);
+                NeonHelper.DeleteFile(archivePath);
             }
 
             // We need to set execute permissions on Linux and OS/X.
@@ -2767,7 +2571,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// Returns the path to the the <b>Helm</b> to be used by <b>neon-cli</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
         /// <param name="userToolsFolder">
@@ -2813,12 +2617,12 @@ TCPKeepAlive yes
                         }
                         else
                         {
-                            throw new Exception($"Unable to get [helm] version from: {versionOutput}");
+                            throw new Exception($"Unable to extract the [helm] version from: {versionOutput}");
                         }
                     }
                     catch
                     {
-                        // [helm.exe] doesn't exist at that location or is invalid.
+                        // [helm] doesn't exist in the target folder or is out-of-date or invalid.
 
                         return false;
                     }
@@ -2846,6 +2650,172 @@ TCPKeepAlive yes
                 };
 
             return GetToolPath(installFolder, "helm", toolChecker, toolUriRetriever, userToolsFolder);
+        }
+
+        /// <summary>
+        /// Returns the path to the the <b>Cilium-CLI</b> to be used by <b>neon-cli</b>.
+        /// </summary>
+        /// <param name="installFolder">Path to the tool installation folder.</param>
+        /// <param name="userToolsFolder">
+        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
+        /// the method will download the file to <see cref="ToolsFolder"/>.
+        /// </param>
+        /// <returns>The fully qualified tool path.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
+        /// <remarks>
+        /// <para>
+        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
+        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
+        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
+        /// </para>
+        /// <para>
+        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
+        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
+        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
+        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
+        /// </para>
+        /// </remarks>
+        public static string GetCiliumCliPath(string installFolder, bool userToolsFolder = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
+
+            Func<string, bool> toolChecker =
+                toolPath =>
+                {
+                    // [cilium version] output will look like:
+                    //
+                    //      cilium-cli: v0.15.19 compiled with go1.21.5 on windows/amd64
+                    //      cilium image (default): v1.14.4
+                    //      cilium image (stable): v1.14.5
+
+                    try
+                    {
+                        var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
+                        var versionOutput = response.OutputText;
+                        var versionRegex  = new Regex(@"cilium-cli:\s(?'version'v[\d.]+)\s", RegexOptions.None);
+                        var match         = versionRegex.Match(versionOutput);
+
+                        if (match.Success)
+                        {
+                            return match.Groups["version"].Value == KubeVersions.CiliumCli;
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to extract the [cilium-cli] version from: {versionOutput}");
+                        }
+                    }
+                    catch
+                    {
+                        // [cilium-cli] doesn't exist in the target folder or is out-of-date or invalid.
+
+                        return false;
+                    }
+                };
+
+            Func<string> toolUriRetriever =
+                () =>
+                {
+                    if (NeonHelper.IsWindows)
+                    {
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-windows-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsLinux)
+                    {
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-linux-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsOSX)
+                    {
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-darwin-amd64.tar.gz";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(NeonHelper.OSDescription);
+                    }
+                };
+
+            return GetToolPath(installFolder, "cilium", toolChecker, toolUriRetriever, userToolsFolder);
+        }
+
+        /// <summary>
+        /// Returns the path to the the <b>Hubble</b> to be used by <b>neon-cli</b>.
+        /// </summary>
+        /// <param name="installFolder">Path to the tool installation folder.</param>
+        /// <param name="userToolsFolder">
+        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
+        /// the method will download the file to <see cref="ToolsFolder"/>.
+        /// </param>
+        /// <returns>The fully qualified tool path.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
+        /// <remarks>
+        /// <para>
+        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
+        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
+        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
+        /// </para>
+        /// <para>
+        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
+        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
+        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
+        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
+        /// </para>
+        /// </remarks>
+        public static string GetHubbleCliPath(string installFolder, bool userToolsFolder = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
+
+            Func<string, bool> toolChecker =
+                toolPath =>
+                {
+                    // [hubble version] output will look like (no "v" in the version):
+                    //
+                    //      hubble 0.12.3 compiled with go1.20.12 on linux/amd64
+
+                    try
+                    {
+                        var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
+                        var versionOutput = response.OutputText;
+                        var versionRegex  = new Regex(@"hubble\s(?'version'[\d.]+)\s", RegexOptions.None);
+                        var match         = versionRegex.Match(versionOutput);
+
+                        if (match.Success)
+                        {
+                            return $"v{match.Groups["version"].Value}" == KubeVersions.HubbleCli;
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to extract the [hubble-cli] version from: {versionOutput}");
+                        }
+                    }
+                    catch
+                    {
+                        // [hubble-cli] doesn't exist in the target folder or is out-of-date or invalid.
+
+                        return false;
+                    }
+                };
+
+            Func<string> toolUriRetriever =
+                () =>
+                {
+                    if (NeonHelper.IsWindows)
+                    {
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-windows-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsLinux)
+                    {
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-linux-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsOSX)
+                    {
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-darwin-arm64.tar.gz";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(NeonHelper.OSDescription);
+                    }
+                };
+
+            return GetToolPath(installFolder, "hubble", toolChecker, toolUriRetriever, userToolsFolder);
         }
 
         /// <summary>
