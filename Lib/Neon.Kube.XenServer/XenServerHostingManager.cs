@@ -797,7 +797,8 @@ namespace Neon.Kube.Hosting.XenServer
                             xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: XVA [{progress}%] [{driveTemplateName}]");
 
                             return !xenController.IsCancelPending;
-                        });
+                        },
+                        strictCheck: false);
                 }
                 else
                 {

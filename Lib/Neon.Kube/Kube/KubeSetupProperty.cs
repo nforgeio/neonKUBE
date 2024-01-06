@@ -67,13 +67,6 @@ namespace Neon.Kube
         public const string MaintainerMode = "maintainer-setup";
 
         /// <summary>
-        /// Property name for a <c>bool</c> that identifies the base image name to be used for preparing
-        /// a cluster in <b>debug mode</b>.  This is the name of the base image file as persisted to our
-        /// public S3 bucket.  This will not be set for cluster setup.
-        /// </summary>
-        public const string BaseImageName = "base-image-name";
-
-        /// <summary>
         /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
         /// </summary>
         public const string HostingEnvironment = "hosting-environment";

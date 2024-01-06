@@ -2304,7 +2304,7 @@ TCPKeepAlive yes
         /// hashes in the manifest, which can take quite a while for large files.
         /// </para>
         /// <para>
-        /// This defaults to <c>true</c>.
+        /// This defaults to <c>false</c>.
         /// </para>
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
@@ -2324,7 +2324,7 @@ TCPKeepAlive yes
             string                      imageUri, 
             string                      imagePath,
             DownloadProgressDelegate    progressAction    = null,
-            bool                        strictCheck       = true,
+            bool                        strictCheck       = false,
             CancellationToken           cancellationToken = default)
         {
             await SyncContext.Clear;

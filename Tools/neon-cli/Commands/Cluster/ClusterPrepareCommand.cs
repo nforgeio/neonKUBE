@@ -75,16 +75,6 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --base-image-name           - Specifies the base image name to use when operating
-                                  in [--debug] mode.  This will be the name of the base
-                                  image file as published to our public S3 bucket for
-                                  the target hosting manager.  Examples:
-
-                                        Hyper-V:   ubuntu-22.04.hyperv.vhdx
-                                        XenServer: ubuntu-22.04.xenserver.xva
-
-                                  NOTE: This is required for [--debug]
-
     --debug                     - Implements cluster setup from the base rather
                                   than the node image.  This mode is useful while
                                   developing and debugging cluster setup.
@@ -106,13 +96,15 @@ OPTIONS:
                                   to perform in parallel.  This defaults to [6].
 
     --node-image-path=PATH      - Uses the node image at the PATH specified rather than
-                                  downloading the node image.  This is useful for '
+                                  downloading the node image.  This is useful for
                                   debugging node image changes locally.
+
+                                  NOTE: This is ignored for [--debug] mode.
 
     --node-image-uri            - Overrides the default node image URI.
 
                                   NOTE: This is ignored for [--debug] mode.
-                                  NOTE: This is ignored when [--node-image-path] is present.
+                                  NOTE: This is also ignored when [--node-image-path] is present.
 
     --no-telemetry              - Disables whether telemetry for failed cluster deployment,
                                   overriding the NEONKUBE_DISABLE_TELEMETRY environment
@@ -159,7 +151,6 @@ stage process is typically used only by NEONKUBE maintainers.
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] 
         {
-            "--base-image-name",
             "--debug",
             "--disable-pending", 
             "--insecure",
@@ -199,13 +190,12 @@ stage process is typically used only by NEONKUBE maintainers.
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
            
-            var baseImageName     = commandLine.GetOption("--base-image-name");
             var debug             = commandLine.HasOption("--debug");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var insecure          = commandLine.HasOption("--insecure");
-            var nodeImagePath     = commandLine.GetOption("--node-image-path");
-            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
+            var nodeImagePath     = debug ? null : commandLine.GetOption("--node-image-path");
+            var nodeImageUri      = debug ? null : commandLine.GetOption("--node-image-uri");
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
@@ -225,12 +215,6 @@ stage process is typically used only by NEONKUBE maintainers.
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
                 Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
-                Program.Exit(-1);
-            }
-
-            if (debug && string.IsNullOrEmpty(baseImageName))
-            {
-                Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
                 Program.Exit(-1);
             }
 
@@ -332,7 +316,6 @@ stage process is typically used only by NEONKUBE maintainers.
 
             var prepareOptions = new PrepareClusterOptions()
             {
-                BaseImageName         = baseImageName,
                 DisableConsoleOutput  = quiet,
                 DebugMode             = debug,
                 Insecure              = insecure,

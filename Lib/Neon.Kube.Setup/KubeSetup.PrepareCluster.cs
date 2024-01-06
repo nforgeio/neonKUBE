@@ -88,7 +88,6 @@ namespace Neon.Kube.Setup
             }
 
             Covenant.Requires<ArgumentException>(options.MaxParallel >= 0, nameof(options.MaxParallel));
-            Covenant.Requires<ArgumentNullException>(!options.DebugMode || !string.IsNullOrEmpty(options.BaseImageName), nameof(options.BaseImageName));
 
             if (options.DesktopReadyToGo)
             {
@@ -219,7 +218,6 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.Preparing, true);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
             controller.Add(KubeSetupProperty.DebugMode, options.DebugMode);
-            controller.Add(KubeSetupProperty.BaseImageName, options.BaseImageName);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);

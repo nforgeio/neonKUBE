@@ -242,8 +242,11 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    SudoCommand($"{KubeConst.SafeAptGetTool} update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeConst.SafeAptGetTool} install -yq apt-cacher-ng ntp secure-delete sysstat vim zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeConst.SafeAptGetTool} update")
+                        .EnsureSuccess();
+
+                    SudoCommand($"{KubeConst.SafeAptGetTool} install -yq apt-cacher-ng ntp secure-delete sysstat zip")
+                        .EnsureSuccess();
 
                     // $note(jefflill):
                     //
@@ -289,7 +292,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
 
                     if (this.KernelVersion < new Version(5, 6, 0))
                     {
-                        SudoCommand($"{KubeConst.SafeAptGetTool} install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                        SudoCommand($"{KubeConst.SafeAptGetTool} install -yq haveged")
+                            .EnsureSuccess();
                     }
                 });
         }

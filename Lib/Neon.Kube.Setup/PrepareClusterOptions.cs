@@ -95,11 +95,6 @@ namespace Neon.Kube.Setup
         public bool DebugMode { get; set; } = false;
 
         /// <summary>
-        /// Optionally specifies the base image name to use for debug mode.
-        /// </summary>
-        public string BaseImageName { get; set; } = null;
-
-        /// <summary>
         /// Optionally remove any existing cluster with the same name in the target environment.
         /// </summary>
         public bool RemoveExisting { get; set; } = false;

@@ -356,7 +356,8 @@ namespace Neon.Kube.Hosting.HyperV
                                 controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
                                 return !controller.IsCancelPending;
-                            });
+                            },
+                            strictCheck: false);
                     });
             }
             else
@@ -386,7 +387,8 @@ namespace Neon.Kube.Hosting.HyperV
                                         controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
                                         return !controller.IsCancelPending;
-                                    });
+                                    },
+                                    strictCheck: false);
                             }
                             else
                             {
