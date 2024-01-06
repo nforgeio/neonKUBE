@@ -304,7 +304,7 @@ namespace Neon.Kube
         /// Specifies the version of Cilium to install.
         /// </summary>
         [KubeVersion]
-        public const string Cilium = "v1.14.4";
+        public const string Cilium = "v1.14.5";
 
         /// <summary>
         /// Specifies the version of Cilium CLI to install.

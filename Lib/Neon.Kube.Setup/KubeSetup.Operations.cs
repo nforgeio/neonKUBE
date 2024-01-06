@@ -90,12 +90,12 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Configures a local HAProxy container that makes the Kubernetes etcd
-        /// cluster highly available.
+        /// Configures a local HAProxy container that makes Kubernetes API server,
+        /// etcd and istio ingress highly available.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="node">The node where the operation will be performed.</param>
-        public static void SetupEtcdHaProxy(ISetupController controller, NodeSshProxy<NodeDefinition> node)
+        public static void SetupHaProxy(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
@@ -108,7 +108,7 @@ namespace Neon.Kube.Setup
             sbHaProxyConfig.Append(
 $@"global
     daemon
-    log stdout  format raw  local0  info
+    log stdout format raw local0 info
     maxconn 32000
 
 defaults
@@ -411,6 +411,7 @@ spec:
                     //await InstallCalicoAsync(controller, controlNode);
                     await InstallCiliumAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallMetricsServerAsync(controller, controlNode);
 
@@ -745,7 +746,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
                             // Configure etcd.
 
-                            SetupEtcdHaProxy(controller, firstControlNode);
+                            SetupHaProxy(controller, firstControlNode);
 
                             // CRI-O needs to be running and listening on its unix domain socket so that
                             // Kubelet can start and the cluster can be initialized via [kubeadm].  CRI-O
@@ -800,7 +801,7 @@ fi
 
 # The first call doesn't specify [--ignore-preflight-errors=all]
 
-if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable --skip-phases=addon/kube-proxy; then
     exit 0
 fi
 
@@ -809,7 +810,7 @@ fi
 
 for count in {{1..2}}
 do
-    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all; then
+    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all --skip-phases=addon/kube-proxy; then
         exit 0
     fi
 done
@@ -935,7 +936,7 @@ exit 1
                                         {
                                             controller.LogProgress(controlNode, verb: "join", message: "control-plane node to cluster");
 
-                                            SetupEtcdHaProxy(controller, controlNode);
+                                            SetupHaProxy(controller, controlNode);
 
                                             var joined = false;
 
@@ -1010,7 +1011,7 @@ exit 1
                                     {
                                         controller.LogProgress(worker, verb: "join", message: "worker to cluster");
 
-                                        SetupEtcdHaProxy(controller, worker);
+                                        SetupHaProxy(controller, worker);
 
                                         var joined = false;
 
@@ -1286,14 +1287,14 @@ exit 1
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "calico-node",
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval,
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval,
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     // Spin up a [dnsutils] pod and then exec into it to confirm that
@@ -1526,7 +1527,7 @@ exit 1
         }
 
         /// <summary>
-        /// Installs Cilium
+        /// Installs Cilium and Hubble.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
@@ -1538,37 +1539,46 @@ exit 1
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster          = controlNode.Cluster;
-            var firstControlNode = cluster.ControlNodes.First();
-            var k8s              = GetK8sClient(controller);
-            var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/install-cilium",
+                async () =>
+                {
+                    var cluster          = controlNode.Cluster;
+                    var firstControlNode = cluster.ControlNodes.First();
+                    var k8s              = GetK8sClient(controller);
+                    var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
 
-            var script =
+                    var script =
 $@"
 set -euo pipefail
-set -x
 
 # Install Cilium using the CLI.
 
 cilium install --version {KubeVersions.Cilium} \
-    --set ipam.mode=Kubernetes
+    --set ipam.mode=Kubernetes \
+    --set kubeProxyReplacement=strict \
+    --set k8sServiceHost=127.0.0.1 \
+    --set k8sServicePort={NetworkPorts.KubernetesApiServer}
 
 # We need to restart CRI-O.
 
 systemctl restart cri-o
 
-# Validate the Cilium install.
+# Validate the Cilium installation.
 
-cilium status --wait
+cilium status --wait --wait-duration=5m
 
+# Enable Hubble
 
+cilium hubble enable --ui
 ";
 
-            firstControlNode.SudoCommand(script)
-                .EnsureSuccess();
+                    firstControlNode.SudoCommand(script)
+                        .EnsureSuccess();
 
-            throw new NotImplementedException("$todo(jefflill)");
+                    await Task.CompletedTask;
+                });
         }
 
         /// <summary>

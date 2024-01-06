@@ -1747,7 +1747,7 @@ done
 
                 foreach (var line in new StringReader(manifestText).Lines())
                 {
-                    if (!line.Contains("--pod-eviction-time"))
+                    if (!line.Contains("--pod-eviction-timeout"))
                     {
                         sb.AppendLineLinux(line);
                     }
