@@ -821,5 +821,12 @@ function Get-KubeVersion
         [string]$name
     )
 
-    return $(& neon-build read-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" $name)
+    $version = $(& neon-build read-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" $name)
+
+    if ([System.String]::IsNullOrEmpty($version))
+    {
+        throw "Get-KubeVersion: [KubeVersions.$name] constant was not found."
+    }
+
+    return $version
 }

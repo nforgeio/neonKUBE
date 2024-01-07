@@ -313,8 +313,19 @@ namespace Neon.Kube
         public const string CiliumCli = "v0.15.19";
 
         /// <summary>
+        /// Specifies the version of Hubble UI to install.
+        /// </summary>
+        public const string HubbleRelay = "v1.14.4";
+
+        /// <summary>
+        /// Specifies the version of Hubble UI to install.
+        /// </summary>
+        public const string HubbleUI = "v0.12.1";
+
+        /// <summary>
         /// Specifies the version of the Hubble CLI to install.
         /// </summary>
+        [KubeVersion]
         public const string HubbleCli = "v0.12.3";
 
         /// <summary>
