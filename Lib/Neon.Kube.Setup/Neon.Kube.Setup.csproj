@@ -50,6 +50,7 @@
         <None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
         <None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
         <None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\cilium\README-NEONKUBE.md" />
         <None Remove="Resources\Helm\dex\templates\ldap-connector.yaml" />
         <None Remove="Resources\Helm\grafana-agent\crds\monitoring.grafana.com_integrations.yaml" />
         <None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />

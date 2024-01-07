@@ -550,7 +550,7 @@ function DeleteFolder
 
 $noImagePush = $false
 
-function Push-DockerImage
+function Push-ContainerImage
 {
     [CmdletBinding()]
     param (
@@ -661,7 +661,7 @@ function Push-DockerImage
 #
 # NOTE: This function attempts to workaround what appears to be transient issues.
 
-function Pull-DockerImage
+function Pull-ContainerImage
 {
     [CmdletBinding()]
     param (
