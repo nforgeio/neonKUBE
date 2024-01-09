@@ -307,26 +307,43 @@ namespace Neon.Kube
         public const string Cilium = "v1.14.5";
 
         /// <summary>
+        /// Specifies the version of Cilium-Certgen to be used for
+        /// regenerating MTLS certificates.
+        /// </summary>
+        [KubeVersion]
+        public const string CiliumCertGen = "v0.1.9";
+
+        /// <summary>
         /// Specifies the version of Cilium CLI to install.
         /// </summary>
         [KubeVersion]
         public const string CiliumCli = "v0.15.19";
 
         /// <summary>
-        /// Specifies the version of Hubble UI to install.
+        /// Specifies the version of Cilium Envoy to install.
         /// </summary>
-        public const string HubbleRelay = "v1.14.4";
-
-        /// <summary>
-        /// Specifies the version of Hubble UI to install.
-        /// </summary>
-        public const string HubbleUI = "v0.12.1";
+        public const string CiliumEnvoy = "v1.26.6-ad82c7c56e88989992fd25d8d67747de865c823b";
 
         /// <summary>
         /// Specifies the version of the Hubble CLI to install.
         /// </summary>
         [KubeVersion]
-        public const string HubbleCli = "v0.12.3";
+        public const string CiliumHubbleCli = "v0.12.3";
+
+        /// <summary>
+        /// Specifies the version of Hubble UI to install.
+        /// </summary>
+        public const string CiliumHubbleRelay = "v1.14.5";
+
+        /// <summary>
+        /// Specifies the version of Hubble UI to install.
+        /// </summary>
+        public const string CiliumHubbleUI = "v0.12.1";
+
+        /// <summary>
+        /// Specifies the version of Hubble UI Backend to install.
+        /// </summary>
+        public const string CiliumHubbleUIBackend = "v0.12.1";
 
         /// <summary>
         /// Specifies the version of dnsutils to install.
@@ -409,7 +426,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Constructs a <see cref="PreprocessReader"/> capable of preprocessing version
-        /// constants named like <b>KubeVersions.VERSION</b> to the referened version value.
+        /// constants named like <b>$&lt;KubeVersions.VERSION&gt;</b> to the referenced value.
         /// </summary>
         /// <param name="reader">Specifies the <see cref="TextReader"/> with the input text.</param>
         /// <param name="variableRegex">
@@ -457,8 +474,6 @@ namespace Neon.Kube
                                 break;
 
                             case MemberTypes.Field:
-
-                                // Constants and field members work the same.
 
                                 var field = (FieldInfo)member;
 

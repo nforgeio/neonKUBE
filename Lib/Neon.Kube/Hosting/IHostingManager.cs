@@ -102,8 +102,8 @@ namespace Neon.Kube.Hosting
         /// <summary>
         /// Returns the MTU (Maximum Transmission Unit) to be configured for network interfaces 
         /// on node machines created by the hosting manager.  This may return <b>0</b> which
-        /// indicates that the default MTU (typically <see cref="NetConst.DefaultMTU"/> bytes) 
-        /// should be set or a custom value between [512-9000].
+        /// indicates that the default MTU (typically <see cref="NetConst.DefaultMTU"/> bytes)
+        /// or an automatically determined MTU should be set.
         /// </summary>
         int NodeMtu { get; }
 

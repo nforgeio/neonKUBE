@@ -2779,7 +2779,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return $"v{match.Groups["version"].Value}" == KubeVersions.HubbleCli;
+                            return $"v{match.Groups["version"].Value}" == KubeVersions.CiliumHubbleCli;
                         }
                         else
                         {
@@ -2799,15 +2799,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-windows-amd64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-windows-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-linux-amd64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-linux-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.HubbleCli}/hubble-darwin-arm64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-darwin-arm64.tar.gz";
                     }
                     else
                     {

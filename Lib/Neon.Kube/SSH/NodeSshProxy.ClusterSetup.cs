@@ -1310,10 +1310,10 @@ EOF
                     NodeInstallPodman(controller);
 
                     controller.ThrowIfCancelled();
-                    NodeInstallKubernetes(controller);
+                    NodeInstallHelm(controller);
 
                     controller.ThrowIfCancelled();
-                    NodeInstallHelm(controller);
+                    NodeInstallKubernetes(controller);
 
                     controller.ThrowIfCancelled();
                     SetupKubelet(controller);

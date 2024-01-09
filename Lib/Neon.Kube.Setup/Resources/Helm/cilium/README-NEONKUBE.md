@@ -8,6 +8,4 @@ This documents how we modified the standard Cilium Helm charts and relocated the
    clicking on that file link and then clicking on the **Raw button** or **View raw**
    link.
 
-   Then use **7-zip** to extract the Helm files.
-
-2. 
+2. Use **7-zip** to extract the Helm files.

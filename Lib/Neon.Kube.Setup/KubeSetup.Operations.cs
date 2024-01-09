@@ -408,7 +408,6 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    //await InstallCalicoAsync(controller, controlNode);
                     await InstallCiliumAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -437,7 +436,7 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallKubeDashboardAsync(controller, controlNode);
+                    await InstallKubernetesDashboardAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
@@ -574,8 +573,7 @@ spec:
 
             // Append the InitConfiguration
 
-            var kubeletFailSwapOnLine = string.Empty;
-            var clusterConfig         = new StringBuilder();
+            var clusterConfig = new StringBuilder();
 
             clusterConfig.AppendLine(
 $@"
@@ -641,8 +639,7 @@ runtimeRequestTimeout: 5m
 maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
 shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
 shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
-rotateCertificates: true
-{kubeletFailSwapOnLine}");
+rotateCertificates: true");
 
             clusterConfig.AppendLine($"systemReserved:");
 
@@ -718,7 +715,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.ThrowIfCancelled();
-            firstControlNode.InvokeIdempotent("setup/init-kubernetes",
+            firstControlNode.InvokeIdempotent("setup/kubernetes",
                 () =>
                 {
                     //---------------------------------------------------------
@@ -1370,7 +1367,7 @@ exit 1
                             {
                                 { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
                                 { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                    };
+                            };
 
                             coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
                             coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
@@ -1543,11 +1540,15 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/install-cilium",
                 async () =>
                 {
+                    controller.LogProgress(controlNode, verb: "setup", message: "cilium");
+
                     var cluster          = controlNode.Cluster;
+                    var hostingManager   = cluster.HostingManager;
                     var firstControlNode = cluster.ControlNodes.First();
                     var k8s              = GetK8sClient(controller);
                     var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
                     var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+                    var mtu              = hostingManager.NodeMtu;
 
                     var script =
 $@"
@@ -1556,22 +1557,36 @@ set -euo pipefail
 # Install Cilium using the CLI.
 
 cilium install --version {KubeVersions.Cilium} \
+    --chart-directory={KubeNodeFolder.Helm}/cilium \
     --set ipam.mode=Kubernetes \
     --set kubeProxyReplacement=strict \
     --set k8sServiceHost=127.0.0.1 \
-    --set k8sServicePort={NetworkPorts.KubernetesApiServer}
+    --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
+    --set MTU={mtu} \
+    --set envoy.image.repository=registry.neon.local/neonkube/cilium-envoy \
+    --set envoy.image.useDigest=false \
+    --set hubble.relay.image.repository=registry.neon.local/neonkube/cilium-hubble-relay \
+    --set hubble.relay.image.useDigest=false \
+    --set hubble.ui.backend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui-backend \
+    --set hubble.ui.backend.image.useDigest=false \
+    --set hubble.ui.frontend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui \
+    --set hubble.ui.frontend.image.useDigest=false \
+    --set image.repository=registry.neon.local/neonkube/cilium \
+    --set image.useDigest=false \
+    --set operator.image.repository=registry.neon.local/neonkube/cilium-operator \
+    --set operator.image.useDigest=false
 
 # We need to restart CRI-O.
 
 systemctl restart cri-o
 
-# Validate the Cilium installation.
-
-cilium status --wait --wait-duration=5m
-
 # Enable Hubble
 
 cilium hubble enable --ui
+
+# Validate the Cilium installation.
+
+cilium status --wait --wait-duration=5m
 ";
 
                     firstControlNode.SudoCommand(script)
@@ -2379,12 +2394,12 @@ cilium hubble enable --ui
         }
 
         /// <summary>
-        /// Configures the root Kubernetes user.
+        /// Configures the Kubernetes dashboard.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task InstallKubernetesDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2584,28 +2599,6 @@ cilium hubble enable --ui
                         },
                         timeoutMessage:    "setup/kiali-ready",
                         cancellationToken: controller.CancellationToken);
-                });
-        }
-
-        /// <summary>
-        /// Some initial kubernetes configuration.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/initial-kubernetes", async
-                () =>
-                {
-                    controller.LogProgress(controlNode, verb: "setup", message: "kubernetes");
-
-                    await controlNode.InstallHelmChartAsync(controller, "cluster-setup");
                 });
         }
 

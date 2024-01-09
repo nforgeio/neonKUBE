@@ -296,7 +296,7 @@ rm cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
 
 # Install the Hubble CLI.
 
-HUBBLE_CLI_VERSION={KubeVersions.HubbleCli}
+HUBBLE_CLI_VERSION={KubeVersions.CiliumHubbleCli}
 curl -L --fail --remote-name-all https://github.com/cilium/hubble/releases/download/$HUBBLE_CLI_VERSION/hubble-$OS-$ARCH.tar.gz{{,.sha256sum}}
 sha256sum --check hubble-$OS-$ARCH.tar.gz.sha256sum
 tar xzvfC hubble-$OS-$ARCH.tar.gz /usr/local/bin
@@ -1180,7 +1180,7 @@ rm -rf linux-amd64
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="downloadParallel">Optionally specifies the limit for parallelism when downloading images from GitHub registry.</param>
         /// <param name="loadParallel">Optionally specifies the limit for parallelism when loading images into the cluster.</param>
-        public async Task NodeLoadImagesAsync(
+        public async Task NodeDebugLoadImagesAsync(
             ISetupController    controller, 
             int                 downloadParallel = 5, 
             int                 loadParallel     = 2)
@@ -1320,9 +1320,11 @@ rm -rf linux-amd64
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            InvokeIdempotent("setup/kubernetes",
+            InvokeIdempotent("base/kubernetes",
                 () =>
                 {
+                    controller.LogProgress(this, "install", "kubernetes");
+
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
                     // We ran into a problem downloading the Google [apt-key.gpg] file which
@@ -1413,7 +1415,7 @@ rm kubeadm.config.yaml
 mkdir -p /opt/cni/bin
 mkdir -p /etc/cni/net.d
 
-echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' --node-ip='{NodeDefinition.Address}' > /etc/default/kubelet
 
 # Stop and disable [kubelet] for now.  We'll re-enable this later during cluster setup.
 
@@ -1421,7 +1423,7 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                            controller.LogProgress(this, verb: "setup", message: "kubernetes");
+                            controller.LogProgress(this, verb: "install", message: "kubernetes");
 
                             SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
                         });
