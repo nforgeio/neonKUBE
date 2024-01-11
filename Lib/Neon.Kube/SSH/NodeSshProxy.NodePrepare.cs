@@ -1203,8 +1203,8 @@ rm -rf linux-amd64
                     var images     = new List<NodeImageInfo>();
 
                     var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
-                        .Select(path => Path.GetFullPath(path))
-                        .ToArray();
+                    .Select(path => Path.GetFullPath(path))
+                    .ToArray();
 
                     var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-stage";
                     var pullImageTasks = new List<Task>();
