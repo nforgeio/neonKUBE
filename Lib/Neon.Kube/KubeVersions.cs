@@ -333,17 +333,48 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the version of Hubble UI to install.
         /// </summary>
+        [KubeVersion]
         public const string CiliumHubbleRelay = "v1.14.5";
 
         /// <summary>
         /// Specifies the version of Hubble UI to install.
         /// </summary>
+        [KubeVersion]
         public const string CiliumHubbleUI = "v0.12.1";
 
         /// <summary>
         /// Specifies the version of Hubble UI Backend to install.
         /// </summary>
+        [KubeVersion]
         public const string CiliumHubbleUIBackend = "v0.12.1";
+
+        /// <summary>
+        /// Specifies the version of the Cilium generic operator to base our custom image on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Using the <see cref="Cilium"/> version as the tag for our base image doesn't
+        /// work, even though Cilium has an image named with this tag up on quay.io.  The
+        /// problem is that the Cilium Helm chart explicitly specifies the entrypoint command
+        /// as <b>/usr/bin/cilium-operator-generic</b> but this file isn't actually present
+        /// in the image, but <b>/usr/bin/cilium-operator</b> is present.
+        /// </para>
+        /// <para>
+        /// To workaround this, we need to manually set this constant to <b>genericDigest</b>
+        /// value from the Cilium Helm chart's <b>values.yaml file</b>, located at:
+        /// <c>$\neonKUBE\Lib\Neon.Kube.Setup\Resources\Helm\cilium\values.yaml</c>
+        /// </para>
+        /// <para>
+        /// Open the <c>values.yaml</c> file, search for <b>genericDigest</b> and then
+        /// set this constant to the value there.
+        /// </para>
+        /// <note>
+        /// The NEONCLOUD base image script for <b>cilium-operator</b> performs a check
+        /// against the Helm chart to ensure that this constant has been set correctly.
+        /// </note>
+        /// </remarks>
+        [KubeVersion]
+        public const string CiliumGenericOperatorDigest = "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a";
 
         /// <summary>
         /// Specifies the version of dnsutils to install.

@@ -1555,6 +1555,12 @@ $@"
 set -euo pipefail
 
 # Install Cilium using the CLI.
+#
+# NOTE: The [cilium-cli] appears to select different operator container
+#       images when deployed to cloud native Kubernetes platforms and
+#       a generic image for other environments.  NEONKUBE deploys the
+#       generic image.  [cilium-cli] appends [-generic] to the
+#       [cilium-operator] container name below for us.
 
 cilium install --version {KubeVersions.Cilium} \
     --chart-directory={KubeNodeFolder.Helm}/cilium \
@@ -1576,7 +1582,8 @@ cilium install --version {KubeVersions.Cilium} \
     --set operator.image.repository=registry.neon.local/neonkube/cilium-operator \
     --set operator.image.useDigest=false
 
-# We need to restart CRI-O.
+# We need to restart CRI-O, presumably so it can react to
+# the new cilium-proxy CNI.
 
 systemctl restart cri-o
 
@@ -1584,7 +1591,7 @@ systemctl restart cri-o
 
 cilium hubble enable --ui
 
-# Validate the Cilium installation.
+# Validate and wait for the Cilium installation to complete.
 
 cilium status --wait --wait-duration=5m
 ";
