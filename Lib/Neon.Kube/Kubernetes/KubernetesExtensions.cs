@@ -44,6 +44,7 @@ using k8s;
 using k8s.Autorest;
 using k8s.KubeConfigModels;
 using k8s.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Neon.Kube.K8s
 {
@@ -178,6 +179,21 @@ namespace Neon.Kube.K8s
             }
 
             metadata.Labels[name] = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Sets a collection of labels within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="labels">The dictionary of labels to set.</param>
+        public static void SetLabels(this V1ObjectMeta metadata, Dictionary<string, string> labels)
+        {
+            Covenant.Requires<ArgumentNullException>(labels != null, nameof(labels));
+
+            foreach (var label in labels)
+            {
+                metadata.SetLabel(label.Key, label.Value);
+            }
         }
 
         /// <summary>
