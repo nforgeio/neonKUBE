@@ -715,7 +715,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.ThrowIfCancelled();
-            firstControlNode.InvokeIdempotent("setup/kubernetes",
+            firstControlNode.InvokeIdempotent("setup/config-kubernetes",
                 () =>
                 {
                     //---------------------------------------------------------
@@ -726,7 +726,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
                     // Initialize Kubernetes:
 
                     controller.ThrowIfCancelled();
-                    firstControlNode.InvokeIdempotent("setup/kubernetes-init",
+                    firstControlNode.InvokeIdempotent("setup/config-kubernetes-init",
                         () =>
                         {
                             controller.LogProgress(firstControlNode, verb: "reset", message: "kubernetes");
@@ -859,7 +859,7 @@ exit 1
                         });
 
                     controller.ThrowIfCancelled();
-                    firstControlNode.InvokeIdempotent("setup/kubectl",
+                    firstControlNode.InvokeIdempotent("setup/config-kubernetes-kubectl",
                         () =>
                         {
                             controller.LogProgress(firstControlNode, verb: "configure", message: "kubectl");
@@ -906,7 +906,7 @@ exit 1
                         try
                         {
                             controller.ThrowIfCancelled();
-                            controlNode.InvokeIdempotent("setup/kubectl",
+                            controlNode.InvokeIdempotent("setup/config-kubernetes-kubectl",
                                 () =>
                                 {
                                     controller.LogProgress(controlNode, verb: "setup", message: "kubectl");
@@ -928,7 +928,7 @@ exit 1
                                     // Join the cluster:
 
                                     controller.ThrowIfCancelled();
-                                    controlNode.InvokeIdempotent("setup/join-control-plane",
+                                    controlNode.InvokeIdempotent("setup/config-kubernetes-join-control-plane",
                                         () =>
                                         {
                                             controller.LogProgress(controlNode, verb: "join", message: "control-plane node to cluster");
@@ -1003,7 +1003,7 @@ exit 1
                             try
                             {
                                 controller.ThrowIfCancelled();
-                                worker.InvokeIdempotent("setup/worker-join",
+                                worker.InvokeIdempotent("setup/config-kubernetes-worker-join",
                                     () =>
                                     {
                                         controller.LogProgress(worker, verb: "join", message: "worker to cluster");

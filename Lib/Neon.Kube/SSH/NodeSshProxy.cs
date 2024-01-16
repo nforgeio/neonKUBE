@@ -559,58 +559,7 @@ namespace Neon.Kube.SSH
             var trim = HostingManager.SupportsFsTrim(hostingEnvironment);
             var zero = HostingManager.SupportsFsZero(hostingEnvironment);
 
-            Clean(trim: trim, zero: zero, aptGetTool: $"{KubeConst.SafeAptGetTool}");
-        }
-
-        /// <summary>
-        /// Upgrades the base Linux distribtion, rebooting the node when required.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="fullUpgrade">
-        /// Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
-        /// apply security patches.
-        /// </param>
-        public void UpdateLinux(ISetupController controller, bool fullUpgrade)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var nodeDefinition = NeonHelper.CastTo<NodeDefinition>(Metadata);
-
-            InvokeIdempotent($"setup/upgrade-linux",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "upgrade", message: $"linux [full={fullUpgrade}]");
-
-                    // Upgrade Linux packages if requested.
-
-                    bool rebootRequired;
-
-                    if (fullUpgrade)
-                    {
-                        Status         = "upgrade: full";
-                        rebootRequired = PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetTool}");
-                    }
-                    else
-                    {
-                        Status         = "upgrade: partial";
-                        rebootRequired = UpgradeLinuxDistribution(aptGetTool: $"{KubeConst.SafeAptGetTool}");
-                    }
-
-                    // Check to see whether the upgrade requires a reboot and
-                    // do that now if necessary.
-
-                    if (rebootRequired)
-                    {
-                        Status = "restarting...";
-                        Reboot();
-                    }
-
-                    // Clean up any cached APT files.
-
-                    Status = "clean up";
-                    SudoCommand($"{KubeConst.SafeAptGetTool} clean -yq");
-                    SudoCommand("rm -rf /var/lib/apt/lists");
-                });
+            Clean(trim: trim, zero: zero, aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
         }
 
         /// <summary>

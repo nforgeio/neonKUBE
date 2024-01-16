@@ -468,6 +468,6 @@ namespace Neon.Kube
         /// package manager is already busy performing another operation, such
         /// as checking for daily updates.
         /// </summary>
-        public const string SafeAptGetTool = $"{KubeNodeFolder.Bin}/safe-apt-get";
+        public const string SafeAptGetToolPath = $"{KubeNodeFolder.Bin}/safe-apt-get";
     }
 }

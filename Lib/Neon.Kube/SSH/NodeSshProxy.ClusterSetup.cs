@@ -1175,8 +1175,8 @@ ff02::2         ip6-allrouters
 $@"
 set -eou pipefail   # Enable full failure detection
 
-{KubeConst.SafeAptGetTool} update
-{KubeConst.SafeAptGetTool} install -yq apt-cacher-ng
+{KubeConst.SafeAptGetToolPath} update
+{KubeConst.SafeAptGetToolPath} install -yq apt-cacher-ng
 
 # Configure the cache to pass-thru SSL requests
 # and then restart.

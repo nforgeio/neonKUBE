@@ -173,7 +173,7 @@ namespace Neon.Kube.Setup
             var desktopServiceProxy = new DesktopServiceProxy();
 
             // Configure the setup controller state.
-            
+
             var headendClient = HeadendClient.Create();
 
             headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
@@ -235,8 +235,26 @@ namespace Neon.Kube.Setup
             }
 
             controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
-            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));
-            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}"));
+            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller));
+
+            controller.AddNodeStep("upgrade linux kernel",
+                (controller, node) =>
+                {
+                    node.InvokeIdempotent("setup/upgrade-kernel",
+                        () =>
+                        {
+                            node.Status = "upgrade linux kernel";
+
+                            if (node.UpgradeLinuxDistribution(aptGetTool: KubeConst.SafeAptGetToolPath, upgradeKernel: true));
+                            {
+                                node.Reboot(wait: true);
+                            }
+                        });
+
+                    node.Status = null;
+                });
+
+            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}"));
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
             controller.AddNodeStep("cluster manifest", ConfigureMetadataAsync);
 

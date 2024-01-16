@@ -58,9 +58,8 @@ namespace Neon.Kube.SSH
         /// Performs low-level initialization of a cluster node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution (defaults to <c>false</c>).</param>
         /// <param name="patchLinux">Optionally apply any available Linux security patches (defaults to <c>true</c>).</param>
-        public void BaseInitialize(ISetupController controller, bool upgradeLinux = false, bool patchLinux = true)
+        public void BaseInitialize(ISetupController controller, bool patchLinux = true)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
@@ -75,7 +74,7 @@ namespace Neon.Kube.SSH
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);
-            UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}");
+            UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
             BaseInstallPackages(controller);
             BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
@@ -90,11 +89,6 @@ namespace Neon.Kube.SSH
             }
 
             BaseCreateKubeFolders(controller);
-
-            if (upgradeLinux)
-            {
-                BaseUpgradeLinuxDistribution(controller);
-            }
         }
 
         /// <summary>
@@ -242,10 +236,10 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    SudoCommand($"{KubeConst.SafeAptGetTool} update")
+                    SudoCommand($"{KubeConst.SafeAptGetToolPath} update")
                         .EnsureSuccess();
 
-                    SudoCommand($"{KubeConst.SafeAptGetTool} install -yq apt-cacher-ng ntp secure-delete sysstat zip")
+                    SudoCommand($"{KubeConst.SafeAptGetToolPath} install -yq apt-cacher-ng ntp secure-delete sysstat zip")
                         .EnsureSuccess();
 
                     // $note(jefflill):
@@ -292,7 +286,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
 
                     if (this.KernelVersion < new Version(5, 6, 0))
                     {
-                        SudoCommand($"{KubeConst.SafeAptGetTool} install -yq haveged")
+                        SudoCommand($"{KubeConst.SafeAptGetToolPath} install -yq haveged")
                             .EnsureSuccess();
                     }
                 });
@@ -310,23 +304,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     controller.LogProgress(this, verb: "patch", message: "linux");
-                    PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetTool}");
-                });
-        }
-
-        /// <summary>
-        /// Upgrades the Linux distribution on the node.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void BaseUpgradeLinuxDistribution(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            InvokeIdempotent("base/upgrade-linux",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "upgrade", message: "linux distribution");
-                    UpgradeLinuxDistribution();
+                    PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
                 });
         }
 
@@ -473,7 +451,7 @@ touch /etc/cloud/cloud-init.disabled
 $@"
 set -euo pipefail
 
-{KubeConst.SafeAptGetTool} purge snapd -yq
+{KubeConst.SafeAptGetToolPath} purge snapd -yq
 
 rm -rf ~/snap
 rm -rf /var/cache/snapd
@@ -502,7 +480,7 @@ var removePackagesScript =
 $@"
 set -euo pipefail
 
-{KubeConst.SafeAptGetTool} purge -y \
+{KubeConst.SafeAptGetToolPath} purge -y \
     git git-man \
     iso-codes \
     locales \
@@ -511,7 +489,7 @@ set -euo pipefail
     snapd \
     vim vim-runtime vim-tiny
 
-{KubeConst.SafeAptGetTool} autoremove -y
+{KubeConst.SafeAptGetToolPath} autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

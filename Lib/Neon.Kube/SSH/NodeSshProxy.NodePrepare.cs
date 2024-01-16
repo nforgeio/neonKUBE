@@ -229,8 +229,8 @@ fi
 $@"
 set -euo pipefail
 
-{KubeConst.SafeAptGetTool} update -y
-{KubeConst.SafeAptGetTool} install -y nfs-common
+{KubeConst.SafeAptGetToolPath} update -y
+{KubeConst.SafeAptGetToolPath} install -y nfs-common
 ";
                     SudoCommand(CommandBundle.FromScript(InstallNfsScript), RunOptions.FaultOnError);
                 });
@@ -327,7 +327,7 @@ popd
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
                     controller.ThrowIfCancelled();
-                    UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetTool}");
+                    UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
 
                     controller.ThrowIfCancelled();
                     RemoveSwapFile(controller);
@@ -387,8 +387,8 @@ popd
 $@"
 set -euo pipefail
 
-{KubeConst.SafeAptGetTool} update -y
-{KubeConst.SafeAptGetTool} install -y ipset ipvsadm
+{KubeConst.SafeAptGetToolPath} update -y
+{KubeConst.SafeAptGetToolPath} install -y ipset ipvsadm
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -485,8 +485,8 @@ if [ ""{install}"" = ""true"" ]; then
 
     # Install the packaging dependencies.
 
-    {KubeConst.SafeAptGetTool} update
-    {KubeConst.SafeAptGetTool} install -y curl software-properties-common
+    {KubeConst.SafeAptGetToolPath} update
+    {KubeConst.SafeAptGetToolPath} install -y curl software-properties-common
 
     # Configure Kubernetes and CRI-O repositories:
     #
@@ -510,8 +510,8 @@ if [ ""{install}"" = ""true"" ]; then
 
     # Install CRI-O.
 
-    {KubeConst.SafeAptGetTool} update
-    {KubeConst.SafeAptGetTool} install -y cri-o --allow-change-held-packages
+    {KubeConst.SafeAptGetToolPath} update
+    {KubeConst.SafeAptGetToolPath} install -y cri-o --allow-change-held-packages
 fi
 
 # Generate the CRI-O configuration.
@@ -1060,10 +1060,10 @@ $@"
 
 set -euo pipefail
 
-{KubeConst.SafeAptGetTool} update -q
+{KubeConst.SafeAptGetToolPath} update -q
 set +e
-{KubeConst.SafeAptGetTool} install -yq podman -o Dpkg::Options::=""--force-overwrite""
-{KubeConst.SafeAptGetTool} install -yq skopeo
+{KubeConst.SafeAptGetToolPath} install -yq podman -o Dpkg::Options::=""--force-overwrite""
+{KubeConst.SafeAptGetToolPath} install -yq skopeo
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
@@ -1381,8 +1381,9 @@ echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs
 
 # Install: kubelet, kubeadm, and kubectl.
 
-{KubeConst.SafeAptGetTool} update
-{KubeConst.SafeAptGetTool} install -yq kubelet kubeadm kubectl
+{KubeConst.SafeAptGetToolPath} update
+{KubeConst.SafeAptGetToolPath} install -yq kubelet kubeadm kubectl --allow-change-held-packages
+{KubeConst.SafeAptGetToolPath} autoremove -y
 
 # Prevent the package manager from upgrading these components.
 
