@@ -327,7 +327,7 @@ popd
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
                     controller.ThrowIfCancelled();
-                    UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
+                    UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath);
 
                     controller.ThrowIfCancelled();
                     RemoveSwapFile(controller);

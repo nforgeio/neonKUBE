@@ -74,7 +74,7 @@ namespace Neon.Kube.SSH
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);
-            UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
+            UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath);
             BaseInstallPackages(controller);
             BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
@@ -304,7 +304,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     controller.LogProgress(this, verb: "patch", message: "linux");
-                    PatchLinux(aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
+                    PatchLinux(aptGetTool: KubeConst.SafeAptGetToolPath);
                 });
         }
 

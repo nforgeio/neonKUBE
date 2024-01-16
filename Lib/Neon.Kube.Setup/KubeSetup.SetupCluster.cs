@@ -254,7 +254,7 @@ namespace Neon.Kube.Setup
                     node.Status = null;
                 });
 
-            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: $"{KubeConst.SafeAptGetToolPath}"));
+            controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath));
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
             controller.AddNodeStep("cluster manifest", ConfigureMetadataAsync);
 

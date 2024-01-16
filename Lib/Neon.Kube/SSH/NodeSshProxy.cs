@@ -559,7 +559,7 @@ namespace Neon.Kube.SSH
             var trim = HostingManager.SupportsFsTrim(hostingEnvironment);
             var zero = HostingManager.SupportsFsZero(hostingEnvironment);
 
-            Clean(trim: trim, zero: zero, aptGetTool: $"{KubeConst.SafeAptGetToolPath}");
+            Clean(trim: trim, zero: zero, aptGetTool: KubeConst.SafeAptGetToolPath);
         }
 
         /// <summary>

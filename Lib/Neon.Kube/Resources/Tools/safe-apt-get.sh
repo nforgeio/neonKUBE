@@ -16,11 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Wraps the [apt-get] command such that the command is retried for a
-# while so it can acquire the lock.
+# Wraps the [apt-get] command such that the command is retried forever
+# so it can acquire the lock file when held be another process.
 
 set -e
 
-LOCK_TIMEOUT_SECONDS=300
-
-apt-get -o DPkg::Lock::Timeout=$LOCK_TIMEOUT_SECONDS "$@"
+apt-get -o DPkg::Lock::Timeout=-1 "$@"
