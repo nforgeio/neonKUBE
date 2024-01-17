@@ -1827,7 +1827,7 @@ cilium status --wait --wait-duration=5m
                 });
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/ingress-ready",
+            await controlNode.InvokeIdempotentAsync("setup/istio-ready",
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "istio");
@@ -1840,7 +1840,7 @@ cilium status --wait --wait-duration=5m
                             k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:    "setup/ingress-ready",
+                        timeoutMessage:    "setup/istio-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
