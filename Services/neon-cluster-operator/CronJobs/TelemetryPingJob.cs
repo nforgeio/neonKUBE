@@ -92,7 +92,6 @@ namespace NeonClusterOperator
                         node.CpuArchitecture         = k8sNode.Status.NodeInfo.Architecture;
                         node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
                         node.KubeletVersion          = k8sNode.Status.NodeInfo.KubeletVersion;
-                        node.KubeProxyVersion        = k8sNode.Status.NodeInfo.KubeProxyVersion;
                         node.OperatingSystem         = k8sNode.Status.NodeInfo.OperatingSystem;
                         node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
                         node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;

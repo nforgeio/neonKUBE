@@ -321,12 +321,6 @@ namespace Neon.Kube
         public string KubeletVersion { get; set; }
 
         /// <summary>
-        /// Identifies the node's kube-proxy version.
-        /// </summary>
-        [JsonProperty(PropertyName = "KubeProxyVersion", Required = Required.Always | Required.AllowNull)]
-        public string KubeProxyVersion { get; set; }
-
-        /// <summary>
         /// Identifies the node's private address.
         /// </summary>
         [JsonProperty(PropertyName = "PrivateAddress", Required = Required.Always | Required.AllowNull)]
