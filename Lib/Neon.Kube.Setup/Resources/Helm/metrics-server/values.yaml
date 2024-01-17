@@ -5,7 +5,7 @@
 image:
   registry: registry.neon.local/neonkube
   repository: metrics-server
-  tag: v0.6.1
+  tag: $<KubeVersions.MetricsServer>
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
