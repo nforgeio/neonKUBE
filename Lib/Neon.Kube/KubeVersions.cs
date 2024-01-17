@@ -228,10 +228,10 @@ namespace Neon.Kube
         public const string GoLang = "1.21.3";
 
         /// <summary>
-        /// Specifies the version of the Kubernetes dashboard to be installed.
+        /// Specifies the version of the Kubernetes Dashboard to be installed.
         /// </summary>
         [KubeVersion]
-        public const string KubernetesDashboard = "2.5.1";
+        public const string KubernetesDashboard = "v2.7.0";
 
         /// <summary>
         /// Specifies the version of the Kubernetes dashboard metrics scraper to be installed.
@@ -262,6 +262,24 @@ namespace Neon.Kube
         /// </summary>
         [KubeVersion]
         public const string KubeletPackage = Kubernetes + "-00";
+
+        /// <summary>
+        /// Returns the package version for the Kubernetes metrics-server service to be installed.
+        /// </summary>
+        [KubeVersion]
+        public const string MetricsServer = "v0.6.4";
+
+        /// <summary>
+        /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
+        /// </summary>
+        [KubeVersion]
+        public const string KubeStateMetrics = "v2.10.1";
+
+        /// <summary>
+        /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
+        /// </summary>
+        [KubeVersion]
+        public const string KubernetesUIMetricsScraper = "v1.0.9";
 
         /// <summary>
         /// <para>
