@@ -130,30 +130,12 @@ namespace Neon.Kube.ClusterDef
         public bool NodeProblemDetector { get; set; } = false;
 
         /// <summary>
-        /// <para>
         /// Optionally enables the Istio service mesh.  This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// This will be automatically enabled when <see cref="Kiali"/> is enabled.
-        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "ServiceMesh", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "serviceMesh", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool ServiceMesh { get; set; } = false;
-
-        /// <summary>
-        /// <para>
-        /// Optionally enables the Kiali service mesh dashboard.  This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// <see cref="ServiceMesh"/> will also be enabled when <see cref="Kiali"/> is enabled.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "Kiali", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kiali", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool Kiali { get; set; } = false;
 
         /// <summary>
         /// Indicates whether <b>Mimir</b> is installed.
@@ -188,10 +170,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (Kiali)
-            {
-                ServiceMesh = true;
-            }
+            ServiceMesh = true;
         }
     }
 }

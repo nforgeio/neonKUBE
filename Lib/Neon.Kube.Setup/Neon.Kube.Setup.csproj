@@ -39,10 +39,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="Resources\Helm\calico\templates\service-controller.yaml" />
-        <None Remove="Resources\Helm\calico\templates\service-node.yaml" />
-        <None Remove="Resources\Helm\calico\templates\servicemonitor-controller.yaml" />
-        <None Remove="Resources\Helm\calico\templates\servicemonitor-node.yaml" />
         <None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
         <None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
         <None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
@@ -70,9 +66,6 @@
         <None Remove="Resources\Helm\harbor\templates\registrycontroller.yaml" />
         <None Remove="Resources\Helm\harbor\templates\trivy.yaml" />
         <None Remove="Resources\Helm\istio\templates\_helpers.tpl" />
-        <None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
-        <None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
-        <None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
         <None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
         <None Remove="Resources\Helm\loki\templates\buckets.yaml" />
         <None Remove="Resources\Helm\loki\templates\service.yaml" />
