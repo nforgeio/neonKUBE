@@ -31,6 +31,9 @@ spec:
     metricsExternalLabelName: ""
     externalLabels:
       cluster: {{ .Values.cluster.name }}
+      datacenter: {{ .Values.cluster.datacenter }}
+      neonkube_version: {{ .Values.cluster.version }}
+      hosting_environment: {{ .Values.cluster.hostingEnvironment }}
     shards: {{ .Values.shards }}
     instanceSelector:
       matchLabels:
