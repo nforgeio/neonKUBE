@@ -477,13 +477,6 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
 
-                    if (cluster.SetupState.ClusterDefinition.Features.Kiali)
-                    {
-                        controller.ClearStatus();
-                        controller.ThrowIfCancelled();
-                        await InstallKialiAsync(controller, controlNode);
-                    }
-
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallMinioAsync(controller, controlNode);
@@ -1524,6 +1517,30 @@ exit 1
         }
 
         /// <summary>
+        /// Uploads cluster related metadata to cluster nodes to <b>/etc/neonkube/metadata</b>
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="node">The target cluster node.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallClusterManifestAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            controller.ThrowIfCancelled();
+            node.InvokeIdempotent("cluster-metadata",
+                () =>
+                {
+                    var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
+
+                    node.UploadText(LinuxPath.Combine(KubeNodeFolder.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest(debugMode), Formatting.Indented));
+                });
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Installs Cilium and Hubble.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -1601,28 +1618,6 @@ cilium status --wait --wait-duration=5m
 
                     await Task.CompletedTask;
                 });
-        }
-
-        /// <summary>
-        /// Uploads cluster related metadata to cluster nodes to <b>/etc/neonkube/metadata</b>
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="node">The target cluster node.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ConfigureMetadataAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-
-            controller.ThrowIfCancelled();
-            node.InvokeIdempotent("cluster-metadata",
-                () =>
-                {
-                    node.UploadText(LinuxPath.Combine(KubeNodeFolder.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest, Formatting.Indented));
-                });
-
-            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2215,7 +2210,8 @@ cilium status --wait --wait-duration=5m
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress destination rule");
 
-                    var destinationRule                        = new V1DestinationRule().Initialize();
+                    var destinationRule = new V1DestinationRule().Initialize();
+
                     destinationRule.Metadata.Name              = "tls-kubernetes-apiserver";
                     destinationRule.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
 
@@ -2518,94 +2514,6 @@ cilium status --wait --wait-duration=5m
                     await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
                         releaseName: "cluster-crds",
                         @namespace:  KubeNamespace.NeonSystem);
-                });
-        }
-
-        /// <summary>
-        /// Deploy Kiali.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Kiali);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/kiali",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "setup", message: "kiali");
-
-                    var values        = new Dictionary<string, object>();
-                    var nodeSelectors = new Dictionary<string, string>
-                    {
-                        { NodeLabels.LabelIstio, "true" }
-                    };
-
-                    var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
-
-                    values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
-                    values.Add("image.operator.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.operator.repository", "kiali-kiali-operator");
-                    values.Add("image.kiali.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.kiali.repository", "kiali-kiali");
-                    values.Add("cluster.name", cluster.Name);
-                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
-                    values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                    values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
-                    values.Add($"neonkube.clusterDomain.grafana", ClusterHost.Grafana);
-                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
-                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-
-                    int i = 0;
-
-                    foreach (var selector in nodeSelectors)
-                    {
-                        values.Add($"nodeSelectors[{i}].key", selector.Key);
-                        values.Add($"nodeSelectors[{i}].value", selector.Value);
-                        i++;
-                    }
-
-                    i = 0;
-
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
-                    {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
-
-                    await controlNode.InstallHelmChartAsync(controller, "kiali",
-                        releaseName:  "kiali-operator",
-                        @namespace:   KubeNamespace.NeonSystem,
-                        prioritySpec: PriorityClass.NeonApp.Name,
-                        values:       values);
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/kiali-ready",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "kiali");
-
-                    await NeonHelper.WaitAllAsync(
-                        new List<Task>()
-                        {
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
-                        },
-                        timeoutMessage:    "setup/kiali-ready",
-                        cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4201,6 +4109,9 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
+            // $todo(jefflill): Do we need to change this into a Hubble user?
+
+#if TODO
             if (cluster.SetupState.ClusterDefinition.Features.Kiali)
             {
                 controller.ThrowIfCancelled();
@@ -4227,13 +4138,14 @@ $@"- name: StorageType
                         controller.ThrowIfCancelled();
 
                         (await k8s.NamespacedPodExecWithRetryAsync(
-                                    retryPolicy:        podExecRetry,
-                                    name:               pod.Name(),
-                                    namespaceParameter: pod.Namespace(),
-                                    container:          "grafana",
-                                    command:            cmd)).EnsureSuccess();
+                            retryPolicy:        podExecRetry,
+                            name:               pod.Name(),
+                            namespaceParameter: pod.Namespace(),
+                            container:          "grafana",
+                            command:            cmd)).EnsureSuccess();
                     });
             }
+#endif
 
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-config",
                 async () =>
@@ -4883,7 +4795,8 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var k8s = GetK8sClient(controller);
+            var k8s       = GetK8sClient(controller);
+            var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/cluster-manifest",
@@ -4892,7 +4805,7 @@ $@"- name: StorageType
                     var configmap = new TypedConfigMap<ClusterManifest>(
                         name:       KubeConfigMapName.ClusterManifest, 
                         @namespace: KubeNamespace.NeonSystem, 
-                        data:       KubeSetup.ClusterManifest);
+                        data:       KubeSetup.ClusterManifest(debugMode));
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(configmap);
                 });
@@ -5111,7 +5024,10 @@ $@"- name: StorageType
                             enabled:      true,
                             displayOrder: 10);
                     }
-                     
+
+                    // $todo(jefflill): Create Hubble dashboard.
+
+#if TODO
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
                         await CreateNeonDashboardAsync(
@@ -5123,6 +5039,7 @@ $@"- name: StorageType
                             enabled:      true,
                             displayOrder: 10);
                     }
+#endif
                 });
         }
 

@@ -103,29 +103,44 @@ namespace Neon.Kube.Setup
         /// file and then falls back to downloading it from S3.
         /// </para>
         /// </summary>
-        public static ClusterManifest ClusterManifest
+        /// <param name="debugMode">
+        /// <para>
+        /// Optionally indicates that setup is running in <b>debug mode</b> which currently means that
+        /// the cluster manifest has not been generated yet.  When this is <c>true</c>, this method
+        /// will return an empty manifest and any subsequent calls will also return an empty manifest,
+        /// even when <paramref name="debugMode"/> is passed as <c>false</c>.
+        /// </para>
+        /// <note>
+        /// Clusters deployed with <b>debug mode</b> will not pin the NEONKUBE related images on cluster
+        /// nodes, resulting in the possibility that Kubelet may evict these images due to disk pressure.
+        /// </note>
+        /// </param>
+        /// <returns>The cluster manifest.</returns>
+        public static ClusterManifest ClusterManifest(bool debugMode = false)
         {
-            get
+            if (cachedClusterManifest != null)
             {
-                if (cachedClusterManifest != null)
+                return cachedClusterManifest;
+            }
+
+            var localClusterManifestPath = Path.Combine(NeonHelper.GetApplicationFolder(), "cluster-manifest.json");
+
+            if (File.Exists(localClusterManifestPath))
+            {
+                return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(File.ReadAllText(localClusterManifestPath));
+            }
+            else
+            {
+                if (debugMode)
                 {
-                    return cachedClusterManifest;
+                    return cachedClusterManifest = new ClusterManifest();
                 }
 
-                var localClusterManifestPath = Path.Combine(NeonHelper.GetApplicationFolder(), "cluster-manifest.json");
-
-                if (File.Exists(localClusterManifestPath))
+                using (var httpClient = new HttpClient())
                 {
-                    return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(File.ReadAllText(localClusterManifestPath));
-                }
-                else
-                {
-                    using (var httpClient = new HttpClient())
-                    {
-                        var response = httpClient.GetSafeAsync(KubeDownloads.NeonClusterManifestUri).Result;
+                    var response = httpClient.GetSafeAsync(KubeDownloads.NeonClusterManifestUri).Result;
 
-                        return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(response.Content.ReadAsStringAsync().Result);
-                    }
+                    return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(response.Content.ReadAsStringAsync().Result);
                 }
             }
         }

@@ -198,7 +198,7 @@ namespace NeonCli
 
             var manifestImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var image in KubeSetup.ClusterManifest.ContainerImages)
+            foreach (var image in KubeSetup.ClusterManifest().ContainerImages)
             {
                 manifestImages.Add(image.SourceRef);
             }

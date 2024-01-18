@@ -245,7 +245,7 @@ namespace Neon.Kube.Setup
                         {
                             node.Status = "upgrade linux kernel";
 
-                            if (node.UpgradeLinuxDistribution(aptGetTool: KubeConst.SafeAptGetToolPath, upgradeKernel: true));
+                            if (node.UpgradeLinuxDistribution(aptGetTool: KubeConst.SafeAptGetToolPath, upgradeKernel: true))
                             {
                                 node.Reboot(wait: true);
                             }
@@ -256,7 +256,7 @@ namespace Neon.Kube.Setup
 
             controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath));
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
-            controller.AddNodeStep("cluster manifest", ConfigureMetadataAsync);
+            controller.AddNodeStep("cluster manifest", InstallClusterManifestAsync);
 
             // Perform common configuration for the bootstrap node first.
             // We need to do this so the the package cache will be running
@@ -265,7 +265,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("setup control-plane",
                 (controller, node) =>
                 {
-                    node.SetupNode(controller, KubeSetup.ClusterManifest);
+                    node.SetupNode(controller, KubeSetup.ClusterManifest(options.DebugMode));
                 },
                 (controller, node) => node == cluster.DeploymentControlNode);
 
@@ -276,7 +276,7 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
                     {
-                        node.SetupNode(controller, KubeSetup.ClusterManifest);
+                        node.SetupNode(controller, KubeSetup.ClusterManifest(options.DebugMode));
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
                     (controller, node) => node != cluster.DeploymentControlNode);
