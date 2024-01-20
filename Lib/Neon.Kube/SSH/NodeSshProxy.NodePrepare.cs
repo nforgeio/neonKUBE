@@ -51,6 +51,8 @@ namespace Neon.Kube.SSH
             InvokeIdempotent("setup/swap-remove",
                 () =>
                 {
+                    controller.LogProgress(this, verb: "remove", message: "swap file");
+
                     SudoCommand("rm -f /swap.img");
                 });
         }
@@ -274,7 +276,7 @@ systemctl restart rsyslog.service
             InvokeIdempotent("base/cilium-cli",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "journald filters");
+                    controller.LogProgress(this, verb: "install", message: "cilium cli");
 
                     var script =
 $@"
@@ -306,6 +308,36 @@ popd
 ";
                     SudoCommand(CommandBundle.FromScript(script))
                         .EnsureSuccess();
+                });
+        }
+
+        /// <summary>
+        /// Installs the Istio CLI.
+        /// </summary>
+        /// <param name="controller"></param>
+        public void InstallIstioCli(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/istio-cli",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "install", message: "istiocli");
+
+                    // Download the Istio release and relocate its CLI to: /usr/local/bin
+
+                    const string script =
+$@"
+set -euo pipefail
+
+cd /tmp
+curl -L --retry 5 --retry-delay 10 https://github.com/istio/istio/releases/download/{KubeVersions.Istio}/istio-{KubeVersions.Istio}-linux-amd64.tar.gz -o istio-{KubeVersions.Istio}.tar.gz
+tar -xzvf istio-{KubeVersions.Istio}.tar.gz
+cp istio-{KubeVersions.Istio}/bin/* /usr/local/bin
+rm -r istio-{KubeVersions.Istio}*
+";
+                    SudoCommand(CommandBundle.FromScript(script))
+                                .EnsureSuccess();
                 });
         }
 
@@ -1271,15 +1303,12 @@ rm -rf linux-amd64
         public async Task LoadImageAsync(NodeImageInfo image)
         {
             await SyncContext.Clear;
-            await Task.Yield();
 
             var dockerPath = NeonHelper.VerifiedDockerCli;
 
-            await InvokeIdempotentAsync($"setup/debug-load-images-{image.Name}",
-                async () =>
+            InvokeIdempotent($"setup/debug-load-images-{image.Name}",
+                () =>
                 {
-                    await Task.CompletedTask;
-
                     var id = Guid.NewGuid().ToString("d");
 
                     using (var tempFile = new TempFile(suffix: ".image.tar", null))

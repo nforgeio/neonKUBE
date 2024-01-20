@@ -62,6 +62,7 @@ namespace Neon.Kube.Setup
         private const int                       maxJoinAttempts         = 5;
         private static readonly TimeSpan        joinRetryDelay          = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan        clusterOpTimeout        = TimeSpan.FromMinutes(10);
+        private static readonly int             clusterOpTimeoutSeconds = (int)Math.Ceiling(clusterOpTimeout.TotalSeconds);
         private static readonly TimeSpan        clusterOpPollInterval   = TimeSpan.FromSeconds(1);
         private static readonly IRetryPolicy    podExecRetry            = new ExponentialRetryPolicy(e => e is ExecuteException, maxAttempts: 10, maxRetryInterval: TimeSpan.FromSeconds(5));
         private static IStaticDirectory         cachedResources;

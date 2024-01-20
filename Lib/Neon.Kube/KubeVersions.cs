@@ -410,7 +410,7 @@ namespace Neon.Kube
         /// Specifies the version of Istio to install.
         /// </summary>
         [KubeVersion]
-        public const string Istio = "1.14.1-distroless";
+        public const string Istio = "1.20.2";
 
         /// <summary>
         /// Specifies the version of Helm to be installed.

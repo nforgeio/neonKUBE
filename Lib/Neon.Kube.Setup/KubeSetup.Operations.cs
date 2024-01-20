@@ -412,11 +412,11 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallMetricsServerAsync(controller, controlNode);
+                    await InstallIstioAsync(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallIstioAsync(controller, controlNode);
+                    await InstallMetricsServerAsync(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
@@ -1541,86 +1541,6 @@ exit 1
         }
 
         /// <summary>
-        /// Installs Cilium and Hubble.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCiliumAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/install-cilium",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "setup", message: "cilium");
-
-                    var cluster          = controlNode.Cluster;
-                    var hostingManager   = cluster.HostingManager;
-                    var firstControlNode = cluster.ControlNodes.First();
-                    var k8s              = GetK8sClient(controller);
-                    var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
-                    var mtu              = hostingManager.NodeMtu;
-
-                    var script =
-$@"
-set -euo pipefail
-
-# Install Cilium using the CLI.
-#
-# NOTE: The [cilium-cli] appears to select different operator container
-#       images when deployed to cloud native Kubernetes platforms and
-#       a generic image for other environments.  NEONKUBE deploys the
-#       generic image.  [cilium-cli] appends [-generic] to the
-#       [cilium-operator] container name below for us.
-
-cilium install --version {KubeVersions.Cilium} \
-    --chart-directory={KubeNodeFolder.Helm}/cilium \
-    --set ipam.mode=Kubernetes \
-    --set kubeProxyReplacement=strict \
-    --set k8sServiceHost=127.0.0.1 \
-    --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
-    --set MTU={mtu} \
-    --set envoy.image.repository=registry.neon.local/neonkube/cilium-envoy \
-    --set envoy.image.useDigest=false \
-    --set hubble.relay.image.repository=registry.neon.local/neonkube/cilium-hubble-relay \
-    --set hubble.relay.image.useDigest=false \
-    --set hubble.ui.backend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui-backend \
-    --set hubble.ui.backend.image.useDigest=false \
-    --set hubble.ui.frontend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui \
-    --set hubble.ui.frontend.image.useDigest=false \
-    --set image.repository=registry.neon.local/neonkube/cilium \
-    --set image.useDigest=false \
-    --set operator.image.repository=registry.neon.local/neonkube/cilium-operator \
-    --set operator.image.useDigest=false
-
-# We need to restart CRI-O, presumably so it can react to
-# the new cilium-proxy CNI.
-
-systemctl restart cri-o
-
-# Enable Hubble
-
-cilium hubble enable --ui
-
-# Validate and wait for the Cilium installation to complete.
-
-cilium status --wait --wait-duration=5m
-";
-
-                    firstControlNode.SudoCommand(script)
-                        .EnsureSuccess();
-
-                    await Task.CompletedTask;
-                });
-        }
-
-        /// <summary>
         /// Configures pods to be schedule on control-plane nodes when enabled.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -1687,55 +1607,83 @@ cilium status --wait --wait-duration=5m
         }
 
         /// <summary>
-        /// Installs the Kubernetes Metrics Server service.
+        /// Installs Cilium and Hubble.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task InstallCiliumAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster       = controlNode.Cluster;
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MetricsServer);
-
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
+            await controlNode.InvokeIdempotentAsync("setup/install-cilium",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "metrics-server");
+                    controller.LogProgress(controlNode, verb: "setup", message: "cilium");
 
-                    var values = new Dictionary<string, object>();
+                    var cluster          = controlNode.Cluster;
+                    var hostingManager   = cluster.HostingManager;
+                    var firstControlNode = cluster.ControlNodes.First();
+                    var k8s              = GetK8sClient(controller);
+                    var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+                    var mtu              = hostingManager.NodeMtu;
 
-                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    var script =
+$@"
+set -euo pipefail
 
-                    int i = 0;
+# Install Cilium using the CLI.
+#
+# NOTE: The [cilium-cli] appears to select different operator container
+#       images when deployed to cloud native Kubernetes platforms and
+#       a generic image for other environments.  NEONKUBE deploys the
+#       generic image.  [cilium-cli] appends [-generic] to the
+#       [cilium-operator] container name below for us.
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
-                    {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
+cilium install --version {KubeVersions.Cilium} \
+    --chart-directory={KubeNodeFolder.Helm}/cilium \
+    --set ipam.mode=Kubernetes \
+    --set kubeProxyReplacement=strict \
+    --set k8sServiceHost=127.0.0.1 \
+    --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
+    --set MTU={mtu} \
+    --set envoy.image.repository=registry.neon.local/neonkube/cilium-envoy \
+    --set envoy.image.useDigest=false \
+    --set hubble.relay.image.repository=registry.neon.local/neonkube/cilium-hubble-relay \
+    --set hubble.relay.image.useDigest=false \
+    --set hubble.ui.backend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui-backend \
+    --set hubble.ui.backend.image.useDigest=false \
+    --set hubble.ui.frontend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui \
+    --set hubble.ui.frontend.image.useDigest=false \
+    --set image.repository=registry.neon.local/neonkube/cilium \
+    --set image.useDigest=false \
+    --set operator.image.repository=registry.neon.local/neonkube/cilium-operator \
+    --set operator.image.useDigest=false \
+    --set socketLB.hostNamespaceOnly=true
 
-                    await controlNode.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespace.KubeSystem, values: values);
-                });
+# We need to restart CRI-O, presumably so it can react to
+# the new cilium-proxy CNI.
 
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "metrics-server");
+systemctl restart cri-o
 
-                    await k8s.AppsV1.WaitForDeploymentAsync("kube-system", "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+# Enable Hubble
+
+cilium hubble enable --ui
+
+# Validate and wait for the Cilium installation to complete.
+
+cilium status --wait --wait-duration={clusterOpTimeoutSeconds}s
+";
+
+                    firstControlNode.SudoCommand(script)
+                        .EnsureSuccess();
+
+                    await Task.CompletedTask;
                 });
         }
 
@@ -1748,13 +1696,59 @@ cilium status --wait --wait-duration=5m
         public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
+             
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            controller.ThrowIfCancelled();
+            controlNode.InvokeIdempotent("setup/install-istio",
+                () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "istio");
+
+                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s           = GetK8sClient(controller);
+                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+
+                    const string manifest =
+$@"
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  hub: registry.neon.local/neonkube
+  tag: {KubeVersions.Istio}
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+    cni:
+      enabled: true
+  values:
+    global:
+      istioNamespace: {KubeNamespace.IstioSystem}
+    pilot:
+      traceSampling: 0.1
+";
+
+                    const string script =
+$@"
+set -euo pipefail
+
+istioctl install -y -f manifest.yaml
+";
+                    controlNode.SudoCommand(CommandBundle.FromScript(script)
+                        .AddFile("manifest.yaml", manifest))
+                        .EnsureSuccess();
+                });
+
+            // $todo(jefflill):
+            //
+            // Remove this after we finish converting to setting Istio up via its CLI.
+            // I'm keeping this around in case we need to apply any of these configs.
+#if TODO
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
             var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
@@ -1802,7 +1796,6 @@ cilium status --wait --wait-duration=5m
                     values.Add($"resources.pilot.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
                     values.Add($"resources.pilot.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
 
-                    
                     i = 0;
 
                     foreach (var selector in nodeSelectors)
@@ -1892,7 +1885,7 @@ cilium status --wait --wait-duration=5m
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
 
-                    // turn down tracing in neon namespaces.
+                    // Turn down tracing in neon namespaces.
 
                     telemetry.Metadata.Name                                 = "neon-monitor-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
@@ -1905,6 +1898,60 @@ cilium status --wait --wait-duration=5m
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 1.0;
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
+                });
+#endif
+        }
+
+        /// <summary>
+        /// Installs the Kubernetes Metrics Server service.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster       = controlNode.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MetricsServer);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "metrics-server");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
+
+                    await controlNode.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespace.KubeSystem, values: values);
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "metrics-server");
+
+                    await k8s.AppsV1.WaitForDeploymentAsync("kube-system", "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -1954,7 +2001,7 @@ cilium status --wait --wait-duration=5m
 
                     await controlNode.InstallHelmChartAsync(controller, "cert-manager",
                         releaseName:  "cert-manager",
-                        @namespace:   KubeNamespace.NeonIngress,
+                        @namespace:   KubeNamespace.IstioSystem,
                         prioritySpec: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}",
                         values:       values);
                 });
@@ -1968,9 +2015,9 @@ cilium status --wait --wait-duration=5m
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.IstioSystem, "cert-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.IstioSystem, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.IstioSystem, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
                         timeoutMessage:   "setup/cert-manager-ready",
                         cancellationToken: controller.CancellationToken);
@@ -1997,7 +2044,7 @@ cilium status --wait --wait-duration=5m
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "neon-acme",
-                            NamespaceProperty = KubeNamespace.NeonIngress
+                            NamespaceProperty = KubeNamespace.IstioSystem
                         },
                         Spec = new V1IssuerSpec()
                         {
@@ -2012,7 +2059,7 @@ cilium status --wait --wait-duration=5m
                             Metadata = new V1ObjectMeta()
                             {
                                 Name              = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
-                                NamespaceProperty = KubeNamespace.NeonIngress
+                                NamespaceProperty = KubeNamespace.IstioSystem
                             },
                             StringData = new Dictionary<string, string>()
                             {
@@ -2032,7 +2079,7 @@ cilium status --wait --wait-duration=5m
                             Metadata = new V1ObjectMeta()
                             {
                                 Name              = issuer.Spec.Acme.PrivateKeySecretRef.Name,
-                                NamespaceProperty = KubeNamespace.NeonIngress
+                                NamespaceProperty = KubeNamespace.IstioSystem
                             },
                             StringData = new Dictionary<string, string>()
                             {
@@ -2055,7 +2102,7 @@ cilium status --wait --wait-duration=5m
                                 Metadata = new V1ObjectMeta()
                                 {
                                     Name              = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
-                                    NamespaceProperty = KubeNamespace.NeonIngress
+                                    NamespaceProperty = KubeNamespace.IstioSystem
                                 },
                                 StringData = new Dictionary<string, string>()
                                 {
@@ -2107,7 +2154,7 @@ cilium status --wait --wait-duration=5m
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-acme",
                         releaseName: "neon-acme",
-                        @namespace:   KubeNamespace.NeonIngress,
+                        @namespace:   KubeNamespace.IstioSystem,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
                 });
@@ -2144,7 +2191,7 @@ cilium status --wait --wait-duration=5m
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "neon-cluster-certificate",
-                            NamespaceProperty = KubeNamespace.NeonIngress
+                            NamespaceProperty = KubeNamespace.IstioSystem
                         },
                         Data = cert,
                         Type = "kubernetes.io/tls"
@@ -2182,7 +2229,7 @@ cilium status --wait --wait-duration=5m
 
                     var service                        = new V1Service().Initialize();
                     service.Metadata.Name              = "kubernetes-apiserver";
-                    service.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+                    service.Metadata.NamespaceProperty = KubeNamespace.IstioSystem;
 
                     service.Spec = new V1ServiceSpec()
                     {
@@ -2213,7 +2260,7 @@ cilium status --wait --wait-duration=5m
                     var destinationRule = new V1DestinationRule().Initialize();
 
                     destinationRule.Metadata.Name              = "tls-kubernetes-apiserver";
-                    destinationRule.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+                    destinationRule.Metadata.NamespaceProperty = KubeNamespace.IstioSystem;
 
                     destinationRule.Spec = new V1DestinationRuleSpec()
                     {
@@ -2243,11 +2290,11 @@ cilium status --wait --wait-duration=5m
 
                     var virtualService                        = new V1VirtualService().Initialize();
                     virtualService.Metadata.Name              = "kubernetes-apiserver";
-                    virtualService.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+                    virtualService.Metadata.NamespaceProperty = KubeNamespace.IstioSystem;
 
                     virtualService.Spec = new V1VirtualServiceSpec()
                     {
-                        Gateways = new List<string>() { $"{KubeNamespace.NeonIngress}/neoncluster-gateway" },
+                        Gateways = new List<string>() { $"{KubeNamespace.IstioSystem}/neoncluster-gateway" },
                         Hosts    = new List<string>() { cluster.SetupState.ClusterDomain },
                         Http     = new List<HTTPRoute>()
                         {
@@ -2325,7 +2372,7 @@ cilium status --wait --wait-duration=5m
 
                     await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
-                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+                    secret.Metadata.NamespaceProperty = KubeNamespace.IstioSystem;
 
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                 });
@@ -5151,7 +5198,7 @@ $@"- name: StorageType
 
             var tasks = new List<Task>();
 
-            tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonIngress, false));
+            tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.IstioSystem, false));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonMonitor, true));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonStorage, false));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonStatus, false));

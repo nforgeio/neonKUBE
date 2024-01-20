@@ -62,9 +62,9 @@ namespace Neon.Kube
         public const string KubeNodeLease = "kube-node-lease";
 
         /// <summary>
-        /// Hosts the remaining Istio components.
+        /// Hosts Istio components.
         /// </summary>
-        public const string NeonIngress = "neon-ingress";
+        public const string IstioSystem = "istio-system";
 
         /// <summary>
         /// Hosts cluster monitoring.
@@ -123,7 +123,7 @@ namespace Neon.Kube
 
             NeonNamespaces = new List<string>()
             {
-                NeonIngress,
+                IstioSystem,
                 NeonMonitor,
                 NeonStorage,
                 NeonSystem,
