@@ -31,16 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// <para>
-    /// Wrapper message for uint32.
-    ///
-    /// The JSON representation for UInt32Value is JSON number.
-    /// </para>
+    /// Wraps a uint32 value.
     /// </summary>
     public class UInt32Value : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the UInt32Value class.
+        /// Default constructor.
         /// </summary>
         public UInt32Value()
         {

@@ -27,7 +27,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// CRD that controls Istio tracing.
+    /// Controls Istio telemetry.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
@@ -54,7 +54,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "telemetries";
 
         /// <summary>
-        /// Initializes a new instance of the Telemetry class.
+        /// Default constructor.
         /// </summary>
         public V1Telemetry()
         {

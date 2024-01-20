@@ -39,7 +39,7 @@ namespace Neon.Kube.Resources.Istio
     public class Headers : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the Headers class.
+        /// Default constructor.
         /// </summary>
         public Headers()
         {

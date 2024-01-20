@@ -31,12 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// L4 routing rule weighted destination.
+    /// Specifies a weighted L4 routing rule destination.
     /// </summary>
     public class RouteDestination : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the RouteDestination class.
+        /// Default constructor.
         /// </summary>
         public RouteDestination()
         {

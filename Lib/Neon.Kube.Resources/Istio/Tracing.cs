@@ -36,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
     public class Tracing : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the Tracing class.
+        /// Default constructor.
         /// </summary>
         public Tracing()
         {

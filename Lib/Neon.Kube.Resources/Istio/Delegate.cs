@@ -36,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
     public class Delegate : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the Delegate class.
+        /// Default constructor.
         /// </summary>
         public Delegate()
         {

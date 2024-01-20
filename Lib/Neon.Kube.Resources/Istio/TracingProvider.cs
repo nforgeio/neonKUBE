@@ -31,12 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Descrribes a tracing provider.
+    /// Describes a tracing provider.
     /// </summary>
     public class TracingProvider : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the TracingProvider class.
+        /// Default constructor.
         /// </summary>
         public TracingProvider()
         {

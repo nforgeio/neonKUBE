@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
+    /// Specifies the details for an Istio virtual service.
     /// </summary>
     public class V1VirtualServiceSpec
     {

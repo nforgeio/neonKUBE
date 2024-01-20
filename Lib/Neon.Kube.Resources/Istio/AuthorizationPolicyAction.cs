@@ -34,7 +34,7 @@ using Neon.Net;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Action specifies the operation to take for an <see cref="V1AuthorizationPolicy"/>.
+    /// Specifies the operation to take for an <see cref="V1AuthorizationPolicy"/>.
     /// </summary>
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
     public enum AuthorizationPolicyAction

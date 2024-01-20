@@ -37,7 +37,7 @@ namespace Neon.Kube.Resources.Istio
     public class TCPRoute : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the TCPRoute class.
+        /// Default constructor.
         /// </summary>
         public TCPRoute()
         {

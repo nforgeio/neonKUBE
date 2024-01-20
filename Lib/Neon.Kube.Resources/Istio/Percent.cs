@@ -32,7 +32,7 @@ namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// <para>
-    /// Percent specifies the number of a port to be used for matching or selection for final routing.
+    /// Default constructor.
     /// </para>
     /// </summary>
     public class Percent : IValidate

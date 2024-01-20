@@ -28,7 +28,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// ServiceEntry enables adding additional entries into Istio’s internal service registry.
+    /// Used to add additional entries into Istio’s internal service registry.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
@@ -55,7 +55,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "serviceentries";
 
         /// <summary>
-        /// Initializes a new instance of the ServiceEntry class.
+        /// Default constructor.
         /// </summary>
         public ServiceEntry()
         {

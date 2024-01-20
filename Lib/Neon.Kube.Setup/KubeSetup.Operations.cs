@@ -1727,8 +1727,6 @@ spec:
     cni:
       enabled: true
   values:
-    global:
-      istioNamespace: {KubeNamespace.IstioSystem}
     pilot:
       traceSampling: 0.1
 ";

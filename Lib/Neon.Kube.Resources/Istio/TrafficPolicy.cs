@@ -34,7 +34,7 @@ namespace Neon.Kube.Resources.Istio
     public class TrafficPolicy
     {
         /// <summary>
-        /// Initializes a new instance of the TrafficPolicy class.
+        /// Default constructor.
         /// </summary>
         public TrafficPolicy()
         {

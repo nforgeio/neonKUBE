@@ -29,13 +29,13 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Enables specifying the properties of a single non-Kubernetes workload such a VM or a bare metal services that can be 
-    /// referred to by service entries.
+    /// Specifies the properties of a single non-Kubernetes workload such a VM or a bare metal services that can be 
+    /// referenced by a virtual service.
     /// </summary>
     public class WorkloadEntry
     {
         /// <summary>
-        /// Initializes a new instance of the WorkloadEntry class.
+        /// Default constructor.
         /// </summary>
         public WorkloadEntry()
         {

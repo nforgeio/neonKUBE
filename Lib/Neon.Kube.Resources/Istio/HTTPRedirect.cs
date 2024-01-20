@@ -31,14 +31,14 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// HTTPRedirect can be used to send a 301 redirect response to the caller, where the Authority/Host and the URI in the response can be 
-    /// swapped with the specified values. For example, the following rule redirects requests for /v1/getProductRatings API on the ratings 
-    /// service to /v1/bookRatings provided by the bookratings service.
+    /// Used to send a 301 redirect response to the caller, where the Authority/Host and the URI in the response can be 
+    /// swapped with the specified values. For example, the following rule redirects requests for /v1/getProductRatings
+    /// API on the ratings service to /v1/bookRatings provided by the bookratings service.
     /// </summary>
     public class HTTPRedirect : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPRedirect class.
+        /// Default constructor.
         /// </summary>
         public HTTPRedirect()
         {

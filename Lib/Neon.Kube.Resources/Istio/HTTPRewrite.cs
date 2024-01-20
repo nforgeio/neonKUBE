@@ -31,14 +31,15 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// HTTPRewrite can be used to rewrite specific parts of a HTTP request before forwarding the request to the destination. Rewrite 
-    /// primitive can be used only with HTTPRouteDestination. The following example demonstrates how to rewrite the URL prefix for api 
-    /// call (/ratings) to ratings service before making the actual API call.
+    /// Used to rewrite specific parts of a HTTP request before forwarding the request to the destination.
+    /// Rewrite  primitive can be used only with HTTPRouteDestination. The following example demonstrates
+    /// how to rewrite the URL prefix for api  call (/ratings) to ratings service before making the actual
+    /// API call.
     /// </summary>
     public class HTTPRewrite : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPRewrite class.
+        /// Default constructor.
         /// </summary>
         public HTTPRewrite()
         {

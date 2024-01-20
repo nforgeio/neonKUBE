@@ -38,7 +38,7 @@ using Neon.Net;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Resolution determines how the proxy will resolve the IP addresses of the network endpoints associated with the service, so 
+    /// Determines how the proxy will resolve the IP addresses of the network endpoints associated with the service, so 
     /// that it can route to one of them. The resolution mode specified here has no impact on how the application resolves the IP 
     /// address associated with the service. The application may still have to use DNS to resolve the service to an IP so that the 
     /// outbound traffic can be captured by the Proxy. Alternatively, for HTTP services, the application could directly communicate 

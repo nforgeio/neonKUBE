@@ -32,13 +32,13 @@ namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// <para>
-    /// PortSelector specifies the number of a port to be used for matching or selection for final routing.
+    /// Specifies the number of a port to be used for matching or selection for final routing.
     /// </para>
     /// </summary>
     public class PortSelector : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the PortSelector class.
+        /// Default constructor.
         /// </summary>
         public PortSelector()
         {

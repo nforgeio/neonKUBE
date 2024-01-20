@@ -52,7 +52,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "destinationrules";
 
         /// <summary>
-        /// Initializes a new instance of the V1DestinationRule class.
+        /// Default constructor.
         /// </summary>
         public V1DestinationRule()
         {

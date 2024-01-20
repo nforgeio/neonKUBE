@@ -31,15 +31,13 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// <para>
-    /// Abort specification is used to prematurely abort a request with a pre-specified error code. The following example will return an HTTP 
+    /// Used to prematurely abort a request with a pre-specified error code. The following example will return an HTTP 
     /// 400 error code for 1 out of every 1000 requests to the “ratings” service “v1”.
-    /// </para>
     /// </summary>
     public class Abort : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPFaultInjection.Abort class.
+        /// Default constructor.
         /// </summary>
         public Abort()
         {

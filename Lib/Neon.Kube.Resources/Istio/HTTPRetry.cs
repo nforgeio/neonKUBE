@@ -37,7 +37,7 @@ namespace Neon.Kube.Resources.Istio
     public class HTTPRetry : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPRetry class.
+        /// Default constructor.
         /// </summary>
         public HTTPRetry()
         {

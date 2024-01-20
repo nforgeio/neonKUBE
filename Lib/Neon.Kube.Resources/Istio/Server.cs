@@ -29,12 +29,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes the properties of the proxy on a given load balancer port.
+    /// Describes the properties of the proxy on a given ingress port.
     /// </summary>
     public class Server
     {
         /// <summary>
-        /// Initializes a new instance of the Server class.
+        /// Default constructor.
         /// </summary>
         public Server()
         {

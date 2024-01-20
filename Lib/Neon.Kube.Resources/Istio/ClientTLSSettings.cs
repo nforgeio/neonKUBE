@@ -35,7 +35,7 @@ namespace Neon.Kube.Resources.Istio
     public class ClientTLSSettings
     {
         /// <summary>
-        /// Initializes a new instance of the ClientTLSSettings class.
+        /// Default constructor.
         /// </summary>
         public ClientTLSSettings()
         {

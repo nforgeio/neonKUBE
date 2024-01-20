@@ -27,7 +27,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// 
+    /// Describes a Istio gateway.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
@@ -54,7 +54,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "gateways";
 
         /// <summary>
-        /// Initializes a new instance of the Gateway class.
+        /// Default constructor.
         /// </summary>
         public V1Gateway()
         {

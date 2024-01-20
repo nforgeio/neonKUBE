@@ -36,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
     public class StringMatch : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the StringMatch class.
+        /// Default constructor.
         /// </summary>
         public StringMatch()
         {

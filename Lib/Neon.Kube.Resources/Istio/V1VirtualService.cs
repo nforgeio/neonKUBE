@@ -27,7 +27,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// 
+    /// Describes an Istio virtual service.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
@@ -54,7 +54,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "virtualservices";
 
         /// <summary>
-        /// Initializes a new instance of the V1VirtualService class.
+        /// Default constructor.
         /// </summary>
         public V1VirtualService()
         {

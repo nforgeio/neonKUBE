@@ -38,7 +38,7 @@ using Neon.Net;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// TLS modes enforced by the proxy.
+    /// Enumerates TLS modes enforced by the proxy.
     /// </summary>
     [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]

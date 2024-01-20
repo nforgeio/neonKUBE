@@ -32,14 +32,13 @@ namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// <para>
-    /// Delay specification is used to inject latency into the request forwarding path. The following example will introduce a 5
-    /// second delay in 1 out of every 1000 requests to the “v1” version of the “reviews” service from all pods with label env: prod
+    /// Used to inject latency into the request forwarding path.
     /// </para>
     /// </summary>
     public class Delay : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPFaultInjection.Delay class.
+        /// Default constructor.
         /// </summary>
         public Delay()
         {

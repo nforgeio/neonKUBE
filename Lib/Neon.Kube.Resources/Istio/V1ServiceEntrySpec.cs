@@ -22,12 +22,12 @@ using System.ComponentModel;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// ServiceEntry enables adding additional entries into Istio’s internal service registry.
+    /// Specifies an Istio service.
     /// </summary>
     public class V1ServiceEntrySpec
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public V1ServiceEntrySpec()
         {

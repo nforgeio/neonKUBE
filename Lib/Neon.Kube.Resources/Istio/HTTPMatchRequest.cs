@@ -31,14 +31,14 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// HttpMatchRequest specifies a set of criterion to be met in order for the rule to be applied to the HTTP request. For example, the following 
-    /// restricts the rule to match only requests where the URL path starts with /ratings/v2/ and the request contains a custom end-user header 
-    /// with value jason.
+    /// Specifies a set of criterion to be met in order for the rule to be applied to the HTTP request. For example, the following 
+    /// restricts the rule to match only requests where the URL path starts with /ratings/v2/ and the request contains a custom end-user
+    /// header  with value jason.
     /// </summary>
     public class HTTPMatchRequest : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPMatchRequest class.
+        /// Default constructor.
         /// </summary>
         public HTTPMatchRequest()
         {

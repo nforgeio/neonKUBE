@@ -38,7 +38,7 @@ using Neon.Net;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Location specifies whether the service is part of Istio mesh or outside the mesh. Location determines the behavior of several
+    /// Specifies whether the service is part of Istio mesh or outside the mesh. Location determines the behavior of several
     /// features, such as service-to-service mTLS authentication, policy enforcement, etc. When communicating with services outside 
     /// the mesh, Istio’s mTLS authentication is disabled, and policy enforcement is performed on the client-side as opposed to
     /// server-side.

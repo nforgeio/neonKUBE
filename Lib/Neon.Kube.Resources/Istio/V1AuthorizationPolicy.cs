@@ -52,7 +52,7 @@ namespace Neon.Kube.Resources.Istio
         public const string KubePlural = "authorizationpolicies";
 
         /// <summary>
-        /// Initializes a new instance of the V1AuthorizationPolicy class.
+        /// Default constructor.
         /// </summary>
         public V1AuthorizationPolicy()
         {

@@ -31,12 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// 
+    /// Specifies ingress TLS settings.
     /// </summary>
     public class ServerTLSSettings: IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the ServerTLSSettings class.
+        /// Default constructor.
         /// </summary>
         public ServerTLSSettings()
         {

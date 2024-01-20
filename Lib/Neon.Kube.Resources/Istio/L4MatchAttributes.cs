@@ -31,12 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// L4 connection match attributes. Note that L4 connection matching support is incomplete.
+    /// Describes L4 connection match attributes. Note that L4 connection matching support is incomplete.
     /// </summary>
     public class L4MatchAttributes : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the L4MatchAttributes class.
+        /// Default constructor.
         /// </summary>
         public L4MatchAttributes()
         {

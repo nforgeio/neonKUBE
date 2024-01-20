@@ -29,12 +29,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
+    /// Specifires an Istio gateway.
     /// </summary>
     public class V1GatewaySpec
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public V1GatewaySpec()
         {

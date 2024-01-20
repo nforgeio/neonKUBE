@@ -31,9 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// <para>
-    /// HTTPFaultInjection can be used to specify one or more faults to inject while forwarding HTTP requests to the destination specified in a route. Fault specification is part of a V1VirtualService rule. Faults include aborting the Http request from downstream service, and/or delaying proxying of requests. A fault rule MUST HAVE delay or abort or both.
-    /// </para>
+    /// Used to specify one or more faults to inject while forwarding HTTP requests to the destination specified in a route. Fault specification is part of a V1VirtualService rule. Faults include aborting the Http request from downstream service, and/or delaying proxying of requests. A fault rule MUST HAVE delay or abort or both.
     /// </summary>
     /// <remarks>
     /// Note: Delay and abort faults are independent of one another, even if both are specified simultaneously.
@@ -41,7 +39,7 @@ namespace Neon.Kube.Resources.Istio
     public class HTTPFaultInjection : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPFaultInjection class.
+        /// Default constructor.
         /// </summary>
         public HTTPFaultInjection()
         {

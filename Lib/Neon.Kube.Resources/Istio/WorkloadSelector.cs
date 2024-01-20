@@ -29,7 +29,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// WorkloadSelector specifies the criteria used to determine if the Gateway, Sidecar, EnvoyFilter, or ServiceEntry 
+    /// Specifies the criteria used to determine if the Gateway, Sidecar, EnvoyFilter, or ServiceEntry 
     /// configuration can be applied to a proxy. The matching criteria includes the metadata associated with a proxy, workload
     /// instance info such as labels attached to the pod/VM, or any other info that the proxy provides to Istio during the initial 
     /// handshake. If multiple conditions are specified, all conditions need to match in order for the workload instance to be selected. 
@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources.Istio
     public class WorkloadSelector
     {
         /// <summary>
-        /// Initializes a new instance of the WorkloadSelector class.
+        /// Default constructor.
         /// </summary>
         public WorkloadSelector()
         {

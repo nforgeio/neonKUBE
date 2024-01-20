@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources.Istio
     public class HTTPRouteDestination : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPRouteDestination class.
+        /// Default constructor.
         /// </summary>
         public HTTPRouteDestination()
         {

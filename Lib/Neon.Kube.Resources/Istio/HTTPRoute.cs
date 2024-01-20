@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes the properties of a specific HTTPRoute of a service.
+    /// Default constructor.
     /// </summary>
     public class HTTPRoute : IValidate
     {

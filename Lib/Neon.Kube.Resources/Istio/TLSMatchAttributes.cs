@@ -36,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
     public class TLSMatchAttributes : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the TLSMatchAttributes class.
+        /// Default constructor.
         /// </summary>
         public TLSMatchAttributes()
         {

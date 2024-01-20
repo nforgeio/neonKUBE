@@ -43,11 +43,10 @@ namespace Neon.Kube.Resources.Istio
     public class ExtensionProvider
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public ExtensionProvider()
         {
-
         }
 
         /// <summary>

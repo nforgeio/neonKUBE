@@ -51,7 +51,7 @@ namespace Neon.Kube.Resources.Istio
     public class Destination : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the Destination class.
+        /// Default constructor.
         /// </summary>
         public Destination()
         {

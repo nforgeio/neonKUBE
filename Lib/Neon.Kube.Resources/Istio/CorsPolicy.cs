@@ -41,7 +41,7 @@ namespace Neon.Kube.Resources.Istio
     public class CorsPolicy : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the CorsPolicy class.
+        /// Default constructor.
         /// </summary>
         public CorsPolicy()
         {

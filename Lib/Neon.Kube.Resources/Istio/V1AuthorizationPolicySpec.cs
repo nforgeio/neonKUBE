@@ -28,7 +28,7 @@ namespace Neon.Kube.Resources.Istio
     public class V1AuthorizationPolicySpec
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public V1AuthorizationPolicySpec()
         {

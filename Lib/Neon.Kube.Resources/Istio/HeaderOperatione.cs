@@ -31,12 +31,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// HeaderOperations Describes the header manipulations to apply.
+    /// Describes the header manipulations to apply.
     /// </summary>
     public class HeaderOperations : IValidate
     {
         /// <summary>
-        /// Initializes a new instance of the HeaderOperations class.
+        /// Default constructor.
         /// </summary>
         public HeaderOperations()
         {

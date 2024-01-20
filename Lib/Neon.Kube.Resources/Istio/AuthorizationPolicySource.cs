@@ -45,11 +45,10 @@ namespace Neon.Kube.Resources.Istio
     public class AuthorizationPolicySource
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public AuthorizationPolicySource()
         {
-
         }
 
         /// <summary>

@@ -22,6 +22,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+
 using k8s;
 using k8s.Models;
 
@@ -30,7 +31,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes the properties of a specific port of a service.
+    /// Default constructor.
     /// </summary>
     public class Port : IValidate
     {

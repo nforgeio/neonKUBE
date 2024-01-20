@@ -38,7 +38,7 @@ using Neon.Net;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// The protocol exposed on the port.
+    /// Enumerates the possible the network protocols exposed on an ingress port.
     /// </summary>
     [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]

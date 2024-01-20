@@ -29,12 +29,12 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// Describes a Telemetry spec.
+    /// Customizes Istio telemetry.
     /// </summary>
     public class V1TelemetrySpec
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public V1TelemetrySpec()
         {
