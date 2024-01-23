@@ -456,7 +456,7 @@ namespace Neon.Kube.ClusterDef
                     new IngressRule()
                     {
                         Name         = "http",
-                        Protocol     = IngressProtocol.Tcp,
+                        Protocol     = IngressProtocol.Http,
                         ExternalPort = NetworkPorts.HTTP,
                         NodePort     = KubeNodePort.IstioIngressHttp,
                         TargetPort   = 8080
@@ -469,7 +469,7 @@ namespace Neon.Kube.ClusterDef
                     new IngressRule()
                     {
                         Name         = "https",
-                        Protocol     = IngressProtocol.Tcp,
+                        Protocol     = IngressProtocol.Https,
                         ExternalPort = NetworkPorts.HTTPS,
                         NodePort     = KubeNodePort.IstioIngressHttps,
                         TargetPort   = 8443

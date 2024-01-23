@@ -53,7 +53,7 @@ namespace Neon.Kube.Resources.Istio
         public Dictionary<string, string> Selector { get; set; }
 
         /// <summary>
-        /// Describes the properties of the proxy on a given load balancer port.
+        /// Lists the gateway ingress server rules.
         /// </summary>
         [JsonProperty(PropertyName = "servers", Required = Required.Always)]
         [DefaultValue(null)]

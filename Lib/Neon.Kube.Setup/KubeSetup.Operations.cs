@@ -321,7 +321,7 @@ spec:
             var retryCount    = 0;
             var retryInterval = TimeSpan.FromSeconds(60);
 
-            var retry = new LinearRetryPolicy(
+            var globalRetry = new LinearRetryPolicy(
                 e =>
                 {
                     if (++retryCount < maxRetries)
@@ -340,7 +340,7 @@ spec:
                 maxAttempts:   maxRetries,
                 retryInterval: TimeSpan.FromSeconds(60));
 
-            await retry.InvokeAsync(
+            await globalRetry.InvokeAsync(
                 async () =>
                 {
                     controller.ClearStatus();
@@ -1399,12 +1399,7 @@ exit 1
 
                             var pod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "neonkube.io/setup-pod=dnsutils");
 
-                            var retry = new LinearRetryPolicy(
-                                transientDetector: null,
-                                retryInterval:     clusterOpPollInterval,
-                                timeout:           clusterOpTimeout);
-
-                            await retry.InvokeAsync(
+                            await operationRetry.InvokeAsync(
                                 async () =>
                                 {
                                     try
@@ -1438,12 +1433,7 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/calico-metrics",
                 async () =>
                 {
-                    var retry = new LinearRetryPolicy(
-                        transientDetector: null,
-                        retryInterval:     clusterOpPollInterval,
-                        timeout:           clusterOpTimeout);
-
-                    await retry.InvokeAsync(
+                    await operationRetry.InvokeAsync(
                         async () =>
                         {
                             var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
@@ -1564,12 +1554,8 @@ exit 1
                     if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = (V1NodeList)null;
-                        var retry = new LinearRetryPolicy(
-                            transientDetector: null,
-                            retryInterval:     clusterOpPollInterval,
-                            timeout:           clusterOpTimeout);
 
-                        await retry.InvokeAsync(
+                        await operationRetry.InvokeAsync(
                            async () =>
                            {
                                nodes = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
@@ -1700,17 +1686,21 @@ cilium status --wait --wait-duration={clusterOpTimeoutSeconds}s
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+
+            // Install Istio.
+
             controller.ThrowIfCancelled();
-            controlNode.InvokeIdempotent("setup/install-istio",
+            controlNode.InvokeIdempotent("setup/istio-install",
                 () =>
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "istio");
 
-                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var k8s           = GetK8sClient(controller);
-                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    // Construct the installation manifest.
 
-                    const string manifest =
+                    var manifest =
 $@"
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
@@ -1731,6 +1721,8 @@ spec:
       traceSampling: 0.1
 ";
 
+                    // Install Istio.
+
                     const string script =
 $@"
 set -euo pipefail
@@ -1740,6 +1732,75 @@ istioctl install -y -f manifest.yaml
                     controlNode.SudoCommand(CommandBundle.FromScript(script)
                         .AddFile("manifest.yaml", manifest))
                         .EnsureSuccess();
+                });
+
+            // Configure the ingress gateways.
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/istio-ingress",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "istio ingress");
+
+                    var istioGateway = new V1Gateway()
+                    {
+                        Metadata = new V1ObjectMeta(name: "neon-ingress", namespaceProperty: KubeNamespace.IstioSystem),
+                        Spec     = new V1GatewaySpec()
+                        {
+                            Selector = new Dictionary<string, string>(),
+                            Servers  = new List<Server>()
+                        }
+                    };
+
+                    istioGateway.Spec.Selector.Add("istio", "ingressgateway");
+
+                    foreach (var rule in controlNode.Cluster.SetupState.ClusterDefinition.Network.IngressRules
+                        .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through an ingress gateway
+                    {
+                        var server = new Server()
+                        {
+                            Hosts = new List<string>(),
+                            Port  = new Port()
+                        };
+
+                        server.Hosts.Add(cluster.Domain);
+                        server.Hosts.Add($"*.{cluster.Domain}");
+
+                        server.Port.Name       = rule.Name;
+                        server.Port.Number     = rule.NodePort;
+                        server.Port.TargetPort = 0;
+
+                        switch (rule.Protocol)
+                        {
+                            case IngressProtocol.Http:
+
+                                server.Port.Protocol     = PortProtocol.HTTP;
+                                server.TLS.HttpsRedirect = true;
+                                break;
+
+                            case IngressProtocol.Https:
+
+                                server.Port.Protocol = PortProtocol.HTTPS;
+                                break;
+
+                            case IngressProtocol.Tcp:
+
+                                server.Port.Protocol = PortProtocol.TCP;
+                                break;
+
+                            case IngressProtocol.Udp:
+
+                                throw new NotSupportedException($"[{rule.Protocol}] ingress protocol is not currently supported.");
+
+                            default:
+
+                                throw new NotImplementedException($"[{rule.Protocol}] ingress protocol is not implemented.");
+                        }
+
+                        istioGateway.Spec.Servers.Add(server);
+                    }
+
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Gateway>(istioGateway, name: istioGateway.Name(), namespaceParameter: istioGateway.Namespace());
                 });
 
             // $todo(jefflill):
@@ -1898,7 +1959,7 @@ istioctl install -y -f manifest.yaml
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
                 });
 #endif
-        }
+                }
 
         /// <summary>
         /// Installs the Kubernetes Metrics Server service.
@@ -4209,14 +4270,9 @@ $@"- name: StorageType
                         $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
                     };
 
-                    var retry = new LinearRetryPolicy(
-                        transientDetector: null,
-                        retryInterval:     clusterOpPollInterval,
-                        timeout:           clusterOpTimeout);
-
                     var dashboardId = string.Empty;
 
-                    await retry.InvokeAsync(
+                    await operationRetry.InvokeAsync(
                         async () =>
                         {
                             var grafanaPod      = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
@@ -4410,12 +4466,7 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
-                            var retry = new LinearRetryPolicy(
-                                transientDetector: null,
-                                retryInterval:     clusterOpPollInterval,
-                                timeout:           clusterOpTimeout);
-
-                            await retry.InvokeAsync(
+                            await operationRetry.InvokeAsync(
                                 async () =>
                                 {
                                     var minioPod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
@@ -4786,14 +4837,9 @@ $@"- name: StorageType
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
 
-                    var retry = new LinearRetryPolicy(
-                        transientDetector: null,
-                        retryInterval:     clusterOpPollInterval,
-                        timeout:           clusterOpTimeout);
-
                     foreach (var node in cluster.Nodes)
                     {
-                        retry.Invoke(
+                        operationRetry.Invoke(
                             () =>
                             {
                                 controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
@@ -5704,12 +5750,7 @@ $@"- name: StorageType
                     // by quering the three tables we'll be modifying later below.  The database
                     // will be ready when these queries succeed.
 
-                    var retry = new LinearRetryPolicy(
-                        transientDetector: null,
-                        retryInterval:     clusterOpPollInterval,
-                        timeout:           clusterOpTimeout);
-
-                    await retry.InvokeAsync(
+                    await operationRetry.InvokeAsync(
                         async () =>
                         {
                             // Verify [groups] table.
