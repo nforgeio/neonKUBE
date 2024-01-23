@@ -3747,9 +3747,9 @@ TCPKeepAlive yes
                 {
                     var sourceTypes = new Type[]
                     {
-                        typeof(KubeConst),
                         typeof(KubeNamespace),
-                        typeof(KubePort)
+                        typeof(KubePort),
+                        typeof(KubeVersion)
                     };
 
                     foreach (var type in sourceTypes)
