@@ -26,7 +26,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines reserved NEONKUBE ports.
+    /// Defines reserved NEONKUBE node and cluster network ports.
     /// </summary>
     public static class KubePort
     {
@@ -51,5 +51,30 @@ namespace Neon.Kube
         /// The last port reserved by NeonKUBE SSO redirects.
         /// </summary>
         public const int KubeLastSsoPort = 13074;
+
+        /// <summary>
+        /// The first port reserved by Kubernetes for exposing node ports.
+        /// </summary>
+        public const int KubeFirstNodePort = 30000;
+
+        /// <summary>
+        /// The last port reserved by Kubernetes for exposing node ports.
+        /// </summary>
+        public const int KubeLastNodePort = 32767;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTP service.
+        /// </summary>
+        public const int IstioIngressHttp = 30080;
+
+        /// <summary>
+        /// The node port exposed by the Istio Ingress HTTPS service.
+        /// </summary>
+        public const int IstioIngressHttps = 30443;
+
+        /// <summary>
+        /// The port exposed by the Kubernetes API servers on the control-plane nodes.
+        /// </summary>
+        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
     }
 }

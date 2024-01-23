@@ -69,16 +69,16 @@ namespace Test.NeonCli
             {
                 var result = await runner.ExecuteAsync(Program.Main, "version");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal(KubeVersions.Kubernetes, result.OutputText.Trim());
+                Assert.Equal(KubeVersion.Kubernetes, result.OutputText.Trim());
 
                 result = await runner.ExecuteAsync(Program.Main, "version", "-n");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal(KubeVersions.Kubernetes, result.OutputText.Trim());
+                Assert.Equal(KubeVersion.Kubernetes, result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
                 result = await runner.ExecuteAsync(Program.Main, "version", "-n", "--git");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal($"{KubeVersions.Kubernetes}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
+                Assert.Equal($"{KubeVersion.Kubernetes}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
                 result = await runner.ExecuteAsync(Program.Main, "version", $"--minimum={Program.Version}");

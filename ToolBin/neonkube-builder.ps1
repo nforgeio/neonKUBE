@@ -92,7 +92,7 @@ $nkToolBin   = "$nkRoot\ToolBin"
 $buildConfig = "-p:Configuration=$config"
 $env:PATH   += ";$nkBuild"
 
-$neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersion.cs" NeonKube)
 ThrowOnExitCode
 
     #------------------------------------------------------------------------------

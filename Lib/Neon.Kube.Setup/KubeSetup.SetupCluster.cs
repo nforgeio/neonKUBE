@@ -125,12 +125,12 @@ namespace Neon.Kube.Setup
 
             // Do a quick check to ensure that component versions look reasonable.
 
-            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
-            var crioVersion       = new Version(KubeVersions.Crio);
+            var kubernetesVersion = new Version(KubeVersion.Kubernetes);
+            var crioVersion       = new Version(KubeVersion.Crio);
 
             if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
             {
-                throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+                throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersion.Crio)}={KubeVersion.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersion.Kubernetes)}={KubeVersion.Kubernetes}].");
             }
 
             // Initialize the cluster proxy.
@@ -227,9 +227,9 @@ namespace Neon.Kube.Setup
                             throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
                         }
 
-                        if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
+                        if (!imageVersion.ToString().StartsWith(KubeVersion.NeonKube))
                         {
-                            throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                            throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersion.NeonKube}] implemented by the current build.");
                         }
                     });
             }

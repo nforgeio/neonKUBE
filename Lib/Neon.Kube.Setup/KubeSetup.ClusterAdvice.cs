@@ -78,7 +78,7 @@ namespace Neon.Kube.Setup
 
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.BlackboxExporter, CalculateBlackboxExporterAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Cilium, CalculateCiliumAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CertManager, CalculateCertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CoreDns, CalculateCoreDnsAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Dex, CalculateDexAdvice(cluster));
@@ -195,9 +195,9 @@ namespace Neon.Kube.Setup
             return advice;
         }
 
-        private static KubeServiceAdvice CalculateCalicoAdvice(ClusterProxy cluster)
+        private static KubeServiceAdvice CalculateCiliumAdvice(ClusterProxy cluster)
         {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.Calico);
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Cilium);
 
             advice.MetricsEnabled = false;
 

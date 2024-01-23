@@ -66,9 +66,9 @@ namespace Neon.Kube.SSH
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// This method replaces any <b>$&lt;KubeVersions.NAME&gt;</b> references
+        /// This method replaces any <b>$&lt;KubeVersion.NAME&gt;</b> references
         /// within the Helm chart files with the corresponding public constant,
-        /// field, or property value from <see cref="KubeVersions"/>.
+        /// field, or property value from <see cref="KubeVersion"/>.
         /// </note>
         /// </remarks>
         public static async Task NodeInstallHelmArchiveAsync(this ILinuxSshProxy node, ISetupController controller)
@@ -83,7 +83,7 @@ namespace Neon.Kube.SSH
                 var preprocessor = new ZipPreprocessor(
                     async (path, input) =>
                     {
-                        var preprocessor = KubeVersions.CreatePreprocessor(new StreamReader(input));
+                        var preprocessor = KubeHelper.CreateValuePreprocessor(new StreamReader(input));
                         var output       = new MemoryStream();
 
                         foreach (var line in preprocessor.Lines())

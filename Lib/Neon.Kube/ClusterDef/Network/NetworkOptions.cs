@@ -458,7 +458,7 @@ namespace Neon.Kube.ClusterDef
                         Name         = "http",
                         Protocol     = IngressProtocol.Http,
                         ExternalPort = NetworkPorts.HTTP,
-                        NodePort     = KubeNodePort.IstioIngressHttp,
+                        NodePort     = KubePort.IstioIngressHttp,
                         TargetPort   = 8080
                     });
             }
@@ -471,7 +471,7 @@ namespace Neon.Kube.ClusterDef
                         Name         = "https",
                         Protocol     = IngressProtocol.Https,
                         ExternalPort = NetworkPorts.HTTPS,
-                        NodePort     = KubeNodePort.IstioIngressHttps,
+                        NodePort     = KubePort.IstioIngressHttps,
                         TargetPort   = 8443
                     });
             }

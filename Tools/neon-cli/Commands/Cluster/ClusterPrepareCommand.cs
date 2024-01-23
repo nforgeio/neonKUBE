@@ -199,7 +199,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
-            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
+            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersion.BuildBranch : null);
             var unredacted        = commandLine.HasOption("--unredacted");
 
             if (noTelemetry)
@@ -209,7 +209,7 @@ stage process is typically used only by NEONKUBE maintainers.
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
-                stageBranch = KubeVersions.BuildBranch;
+                stageBranch = KubeVersion.BuildBranch;
             }
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)

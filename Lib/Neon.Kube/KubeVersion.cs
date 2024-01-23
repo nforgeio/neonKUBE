@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        KubeVersions.cs
+// FILE:        KubeVersion.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -39,30 +39,12 @@ namespace Neon.Kube
     /// NEONKUBE release.  Kubernetes release information can be found here:
     /// https://kubernetes.io/releases/
     /// </summary>
-    public static class KubeVersions
+    public static class KubeVersion
     {
-        //---------------------------------------------------------------------
-        // Local types
-
-        /// <summary>
-        /// Used to identify <see cref="KubeVersions"/> version constants for
-        /// preprocessing Helm charts.
-        /// </summary>
-        [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-        internal class KubeVersionAttribute : Attribute
-        {
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
-        private static object                       syncLock               = new object();
-        private static Dictionary<string, string>   preprocessorDictionary = null;
-
         /// <summary>
         /// Returns the name of the branch from which this assembly was built.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string BuildBranch = BuildInfo.ThisAssembly.Git.Branch;
 
         /// <summary>
@@ -159,7 +141,7 @@ namespace Neon.Kube
         /// other developers.
         /// </note>
         /// </remarks>
-        [KubeVersion]
+        [KubeValue]
         public const string NeonKube = "0.11.0-beta.0";
 
         /// <summary>
@@ -167,7 +149,7 @@ namespace Neon.Kube
         /// branches whose names starts with <b>release-</b> and will be <b>.BRANCH</b> for
         /// all other branches.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public static string BranchPart
         {
             get
@@ -186,13 +168,13 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the full NEONKUBE release including the <see cref="BranchPart"/>, if any.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public static readonly string NeonKubeWithBranchPart = $"{NeonKube}{BranchPart}";
 
         /// <summary>
         /// Returns the prefix used for NEONKUBE container tags.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string NeonKubeContainerImageTagPrefix = "neonkube-";
 
         /// <summary>
@@ -205,80 +187,80 @@ namespace Neon.Kube
         /// from a non-release branch.
         /// </note>
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public static string NeonKubeContainerImageTag => $"{NeonKubeContainerImageTagPrefix}{NeonKube}{BranchPart}";
 
         /// <summary>
         /// Specifies the version of Kubernetes to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Kubernetes = "1.29.0";
 
         /// <summary>
         /// Specifies the version of Kubernetes to be installed, without the patch component.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubernetesNoPatch = "1.29";
 
         /// <summary>
         /// Specifies the version of the GOLANG compiler to use for building Kubernetes
         /// related components like <b>CRI-O</b>.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string GoLang = "1.21.3";
 
         /// <summary>
         /// Specifies the version of the Kubernetes Dashboard to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubernetesDashboard = "v2.7.0";
 
         /// <summary>
         /// Specifies the version of the Kubernetes dashboard metrics scraper to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubernetesDashboardMetrics = "v1.0.6";
 
         /// <summary>
         /// Returns the package version for Kubernetes admin service.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubeAdminPackage = Kubernetes + "-00";
 
         /// <summary>
         /// Specifies the version of the Kubernetes client tools to be installed with NEONDESKTOP.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Kubectl = Kubernetes;
 
         /// <summary>
         /// Returns the package version for the Kubernetes cli.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubectlPackage = Kubectl + "-00";
 
         /// <summary>
         /// Returns the package version for the Kubelet service.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubeletPackage = Kubernetes + "-00";
 
         /// <summary>
         /// Returns the package version for the Kubernetes metrics-server service to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string MetricsServer = "v0.6.4";
 
         /// <summary>
         /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubeStateMetrics = "v2.10.1";
 
         /// <summary>
         /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string KubernetesUIMetricsScraper = "v1.0.9";
 
         /// <summary>
@@ -297,44 +279,44 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public static readonly string Crio = PatchVersion(Kubernetes, 0);
 
         /// <summary>
         /// Specifies the version of Podman to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Podman = "3.4.4+ds1-1ubuntu1.22.04.2";
 
         /// <summary>
         /// Specifies the version of Etcd to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Etcd = "3.5.10-0";
 
         /// <summary>
         /// Specifies the version of Calico to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Calico = "v3.23.5";
 
         /// <summary>
         /// Specifies the version of Cilium to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Cilium = "v1.14.5";
 
         /// <summary>
         /// Specifies the version of Cilium-Certgen to be used for
         /// regenerating MTLS certificates.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumCertGen = "v0.1.9";
 
         /// <summary>
         /// Specifies the version of Cilium CLI to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumCli = "v0.15.19";
 
         /// <summary>
@@ -345,25 +327,25 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the version of the Hubble CLI to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumHubbleCli = "v0.12.3";
 
         /// <summary>
         /// Specifies the version of Hubble UI to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumHubbleRelay = "v1.14.5";
 
         /// <summary>
         /// Specifies the version of Hubble UI to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumHubbleUI = "v0.12.1";
 
         /// <summary>
         /// Specifies the version of Hubble UI Backend to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumHubbleUIBackend = "v0.12.1";
 
         /// <summary>
@@ -391,79 +373,79 @@ namespace Neon.Kube
         /// against the Helm chart to ensure that this constant has been set correctly.
         /// </note>
         /// </remarks>
-        [KubeVersion]
+        [KubeValue]
         public const string CiliumGenericOperatorDigest = "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a";
 
         /// <summary>
         /// Specifies the version of dnsutils to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string DnsUtils = "1.3";
 
         /// <summary>
         /// Specifies the version of HaProxy to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Haproxy = "1.9.2-alpine";
 
         /// <summary>
         /// Specifies the version of Istio to install.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Istio = "1.20.2";
 
         /// <summary>
         /// Specifies the version of Helm to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Helm = "3.12.0";
 
         /// <summary>
         /// Specifies the version of CoreDNS to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CoreDNS = "v1.11.1";
 
         /// <summary>
         /// Specifies the version of CoreDNS plugin to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string CoreDNSPlugin = "0.2-istio-1.1";
 
         /// <summary>
         /// Specifies the version of Prometheus to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Prometheus = "v2.22.1";
 
         /// <summary>
         /// Specifies the version of AlertManager to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string AlertManager = "v0.21.0";
 
         /// <summary>
         /// Specifies the version of pause image to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Pause = "3.9";
 
         /// <summary>
         /// Specifies the version of busybox image to be installed.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public const string Busybox = "1.32.0";
 
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
-        [KubeVersion]
+        [KubeValue]
         public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static KubeVersions()
+        static KubeVersion()
         {
             // Ensure that some of the version constants are reasonable.
 
@@ -471,82 +453,6 @@ namespace Neon.Kube
             {
                 throw new InvalidDataException($"[KubernetesNoPatch={KubernetesNoPatch}] must be the same as [Kubernetes={Kubernetes}] without the patch part,");
             }
-        }
-
-        /// <summary>
-        /// Constructs a <see cref="PreprocessReader"/> capable of preprocessing version
-        /// constants named like <b>$&lt;KubeVersions.VERSION&gt;</b> to the referenced value.
-        /// </summary>
-        /// <param name="reader">Specifies the <see cref="TextReader"/> with the input text.</param>
-        /// <param name="variableRegex">
-        /// Optionally specified the regular expression to be used to identify preprocessor
-        /// variable references within the preprocessed text.  This defaults to
-        /// <see cref="PreprocessReader.DefaultVariableExpansionRegex"/>.
-        /// </param>
-        /// <returns>The <see cref="PreprocessReader"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// The constant name name processing will be <b>case-sensitive</b>.
-        /// </note>
-        /// </remarks>
-        public static PreprocessReader CreatePreprocessor(TextReader reader, Regex variableRegex = null)
-        {
-            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
-
-            // We're going to cache the preprocessor dictionary so we'll only need
-            // to reflect the values once.
-
-            lock (syncLock)
-            {
-                if (preprocessorDictionary == null)
-                {
-                    preprocessorDictionary = new Dictionary<string, string>();
-
-                    // We need to process version constants, fields, and properties.
-
-                    foreach (var member in typeof(KubeVersions).GetMembers(BindingFlags.Public | BindingFlags.Static))
-                    {
-                        var versionAttribute = member.GetCustomAttribute<KubeVersionAttribute>();
-
-                        if (versionAttribute == null)
-                        {
-                            continue;
-                        }
-
-                        string value;
-
-                        switch (member.MemberType)
-                        {
-                            case MemberTypes.Property:
-
-                                value = typeof(KubeVersions).GetProperty(member.Name).GetValue(null).ToString();
-                                break;
-
-                            case MemberTypes.Field:
-
-                                var field = (FieldInfo)member;
-
-                                value = field.GetValue(null).ToString();
-                                break;
-
-                            default:
-
-                                continue;
-                        }
-
-                        preprocessorDictionary.Add($"KubeVersions.{member.Name}", value);
-                    }
-                }
-            }
-
-            var preprocessReader = new PreprocessReader(reader, preprocessorDictionary)
-            {
-                VariableExpansionRegex = variableRegex ?? PreprocessReader.DefaultVariableExpansionRegex
-            };
-
-            preprocessReader.SetYamlMode();
-
-            return preprocessReader;
         }
 
         /// <summary>

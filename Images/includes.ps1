@@ -51,7 +51,7 @@ $ncTools    = "$ncRoot\Tools"
 
 # NEONKUBE cluster release version.
 
-$neonKUBE_Version = $(& neon-build read-version "$nkRoot\Lib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& neon-build read-version "$nkRoot\Lib\Neon.Kube\KubeVersion.cs" NeonKube)
 ThrowOnExitCode
 
 # NEONKUBE container image tag.

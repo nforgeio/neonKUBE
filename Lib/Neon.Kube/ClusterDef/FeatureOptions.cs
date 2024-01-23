@@ -135,7 +135,7 @@ namespace Neon.Kube.ClusterDef
         [JsonProperty(PropertyName = "ServiceMesh", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "serviceMesh", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool ServiceMesh { get; set; } = false;
+        public bool ServiceMesh { get; set; } = true;
 
         /// <summary>
         /// Indicates whether <b>Mimir</b> is installed.
@@ -169,8 +169,6 @@ namespace Neon.Kube.ClusterDef
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            ServiceMesh = true;
         }
     }
 }

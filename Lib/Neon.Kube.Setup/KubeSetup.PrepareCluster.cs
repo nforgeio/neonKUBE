@@ -440,9 +440,9 @@ namespace Neon.Kube.Setup
                             throw new Exception($"VM image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
                         }
 
-                        if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
+                        if (!imageVersion.ToString().StartsWith(KubeVersion.NeonKube))
                         {
-                            throw new Exception($"VM image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                            throw new Exception($"VM image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersion.NeonKube}] implemented by the current build.");
                         }
                     }
                 });

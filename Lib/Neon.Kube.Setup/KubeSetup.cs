@@ -411,7 +411,7 @@ namespace Neon.Kube.Setup
                                 var metadata = new ClusterSetupFailureMetadata()
                                 {
                                     TimestampUtc    = timestampUtc,
-                                    NeonKubeVersion = KubeVersions.NeonKube,
+                                    NeonKubeVersion = KubeVersion.NeonKube,
                                     CliendId        = clientId,
                                     UserId          = userId,
                                     Exception       = e?.ToString()
@@ -459,7 +459,7 @@ namespace Neon.Kube.Setup
                 {
                     try
                     {
-                        headendClient.ClusterSetup.PostDeploymentLogAsync(tempZipStream, uploadId.ToString("d"), timestampUtc, KubeVersions.NeonKube, clientId.ToString("d"), userId.ToString("d"), preparing).Wait();
+                        headendClient.ClusterSetup.PostDeploymentLogAsync(tempZipStream, uploadId.ToString("d"), timestampUtc, KubeVersion.NeonKube, clientId.ToString("d"), userId.ToString("d"), preparing).Wait();
 
                         // Tell the user that we're done.
 

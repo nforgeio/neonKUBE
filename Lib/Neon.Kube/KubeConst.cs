@@ -206,7 +206,7 @@ namespace Neon.Kube
         /// The container image tag used to reference cluster container images tagged 
         /// our prefix and the cluster version number.
         /// </summary>
-        public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
+        public const string NeonKubeImageTag = "neonkube-" + KubeVersion.NeonKube;
 
         /// <summary>
         /// The size of the OS disk used for base images.

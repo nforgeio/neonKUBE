@@ -50,6 +50,10 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="MIsc\" />
+    </ItemGroup>
+
     <!-- NEONFORGE package or project references -->
 
     <Choose>

@@ -81,7 +81,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" NeonKube "$env:NK_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersion.cs" NeonKube "$env:NK_ROOT\Lib\$project\$project.csproj"
     ThrowOnExitCode
 }
 
@@ -143,7 +143,7 @@ try
     $nkTools         = "$nkRoot\Tools"
     $nkToolBin       = "$nkRoot\ToolBin"
     $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
-    $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
+    $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersion.cs" NeonKube)
 
     #------------------------------------------------------------------------------
     # Save the publish version to [$/build/nuget/version.text] so release tools can

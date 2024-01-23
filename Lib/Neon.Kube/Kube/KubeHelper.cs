@@ -102,6 +102,8 @@ namespace Neon.Kube
         private static object                               jsonConverterLock = new object();
         private static HashSet<string>                      validFeatureGates = null;
 
+        private static readonly Dictionary<string, string>  valuePreprocessorDictionary = new Dictionary<string, string>();
+
         /// <summary>
         /// CURL command common options.
         /// </summary>
@@ -2613,7 +2615,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return match.Groups["version"].Value == KubeVersions.Helm;
+                            return match.Groups["version"].Value == KubeVersion.Helm;
                         }
                         else
                         {
@@ -2633,15 +2635,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-windows-amd64.zip";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-arm64.tar.gz";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-linux-arm64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-darwin-arm64.tar.gz";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-darwin-arm64.tar.gz";
                     }
                     else
                     {
@@ -2697,7 +2699,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return match.Groups["version"].Value == KubeVersions.CiliumCli;
+                            return match.Groups["version"].Value == KubeVersion.CiliumCli;
                         }
                         else
                         {
@@ -2717,15 +2719,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-windows-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-windows-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-linux-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-linux-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-darwin-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-darwin-amd64.tar.gz";
                     }
                     else
                     {
@@ -2779,7 +2781,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return $"v{match.Groups["version"].Value}" == KubeVersions.CiliumHubbleCli;
+                            return $"v{match.Groups["version"].Value}" == KubeVersion.CiliumHubbleCli;
                         }
                         else
                         {
@@ -2799,15 +2801,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-windows-amd64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersion.CiliumHubbleCli}/hubble-windows-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-linux-amd64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersion.CiliumHubbleCli}/hubble-linux-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersions.CiliumHubbleCli}/hubble-darwin-arm64.tar.gz";
+                        return $"https://github.com/cilium/hubble/releases/download/{KubeVersion.CiliumHubbleCli}/hubble-darwin-arm64.tar.gz";
                     }
                     else
                     {
@@ -3039,15 +3041,15 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// Returns the path to the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersion.cs</b> source file.
         /// </summary>
-        /// <returns>The <b>KubeVersions.cd</b> path.</returns>
+        /// <returns>The <b>KubeVersion.cs</b> path.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
-        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersion.NeonKube"/>
         /// constant could not be located.
         /// </exception>
-        private static string GetKubeVersionsPath()
+        private static string GetKubeVersionPath()
         {
             var nkRoot = Environment.GetEnvironmentVariable("NK_ROOT");
 
@@ -3066,7 +3068,7 @@ TCPKeepAlive yes
                 throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not include the [neonKUBE.sln] file.");
             }
 
-            var versionsPath = Path.Combine(nkRoot, "Lib", "Neon.Kube", "KubeVersions.cs");
+            var versionsPath = Path.Combine(nkRoot, "Lib", "Neon.Kube", "KubeVersion.cs");
 
             if (!File.Exists(versionsPath))
             {
@@ -3077,35 +3079,35 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeVersions.NeonKube"/> constant value extracted from the 
-        /// <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
+        /// Returns the <see cref="KubeVersion.NeonKube"/> constant value extracted from the 
+        /// <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersion.cs</b> source file.  Note that the
         /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
         /// </summary>
         /// <returns>The <b>NeonKube</b> version.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
-        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersion.NeonKube"/>
         /// constant could not be located.
         /// </exception>
         public static SemanticVersion GetNeonKubeVersion()
         {
             var versionRegex = new Regex(@"^\s*public const string NeonKube = ""(?<version>.+)"";", RegexOptions.Multiline);
-            var versionsPath = GetKubeVersionsPath();
+            var versionsPath = GetKubeVersionPath();
             var versionsText = File.ReadAllText(versionsPath);
             var match        = versionRegex.Match(versionsText);
 
             if (!match.Success)
             {
-                throw new InvalidOperationException($"[KubeVersions.NeonKube] constant not found.");
+                throw new InvalidOperationException($"[KubeVersion.NeonKube] constant not found.");
             }
 
             return SemanticVersion.Parse(match.Groups["version"].Value);
         }
 
         /// <summary>
-        /// Edits the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
-        /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
+        /// Edits the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersion.cs</b> source file by setting
+        /// the <see cref="KubeVersion.NeonKube"/> constant to the version passed.
         /// </summary>
         /// <param name="version">The new version number.</param>
         /// <returns>
@@ -3121,7 +3123,7 @@ TCPKeepAlive yes
                 return false;
             }
 
-            var versionsPath = GetKubeVersionsPath();
+            var versionsPath = GetKubeVersionPath();
             var versionsText = File.ReadAllText(versionsPath);
             var versionRegex = new Regex(@"public\s+const\s+string\s+NeonKube\s+="".+""\s+;");
             var replaceText  = $"        public const string NeonKube = \"{version}\";";
@@ -3581,7 +3583,7 @@ TCPKeepAlive yes
             // table is up-to-date.  You'll need to update the target versioin in the
             // assertion below after updating the valid feature gates.
 
-            Covenant.Assert(KubeVersions.Kubernetes == "1.29.0", $"MAINTAINER: Valid feature gates may not match Kubernetes version [{KubeVersions.Kubernetes}].  Please update.");
+            Covenant.Assert(KubeVersion.Kubernetes == "1.29.0", $"MAINTAINER: Valid feature gates may not match Kubernetes version [{KubeVersion.Kubernetes}].  Please update.");
 
             if (validFeatureGates == null)
             {
@@ -3711,6 +3713,93 @@ TCPKeepAlive yes
             }
 
             return validFeatureGates.Contains(feature);
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PreprocessReader"/> capable of preprocessing version
+        /// constants defined by <see cref="KubeVersion"/>, <see cref="KubeNamespace"/>,
+        /// and <see cref="KubePort"/> named like <b>$&lt;KubeVersion.VERSION&gt;</b>,
+        /// <b>$&lt;KubeNamespace.NAME&gt;</b>, or <b>$&lt;KubePort.NUMBER&gt;</b> to the
+        /// associated value.
+        /// </summary>
+        /// <param name="reader">Specifies the <see cref="TextReader"/> with the input text.</param>
+        /// <param name="variableRegex">
+        /// Optionally specified the regular expression to be used to identify preprocessor
+        /// variable references within the preprocessed text.  This defaults to
+        /// <see cref="PreprocessReader.DefaultVariableExpansionRegex"/>.
+        /// </param>
+        /// <returns>The <see cref="PreprocessReader"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// The constant name name processing will be <b>case-sensitive</b>.
+        /// </note>
+        /// </remarks>
+        public static PreprocessReader CreateValuePreprocessor(TextReader reader, Regex variableRegex = null)
+        {
+            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
+
+            // We're going to cache the preprocessor dictionary so we'll only need
+            // to reflect the values once.
+
+            lock (valuePreprocessorDictionary)
+            {
+                if (valuePreprocessorDictionary.Count == 0)
+                {
+                    var sourceTypes = new Type[]
+                    {
+                        typeof(KubeConst),
+                        typeof(KubeNamespace),
+                        typeof(KubePort)
+                    };
+
+                    foreach (var type in sourceTypes)
+                    {
+                        // We need to process version constants, fields, and properties.
+
+                        foreach (var member in typeof(KubeVersion).GetMembers(BindingFlags.Public | BindingFlags.Static))
+                        {
+                            var versionAttribute = member.GetCustomAttribute<KubeValueAttribute>();
+
+                            if (versionAttribute == null)
+                            {
+                                continue;
+                            }
+
+                            string value;
+
+                            switch (member.MemberType)
+                            {
+                                case MemberTypes.Property:
+
+                                    value = typeof(KubeVersion).GetProperty(member.Name).GetValue(null).ToString();
+                                    break;
+
+                                case MemberTypes.Field:
+
+                                    var field = (FieldInfo)member;
+
+                                    value = field.GetValue(null).ToString();
+                                    break;
+
+                                default:
+
+                                    continue;
+                            }
+
+                            valuePreprocessorDictionary.Add($"{type.Name}.{member.Name}", value);
+                        }
+                    }
+                }
+            }
+
+            var preprocessReader = new PreprocessReader(reader, valuePreprocessorDictionary)
+            {
+                VariableExpansionRegex = variableRegex ?? PreprocessReader.DefaultVariableExpansionRegex
+            };
+
+            preprocessReader.SetYamlMode();
+
+            return preprocessReader;
         }
     }
 }

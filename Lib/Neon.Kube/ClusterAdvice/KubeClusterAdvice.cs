@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the NEONKUBE cluster's <b>Calico</b> service.
         /// </summary>
-        public static string Calico = "calico";
+        public static string Cilium = "cilium";
 
         /// <summary>
         /// Identifies the NEONKUBE cluster's <b>CertManager</b> service manager nodes.

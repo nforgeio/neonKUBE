@@ -95,7 +95,7 @@ ARGUMENTS:
             }
             else
             {
-                Console.WriteLine($"[{featureGateWarnings.Count}] feature gates are not supported by Kubernetes v{KubeVersions.Kubernetes}");
+                Console.WriteLine($"[{featureGateWarnings.Count}] feature gates are not supported by Kubernetes v{KubeVersion.Kubernetes}");
                 Console.WriteLine($"These feature gates will be ignored:");
                 Console.WriteLine();
 

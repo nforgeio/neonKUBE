@@ -150,7 +150,7 @@ backend kubernetes_controlplane_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server                  {controlNode.Name} {controlNode.Metadata.Address}:{KubeNodePort.KubeApiServer}");
+    server                  {controlNode.Name} {controlNode.Metadata.Address}:{KubePort.KubeApiServer}");
             }
 
             sbHaProxyConfig.Append(
@@ -164,7 +164,7 @@ backend harbor_backend_http
             {
                 sbHaProxyConfig.Append(
 $@"
-    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubeNodePort.IstioIngressHttp}");
+    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubePort.IstioIngressHttp}");
             }
 
             sbHaProxyConfig.Append(
@@ -178,7 +178,7 @@ backend harbor_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubeNodePort.IstioIngressHttps}");
+    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubePort.IstioIngressHttps}");
             }
 
             node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
@@ -207,7 +207,7 @@ spec:
   priorityClassName: { PriorityClass.SystemNodeCritical.Name }
   containers:
     - name: web
-      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}
+      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -580,7 +580,7 @@ nodeRegistration:
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
-kubernetesVersion: ""v{KubeVersions.Kubernetes}""
+kubernetesVersion: ""v{KubeVersion.Kubernetes}""
 imageRepository: ""{KubeConst.LocalClusterRegistry}""
 apiServer:
   extraArgs:
@@ -939,7 +939,7 @@ exit 1
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}"
+                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1015,7 +1015,7 @@ exit 1
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}",
+                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}",
                                             RunOptions.FaultOnError);
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1251,12 +1251,12 @@ exit 1
                     var k8s            = GetK8sClient(controller);
                     var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                     var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var calicoAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Calico);
+                    var ciliumAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cilium);
 
                     var values = new Dictionary<string, object>();
 
                     values.Add("images.registry", KubeConst.LocalClusterRegistry);
-                    values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.enabled", ciliumAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
 
                     if (hostingManager.NodeMtu > 0)
                     {
@@ -1315,7 +1315,7 @@ exit 1
                                             new V1Container()
                                             {
                                                 Name            = "dnsutils",
-                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersions.DnsUtils}",
+                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersion.DnsUtils}",
                                                 Command         = new List<string>() {"sleep", "3600" },
                                                 ImagePullPolicy = "IfNotPresent"
                                             }
@@ -1492,7 +1492,7 @@ exit 1
                                 {
                                     MatchLabels = new Dictionary<string, string>()
                                     {
-                                    { "k8s-app", "kube-dns"}
+                                        { "k8s-app", "kube-dns"}
                                     }
                                 }
                             }
@@ -1616,6 +1616,7 @@ exit 1
                     var firstControlNode = cluster.ControlNodes.First();
                     var k8s              = GetK8sClient(controller);
                     var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var ciliumAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cilium);
                     var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
                     var mtu              = hostingManager.NodeMtu;
 
@@ -1631,7 +1632,7 @@ set -euo pipefail
 #       generic image.  [cilium-cli] appends [-generic] to the
 #       [cilium-operator] container name below for us.
 
-cilium install --version {KubeVersions.Cilium} \
+cilium install --version {KubeVersion.Cilium} \
     --chart-directory={KubeNodeFolder.Helm}/cilium \
     --set ipam.mode=Kubernetes \
     --set kubeProxyReplacement=strict \
@@ -1706,7 +1707,7 @@ apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
   hub: registry.neon.local/neonkube
-  tag: {KubeVersions.Istio}
+  tag: {KubeVersion.Istio}
   meshConfig:
     accessLogFile: /dev/stdout
     enableTracing: true
@@ -1734,7 +1735,7 @@ istioctl install -y -f manifest.yaml
                         .EnsureSuccess();
                 });
 
-            // Configure the ingress gateways.
+            // Configure the ingress rules.
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/istio-ingress",
@@ -1760,7 +1761,8 @@ istioctl install -y -f manifest.yaml
                         var server = new Server()
                         {
                             Hosts = new List<string>(),
-                            Port  = new Port()
+                            Port  = new Port(),
+                            TLS   = new ServerTLSSettings()
                         };
 
                         server.Hosts.Add(cluster.Domain);
@@ -2183,7 +2185,7 @@ istioctl install -y -f manifest.yaml
                         });
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("certficateDuration", cluster.SetupState.ClusterDefinition.Network.AcmeOptions.CertificateDuration);
@@ -3399,10 +3401,10 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "blackbox-exporter",
-                        releaseName: "blackbox-exporter",
-                        @namespace: KubeNamespace.NeonMonitor,
+                        releaseName:  "blackbox-exporter",
+                        @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
-                        values: values);
+                        values:       values);
                 });
         }
 
@@ -4971,7 +4973,7 @@ $@"- name: StorageType
                     };
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add("image.pullPolicy", "IfNotPresent");
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
@@ -5160,7 +5162,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add($"cluster.datacenter", cluster.SetupState.ClusterDefinition.Datacenter);
@@ -5415,7 +5417,7 @@ $@"- name: StorageType
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("healthCheck.image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add($"neonSystemDb.enableConnectionPooler", true);
 
                     int i = 0;
@@ -5660,7 +5662,7 @@ $@"- name: StorageType
             var values        = new Dictionary<string, object>();
 
             values.Add("image.registry", KubeConst.LocalClusterRegistry);
-            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+            values.Add("image.tag", KubeVersion.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Name);
             values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);

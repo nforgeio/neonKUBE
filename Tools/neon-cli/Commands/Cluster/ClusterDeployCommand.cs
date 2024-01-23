@@ -171,11 +171,11 @@ stage process is typically used only by NEONKUBE maintainers.
             var quiet             = commandLine.HasOption("--quiet");
             var uploadCharts      = commandLine.HasOption("--upload-charts");
             var useStaged         = commandLine.HasOption("--use-staged");
-            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
+            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersion.BuildBranch : null);
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
-                stageBranch = KubeVersions.BuildBranch;
+                stageBranch = KubeVersion.BuildBranch;
             }
 
             // We're simply going to invoke the [cluster prepare] and [cluster setup]
