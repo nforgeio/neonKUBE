@@ -56,8 +56,6 @@ namespace NeonClusterOperator
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<ClusterCertificateRenewalJob>();
 
-        private static Random random   = new Random();
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -96,7 +94,7 @@ namespace NeonClusterOperator
 
                     if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0 || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
                     {
-                        await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
+                        await Task.Delay(TimeSpan.FromMinutes(Random.Shared.Next(90)));
 
                         IDictionary<string, byte[]> cert;
                         if (clusterInfo.IsDesktop)
