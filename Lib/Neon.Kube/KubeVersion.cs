@@ -203,7 +203,7 @@ namespace Neon.Kube
         public const string Kubernetes = "1.29.0";
 
         /// <summary>
-        /// Specifies the version of Kubernetes to be installed, without the patch component.
+        /// Specifies the version of <b>Kubernetes</b> to be installed, <b>without the patch component</b>.
         /// </summary>
         [KubeValue]
         public const string KubernetesNoPatch = "1.29";
@@ -216,16 +216,16 @@ namespace Neon.Kube
         public const string GoLang = "1.21.3";
 
         /// <summary>
-        /// Specifies the version of the Kubernetes Dashboard to be installed.
+        /// Specifies the version of Kubernetes related container images to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string KubernetesImage = "v1.29.0";
+
+        /// <summary>
+        /// Specifies the version of the <b>Kubernetes Dashboard</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string KubernetesDashboard = "v2.7.0";
-
-        /// <summary>
-        /// Specifies the version of the Kubernetes dashboard metrics scraper to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string KubernetesDashboardMetrics = "v1.0.6";
 
         /// <summary>
         /// Returns the package version for Kubernetes admin service.
@@ -234,44 +234,44 @@ namespace Neon.Kube
         public const string KubeAdminPackage = Kubernetes + "-00";
 
         /// <summary>
-        /// Specifies the version of the Kubernetes client tools to be installed with NEONDESKTOP.
+        /// Specifies the version of the Kubernetes <b>client tool</b> to be installed with NEONDESKTOP.
         /// </summary>
         [KubeValue]
         public const string Kubectl = Kubernetes;
 
         /// <summary>
-        /// Returns the package version for the Kubernetes cli.
+        /// Returns the apt package version for the Kubernetes cli.
         /// </summary>
         [KubeValue]
         public const string KubectlPackage = Kubectl + "-00";
 
         /// <summary>
-        /// Returns the package version for the Kubelet service.
+        /// Returns the apt package version for the Kubelet service.
         /// </summary>
         [KubeValue]
         public const string KubeletPackage = Kubernetes + "-00";
 
         /// <summary>
-        /// Returns the package version for the Kubernetes metrics-server service to be installed.
+        /// Returns the apt package version for the Kubernetes <b>metrics-server</b> service to be installed.
         /// </summary>
         [KubeValue]
         public const string MetricsServer = "v0.6.4";
 
         /// <summary>
-        /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
+        /// Returns the package version for the Kubernetes <b>kube-state-metrics</b> service to be installed.
         /// </summary>
         [KubeValue]
         public const string KubeStateMetrics = "v2.10.1";
 
         /// <summary>
-        /// Returns the package version for the Kubernetes kube-state-metrics service to be installed.
+        /// Returns the version for the Kubernetes <b>kube-state-metrics-scraper</b> service to be installed.
         /// </summary>
         [KubeValue]
         public const string KubernetesUIMetricsScraper = "v1.0.9";
 
         /// <summary>
         /// <para>
-        /// Specifies the version of CRI-O container runtime to be installed.
+        /// Specifies the version of <b>CRI-O container runtime</b> to be installed.
         /// </para>
         /// <note>
         /// <para>
@@ -289,25 +289,19 @@ namespace Neon.Kube
         public static readonly string Crio = PatchVersion(Kubernetes, 0);
 
         /// <summary>
-        /// Specifies the version of Podman to be installed.
+        /// Specifies the version of <b>Podman</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Podman = "3.4.4+ds1-1ubuntu1.22.04.2";
 
         /// <summary>
-        /// Specifies the version of Etcd to install.
+        /// Specifies the version of <b>Etcd</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Etcd = "3.5.10-0";
 
         /// <summary>
-        /// Specifies the version of Calico to install.
-        /// </summary>
-        [KubeValue]
-        public const string Calico = "v3.23.5";
-
-        /// <summary>
-        /// Specifies the version of Cilium to install.
+        /// Specifies the version of <b>Cilium</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Cilium = "v1.14.5";
@@ -320,7 +314,7 @@ namespace Neon.Kube
         public const string CiliumCertGen = "v0.1.9";
 
         /// <summary>
-        /// Specifies the version of Cilium CLI to install.
+        /// Specifies the version of <b>Cilium CLI</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string CiliumCli = "v0.15.19";
@@ -331,25 +325,25 @@ namespace Neon.Kube
         public const string CiliumEnvoy = "v1.26.6-ad82c7c56e88989992fd25d8d67747de865c823b";
 
         /// <summary>
-        /// Specifies the version of the Hubble CLI to install.
+        /// Specifies the version of the <b>Hubble CLI</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string CiliumHubbleCli = "v0.12.3";
 
         /// <summary>
-        /// Specifies the version of Hubble UI to install.
+        /// Specifies the version of <b>Hubble Relay</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string CiliumHubbleRelay = "v1.14.5";
 
         /// <summary>
-        /// Specifies the version of Hubble UI to install.
+        /// Specifies the version of <b></b>Hubble UI to install.
         /// </summary>
         [KubeValue]
         public const string CiliumHubbleUI = "v0.12.1";
 
         /// <summary>
-        /// Specifies the version of Hubble UI Backend to install.
+        /// Specifies the version of <b>Hubble UI Backend</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string CiliumHubbleUIBackend = "v0.12.1";
@@ -383,64 +377,358 @@ namespace Neon.Kube
         public const string CiliumGenericOperatorDigest = "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a";
 
         /// <summary>
-        /// Specifies the version of dnsutils to install.
+        /// Specifies the version of <b>dnsutils</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string DnsUtils = "1.3";
 
         /// <summary>
-        /// Specifies the version of HaProxy to install.
+        /// Specifies the version of <b>HaProxy</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Haproxy = "1.9.2-alpine";
 
         /// <summary>
-        /// Specifies the version of Istio to install.
+        /// Specifies the version of <b>Istio</b> to be install installed.
         /// </summary>
         [KubeValue]
         public const string Istio = "1.20.2";
 
         /// <summary>
-        /// Specifies the version of Helm to be installed.
+        /// Specifies the version of <b>Helm</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Helm = "3.12.0";
 
         /// <summary>
-        /// Specifies the version of CoreDNS to be installed.
+        /// Specifies the version of <b>CoreDNS</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string CoreDNS = "v1.11.1";
 
         /// <summary>
-        /// Specifies the version of CoreDNS plugin to be installed.
+        /// Specifies the version of <b>CoreDNS</b> plugin to be installed.
         /// </summary>
         [KubeValue]
         public const string CoreDNSPlugin = "0.2-istio-1.1";
 
         /// <summary>
-        /// Specifies the version of Prometheus to be installed.
+        /// Specifies the version of <b>Prometheus</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Prometheus = "v2.22.1";
 
         /// <summary>
-        /// Specifies the version of AlertManager to be installed.
+        /// Specifies the version of <b>AlertManager</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string AlertManager = "v0.21.0";
 
         /// <summary>
-        /// Specifies the version of pause image to be installed.
+        /// Specifies the version of <b>pause</b>  to be installed.
         /// </summary>
         [KubeValue]
         public const string Pause = "3.9";
 
         /// <summary>
-        /// Specifies the version of busybox image to be installed.
+        /// Specifies the version of <b>busybox</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string Busybox = "1.32.0";
+
+        /// <summary>
+        /// Specifies the version of <b>bitnami-kubectl</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string BitnamiKubectl = "1.21.4";
+
+        /// <summary>
+        /// Specifies the version of <b>bitnami-memcached-exporter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string BitnamiMemcachedExporter = "0.9.0-debian-10-r348";
+
+        /// <summary>
+        /// Specifies the version of <b>dexidp-dex</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string DexIdpDex = "v2.32.0";
+
+        /// <summary>
+        /// Specifies the version of <b>glauth-plugins</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Glauth = "v2.1.0-rc1";
+
+        /// <summary>
+        /// Specifies the version of <b>Harbor</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Harbor = "v2.5.2";
+
+        /// <summary>
+        /// Specifies the version of <b>Harbor Operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string HarborOperator = "v1.3.0";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana agent</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaAgent = "v0.31.3";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana agent operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaAgentOperator = "v0.31.3";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana deployment/dashboard</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaDeployment = "9.3.6-ubuntu";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana loki</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaLoki = "2.7.3";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana mimir</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaMimir = "2.6.0";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaOperator = "v4.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana operator plug-ins</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaOperatorPlugins = "0.0.5";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana tempo</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaTempo = "2.0.0";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana tempo/query</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaTempoQuery = "2.0.0";
+
+        /// <summary>
+        /// Specifies the version of <b>HAProxy</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string HaProxy = "1.9.2-alpine";
+
+        /// <summary>
+        /// Specifies the version of <b>jetstack-cert-manager-cainjector</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string JetStackCertManagerCainjector = "v1.8.2";
+
+        /// <summary>
+        /// Specifies the version of <b>jetstack-cert-manager-controller</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string JetStackCertManagerController = "v1.8.2";
+
+        /// <summary>
+        /// Specifies the version of <b>jetstack-cert-manager-webhook</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string JetStackCertManagerWebhook = "v1.8.2";
+
+        /// <summary>
+        /// Specifies the version of <b>jettech-kube-webhook-certgen</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string JetStackKubeWebHookCertGen = "v1.5.2";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-attacher</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiAttacher = "v3.1.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-node-driver-registrar</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiNodeDriverRegistrar = "v2.3.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-provisioner</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiProvisioner = "v3.0.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-resizer</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiResizer = "v1.2.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-snapshotter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiSnapshotter = "v3.0.3";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-livenessprobe</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiLivenessProbe = "v2.3.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-snapshot-controller</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiSnapshotController = "v3.0.3";
+
+        /// <summary>
+        /// Specifies the version of <b>kubernetes-e2e-test-images-dnsutils</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string KubernetesE2eTestImagesDnsUtils = "1.3";
+
+        /// <summary>
+        /// Specifies the version of <b>memcached</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Memcached = "1.6.15-alpine3.15";
+
+        /// <summary>
+        /// Specifies the version of <b>minio</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Minio = "RELEASE.2022-07-04T21-02-54Z";
+
+        /// <summary>
+        /// Specifies the version of <b>minio-console</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string MinioConsole = "v0.19.0";
+
+        /// <summary>
+        /// Specifies the version of <b>minio-operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string MinioOperator = "v4.4.25";
+
+        /// <summary>
+        /// Specifies the version of <b>node-problem-detector</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string NodeProblemDetector = "v0.8.10";
+
+        /// <summary>
+        /// Specifies the version of <b>oauth2-proxy</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Oauth2Proxy = "v7.4.0";
+
+        /// <summary>
+        /// Specifies the version of <b>oliver006-redis_exporter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OliverRedisExporter = "v1.13.1";
+
+        /// <summary>
+        /// Specifies the version of <b>OpenEbs</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbs = "3.2.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsNfsServerAlpine = "0.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-node-disk-exporter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsNodeDiskExporter = "1.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-node-disk-manager</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsNodeDiskManager = "1.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-node-disk-operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsNodeDiskOperator = "1.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-provisioner-nfs</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsProvisionerNfs = "0.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>prom-blackbox-exporter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string PromBlackboxExporter = "v0.21.1";
+
+        /// <summary>
+        /// Specifies the version of <b>prometheuscommunity-postgres-exporter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string PromPostgresExporter = "v0.10.0";
+
+        /// <summary>
+        /// Specifies the version of <b>prometheus-operator-prometheus-config-reloader</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string PrometheusConfigReloader = "v0.47.0";
+
+        /// <summary>
+        /// Specifies the version of <b>Redis</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Redis = "6.0.7-alpine";
+
+        /// <summary>
+        /// Specifies the version of <b>stakater-reloader</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string StakaterReloader = "v0.0.95";
+
+        /// <summary>
+        /// Specifies the version of <b>zalan-acid-pgbouncer</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string ZalanAcidPgBouncer = "master-19";
+
+        /// <summary>
+        /// Specifies the version of <b>zalan-postgres-operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string ZalanPostgresOperator = "v1.8.2";
+
+        /// <summary>
+        /// Specifies the version of <b>zalan-spilo-14</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string ZalanSpilo14 = "2.1-p6";
 
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.

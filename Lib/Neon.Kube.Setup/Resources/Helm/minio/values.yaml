@@ -14,7 +14,7 @@ operator:
   #   - name: WATCHED_NAMESPACE
   #     value: ""
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: minio-operator
     tag: v4.4.25
     pullPolicy: IfNotPresent
@@ -36,7 +36,7 @@ operator:
 
 console:
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: minio-console
     tag: v0.19.0
     pullPolicy: IfNotPresent
@@ -64,7 +64,7 @@ tenants:
   - name: minio
     ## Registry location and Tag to download MinIO Server image
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: minio-minio
       tag: RELEASE.2022-07-04T21-02-54Z
       pullPolicy: IfNotPresent

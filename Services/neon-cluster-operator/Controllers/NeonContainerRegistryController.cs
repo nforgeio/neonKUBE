@@ -183,7 +183,7 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
+                logger?.LogInformationEx(() => $"Upserting registry: [{KubeConst.LocalClusterRegistryHostName}]");
 
                 // todo(marcusbooyah): make this use robot accounts.
 

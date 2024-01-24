@@ -221,7 +221,7 @@ namespace NeonCli
 
                     foreach (var name in image.Names)
                     {
-                        if (name.StartsWith("registry.neon.local/") || manifestImages.Contains(name))
+                        if (name.StartsWith($"{KubeConst.LocalClusterRegistryHostName}/") || manifestImages.Contains(name))
                         {
                             found = true;
                             break;

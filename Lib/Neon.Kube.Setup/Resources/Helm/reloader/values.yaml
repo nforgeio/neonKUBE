@@ -6,7 +6,7 @@ global:
   imagePullSecrets: []
 
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: stakater-reloader
   tag: v0.0.95
   pullPolicy: IfNotPresent

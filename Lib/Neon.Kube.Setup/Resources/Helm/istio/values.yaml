@@ -1,8 +1,8 @@
-registry: registry.neon.local/neonkube
+registry: $<KubeConst.LocalClusterRegistry>
 tag: 1.14.1-distroless
 
 images:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   operator: 
     repository: operator
     tag: 1.14.1-distroless

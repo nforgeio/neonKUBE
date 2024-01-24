@@ -9,21 +9,21 @@ shards: 1
 
 agent:
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-agent
     tag: v0.31.3
     pullPolicy: IfNotPresent
 
 operator:
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-agent-operator
     tag: v0.31.3
     pullPolicy: IfNotPresent
 
 configReloader:
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: prometheus-operator-prometheus-config-reloader
     tag: v0.47.0
     pullPolicy: IfNotPresent

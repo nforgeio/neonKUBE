@@ -71,7 +71,7 @@ strategy:
   type: RollingUpdate
 
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: prom-blackbox-exporter
   tag: v0.21.1
   pullPolicy: IfNotPresent

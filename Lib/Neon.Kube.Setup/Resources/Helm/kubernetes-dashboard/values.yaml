@@ -21,7 +21,7 @@ fullnameOverride: kubernetes-dashboard
 
 image:
   ## Repository for container
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: kubernetesui-dashboard
   tag: v2.6.0
   pullPolicy: IfNotPresent
@@ -213,7 +213,7 @@ metricsScraper:
   enabled: true
   interval: 60s
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: kubernetesui-metrics-scraper
     tag: v1.0.7
   resources: {}

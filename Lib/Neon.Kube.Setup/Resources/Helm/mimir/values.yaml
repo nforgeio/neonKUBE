@@ -12,7 +12,7 @@ fullnameOverride: mimir
 # Container image settings.
 # Since the image is unique for all microservices, so are image settings.
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: grafana-mimir
   tag: 2.6.0
   pullPolicy: IfNotPresent

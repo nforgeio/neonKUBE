@@ -10,7 +10,7 @@
 # Container image details.
 
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: neon-node-agent
   tag: null
   pullPolicy: IfNotPresent

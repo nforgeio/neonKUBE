@@ -131,7 +131,7 @@ cluster:
   domain: keycloak.cluster.neoncluster.io
   name: neonkube
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: oauth2-proxy-oauth2-proxy
   tag: v7.4.0
   pullPolicy: IfNotPresent

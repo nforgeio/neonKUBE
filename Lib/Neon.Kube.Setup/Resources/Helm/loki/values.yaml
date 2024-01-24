@@ -44,7 +44,7 @@ loki:
     timeoutSeconds: 1
   image:
     # -- The Docker registry
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     # -- Docker image repository
     repository: grafana-loki
     # -- Overrides the image tag whose default is the chart's appVersion

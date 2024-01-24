@@ -74,7 +74,7 @@ logDir:
   pod: ""
 
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: node-problem-detector
   tag: v0.8.10
   pullPolicy: IfNotPresent

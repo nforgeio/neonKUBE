@@ -1639,17 +1639,17 @@ cilium install --version {KubeVersion.Cilium} \
     --set k8sServiceHost=127.0.0.1 \
     --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
     --set MTU={mtu} \
-    --set envoy.image.repository=registry.neon.local/neonkube/cilium-envoy \
+    --set envoy.image.repository={KubeConst.LocalClusterRegistry}/cilium-envoy \
     --set envoy.image.useDigest=false \
-    --set hubble.relay.image.repository=registry.neon.local/neonkube/cilium-hubble-relay \
+    --set hubble.relay.image.repository={KubeConst.LocalClusterRegistry}/cilium-hubble-relay \
     --set hubble.relay.image.useDigest=false \
-    --set hubble.ui.backend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui-backend \
+    --set hubble.ui.backend.image.repository={KubeConst.LocalClusterRegistry}/cilium-hubble-ui-backend \
     --set hubble.ui.backend.image.useDigest=false \
-    --set hubble.ui.frontend.image.repository=registry.neon.local/neonkube/cilium-hubble-ui \
+    --set hubble.ui.frontend.image.repository={KubeConst.LocalClusterRegistry}/cilium-hubble-ui \
     --set hubble.ui.frontend.image.useDigest=false \
-    --set image.repository=registry.neon.local/neonkube/cilium \
+    --set image.repository={KubeConst.LocalClusterRegistry}/cilium \
     --set image.useDigest=false \
-    --set operator.image.repository=registry.neon.local/neonkube/cilium-operator \
+    --set operator.image.repository={KubeConst.LocalClusterRegistry}/cilium-operator \
     --set operator.image.useDigest=false \
     --set socketLB.hostNamespaceOnly=true
 
@@ -1706,7 +1706,7 @@ $@"
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
-  hub: registry.neon.local/neonkube
+  hub: {KubeConst.LocalClusterRegistry}
   tag: {KubeVersion.Istio}
   meshConfig:
     accessLogFile: /dev/stdout
@@ -4837,7 +4837,7 @@ $@"- name: StorageType
 
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
-                    var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
+                    var command  = $"echo '{password}' | podman login {KubeConst.LocalClusterRegistryHostName} --username {user.Name} --password-stdin";
 
                     foreach (var node in cluster.Nodes)
                     {

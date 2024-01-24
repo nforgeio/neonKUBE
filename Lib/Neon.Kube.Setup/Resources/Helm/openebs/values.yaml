@@ -30,7 +30,7 @@ varDirectoryPath:
 localprovisioner:
   enabled: true
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-provisioner-localpv
     tag: 3.2.0
   replicas: 1
@@ -51,7 +51,7 @@ localprovisioner:
 ndm:
   enabled: true
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-manager
     tag: 1.9.0
   sparse:
@@ -80,7 +80,7 @@ ndm:
 ndmOperator:
   enabled: true
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-operator
     tag: 1.9.0
   replicas: 1
@@ -102,7 +102,7 @@ ndmOperator:
 ndmExporter:
   enabled: true
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-exporter
     tag: 1.9.0
     pullPolicy: IfNotPresent
@@ -126,28 +126,28 @@ ndmExporter:
 cstor:
   pool:
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool
       tag: 3.2.0
   poolMgmt:
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool-manager
       tag: 3.2.0
   target:
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-istgt
       tag: 3.2.0
   webhook:
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-webhook
       tag: 3.2.0
 
 helper:
   image:
-    registry: registry.neon.local/neonkube
+    registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-linux-utils
     tag: 3.2.0
 
@@ -177,7 +177,7 @@ policies:
   monitoring:
     enabled: true
     image:
-      registry: registry.neon.local/neonkube
+      registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-m-exporter
       tag: 3.2.0
 

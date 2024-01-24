@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 image:
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: metrics-server
   tag: $<KubeVersion.MetricsServer>
   pullPolicy: IfNotPresent

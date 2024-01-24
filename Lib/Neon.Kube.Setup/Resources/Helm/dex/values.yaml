@@ -7,7 +7,7 @@ replicaCount: 1
 
 image:
   # -- Name of the image repository to pull the container image from.
-  registry: registry.neon.local/neonkube
+  registry: $<KubeConst.LocalClusterRegistry>
   repository: dexidp-dex
 
   # -- [Image pull policy](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for updating already existing images on a node.
