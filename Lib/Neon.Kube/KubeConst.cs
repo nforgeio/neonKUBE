@@ -32,7 +32,13 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
+    /// <para>
     /// Important cluster constants.
+    /// </para>
+    /// <note>
+    /// Many of these constants are tagged with <see cref="KubeValueAttribute"/> so they can
+    /// be referenced directly from Helm charts like: $%lt;KubeConst.LocalClusterRegistryHostName&gt;
+    /// </note>
     /// </summary>
     public static class KubeConst
     {
@@ -85,6 +91,7 @@ namespace Neon.Kube
         /// <summary>
         /// The root Kubernetes context username for provisioned clusters. 
         /// </summary>
+        [KubeValue]
         public const string RootUser = "root";
 
         /// <summary>
@@ -97,36 +104,43 @@ namespace Neon.Kube
         /// routable.
         /// </note>
         /// </summary>
+        [KubeValue]
         public const string RootDesktopPassword = "root";
 
         /// <summary>
         /// The NEONKUBE domain used to host NEONKUBE cluster DNS records.
         /// </summary>
+        [KubeValue]
         public const string NeonClusterDomain = "neoncluster.io";
 
         /// <summary>
         /// The fixed domain for all desktop clusters.
         /// </summary>
+        [KubeValue]
         public const string DesktopClusterDomain = $"desktop.{NeonClusterDomain}";
 
         /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
+        [KubeValue]
         public const string SysAdminUser = "sysadmin";
 
         /// <summary>
         /// The default host machine sysadmin user ID.
         /// </summary>
+        [KubeValue]
         public const int SysAdminUID = 1000;
 
         /// <summary>
         /// The default host machine sysadmin group.
         /// </summary>
+        [KubeValue]
         public const string SysAdminGroup = "sysadmin";
 
         /// <summary>
         /// The default host machine sysadmin group ID.
         /// </summary>
+        [KubeValue]
         public const int SysAdminGID = 1000;
 
         /// <summary>
@@ -134,6 +148,7 @@ namespace Neon.Kube
         /// base images.  This will generally be changed to a secure password 
         /// during cluster provisioning.
         /// </summary>
+        [KubeValue]
         public const string SysAdminPassword = "sysadmin0000";
 
         /// <summary>
@@ -147,6 +162,7 @@ namespace Neon.Kube
         /// The default name for the local <see cref="k8s.Models.V1StorageClass"/>
         /// </para>
         /// </summary>
+        [KubeValue]
         public const string LocalStorageClassName = "local-storage";
 
         /// <summary>
@@ -158,6 +174,7 @@ namespace Neon.Kube
         /// that instead.
         /// </note>
         /// </summary>
+        [KubeValue]
         public const string LocalVolumePath = "/var/lib/neonkube/volumes";
 
         /// <summary>
@@ -204,8 +221,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// The container image tag used to reference cluster container images tagged 
-        /// our prefix and the cluster version number.
+        /// with our prefix and the cluster version number.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeImageTag = "neonkube-" + KubeVersion.NeonKube;
 
         /// <summary>
@@ -244,52 +262,62 @@ namespace Neon.Kube
         /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
+        [KubeValue]
         public const string ClusterNodeDomain = "neon.local";
 
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
+        [KubeValue]
         public const string LocalClusterRegistryHostName = $"registry.{ClusterNodeDomain}";
 
         /// <summary>
         /// The local cluster registry project.
         /// </summary>
+        [KubeValue]
         public const string LocalClusterRegistryProject = "neonkube";
 
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
+        [KubeValue]
         public const string LocalClusterRegistry = $"{LocalClusterRegistryHostName}/{LocalClusterRegistryProject}";
 
         /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local
         /// Harbor registry via <b>podman</b>.
         /// </summary>
+        [KubeValue]
         public const string HarborCrioUser = "root";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/neonKUBE/issues/1404)
 
         /// <summary>
         /// Returns the Harbor Project name.
         /// </summary>
+        [KubeValue]
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
         /// Identifies the GitHub organization where we host released NEONKUBE container images.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeReleaseOrganization = "neonkube-release";
 
         /// <summary>
         /// Identifies the GitHub organization where we host staged NEONKUBE container images.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeStageOrganization = "neonkube-stage";
 
         /// <summary>
         /// Identifies the NEONKUBE release container image registry.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeReleaseRegistry = $"ghcr.io/{NeonKubeReleaseOrganization}";
 
         /// <summary>
         /// Identifies the NEONKUBE stage container image registry.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeStageRegistry = $"ghcr.io/{NeonKubeStageOrganization}";
 
         /// <summary>
@@ -297,97 +325,110 @@ namespace Neon.Kube
         /// branch the assembly was built from.  This returns <see cref="NeonKubeReleaseRegistry"/> for
         /// release branches and <see cref="NeonKubeStageRegistry"/> for all other branches.
         /// </summary>
+        [KubeValue]
         public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeReleaseRegistry : NeonKubeStageRegistry;
 
         /// <summary>
         /// Identifies the username of the neon-system-db superuser.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbAdminUser = "neon_admin";
 
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbAdminUser"/>.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbAdminSecret = "neon-admin.neon-system-db.credentials.postgresql";
 
         /// <summary>
         /// Identifies the secret containing Dex credentials.
         /// </summary>
+        [KubeValue]
         public const string DexSecret = "neon-sso-dex";
 
         /// <summary>
         /// Identifies the secret containing Neon SSO Session Proxy credentials.
         /// </summary>
+        [KubeValue]
         public const string NeonSsoSessionProxySecret = "neon-sso-session-proxy";
 
         /// <summary>
         /// Identifies the secret containing Neon SSO Oauth2 Proxy credentials.
         /// </summary>
+        [KubeValue]
         public const string NeonSsoOauth2Proxy = "neon-sso-oauth2-proxy";
 
         /// <summary>
         /// Identifies the neon-system-db superuser database.
         /// </summary>
+        [KubeValue]
         public const string NeonClusterOperatorDatabase = "neon_cluster_operator";
 
         /// <summary>
         /// Identifies the neon-system-db username used by neon services.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbServiceUser = "neon_service";
 
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbServiceUser"/>.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbServiceSecret = "neon-service.neon-system-db.credentials.postgresql";
 
         /// <summary>
         /// Identifies the prefix to be used by the Harbor Operator when creating Harbor related databases in neon-system-db.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbHarborPrefix = "harbor";
 
         /// <summary>
         /// Identifies the database name to be used by Grafana.
         /// </summary>
+        [KubeValue]
         public const string NeonSystemDbGrafanaDatabase = "grafana";
 
         /// <summary>
         /// Identifies the the secret containing credentials used by Grafana.
         /// </summary>
+        [KubeValue]
         public const string GrafanaSecret = "grafana-secret";
 
         /// <summary>
         /// Identifies the the secret containing admin credentials for Grafana.
         /// </summary>
+        [KubeValue]
         public const string GrafanaAdminSecret = "grafana-admin-credentials";
 
         /// <summary>
         /// Identifies the secret name where the harbor credentials are stored.
         /// </summary>
+        [KubeValue]
         public const string RegistrySecretKey = "registry";
 
         /// <summary>
         /// Identifies the secret name where the harbor token cert is stored.
         /// </summary>
+        [KubeValue]
         public const string RegistryTokenCertSecretKey = "registry-token-cert";
 
         /// <summary>
         /// Identifies the secret name where the citus credentials are stored.
         /// </summary>
+        [KubeValue]
         public const string CitusSecretKey = "citus";
 
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Grafana.
         /// </summary>
+        [KubeValue]
         public const string NeonJobSetupGrafana = "setup-grafana";
 
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Harbor.
         /// </summary>
+        [KubeValue]
         public const string NeonJobSetupHarbor = "setup-harbor";
-
-        /// <summary>
-        /// Entry storing the last time cluster images were checked.
-        /// </summary>
-        public const string ClusterImagesLastChecked = "cluster-images-last-checked";
 
         /// <summary>
         /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
@@ -424,6 +465,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the Kubernetes group where NEONKUBE custom resources will be located.
         /// </summary>
+        [KubeValue]
         public const string NeonKubeResourceGroup = "neonkube.io";
 
         /// <summary>
@@ -434,6 +476,7 @@ namespace Neon.Kube
         /// <summary>
         /// The CIR-O socket.
         /// </summary>
+        [KubeValue]
         public const string CrioSocketPath = "/var/run/crio/crio.sock";
 
         /// <summary>
@@ -450,16 +493,19 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster wide crio config name.
         /// </summary>
+        [KubeValue]
         public const string ClusterCrioConfigName = "cluster";
 
         /// <summary>
         /// Neon SSO client ID.
         /// </summary>
+        [KubeValue]
         public const string NeonSsoClientId = "neon-sso";
 
         /// <summary>
         /// Neon SSO Public client ID.
         /// </summary>
+        [KubeValue]
         public const string NeonSsoPublicClientId = "neon-sso-public";
 
         /// <summary>

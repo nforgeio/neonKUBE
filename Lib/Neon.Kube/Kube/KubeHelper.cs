@@ -3718,9 +3718,8 @@ TCPKeepAlive yes
         /// <summary>
         /// Constructs a <see cref="PreprocessReader"/> capable of preprocessing version
         /// constants defined by <see cref="KubeVersion"/>, <see cref="KubeNamespace"/>,
-        /// and <see cref="KubePort"/> named like <b>$&lt;KubeVersion.VERSION&gt;</b>,
-        /// <b>$&lt;KubeNamespace.NAME&gt;</b>, or <b>$&lt;KubePort.NUMBER&gt;</b> to the
-        /// associated value.
+        /// <see cref="KubePort"/> and <see cref="KubeConst"/> classes using references
+        /// like <b>$&lt;KubeVersion.Kubernetes&gt;</b>.
         /// </summary>
         /// <param name="reader">Specifies the <see cref="TextReader"/> with the input text.</param>
         /// <param name="variableRegex">
@@ -3747,6 +3746,7 @@ TCPKeepAlive yes
                 {
                     var sourceTypes = new Type[]
                     {
+                        typeof(KubeConst),
                         typeof(KubeNamespace),
                         typeof(KubePort),
                         typeof(KubeVersion)

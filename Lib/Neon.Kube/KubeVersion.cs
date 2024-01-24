@@ -35,9 +35,15 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
+    /// <para>
     /// Specifies deployment related component versions for the current
     /// NEONKUBE release.  Kubernetes release information can be found here:
     /// https://kubernetes.io/releases/
+    /// </para>
+    /// <note>
+    /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can
+    /// be referenced directly from Helm charts like: $%lt;KubeVersion.Kubernetes&gt;
+    /// </note>
     /// </summary>
     public static class KubeVersion
     {

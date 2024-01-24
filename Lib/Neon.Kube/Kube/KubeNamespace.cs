@@ -32,7 +32,13 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
+    /// <para>
     /// Defines the namespace names created for NEONKUBE clusters.
+    /// </para>
+    /// <note>
+    /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can
+    /// be referenced directly from Helm charts like: $%lt;KubeNamespace.KubeSystem&gt;
+    /// </note>
     /// </summary>
     public static class KubeNamespace
     {
