@@ -182,6 +182,16 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - json:
+                    expressions:
+                      severity: severity
+                      severity_number: severityNumber
+                    source: content
+                - labeldrop:
+                    - filename
+                - labels:
+                    severity:
+                    severity_number:
                 - metrics:
                     log_lines_total:
                       type: Counter
