@@ -209,23 +209,10 @@ namespace Neon.Kube
         public const string KubernetesNoPatch = "1.29";
 
         /// <summary>
-        /// Specifies the version of the GOLANG compiler to use for building Kubernetes
-        /// related components like <b>CRI-O</b>.
-        /// </summary>
-        [KubeValue]
-        public const string GoLang = "1.21.3";
-
-        /// <summary>
         /// Specifies the version of Kubernetes related container images to be installed.
         /// </summary>
         [KubeValue]
         public const string KubernetesImage = "v1.29.0";
-
-        /// <summary>
-        /// Specifies the version of the <b>Kubernetes Dashboard</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string KubernetesDashboard = "v2.7.0";
 
         /// <summary>
         /// Returns the package version for Kubernetes admin service.
@@ -250,6 +237,12 @@ namespace Neon.Kube
         /// </summary>
         [KubeValue]
         public const string KubeletPackage = Kubernetes + "-00";
+
+        /// <summary>
+        /// Specifies the version of the <b>Kubernetes Dashboard</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string KubernetesDashboard = "v2.7.0";
 
         /// <summary>
         /// Returns the apt package version for the Kubernetes <b>metrics-server</b> service to be installed.
@@ -383,12 +376,6 @@ namespace Neon.Kube
         public const string DnsUtils = "1.3";
 
         /// <summary>
-        /// Specifies the version of <b>HaProxy</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string Haproxy = "1.9.2-alpine";
-
-        /// <summary>
         /// Specifies the version of <b>Istio</b> to be install installed.
         /// </summary>
         [KubeValue]
@@ -461,18 +448,6 @@ namespace Neon.Kube
         public const string Glauth = "v2.1.0-rc1";
 
         /// <summary>
-        /// Specifies the version of <b>Harbor</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string Harbor = "v2.5.2";
-
-        /// <summary>
-        /// Specifies the version of <b>Harbor Operator</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string HarborOperator = "v1.3.0";
-
-        /// <summary>
         /// Specifies the version of <b>grafana agent</b> to be installed.
         /// </summary>
         [KubeValue]
@@ -530,7 +505,19 @@ namespace Neon.Kube
         /// Specifies the version of <b>HAProxy</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string HaProxy = "1.9.2-alpine";
+        public const string HAProxy = "1.9.2-alpine";
+
+        /// <summary>
+        /// Specifies the version of <b>Harbor</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Harbor = "v2.5.2";
+
+        /// <summary>
+        /// Specifies the version of <b>Harbor Operator</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string HarborOperator = "v1.3.0";
 
         /// <summary>
         /// Specifies the version of <b>jetstack-cert-manager-cainjector</b> to be installed.
@@ -729,6 +716,13 @@ namespace Neon.Kube
         /// </summary>
         [KubeValue]
         public const string ZalanSpilo14 = "2.1-p6";
+
+        /// <summary>
+        /// Specifies the version of the GOLANG compiler to use for building Kubernetes
+        /// related components like <b>CRI-O</b>.
+        /// </summary>
+        [KubeValue]
+        public const string GoLang = "1.21.3";
 
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
