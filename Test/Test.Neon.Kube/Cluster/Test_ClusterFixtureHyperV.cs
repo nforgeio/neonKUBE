@@ -115,10 +115,10 @@ namespace TestKube
             var namespaces = 
                 new string[]
                 {
-                    "default",
-                    "kube-node-lease",
-                    "kube-public",
-                    "kube-system"
+                    KubeNamespace.Default,
+                    KubeNamespace.KubeNodeLease,
+                    KubeNamespace.KubePublic,
+                    KubeNamespace.KubeSystem
                 };
 
             foreach (var @namespace in namespaces)

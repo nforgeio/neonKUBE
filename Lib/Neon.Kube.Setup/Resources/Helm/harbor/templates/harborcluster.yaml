@@ -55,7 +55,7 @@ spec:
     spec:
       postgresql:
         hosts:
-          - host: neon-system-db.neon-system
+          - host: neon-system-db.$<KubeNamespace.NeonSystem>
             port: 5432
         passwordRef: registry
         prefix: harbor_
@@ -84,7 +84,7 @@ spec:
         bucket: harbor
         encrypt: false
         region: neon
-        regionendpoint: http://minio-neon.neon-system
+        regionendpoint: http://minio-neon$<KubeNamespace.NeonSystem>
         secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
         secure: false
         skipverify: true
@@ -196,7 +196,7 @@ spec:
     # Spec for otel provider if provider is set to otel.
     otel: # Optional
       # The endpoint of otel
-      endpoint: grafana-agent-node.neon-monitor.svc.cluster.local:4318 # Required
+      endpoint: grafana-agent-node.$<KubeNamespace.NeonMonitor>.svc.cluster.local:4318 # Required
       # The URL path of otel
       urlPath: /v1/traces # Required
       # Whether enable compression or not for otel

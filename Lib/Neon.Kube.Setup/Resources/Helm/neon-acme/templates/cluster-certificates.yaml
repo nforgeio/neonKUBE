@@ -6,11 +6,11 @@ metadata:
     goharbor.io/deploy-mode: harbor
     goharbor.io/operator-version: v1.0.1
   name: serving-cert
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   dnsNames:
-  - registry-webhook-service.neon-system.svc
-  - registry-webhook-service.neon-system.svc.cluster.local
+  - registry-webhook-service.$<KubeNamespace.NeonSystem>.svc
+  - registry-webhook-service.$<KubeNamespace.NeonSystem>.svc.cluster.local
   duration: {{ .Values.certficateDuration }}
   renewBefore: {{ .Values.certficateRenewBefore }}
   issuerRef:
@@ -25,7 +25,7 @@ metadata:
     goharbor.io/deploy-mode: harbor
     goharbor.io/operator-version: v1.0.1
   name: neon-sso
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   dnsNames:
   - {{ .Values.cluster.domain }}

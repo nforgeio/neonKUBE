@@ -2,7 +2,7 @@ apiVersion: monitoring.grafana.com/v1alpha1
 kind: GrafanaAgent
 metadata:
   name: grafana-agent
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
   labels:
     app: grafana-agent
 spec:

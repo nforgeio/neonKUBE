@@ -1,7 +1,7 @@
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: zalan-postgres-operator
-  tag: v1.8.2
+  tag: $<KubeVersion.ZalanPostgresOperator>
   pullPolicy: "IfNotPresent"
 
   # Optionally specify an array of imagePullSecrets.

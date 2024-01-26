@@ -191,7 +191,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: neon-etcd-proxy
-  namespace: kube-system
+  namespace: {KubeNamespace.KubeSystem}
   labels:
     app: neon-etcd-proxy
     role: neon-etcd-proxy
@@ -207,7 +207,7 @@ spec:
   priorityClassName: { PriorityClass.SystemNodeCritical.Name }
   containers:
     - name: web
-      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}
+      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.HAProxy}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -939,7 +939,7 @@ exit 1
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}"
+                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.HAProxy}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1015,7 +1015,7 @@ exit 1
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.Haproxy}",
+                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersion.HAProxy}",
                                             RunOptions.FaultOnError);
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1470,7 +1470,7 @@ exit 1
                             Metadata = new V1ObjectMeta()
                             {
                                 Name              = "kube-dns",
-                                NamespaceProperty = "kube-system"
+                                NamespaceProperty = KubeNamespace.KubeSystem
                             },
                             Spec = new V1ServiceMonitorSpec()
                             {
@@ -1486,7 +1486,7 @@ exit 1
                                 },
                                 NamespaceSelector = new NamespaceSelector()
                                 {
-                                    MatchNames = new List<string>() { "kube-system" }
+                                    MatchNames = new List<string>() { { KubeNamespace.KubeSystem } }
                                 },
                                 Selector = new V1LabelSelector()
                                 {
@@ -2012,7 +2012,7 @@ istioctl install -y -f manifest.yaml
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "metrics-server");
 
-                    await k8s.AppsV1.WaitForDeploymentAsync("kube-system", "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 

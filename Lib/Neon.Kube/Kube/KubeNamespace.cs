@@ -45,51 +45,55 @@ namespace Neon.Kube
         /// <summary>
         /// The default namespace.
         /// </summary>
+        [KubeValue]
         public const string Default = "default";
 
         /// <summary>
-        /// Hosts the Kubernetes dashboard.
+        /// Hosts Istio components.
         /// </summary>
-        public const string KubernetesDashboard = "kubernetes-dashboard";
+        [KubeValue]
+        public const string IstioSystem = "istio-system";
+
+        /// <summary>
+        /// Hosts the Kubernetes node leases.
+        /// </summary>
+        [KubeValue]
+        public const string KubeNodeLease = "kube-node-lease";
 
         /// <summary>
         /// Hosts Kubernetes public services.
         /// </summary>
+        [KubeValue]
         public const string KubePublic = "kube-public";
 
         /// <summary>
         /// Hosts Kubernetes infrastructure components.
         /// </summary>
+        [KubeValue]
         public const string KubeSystem = "kube-system";
-
-        /// <summary>
-        /// Hosts the Kubernetes node leases.
-        /// </summary>
-        public const string KubeNodeLease = "kube-node-lease";
-
-        /// <summary>
-        /// Hosts Istio components.
-        /// </summary>
-        public const string IstioSystem = "istio-system";
 
         /// <summary>
         /// Hosts cluster monitoring.
         /// </summary>
+        [KubeValue]
         public const string NeonMonitor = "neon-monitor";
-
-        /// <summary>
-        /// Hosts OpenEBS components.
-        /// </summary>
-        public const string NeonStorage = "neon-storage";
 
         /// <summary>
         /// Hosts cluster status information.
         /// </summary>
+        [KubeValue]
         public const string NeonStatus = "neon-status";
+
+        /// <summary>
+        /// Hosts OpenEBS components.
+        /// </summary>
+        [KubeValue]
+        public const string NeonStorage = "neon-storage";
 
         /// <summary>
         /// Hosts NEONKUBE infrastructure.
         /// </summary>
+        [KubeValue]
         public const string NeonSystem = "neon-system";
 
         /// <summary>
@@ -122,8 +126,7 @@ namespace Neon.Kube
                 Default,
                 KubeNodeLease,
                 KubePublic,
-                KubeSystem,
-                KubernetesDashboard
+                KubeSystem
             }
             .AsReadOnly();
 

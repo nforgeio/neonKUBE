@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: postgres-pod-delete
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 subjects:
   - kind: ServiceAccount
     name: postgres-pod

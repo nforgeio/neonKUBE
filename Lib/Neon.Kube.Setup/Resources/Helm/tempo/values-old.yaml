@@ -42,7 +42,7 @@ tempo:
           prefix: neonkube.io/tempo/
           etcd:
             endpoints:
-              - neon-etcd.neon-system.svc.cluster.local:2379
+              - neon-etcd.$<KubeNamespace.NeonSystem>.svc.cluster.local:2379
   retention: 1h
   server:
     httpListenPort: 3100
@@ -51,7 +51,7 @@ tempo:
       backend: s3
       s3:
         bucket: tempo
-        endpoint: minio-neon.neon-system
+        endpoint: minio-neon.$<KubeNamespace.NeonSystem>
         access_key: ${ACCESS_KEY_ID}
         secret_key: ${SECRET_ACCESS_KEY}
         insecure: true

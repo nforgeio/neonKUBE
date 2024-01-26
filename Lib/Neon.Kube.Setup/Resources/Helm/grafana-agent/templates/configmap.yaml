@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-agent-node
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
 data:
   agent.yml: |
     server:
@@ -26,7 +26,7 @@ data:
     metrics:
       global:
         remote_write:
-          - url: http://mimir-distributor.neon-monitor.svc.cluster.local:8080/api/v1/push
+          - url: http://mimir-distributor.$<KubeNamespace.NeonMonitor>.svc.cluster.local:8080/api/v1/push
             headers: 
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
@@ -78,7 +78,7 @@ data:
               - role: endpoints
                 namespaces:
                   names:
-                  - neon-ingress
+                  - $<KubeNamespace.IstioSystem>
               relabel_configs:
               - source_labels:
                   - __meta_kubernetes_service_name
@@ -145,7 +145,7 @@ data:
     logs:
       configs:
         - clients:
-            - url: http://loki-distributor.neon-monitor.svc.cluster.local:3100/loki/api/v1/push
+            - url: http://loki-distributor.$<KubeNamespace.NeonMonitor>.svc.cluster.local:3100/loki/api/v1/push
               tenant_id: {{ .Values.cluster.name | default "neonkube" }}
               backoff_config:
                 min_period: 500ms
@@ -289,7 +289,7 @@ data:
             opencensus:
               endpoint: "0.0.0.0:4320"
           remote_write:
-            - endpoint: tempo-distributor.neon-monitor.svc.cluster.local:4317
+            - endpoint: tempo-distributor.$<KubeNamespace.NeonMonitor>.svc.cluster.local:4317
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               insecure: true
@@ -319,7 +319,7 @@ data:
               insecure: true
             resolver:
               dns:
-                hostname: grafana-agent-node.neon-monitor.svc.cluster.local
+                hostname: grafana-agent-node.$<KubeNamespace.NeonMonitor>.svc.cluster.local
                 port: 4319
           service_graphs:
             enabled: true

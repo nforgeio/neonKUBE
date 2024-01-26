@@ -69,7 +69,7 @@ tenants:
       tag: RELEASE.2022-07-04T21-02-54Z
       pullPolicy: IfNotPresent
     ## Customize namespace for tenant deployment
-    namespace: neon-system
+    namespace: $<KubeNamespace.NeonSystem>
     ## Customize any private registry image pull secret.
     ## currently only one secret registry is supported
     imagePullSecret: {}
@@ -169,13 +169,13 @@ tenants:
       - name: GOGC
         value: "25"
       - name: CONSOLE_PROMETHEUS_URL
-        value: http://mimir.neon-monitor.svc.cluster.local/prometheus
+        value: http://mimir.$<KubeNamespace.NeonMonitor>.svc.cluster.local/prometheus
       - name: CONSOLE_PROMETHEUS_AUTH_TYPE
         value: public
       - name: CONSOLE_PROMETHEUS_JOB_ID
         value: minio
       - name: MINIO_PROMETHEUS_URL
-        value: http://mimir.neon-monitor.svc.cluster.local/prometheus
+        value: http://mimir.$<KubeNamespace.NeonMonitor>.svc.cluster.local/prometheus
       - name: MINIO_PROMETHEUS_AUTH_TYPE
         value: public
       - name: MINIO_PROMETHEUS_JOB_ID
@@ -195,7 +195,7 @@ clients:
   version: '10'
   aliases:
     minio:
-      url: http://minio-neon.neon-system
+      url: http://minio-neon$<KubeNamespace.NeonSystem>
       accessKey: ''
       secretKey: ''
       api: S3v4

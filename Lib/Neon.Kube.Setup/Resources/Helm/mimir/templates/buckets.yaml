@@ -2,7 +2,7 @@ apiVersion: minio.neonkube.io/v1alpha1
 kind: MinioBucket
 metadata:
   name: mimir-tsdb
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   quota:
     hard: true
@@ -14,7 +14,7 @@ apiVersion: minio.neonkube.io/v1alpha1
 kind: MinioBucket
 metadata:
   name: mimir-ruler
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   region: cluster
   tenant: minio

@@ -57,7 +57,7 @@ jivaOperator:
 csiController:
   priorityClass:
     create: false
-    name: neon-storage
+    name: $<KubeNamespace.NeonStorage>
     value: 900000000
   componentName: "openebs-jiva-csi-controller"
   logLevel: "5"
@@ -124,7 +124,7 @@ jivaCSIPlugin:
 csiNode:
   priorityClass:
     create: false
-    name: neon-storage
+    name: $<KubeNamespace.NeonStorage>
     value: 900001000
   componentName: "openebs-jiva-csi-node"
   logLevel: "5"

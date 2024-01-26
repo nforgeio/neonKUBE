@@ -3733,7 +3733,7 @@ TCPKeepAlive yes
         /// The constant name name processing will be <b>case-sensitive</b>.
         /// </note>
         /// </remarks>
-        public static PreprocessReader CreateValuePreprocessor(TextReader reader, Regex variableRegex = null)
+        public static PreprocessReader CreateKubeValuePreprocessor(TextReader reader, Regex variableRegex = null)
         {
             Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
 
@@ -3754,9 +3754,9 @@ TCPKeepAlive yes
 
                     foreach (var type in sourceTypes)
                     {
-                        // We need to process version constants, fields, and properties.
+                        // We need to process constants, fields, and properties.
 
-                        foreach (var member in typeof(KubeVersion).GetMembers(BindingFlags.Public | BindingFlags.Static))
+                        foreach (var member in type.GetMembers(BindingFlags.Public | BindingFlags.Static))
                         {
                             var versionAttribute = member.GetCustomAttribute<KubeValueAttribute>();
 
@@ -3771,7 +3771,7 @@ TCPKeepAlive yes
                             {
                                 case MemberTypes.Property:
 
-                                    value = typeof(KubeVersion).GetProperty(member.Name).GetValue(null).ToString();
+                                    value = type.GetProperty(member.Name).GetValue(null).ToString();
                                     break;
 
                                 case MemberTypes.Field:

@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: neon-acme-ca
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 spec:
@@ -18,7 +18,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: neon-acme-webhook-tls
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>v
   labels:
     app: neon-acme
 spec:
@@ -29,6 +29,6 @@ spec:
   renewBefore: {{ .Values.certficateRenewBefore }}
   dnsNames:
   - neon-acme
-  - neon-acme.neon-ingress
-  - neon-acme.neon-ingress.svc
-  - neon-acme.neon-ingress.svc.cluster.local
+  - neon-acme.$<KubeNamespace.IstioSystem>
+  - neon-acme.$<KubeNamespace.IstioSystem>.svc
+  - neon-acme.$<KubeNamespace.IstioSystem>.svc.cluster.local

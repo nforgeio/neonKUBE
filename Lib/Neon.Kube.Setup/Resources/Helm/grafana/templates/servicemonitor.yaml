@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: grafana
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
 spec:
   endpoints:
     - targetPort: 3001
@@ -11,7 +11,7 @@ spec:
   jobLabel: grafana
   namespaceSelector:
     matchNames:
-      - neon-monitor
+      - $<KubeNamespace.NeonMonitor>
   selector:
     matchLabels:
       app: grafana

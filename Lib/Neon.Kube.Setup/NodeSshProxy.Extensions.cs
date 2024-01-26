@@ -83,16 +83,23 @@ namespace Neon.Kube.SSH
                 var preprocessor = new ZipPreprocessor(
                     async (path, input) =>
                     {
-                        var preprocessor = KubeHelper.CreateValuePreprocessor(new StreamReader(input));
-                        var output       = new MemoryStream();
-
-                        foreach (var line in preprocessor.Lines())
+                        try
                         {
-                            output.Write(Encoding.UTF8.GetBytes(line));
-                            output.WriteByte(NeonHelper.LF);    // Using Linux line endings
-                        }
+                            var preprocessor = KubeHelper.CreateKubeValuePreprocessor(new StreamReader(input));
+                            var output       = new MemoryStream();
 
-                        return await Task.FromResult(output);
+                            foreach (var line in preprocessor.Lines())
+                            {
+                                output.Write(Encoding.UTF8.GetBytes(line));
+                                output.WriteByte(NeonHelper.LF);    // Using Linux line endings
+                            }
+
+                            return await Task.FromResult(output);
+                        }
+                        catch (KeyNotFoundException e)
+                        {
+                            throw new KeyNotFoundException($"{e.Message} file: [{path}]");
+                        }
                     });
 
                 await helmFolder.ZipAsync(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings, preprocessor: preprocessor);

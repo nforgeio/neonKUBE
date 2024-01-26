@@ -73,7 +73,7 @@ strategy:
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: prom-blackbox-exporter
-  tag: v0.21.1
+  tag: $<KubeVersion.PromBlackboxExporter>
   pullPolicy: IfNotPresent
 
   ## Optionally specify an array of imagePullSecrets.

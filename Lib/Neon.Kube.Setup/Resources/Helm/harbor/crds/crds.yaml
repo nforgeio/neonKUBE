@@ -13,7 +13,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -4340,7 +4340,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: cores.goharbor.io
 spec:
@@ -4351,7 +4351,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -5561,7 +5561,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: exporters.goharbor.io
 spec:
@@ -5572,7 +5572,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -6294,7 +6294,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: harborclusters.goharbor.io
 spec:
@@ -6305,7 +6305,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -11544,7 +11544,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
   name: harborconfigurations.goharbor.io
@@ -12016,7 +12016,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: harbors.goharbor.io
 spec:
@@ -12027,7 +12027,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -15933,7 +15933,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
   name: harborserverconfigurations.goharbor.io
@@ -16104,7 +16104,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: jobservices.goharbor.io
 spec:
@@ -16115,7 +16115,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -23562,7 +23562,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: notaryservers.goharbor.io
 spec:
@@ -23573,7 +23573,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -24270,7 +24270,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: notarysigners.goharbor.io
 spec:
@@ -24281,7 +24281,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -24890,7 +24890,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: portals.goharbor.io
 spec:
@@ -24901,7 +24901,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -25363,7 +25363,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>v/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
   name: pullsecretbindings.goharbor.io
@@ -25467,7 +25467,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: registries.goharbor.io
 spec:
@@ -25478,7 +25478,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -30826,7 +30826,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: registrycontrollers.goharbor.io
 spec:
@@ -30837,7 +30837,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1
@@ -31338,7 +31338,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   name: trivies.goharbor.io
 spec:
@@ -31349,7 +31349,7 @@ spec:
         caBundle: Cg==
         service:
           name: registry-webhook-service
-          namespace: neon-system
+          namespace: $<KubeNamespace.NeonSystem>
           path: /convert
       conversionReviewVersions:
       - v1

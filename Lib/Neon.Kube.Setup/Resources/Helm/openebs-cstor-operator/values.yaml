@@ -241,4 +241,4 @@ cleanup:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: bitnami-kubectl
-    tag: 1.21.4
+    tag: $<KubeVersion.BitnamiKubectl>

@@ -5,7 +5,7 @@ metadata:
     name: grafana-agent-node
     operator.agent.grafana.com/name: grafana-agent
   name: grafana-agent-node
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
 spec:
   ports:
   - name: agent-http-metrics

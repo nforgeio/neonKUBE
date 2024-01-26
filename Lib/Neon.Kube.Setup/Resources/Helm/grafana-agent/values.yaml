@@ -11,14 +11,14 @@ agent:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-agent
-    tag: v0.31.3
+    tag: $<KubeVersion.GrafanaAgent>
     pullPolicy: IfNotPresent
 
 operator:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-agent-operator
-    tag: v0.31.3
+    tag: $<KubeVersion.GrafanaAgentOperator>
     pullPolicy: IfNotPresent
 
 configReloader:

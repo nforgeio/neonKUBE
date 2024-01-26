@@ -215,7 +215,7 @@ metricsScraper:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: kubernetesui-metrics-scraper
-    tag: v1.0.7
+    tag: $<KubeVersion.KubernetesUIMetricsScraper>
   resources: {}
   ## SecurityContext for the kubernetes dashboard metrics scraper container
   containerSecurityContext:

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: neon-acme
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 
@@ -11,7 +11,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: neon-acme
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 rules:
@@ -26,7 +26,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: neon-acme
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 roleRef:
@@ -37,7 +37,7 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: neon-acme
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>
 
 ---
 # Grant the webhook permission to read the ConfigMap containing the Kubernetes
@@ -47,7 +47,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: neon-acme:webhook-authentication-reader
-  namespace: kube-system
+  namespace: $<KubeNamespace.KubeSystem>
   labels:
     app: neon-acme
 roleRef:
@@ -58,7 +58,7 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: neon-acme
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>
 ---
 # apiserver gets the auth-delegator role to delegate auth decisions to
 # the core apiserver
@@ -66,7 +66,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: neon-acme:auth-delegator
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 roleRef:
@@ -77,7 +77,7 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: neon-acme
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>
 ---
 # Grant cert-manager permission to validate using our apiserver
 apiVersion: rbac.authorization.k8s.io/v1
@@ -108,7 +108,7 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: cert-manager
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -141,4 +141,4 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: neon-acme
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>

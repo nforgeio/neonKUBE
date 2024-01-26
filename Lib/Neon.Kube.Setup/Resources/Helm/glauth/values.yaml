@@ -9,7 +9,7 @@ image:
   repository: glauth-glauth
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v2.1.0-rc1"
+  tag: "$<KubeVersion.Glauth>"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -97,7 +97,7 @@ config:
     plugin: "/app/postgres.so"
     pluginhandler: NewPostgresHandler
     database:
-      host: neon-system-db-pooler.neon-system
+      host: neon-system-db-pooler.$<KubeNamespace.NeonSystem>
       port: "5432"
       dbname: glauth
       user: neon_service

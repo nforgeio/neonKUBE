@@ -2,7 +2,7 @@ apiVersion: minio.neonkube.io/v1alpha1
 kind: MinioBucket
 metadata:
   name: harbor
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   region: cluster
   tenant: minio

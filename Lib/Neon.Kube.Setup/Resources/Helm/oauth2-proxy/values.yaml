@@ -33,7 +33,7 @@ config:
     cookie_refresh="1h"
     cookie_expire="168h"
     session_store_type = {{ .Values.config.sessionStoreType | quote }}
-    redis_sentinel_connection_urls=[ "redis://neon-redis.neon-system:26379" ]
+    redis_sentinel_connection_urls=[ "redis://neon-redis.$<KubeNamespace.NeonSystem>:26379" ]
     redis_sentinel_master_name = "master" 
     redis_use_sentinel = true
     email_domains = [ "*" ] 

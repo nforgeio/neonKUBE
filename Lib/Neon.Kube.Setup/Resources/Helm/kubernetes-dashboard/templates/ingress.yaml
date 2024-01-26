@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neon-ingress/neoncluster-gateway
+    - $<KubeNamespace.IstioSystem>/neoncluster-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}
   http:
@@ -14,7 +14,7 @@ spec:
             prefix: /oauth2
       route:
         - destination:
-            host: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
+            host: neon-sso-oauth2-proxy.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 4180
     - match:
@@ -22,6 +22,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: {{ template "kubernetes-dashboard.fullname" . }}.neon-system.svc.cluster.local
+            host: {{ template "kubernetes-dashboard.fullname" . }}.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80

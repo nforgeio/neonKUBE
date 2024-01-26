@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: neon-acme
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
   annotations:

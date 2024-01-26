@@ -2,7 +2,7 @@ apiVersion: goharbor.io/v1beta1
 kind: HarborConfiguration
 metadata:
   name: ldap-config
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   configuration:
     authMode: ldap_auth
@@ -19,6 +19,6 @@ spec:
     ldapSearchDn: >-
       cn=serviceuser,ou=admin,{{ .Values.ldap.baseDN }}
     ldapSearchPassword: harbor-ldap
-    ldapUrl: neon-sso-glauth.neon-system:3893
+    ldapUrl: neon-sso-glauth.$<KubeNamespace.NeonSystem>:3893
     ldapVerifyCert: false
   harborClusterRef: registry

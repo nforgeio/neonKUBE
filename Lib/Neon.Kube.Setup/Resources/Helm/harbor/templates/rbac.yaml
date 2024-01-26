@@ -5,7 +5,7 @@ metadata:
     goharbor.io/deploy-mode: harbor
     goharbor.io/operator-version: v1.0.0
   name: leader-election-role
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 rules:
 - apiGroups:
   - ""
@@ -663,7 +663,7 @@ metadata:
     goharbor.io/deploy-mode: harbor
     goharbor.io/operator-version: v1.0.0
   name: leader-election-rolebinding
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -671,7 +671,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -687,4 +687,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>

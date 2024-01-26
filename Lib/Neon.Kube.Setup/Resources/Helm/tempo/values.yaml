@@ -9,7 +9,7 @@ global:
   # -- configures DNS service name
   dnsService: "kube-dns"
   # -- configures DNS service namespace
-  dnsNamespace: "kube-system"
+  dnsNamespace: "$<KubeNamespace.KubeSystem>"
 
 # -- Overrides the chart's name
 nameOverride: "tempo"
@@ -27,7 +27,7 @@ tempo:
     # -- Docker image repository
     repository: grafana-tempo
     # -- Overrides the image tag whose default is the chart's appVersion
-    tag: 2.0.0
+    tag: $<KubeVersion.GrafanaTempo>
     pullPolicy: IfNotPresent
   readinessProbe:
     httpGet:
@@ -383,7 +383,7 @@ queryFrontend:
       # -- Docker image repository for the query-frontend image. Overrides `tempo.image.repository`
       repository: grafana-tempo-query
       # -- Docker image tag for the query-frontend image. Overrides `tempo.image.tag`
-      tag: null
+      tag: <$KubeVersion.GrafanaTempoQuery>
     # -- Resource requests and limits for the query
     resources: {}
     # -- Additional CLI args for tempo-query pods
@@ -625,7 +625,7 @@ config: |
       cache: memcached
       memcached:
         consistent_hash: true
-        addresses: dns+neon-memcached.neon-system.svc:11211
+        addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>.svc:11211
         max_idle_conns: 16
         service: http
         timeout: 1000ms
@@ -666,7 +666,7 @@ storage:
   trace:
     backend: local
     s3:
-      endpoint: minio-neon.neon-system.svc:80
+      endpoint: minio-neon.$<KubeNamespace.NeonSystem>.svc:80
       bucket: tempo
       access_key: ${ACCESS_KEY_ID}
       secret_key: ${SECRET_ACCESS_KEY}

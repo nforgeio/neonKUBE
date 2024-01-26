@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: grafana-agent-node
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
   annotations:
     reloader.stakater.com/auto: 'true'
 spec:

@@ -5,12 +5,12 @@ metadata:
   labels:
     app: neon-acme
   annotations:
-    cert-manager.io/inject-ca-from: "neon-ingress/neon-acme-webhook-tls"
+    cert-manager.io/inject-ca-from: "$<KubeNamespace.IstioSystem>/neon-acme-webhook-tls"
 spec:
   group: acme.neoncloud.io
   groupPriorityMinimum: 1000
   versionPriority: 15
   service:
     name: neon-acme
-    namespace: neon-ingress
+    namespace: $<KubeNamespace.IstioSystem>
   version: v1alpha1

@@ -14,7 +14,7 @@ image:
   pullPolicy: IfNotPresent
 
   # -- Image tag override for the default value (chart appVersion).
-  tag: v2.32.0
+  tag: $<KubeVersion.DexIdpDex>
 
 # -- Reference to one or more secrets to be used when [pulling images](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-pod-that-uses-your-secret) (from private registries).
 imagePullSecrets: []
@@ -64,7 +64,7 @@ config:
     tlsCert: /etc/dex/tls/tls.crt
     tlsKey: /etc/dex/tls/tls.key
   ldap:
-    host: neon-sso-glauth.neon-system:3893
+    host: neon-sso-glauth.$<KubeNamespace.NeonSystem>:3893
     bindDN: cn=serviceuser,ou=admin,dc=cluster,dc=neoncluster,dc=io
     bindPW: mysecret
 

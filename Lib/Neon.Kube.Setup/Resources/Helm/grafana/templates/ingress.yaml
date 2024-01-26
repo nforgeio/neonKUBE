@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neon-ingress/neoncluster-gateway
+    - $<KubeNamespace.IstioSystem>/neoncluster-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}
   http:
@@ -14,6 +14,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: grafana.neon-monitor.svc.cluster.local
+            host: grafana.$<KubeNamespace.NeonMonitor>.svc.cluster.local
             port:
               number: 3000

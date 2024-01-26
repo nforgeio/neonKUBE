@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "minio-operator.labels" . | nindent 4 }}
   name: minio-neon-system
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   endpoints:
     - path: /minio/v2/metrics/cluster
@@ -16,7 +16,7 @@ spec:
       interval: {{ .Values.metrics.serviceMonitor.interval }}
   namespaceSelector:
     matchNames:
-      - neon-system
+      - $<KubeNamespace.NeonSystem>
   selector:
     matchLabels:
       v1.min.io/tenant: minio

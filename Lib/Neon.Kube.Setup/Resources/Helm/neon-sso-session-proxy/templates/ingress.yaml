@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neon-ingress/neoncluster-gateway
+    - $<KubeNamespace.IstioSystem>/neoncluster-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}
   http:
@@ -14,6 +14,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: {{ include "neon-sso-session-proxy.fullname" . }}.neon-system.svc.cluster.local
+            host: {{ include "neon-sso-session-proxy.fullname" . }}.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: {{ .Values.service.port }}

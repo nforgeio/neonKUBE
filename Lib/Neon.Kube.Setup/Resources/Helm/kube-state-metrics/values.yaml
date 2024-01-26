@@ -4,7 +4,7 @@ prometheusScrape: true
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: kube-state-metrics
-  tag: v2.5.0
+  tag: $<KubeVersion.KubeStateMetrics>
   pullPolicy: IfNotPresent
   pullSecrets: []
 

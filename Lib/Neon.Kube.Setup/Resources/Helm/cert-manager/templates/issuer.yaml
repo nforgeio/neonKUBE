@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: neon-system-selfsigned-issuer
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   selfSigned: {}
 ---

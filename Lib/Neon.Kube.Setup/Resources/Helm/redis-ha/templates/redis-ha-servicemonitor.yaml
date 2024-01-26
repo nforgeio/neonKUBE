@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    instance: neon-monitor
+    instance: $<KubeNamespace.NeonMonitor>
 {{- if .Values.exporter.serviceMonitor.labels }}
 {{ toYaml .Values.exporter.serviceMonitor.labels | indent 4}}
 {{- end }}

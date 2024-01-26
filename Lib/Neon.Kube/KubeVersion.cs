@@ -313,9 +313,19 @@ namespace Neon.Kube
         public const string CiliumCli = "v0.15.19";
 
         /// <summary>
-        /// Specifies the version of Cilium Envoy to install.
+        /// Specifies the version of <b>Etcd</b> to be installed for Cilium (when enabled).
+        /// </summary>
+        public const string CiliumEtcd = "v3.5.10";
+
+        /// <summary>
+        /// Specifies the version of <b>Cilium Envoy</b> to be installed.
         /// </summary>
         public const string CiliumEnvoy = "v1.26.6-ad82c7c56e88989992fd25d8d67747de865c823b";
+
+        /// <summary>
+        /// Specifies the version of <b>Cilium Etcd Operator</b> to be installed.
+        /// </summary>
+        public const string CiliumEtcdOperator = "v2.0.7";
 
         /// <summary>
         /// Specifies the version of the <b>Hubble CLI</b> to be installed.
@@ -368,6 +378,12 @@ namespace Neon.Kube
         /// </remarks>
         [KubeValue]
         public const string CiliumGenericOperatorDigest = "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a";
+
+        /// <summary>
+        /// Specifies the version of <b>Cilium Node Startup Script</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string CiliumStartupScript = "62093c5c233ea914bfa26a10ba41f8780d9b737f";
 
         /// <summary>
         /// Specifies the version of <b>dnsutils</b> to be installed.

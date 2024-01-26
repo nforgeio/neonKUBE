@@ -9,6 +9,6 @@ metadata:
 data:
   CONSOLE_IDP_URL: "https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/.well-known/openid-configuration"
   CONSOLE_IDP_CALLBACK: "https://{{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}/oauth_callback"
-  CONSOLE_PROMETHEUS_URL: http://mimir.neon-monitor.svc.cluster.local/prometheus
+  CONSOLE_PROMETHEUS_URL: http://mimir.$<KubeNamespace.NeonMonitor>.svc.cluster.local/prometheus
   CONSOLE_PROMETHEUS_AUTH_TYPE: public
   CONSOLE_PROMETHEUS_JOB_ID: minio

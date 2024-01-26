@@ -5,7 +5,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: {{ include "neon-sso-session-proxy.serviceAccountName" . }}
-    namespace: neon-system
+    namespace: $<KubeNamespace.NeonSystem>
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

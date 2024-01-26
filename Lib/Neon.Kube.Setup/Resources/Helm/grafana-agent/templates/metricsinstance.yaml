@@ -2,7 +2,7 @@ apiVersion: monitoring.grafana.com/v1alpha1
 kind: MetricsInstance
 metadata:
   name: primary
-  namespace: neon-monitor
+  namespace: $<KubeNamespace.NeonMonitor>
   labels:
     agent: grafana-agent
 spec:

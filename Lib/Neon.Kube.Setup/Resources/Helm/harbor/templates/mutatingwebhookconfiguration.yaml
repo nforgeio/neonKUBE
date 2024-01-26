@@ -11,7 +11,7 @@ webhooks:
   clientConfig:
     service:
       name: registry-webhook-service
-      namespace: neon-system
+      namespace: $<KubeNamespace.NeonSystem>
       path: /mutate-goharbor-io-v1beta1-harborcluster
       port: {{ .Values.service.port }}
   failurePolicy: Fail
@@ -32,7 +32,7 @@ webhooks:
   clientConfig:
     service:
       name: registry-webhook-service
-      namespace: neon-system
+      namespace: $<KubeNamespace.NeonSystem>
       path: /mutate-image-path
       port: {{ .Values.service.port }}
   failurePolicy: Fail

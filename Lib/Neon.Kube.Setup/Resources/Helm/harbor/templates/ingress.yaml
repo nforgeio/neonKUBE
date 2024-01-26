@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: registry-gateway
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
 spec:
   selector:
     istio: ingressgateway
@@ -23,8 +23,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neon-ingress/neoncluster-gateway
-    - neon-ingress/registry-gateway
+    - $<KubeNamespace.IstioSystem>/neoncluster-gateway
+    - $<KubeNamespace.IstioSystem>/registry-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
     - {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}
@@ -35,7 +35,7 @@ spec:
             prefix: /c/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - match:
@@ -43,7 +43,7 @@ spec:
             prefix: /api/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - match:
@@ -51,7 +51,7 @@ spec:
             prefix: /v2/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - fault:
@@ -62,7 +62,7 @@ spec:
             prefix: /v1/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - match:
@@ -70,7 +70,7 @@ spec:
             prefix: /service/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - match:
@@ -78,11 +78,11 @@ spec:
             prefix: /chartrepo/
       route:
         - destination:
-            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80
     - route:
         - destination:
-            host: registry-harbor-harbor-portal.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-portal.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
               number: 80

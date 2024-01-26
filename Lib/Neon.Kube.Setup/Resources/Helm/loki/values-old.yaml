@@ -47,7 +47,7 @@ config:
       s3:
         access_key_id: ${ACCESS_KEY_ID}
         bucketnames: loki
-        endpoint: minio-neon.neon-system
+        endpoint: minio-neon.$<KubeNamespace.NeonSystem>
         insecure: true
         region: neon
         s3forcepathstyle: true
@@ -59,7 +59,7 @@ config:
         prefix: neonkube.io/loki/collectors/
         etcd:
           endpoints:
-            - neon-etcd.neon-system.svc.cluster.local:2379
+            - neon-etcd.$<KubeNamespace.NeonSystem>.svc.cluster.local:2379
   ingester:
     chunk_encoding: snappy
     chunk_idle_period: 3m
@@ -102,7 +102,7 @@ config:
       shared_store: s3
     aws:
       bucketnames: loki
-      endpoint: minio-neon.neon-system
+      endpoint: minio-neon.$<KubeNamespace.NeonSystem>
       access_key_id: ${ACCESS_KEY_ID}
       secret_access_key: ${SECRET_ACCESS_KEY}
       insecure: true
@@ -111,7 +111,7 @@ config:
     index_queries_cache_config:
       redis:
         db: 5
-        endpoint: neon-redis.neon-system:26379
+        endpoint: neon-redis.$<KubeNamespace.NeonSystem>:26379
         master_name: master
         timeout: 2000ms
   compactor:
@@ -127,7 +127,7 @@ config:
       cache:
         redis:
           db: 5
-          endpoint: neon-redis.neon-system:26379
+          endpoint: neon-redis.$<KubeNamespace.NeonSystem>:26379
           master_name: master
           timeout: 2000ms
     cache_results: true

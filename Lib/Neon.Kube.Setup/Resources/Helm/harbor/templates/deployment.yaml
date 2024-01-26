@@ -8,7 +8,7 @@ metadata:
   labels:
     control-plane: harbor-operator
   name: harbor-operator
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   selector:
     matchLabels:

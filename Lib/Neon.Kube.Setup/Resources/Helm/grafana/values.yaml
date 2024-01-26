@@ -52,7 +52,7 @@ operator:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-operator-grafana-operator
-    tag: v4.9.0
+    tag: $<KubeVersion.GrafanaOperator>
     sha: ""
     pullPolicy: IfNotPresent
 
@@ -60,14 +60,14 @@ pluginsInit:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: grafana-operator-grafana_plugins_init
-    tag: 0.0.5
+    tag: $<KubeVersion.GrafanaOperatorPlugins>
     sha: ""
     pullPolicy: IfNotPresent
 
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: grafana-grafana
-  tag: 9.3.6-ubuntu
+  tag: $<KubeVersion.GrafanaDeployment>
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -224,7 +224,7 @@ initChownData:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: busybox
-    tag: 1.32.0
+    tag: $<KubeVersion.Busybox>
     pullPolicy: IfNotPresent
 
   ## initChownData resource requests and limits
@@ -323,7 +323,7 @@ datasources:
       type: camptocamp-prometheus-alertmanager-datasource
       access: proxy
       org_id: 1
-      url: http://prometheus-operator-alertmanager.neon-monitor:9093
+      url: http://prometheus-operator-alertmanager.$<KubeNamespace.NeonMonitor>:9093
       version: 1
       editable: false
       jsonData:
@@ -420,7 +420,7 @@ dashboardsConfigMaps: {}
 grafana.ini:
   database:
     type: postgres
-    host: neon-system-db-pooler.neon-system.svc.cluster.local
+    host: neon-system-db-pooler.$<KubeNamespace.NeonSystem>.svc.cluster.local
     name: grafana
     user: neon_service
     password: $__env{DATABASE_PASSWORD}

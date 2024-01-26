@@ -14,7 +14,7 @@ fullnameOverride: mimir
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: grafana-mimir
-  tag: 2.6.0
+  tag: $<KubeVersion.GrafanaMimir>
   pullPolicy: IfNotPresent
   # Optionally specify an array of imagePullSecrets.
   # Secrets must be manually created in the namespace.
@@ -25,7 +25,7 @@ image:
 global:
   # definitions to set up nginx resolver
   dnsService: kube-dns
-  dnsNamespace: kube-system
+  dnsNamespace: $<KubeNamespace.KubeSystem>
   clusterDomain: cluster.local
 
 serviceMesh:
@@ -67,7 +67,7 @@ mimir:
     alertmanager_storage:
       backend: s3
       s3:
-        endpoint: minio-neon.neon-system.svc:80
+        endpoint: minio-neon.$<KubeNamespace.NeonSystem>.svc:80
         bucket_name: mimir-ruler
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}
@@ -133,7 +133,7 @@ mimir:
         chunks_cache:
           backend: memcached
           memcached:
-            addresses: dns+neon-memcached.neon-system:11211
+            addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
             max_item_size: {{ .Values.memcached.maxItemMemory }}
             timeout: 1000ms
         {{- end }}
@@ -141,7 +141,7 @@ mimir:
         metadata_cache:
           backend: memcached
           memcached:
-            addresses: dns+neon-memcached.neon-system:11211
+            addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
             max_item_size: {{ (index .Values "memcached-metadata").maxItemMemory }}
             timeout: 1000ms
         {{- end }}
@@ -151,13 +151,13 @@ mimir:
         index_cache:
           backend: memcached
           memcached:
-            addresses: dns+neon-memcached.neon-system:11211
+            addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
             max_item_size: {{ (index .Values "memcached-queries").maxItemMemory }}
             timeout: 1000ms
         {{- end }}
       {{- if .Values.minio.enabled }}
       s3:
-        endpoint: minio-neon.neon-system.svc:80
+        endpoint: minio-neon.$<KubeNamespace.NeonSystem>.svc:80
         bucket_name: mimir-tsdb
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}
@@ -167,7 +167,7 @@ mimir:
     ruler_storage:
       backend: s3
       s3:
-        endpoint: minio-neon.neon-system.svc:80
+        endpoint: minio-neon.$<KubeNamespace.NeonSystem>.svc:80
         bucket_name: mimir-ruler
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}

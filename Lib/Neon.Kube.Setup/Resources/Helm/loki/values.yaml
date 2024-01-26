@@ -9,7 +9,7 @@ global:
   # -- configures DNS service name
   dnsService: "kube-dns"
   # -- configures DNS service namespace
-  dnsNamespace: "kube-system"
+  dnsNamespace: "$<KubeNamespace.KubeSystem>"
 
 # -- Overrides the chart's name
 nameOverride: loki
@@ -48,7 +48,7 @@ loki:
     # -- Docker image repository
     repository: grafana-loki
     # -- Overrides the image tag whose default is the chart's appVersion
-    tag: 2.7.3
+    tag: $<KubeVersion.GrafanaLoki>
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
   # -- Common labels for all pods
@@ -83,7 +83,7 @@ loki:
         s3:
           access_key_id: ${ACCESS_KEY_ID}
           bucketnames: loki
-          endpoint: minio-neon.neon-system
+          endpoint: minio-neon.$<KubeNamespace.NeonSystem>
           insecure: true
           region: neon
           s3forcepathstyle: true
@@ -135,7 +135,7 @@ loki:
           batch_size: 1024
           parallelism: 100
         memcached_client:
-          addresses: dns+neon-memcached.neon-system:11211
+          addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
           consistent_hash: true
           max_idle_conns: 16
           service: http
@@ -154,7 +154,7 @@ loki:
             batch_size: 1024
             parallelism: 100
           memcached_client:
-            addresses: dns+neon-memcached.neon-system:11211
+            addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
             consistent_hash: true
             max_idle_conns: 16
             service: http
@@ -190,7 +190,7 @@ loki:
         local:
           directory: /etc/loki/rules
       rule_path: /tmp/loki/scratch
-      alertmanager_url: dnssrvnoa+http://_http-metrics._tcp.mimir-alertmanager-headless.neon-monitor.svc.cluster.local:8080/alertmanager
+      alertmanager_url: dnssrvnoa+http://_http-metrics._tcp.mimir-alertmanager-headless.$<KubeNamespace.NeonMonitor>.svc.cluster.local:8080/alertmanager
 
   # -- Check https://grafana.com/docs/loki/latest/configuration/#schema_config for more info on how to configure schemas
   schemaConfig:
@@ -217,7 +217,7 @@ loki:
         batch_size: 1024
         parallelism: 100
       memcached_client:
-        addresses: dns+neon-memcached.neon-system:11211
+        addresses: dns+neon-memcached.$<KubeNamespace.NeonSystem>:11211
         consistent_hash: true
         max_idle_conns: 16
         service: http

@@ -26,7 +26,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used by <see cref="KubeHelper.CreateValuePreprocessor"/> to construct a <see cref="PreprocessReader"/>
+    /// Used by <see cref="KubeHelper.CreateKubeValuePreprocessor"/> to construct a <see cref="PreprocessReader"/>
     /// that will transform variable references like <b>$&lt;KubeVersion.Kubernetes&gt;</b> into their
     /// respective values.  This includes variables defined by <see cref="KubeVersion"/>, <see cref="KubeNamespace"/>,
     /// and <see cref="KubePort"/>.

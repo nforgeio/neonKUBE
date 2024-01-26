@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: registry-harbor
-  namespace: neon-system
+  namespace: $<KubeNamespace.NeonSystem>
 spec:
   endpoints:
     - targetPort: 8001
@@ -11,7 +11,7 @@ spec:
   jobLabel: registry-harbor
   namespaceSelector:
     matchNames:
-      - neon-system
+      - $<KubeNamespace.NeonSystem>
   selector:
     matchLabels:
       goharbor.io/operator-controller: exporter

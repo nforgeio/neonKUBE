@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: neon-acme-selfsign
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 spec:
@@ -12,7 +12,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: neon-acme-ca
-  namespace: neon-ingress
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 spec:
