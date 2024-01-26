@@ -231,7 +231,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "base packages");
+                    controller.LogProgress(this, verb: "install", message: "base packages");
 
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
@@ -607,7 +607,7 @@ EOF
             InvokeIdempotent("base/neon-init",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "neon-init.service");
+                    controller.LogProgress(this, verb: "install", message: "neon-init.service");
 
                     var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
@@ -826,7 +826,7 @@ chmod 740 {KubeNodeFolder.NeonRun}
             InvokeIdempotent("base/tool-scripts",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "tools (base)");
+                    controller.LogProgress(this, verb: "install", message: "tools (base)");
 
                     // Upload any tool scripts to the NEONKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute

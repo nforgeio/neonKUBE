@@ -1165,9 +1165,9 @@ ff02::2         ip6-allrouters
             InvokeIdempotent("setup/package-caching",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "apt package proxy");
+                    controller.LogProgress(this, verb: "install", message: "apt package proxy");
 
-                    // Configure the [apt-cacher-ng] pckage proxy service on control-plane nodes.
+                    // Configure the [apt-cacher-ng] package proxy service on control-plane nodes.
 
                     if (NodeDefinition.Role == NodeRole.ControlPlane)
                     {
@@ -1345,7 +1345,7 @@ EOF
             InvokeIdempotent("setup/kubelet",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "kubelet");
+                    controller.LogProgress(this, verb: "install", message: "kubelet");
 
                     // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
                     // OS disk for most nodes and customize this at 93/95% for clusters with OS disks

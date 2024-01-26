@@ -580,6 +580,10 @@ nodeRegistration:
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
+etcd:
+  local:
+    imageRepository: ""{KubeConst.LocalClusterRegistry}""
+    imageTag: ""{KubeVersion.Etcd}""
 kubernetesVersion: ""v{KubeVersion.Kubernetes}""
 imageRepository: ""{KubeConst.LocalClusterRegistry}""
 apiServer:
@@ -607,6 +611,7 @@ controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
   podSubnet: ""{cluster.SetupState.ClusterDefinition.Network.PodSubnet}""
   serviceSubnet: ""{cluster.SetupState.ClusterDefinition.Network.ServiceSubnet}""
+kubernetesVersion: ""v{KubeVersion.Kubernetes}""
 controllerManager:
   extraArgs:
     logging-format: json
@@ -902,7 +907,7 @@ exit 1
                             controlNode.InvokeIdempotent("setup/config-kubernetes-kubectl",
                                 () =>
                                 {
-                                    controller.LogProgress(controlNode, verb: "setup", message: "kubectl");
+                                    controller.LogProgress(controlNode, verb: "install", message: "kubectl");
 
                                     // It's possible that a previous cluster join operation
                                     // was interrupted.  This command resets the state.
@@ -1245,7 +1250,7 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/cni",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "calico");
+                    controller.LogProgress(controlNode, verb: "install", message: "calico");
 
                     var cluster        = controlNode.Cluster;
                     var k8s            = GetK8sClient(controller);
@@ -1294,7 +1299,7 @@ exit 1
                     await controlNode.InvokeIdempotentAsync("setup/dnsutils",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "setup", message: "dnsutils");
+                            controller.LogProgress(controlNode, verb: "install", message: "dnsutils");
 
                             var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
                                 new V1Pod()
@@ -1609,7 +1614,7 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/install-cilium",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "cilium");
+                    controller.LogProgress(controlNode, verb: "install", message: "cilium");
 
                     var cluster          = controlNode.Cluster;
                     var hostingManager   = cluster.HostingManager;
@@ -1697,7 +1702,7 @@ cilium status --wait --wait-duration={clusterOpTimeoutSeconds}s
             controlNode.InvokeIdempotent("setup/istio-install",
                 () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "istio");
+                    controller.LogProgress(controlNode, verb: "install", message: "istio");
 
                     // Construct the installation manifest.
 
@@ -1741,7 +1746,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/istio-ingress",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "istio ingress");
+                    controller.LogProgress(controlNode, verb: "configure", message: "istio ingress");
 
                     var istioGateway = new V1Gateway()
                     {
@@ -1818,7 +1823,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/ingress",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "ingress");
+                    controller.LogProgress(controlNode, verb: "install", message: "ingress");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -1916,7 +1921,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/ingress-telemetry",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "telemetry");
+                    controller.LogProgress(controlNode, verb: "configure", message: "telemetry");
 
                     var telemetry = new V1Telemetry()
                     {
@@ -1961,7 +1966,7 @@ istioctl install -y -f manifest.yaml
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
                 });
 #endif
-                }
+        }
 
         /// <summary>
         /// Installs the Kubernetes Metrics Server service.
@@ -1985,7 +1990,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "metrics-server");
+                    controller.LogProgress(controlNode, verb: "install", message: "metrics-server");
 
                     var values = new Dictionary<string, object>();
 
@@ -2042,7 +2047,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "cert-manager");
+                    controller.LogProgress(controlNode, verb: "install", message: "cert-manager");
 
                     var values = new Dictionary<string, object>();
 
@@ -2088,7 +2093,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/neon-acme",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-acme");
+                    controller.LogProgress(controlNode, verb: "configure", message: "neon-acme");
 
                     var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s           = GetK8sClient(controller);
@@ -2224,7 +2229,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
+                    controller.LogProgress(controlNode, verb: "configure", message: "neon-cluster-certificate");
 
                     var retry = new LinearRetryPolicy(
                         transientDetector: null,
@@ -2286,7 +2291,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-service",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress service");
+                    controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress service");
 
                     var service                        = new V1Service().Initialize();
                     service.Metadata.Name              = "kubernetes-apiserver";
@@ -2316,7 +2321,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-destination-rule",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress destination rule");
+                    controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress destination rule");
 
                     var destinationRule = new V1DestinationRule().Initialize();
 
@@ -2347,7 +2352,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-virtual-service",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress virtual service");
+                    controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress virtual service");
 
                     var virtualService                        = new V1VirtualService().Initialize();
                     virtualService.Metadata.Name              = "kubernetes-apiserver";
@@ -2416,7 +2421,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neoncloud token");
+                    controller.LogProgress(controlNode, verb: "configure", message: "neoncloud token");
 
                     var secret = new V1Secret()
                     {
@@ -2525,7 +2530,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kube-dashboard",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "kubernetes dashboard");
+                    controller.LogProgress(controlNode, verb: "configure", message: "kubernetes dashboard");
 
                     var values = new Dictionary<string, object>();
 
@@ -2697,13 +2702,13 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "openebs");
+                    controller.LogProgress(controlNode, verb: "configure", message: "openebs");
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "setup", message: "openebs-base");
+                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-base");
 
                             var values = new Dictionary<string, object>();
 
@@ -2749,7 +2754,7 @@ istioctl install -y -f manifest.yaml
                     await controlNode.InvokeIdempotentAsync("setup/openebs-jiva",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "setup", message: "openebs-jiva");
+                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-jiva");
 
                             var values       = new Dictionary<string, object>();
                             var jivaReplicas = Math.Min(3, (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
@@ -2795,7 +2800,7 @@ istioctl install -y -f manifest.yaml
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "setup", message: "openebs-nfs");
+                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-nfs");
 
                             var values = new Dictionary<string, object>();
 
@@ -2848,7 +2853,7 @@ istioctl install -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/openebs-cstor",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "openebs-cstor");
+                    controller.LogProgress(controlNode, verb: "configure", message: "openebs-cstor");
 
                     var values = new Dictionary<string, object>();
 
@@ -2878,7 +2883,7 @@ istioctl install -y -f manifest.yaml
                     await controlNode.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespace.NeonStorage);
                 });
 
-            controller.LogProgress(controlNode, verb: "setup", message: "openebs-pool");
+            controller.LogProgress(controlNode, verb: "configure", message: "openebs-pool");
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/openebs-pool",
@@ -3319,7 +3324,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "prometheus");
+                    controller.LogProgress(controlNode, verb: "install", message: "prometheus");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -3382,7 +3387,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus-blackbox-exporter",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "prometheus");
+                    controller.LogProgress(controlNode, verb: "configure", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
                     var i = 0;
@@ -3465,7 +3470,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/memcached",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "memcached");
+                    controller.LogProgress(controlNode, verb: "install", message: "memcached");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -3711,7 +3716,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "loki");
+                    controller.LogProgress(controlNode, verb: "install", message: "loki");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -3869,7 +3874,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "tempo");
+                    controller.LogProgress(controlNode, verb: "install", message: "tempo");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -4053,7 +4058,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/reloader",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "reloader");
+                    controller.LogProgress(controlNode, verb: "install", message: "reloader");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -4122,7 +4127,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "grafana");
+                    controller.LogProgress(controlNode, verb: "install", message: "grafana");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -4334,7 +4339,7 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "setup", message: "minio");
+                            controller.LogProgress(controlNode, verb: "install", message: "minio");
 
                             var values        = new Dictionary<string, object>();
                             var nodeSelectors = new Dictionary<string, string>
@@ -4508,7 +4513,7 @@ $@"- name: StorageType
             var controlNode = cluster.DeploymentControlNode;
             var tasks       = new List<Task>();
 
-            controller.LogProgress(controlNode, verb: "setup", message: "cluster monitoring");
+            controller.LogProgress(controlNode, verb: "configure", message: "cluster monitoring");
 
             tasks.Add(WaitForPrometheusAsync(controller, controlNode));
             tasks.Add(InstallMemcachedAsync(controller, controlNode));
@@ -4551,7 +4556,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/redis",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "redis");
+                    controller.LogProgress(controlNode, verb: "install", message: "redis");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -4964,7 +4969,7 @@ $@"- name: StorageType
 
                     // Deploy: neon-cluster-operator
 
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-operator");
+                    controller.LogProgress(controlNode, verb: "install", message: "neon-cluster-operator");
 
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
@@ -5071,7 +5076,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboards");
+                    controller.LogProgress(controlNode, verb: "configure", message: "neon-dashboards");
 
                     await CreateNeonDashboardAsync(
                             controller,
@@ -5157,7 +5162,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-node-agent");
+                    controller.LogProgress(controlNode, verb: "install", message: "neon-node-agent");
 
                     var values = new Dictionary<string, object>();
 
@@ -5413,7 +5418,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "neon-system-db");
+                    controller.LogProgress(controlNode, verb: "configure", message: "neon-system-db");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
@@ -5866,7 +5871,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/oauth2-proxy",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "setup", message: "oauth2 proxy");
+                    controller.LogProgress(controlNode, verb: "install", message: "oauth2 proxy");
 
                     var values = new Dictionary<string, object>();
 

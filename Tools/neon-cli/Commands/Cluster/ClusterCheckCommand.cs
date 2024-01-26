@@ -61,7 +61,7 @@ namespace NeonCli
     {
         private const string usage = @"
 Performs various checks on the current NEONKUBE cluster.  These checks are
-targeted at NEONKUBE maintainers to verify that cluster setup worked correctly.
+used by NEONKUBE maintainers to verify that cluster setup worked correctly.
 This does the same thing as the [neon cluster setup --check] option.
 
 USAGE: 
@@ -77,7 +77,8 @@ OPTIONS:
                           checks even when there are no errors
 
     --container-images  - Verifies that all container images running on the
-                          cluster are included in the cluster manifest
+                          cluster are included in the cluster manifest and
+                          that they are all sourced from the local registry
 
     --priority-class    - Verifies that all running pods have a non-zero
                           PriorityClass
@@ -144,7 +145,7 @@ This command returns a non-zero exit code when one or more checks fail.
             var k8s   = KubeHelper.CreateKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
             var error = false;
 
-            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(k8s, details: details))
+            if (containerImages && !await ClusterChecker.CheckContainerImagesAsync(k8s, details: details))
             {
                 error = true;
             }

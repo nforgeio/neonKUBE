@@ -148,7 +148,7 @@ namespace NeonCli
 
             var error = false;
 
-            if (!await CheckNodeContainerImagesAsync(k8s))
+            if (!await CheckContainerImagesAsync(k8s))
             {
                 error = true;
             }
@@ -171,8 +171,9 @@ namespace NeonCli
         /// Verifies that all of the container images currently loaded on nodes are specified in the
         /// container manifest.  Any images that aren't in the manifest need to be preloaded info the 
         /// node image.  This is used to ensure that pods started by third-party operators are also 
-        /// included in the cluster manifest, ensuing that our node images are self-contained for a 
-        /// better setup experience as well as air-gapped clusters.
+        /// included in the cluster manifest, and that all container image references are local,
+        /// ensuing that our node images are self-contained for a better setup experience as well
+        /// as enabling air-gapped clusters.
         /// </para>
         /// <para>
         /// Details about any issues will be written to STDOUT.
@@ -188,7 +189,7 @@ namespace NeonCli
         /// setup experience but also makes air gapped cluster possible.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckNodeContainerImagesAsync(IKubernetes k8s, bool details = false)
+        public static async Task<bool> CheckContainerImagesAsync(IKubernetes k8s, bool details = false)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 

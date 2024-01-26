@@ -373,7 +373,7 @@ namespace Neon.Kube.Setup
             // Add the provisioning steps.
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("check node operating system", (controller, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check operating system", (controller, node) => node.VerifyNodeOS());
 
             controller.AddNodeStep("delete boot script",
                 (controller, node) =>

@@ -68,7 +68,7 @@ namespace Neon.Kube.SSH
             InvokeIdempotent("setup/tools",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "tools (node)");
+                    controller.LogProgress(this, verb: "install", message: "tools (node)");
 
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
@@ -413,7 +413,7 @@ rm -r istio-{KubeVersion.Istio}*
             InvokeIdempotent("setup/ipvs",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "ipvs");
+                    controller.LogProgress(this, verb: "install", message: "ipvs");
 
                     var setupScript =
 $@"
@@ -439,7 +439,7 @@ set -euo pipefail
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true) && !cluster.DebugMode;
 
-            controller.LogProgress(this, verb: "setup", message: "cri-o");
+            controller.LogProgress(this, verb: "install", message: "cri-o");
 
             // $note(jefflill):
             //
@@ -1065,7 +1065,7 @@ systemctl start crio
             InvokeIdempotent("setup/podman",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "podman");
+                    controller.LogProgress(this, verb: "install", message: "podman");
 
                     var setupScript =
 $@"
@@ -1188,7 +1188,7 @@ podman system reset --force
             InvokeIdempotent("setup/helm-client",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "helm client");
+                    controller.LogProgress(this, verb: "install", message: "helm client");
 
                     var script =
 $@"
