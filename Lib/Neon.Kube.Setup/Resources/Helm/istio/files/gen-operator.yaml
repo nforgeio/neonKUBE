@@ -197,7 +197,7 @@ spec:
               memory: 128Mi
           env:
             - name: WATCH_NAMESPACE
-              value: "neon-ingress"
+              value: "$<KubeVersion.Istio>"
             - name: LEADER_ELECTION_NAMESPACE
               value: "istio-operator"
             - name: POD_NAME

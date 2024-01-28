@@ -11,7 +11,7 @@ spec:
   secretName: neon-acme-ca
   duration: {{ .Values.certficateDuration }}
   renewBefore: {{ .Values.certficateRenewBefore }}
-  commonName: "ca.neon-acme.neon-ingress"
+  commonName: "ca.neon-acme.$<KubeVersion.Istio>"
   isCA: true
 ---
 apiVersion: cert-manager.io/v1

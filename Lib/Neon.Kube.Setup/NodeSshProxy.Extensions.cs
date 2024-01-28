@@ -98,7 +98,20 @@ namespace Neon.Kube.SSH
                         }
                         catch (KeyNotFoundException e)
                         {
-                            throw new KeyNotFoundException($"{e.Message} file: [{path}]");
+                            // Augment the exception with the source path to the referenced resource
+                            // file for maintainers.
+
+                            var nkRoot = Environment.GetEnvironmentVariable("NK_ROOT");
+
+                            if (string.IsNullOrEmpty(nkRoot))
+                            {
+                                throw;
+                            }
+
+                            var resourcePath = $"{nkRoot}/Lib/Neon.Kube.Setup/Resources/Helm/{path}]"
+                                .Replace('\\', '/');
+
+                            throw new KeyNotFoundException($"{e.Message} file: [{resourcePath}]");
                         }
                     });
 

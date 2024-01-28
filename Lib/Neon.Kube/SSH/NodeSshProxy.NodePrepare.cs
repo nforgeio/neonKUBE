@@ -266,7 +266,7 @@ systemctl restart rsyslog.service
         }
 
         /// <summary>
-        /// Installs the Cilium and Hubble CLIs.
+        /// Installs the <b>cilium-cli</b>.
         /// </summary>
         /// <param name="controller"></param>
         public void InstallCiliumCli(ISetupController controller)
@@ -295,14 +295,6 @@ curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/download
 sha256sum --check cilium-$OS-$ARCH.tar.gz.sha256sum
 tar -C /usr/local/bin -xzvf cilium-$OS-$ARCH.tar.gz
 rm cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
-
-# Install the Hubble CLI.
-
-HUBBLE_CLI_VERSION={KubeVersion.CiliumHubbleCli}
-curl -L --fail --remote-name-all https://github.com/cilium/hubble/releases/download/$HUBBLE_CLI_VERSION/hubble-$OS-$ARCH.tar.gz{{,.sha256sum}}
-sha256sum --check hubble-$OS-$ARCH.tar.gz.sha256sum
-tar xzvfC hubble-$OS-$ARCH.tar.gz /usr/local/bin
-rm hubble-$OS-$ARCH.tar.gz{{,.sha256sum}}
 
 popd
 ";

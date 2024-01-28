@@ -20,7 +20,7 @@ images:
 imagePullSecrets: []
 
 # Used to replace istioNamespace to support operator watch multiple namespaces.
-watchedNamespaces: neon-ingress
+watchedNamespaces: $<KubeVersion.Istio>
 waitForResourcesTimeout: 300s
 
 # Used for helm2 to add the CRDs to templates.

@@ -197,6 +197,12 @@ namespace Neon.Kube
         public static string NeonKubeContainerImageTag => $"{NeonKubeContainerImageTagPrefix}{NeonKube}{BranchPart}";
 
         /// <summary>
+        /// Specifies the version of Kiali to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Kiali = "v1.79.0";
+
+        /// <summary>
         /// Specifies the version of Kubernetes to be installed.
         /// </summary>
         [KubeValue]
@@ -326,30 +332,6 @@ namespace Neon.Kube
         /// Specifies the version of <b>Cilium Etcd Operator</b> to be installed.
         /// </summary>
         public const string CiliumEtcdOperator = "v2.0.7";
-
-        /// <summary>
-        /// Specifies the version of the <b>Hubble CLI</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string CiliumHubbleCli = "v0.12.3";
-
-        /// <summary>
-        /// Specifies the version of <b>Hubble Relay</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string CiliumHubbleRelay = "v1.14.5";
-
-        /// <summary>
-        /// Specifies the version of <b></b>Hubble UI to install.
-        /// </summary>
-        [KubeValue]
-        public const string CiliumHubbleUI = "v0.12.1";
-
-        /// <summary>
-        /// Specifies the version of <b>Hubble UI Backend</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string CiliumHubbleUIBackend = "v0.12.1";
 
         /// <summary>
         /// Specifies the version of the Cilium generic operator to base our custom image on.
