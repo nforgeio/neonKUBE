@@ -2378,7 +2378,7 @@ istioctl install -y -f manifest.yaml
                                     {
                                         Destination = new Destination()
                                         {
-                                            Host = "kubernetes-apiserver.neon-ingress.svc.cluster.local",
+                                            Host = $"kubernetes-apiserver.{KubeNamespace.IstioSystem}.svc.cluster.local",
                                             Port = new PortSelector()
                                             {
                                                 Number = 443
