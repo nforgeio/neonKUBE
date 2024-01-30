@@ -97,7 +97,7 @@ spec:
               protocol: TCP
             {{- end }}
             {{- if .Values.traces.opencensus }}
-            - containerPort: 4320
+            - containerPort: $<KubePort.GrafanaNodeAgentOpenCensus>
               name: opencensus
               protocol: TCP
             {{- end }}

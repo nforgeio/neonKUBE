@@ -560,7 +560,7 @@ config: |
       {{- end }}
       {{- if .Values.traces.opencensus }}
       opencensus:
-        endpoint: 0.0.0.0:4320
+        endpoint: 0.0.0.0:$<KubePort.GrafanaNodeAgentOpenCensus>
       {{- end }}
       {{- if .Values.traces.kafka }}
       kafka:

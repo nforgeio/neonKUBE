@@ -287,7 +287,7 @@ data:
                 http:
                   endpoint: "0.0.0.0:4318"
             opencensus:
-              endpoint: "0.0.0.0:4320"
+              endpoint: "0.0.0.0:$<KubePort.GrafanaNodeAgentOpenCensus>"
           remote_write:
             - endpoint: tempo-distributor.$<KubeNamespace.NeonMonitor>.svc.cluster.local:4317
               headers: 

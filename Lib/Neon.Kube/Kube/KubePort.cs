@@ -37,8 +37,32 @@ namespace Neon.Kube
     public static class KubePort
     {
         /// <summary>
+        /// Specifies the <b>neon-sso-service</b> port.
+        /// </summary>
+        [KubeValue]
+        public const int NeonSsoService = 4180;
+
+        /// <summary>
+        /// Specifies the <b>neon-sso-service</b> Prometheus metrics port.
+        /// </summary>
+        [KubeValue]
+        public const int NeonSsoServiceMetrics = 44180;
+
+        /// <summary>
+        /// Specifies the node port exposed by the Istio Ingress HTTP service.
+        /// </summary>
+        [KubeValue]
+        public const int IstioIngressHttp = 30080;
+
+        /// <summary>
+        /// Specifies the node port exposed by the Istio Ingress HTTPS service.
+        /// </summary>
+        [KubeValue]
+        public const int IstioIngressHttps = 30443;
+
+        /// <summary>
         /// <para>
-        /// <b>neon-node-agent</b> network port.
+        /// Specifies the <b>neon-node-agent</b> network port.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> <b>neon-node-agent</b> runs in the host node's network
@@ -50,45 +74,39 @@ namespace Neon.Kube
         public const int NeonNodeAgent = 9000;
 
         /// <summary>
-        /// The first port reserved by NeonKUBE SSO redirects.
+        /// Specifies the OpenTelemetry OpenCensus/OLTP pot exposed by the Grafana Node Agent.
         /// </summary>
         [KubeValue]
-        public const int KubeFirstSsoPort = 13051;
+        public const int GrafanaNodeAgentOpenCensus = 4320;
 
         /// <summary>
-        /// The last port reserved by NeonKUBE SSO redirects.
+        /// Specifies the port exposed by the Kubernetes API servers on the control-plane nodes.
         /// </summary>
         [KubeValue]
-        public const int KubeLastSsoPort = 13074;
+        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
 
         /// <summary>
-        /// The first port reserved by Kubernetes for exposing node ports.
+        /// Specifies the first port reserved by NeonKUBE SSO redirects.
+        /// </summary>
+        [KubeValue]
+        public const int KubeFirstSso = 13051;
+
+        /// <summary>
+        /// Specifies the last port reserved by NeonKUBE SSO redirects.
+        /// </summary>
+        [KubeValue]
+        public const int KubeLastSso = 13074;
+
+        /// <summary>
+        /// Specifies the first port reserved by Kubernetes for exposing node ports.
         /// </summary>
         [KubeValue]
         public const int KubeFirstNodePort = 30000;
 
         /// <summary>
-        /// The last port reserved by Kubernetes for exposing node ports.
+        /// Specifies the last port reserved by Kubernetes for exposing node ports.
         /// </summary>
         [KubeValue]
         public const int KubeLastNodePort = 32767;
-
-        /// <summary>
-        /// The node port exposed by the Istio Ingress HTTP service.
-        /// </summary>
-        [KubeValue]
-        public const int IstioIngressHttp = 30080;
-
-        /// <summary>
-        /// The node port exposed by the Istio Ingress HTTPS service.
-        /// </summary>
-        [KubeValue]
-        public const int IstioIngressHttps = 30443;
-
-        /// <summary>
-        /// The port exposed by the Kubernetes API servers on the control-plane nodes.
-        /// </summary>
-        [KubeValue]
-        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
     }
 }

@@ -44,9 +44,9 @@ spec:
     protocol: TCP
     targetPort: 4319
   - name: agent-opencensus
-    port: 4320
+    port: $<KubePort.GrafanaNodeAgentOpenCensus>
     protocol: TCP
-    targetPort: 4320
+    targetPort: $<KubePort.GrafanaNodeAgentOpenCensus>
   - name: agent-syslog
     port: 5140
     protocol: TCP

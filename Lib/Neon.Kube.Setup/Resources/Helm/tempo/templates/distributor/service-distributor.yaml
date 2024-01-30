@@ -67,7 +67,7 @@ spec:
     {{- end }}
     {{- if .Values.traces.opencensus }}
     - name: distributor-opencensus
-      port: 4320
+      port: $<KubePort.GrafanaNodeAgentOpenCensus>
       protocol: TCP
       targetPort: opencensus
     {{- end }}

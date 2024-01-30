@@ -111,11 +111,11 @@ spec:
 {{ tpl (toYaml .Values.extraEnv) . | indent 8 }}
         {{- end }}
         ports:
-          - containerPort: 4180
+          - containerPort: $<KubePort.NeonSsoService>
             name: {{ .Values.httpScheme }}
             protocol: TCP
 {{- if .Values.metrics.enabled }}
-          - containerPort: 44180
+          - containerPort: $<KubePort.NeonSsoServiceMetrics>
             protocol: TCP
             name: metrics
 {{- end }}

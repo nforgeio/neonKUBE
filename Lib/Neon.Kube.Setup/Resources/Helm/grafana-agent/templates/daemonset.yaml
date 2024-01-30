@@ -76,7 +76,7 @@ spec:
         - containerPort: 4319
           name: otlp-grpc-lb
           protocol: TCP
-        - containerPort: 4320
+        - containerPort: $<KubePort.GrafanaNodeAgentOpenCensus>
           name: tcp-opencensus
           protocol: TCP
         - containerPort: 5140

@@ -16,7 +16,7 @@ spec:
         - destination:
             host: neon-sso-oauth2-proxy.$<KubeNamespace.NeonSystem>.svc.cluster.local
             port:
-              number: 4180
+              number: $<KubePort.NeonSsoService>
     - match:
         - uri:
             prefix: /
