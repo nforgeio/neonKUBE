@@ -56,12 +56,12 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Specifies the percentage of distributed traces to collect from the cluster's <b>default</b> namespace.
-        /// This defaults <b>100.0</b> percent.
+        /// This defaults <b>1.0</b> percent.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultNamespaceSamplePercentage", Required = Required.Default)]
         [YamlMember(Alias = "defaultNamespaceSamplePercentage", ApplyNamingConventions = false)]
         [DefaultValue(100.0)]
-        public double DefaultNamespaceSamplingPercentage { get; set; } = 100.0;
+        public double DefaultNamespaceSamplingPercentage { get; set; } = 1.0;
 
         /// <summary>
         /// Specifies the percentage of distributed traces to collect from the cluster's <b>istio-system</b> namespace.
@@ -160,28 +160,28 @@ namespace Neon.Kube.ClusterDef
             CheckSampleRate(nameof(NeonStorageNamespaceSamplingPercentage), NeonStorageNamespaceSamplingPercentage);
             CheckSampleRate(nameof(NeonSystemNamespaceSamplingPercentage), NeonSystemNamespaceSamplingPercentage);
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.Traces))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemTraceServices))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.TracesInternal = true;
+                        node.Labels.SystemTraceServices = true;
                     }
                 }
                 else
                 {
                     foreach (var node in clusterDefinition.Workers)
                     {
-                        node.Labels.TracesInternal = true;
+                        node.Labels.SystemTraceServices = true;
                     }
                 }
             }
             else
             {
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.Traces))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.SystemTraceServices))
                 {
-                    node.Labels.TracesInternal = true;
+                    node.Labels.SystemTraceServices = true;
                 }
             }
         }

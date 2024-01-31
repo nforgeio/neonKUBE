@@ -53,8 +53,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoCallbackUrlController>();
-
         /// <summary>
         /// Static constructor.
         /// </summary>

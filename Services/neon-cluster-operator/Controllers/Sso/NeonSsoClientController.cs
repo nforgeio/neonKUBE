@@ -56,8 +56,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoClientController>();
-
         private Dex.Dex.DexClient dexClient;
 
         /// <summary>

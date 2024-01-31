@@ -74,32 +74,25 @@ namespace Neon.Kube.ClusterDef
 
             var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Minio))
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMinioServices))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.MinioInternal = true;
+                        node.Labels.SystemMinioServices = true;
                     }
                 }
                 else
                 {
                     foreach (var node in clusterDefinition.Workers)
                     {
-                        node.Labels.MinioInternal = true;
+                        node.Labels.SystemMinioServices = true;
                     }
                 }
             }
-            else
-            {
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
-                {
-                    node.Labels.MinioInternal = true;
-                }
-            }
 
-            var serverCount = clusterDefinition.Nodes.Where(n => n.Labels.MinioInternal).Count();
+            var serverCount = clusterDefinition.Nodes.Where(n => n.Labels.SystemMinioServices).Count();
 
             if (serverCount * VolumesPerNode < 4)
             {
@@ -108,7 +101,7 @@ namespace Neon.Kube.ClusterDef
 
             var minOsDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumOsDiskAfterMinio);
 
-            foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.MinioInternal))
+            foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices))
             {
                 var osDisk       = ByteUnits.Parse(node.GetOsDiskSize(clusterDefinition));
                 var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;

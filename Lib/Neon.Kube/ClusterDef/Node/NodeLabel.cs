@@ -75,8 +75,6 @@ namespace Neon.Kube.ClusterDef
     /// </remarks>
     public class NodeLabel
     {
-        private ILogger log = TelemetryHub.CreateLogger<NodeLabel>();
-
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -112,25 +110,6 @@ namespace Neon.Kube.ClusterDef
         /// Reserved label name that identifies the node role.
         /// </summary>
         public const string LabelRole = ClusterDefinition.ReservedNodePrefix + "role";
-
-        /// <summary>
-        /// Reserved label name used to indicate that a node should route external traffic into the cluster.
-        /// </summary>
-        public const string LabelIngress = ClusterDefinition.ReservedNodePrefix + "system.ingress";
-
-        /// <summary>
-        /// Reserved label name used to indicate that a node hosts an OpenEBS cStor block device.
-        /// </summary>
-        public const string LabelOpenEbs = ClusterDefinition.ReservedNodePrefix + "system.openebs";
-
-        /// <summary>
-        /// <b>node.neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
-        /// will be deployed to this node.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool OpenEbs { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -213,24 +192,9 @@ namespace Neon.Kube.ClusterDef
         // Define physical host labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
-        /// </summary>
-        public const string LabelPhysicalMachine = ClusterDefinition.ReservedNodePrefix + "physical.machine";
-
-        /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
         public const string LabelPhysicalLocation = ClusterDefinition.ReservedNodePrefix + "physical.location";
-
-        /// <summary>
-        /// Reserved label name for <see cref="PhysicalAvailabilitySet"/>.
-        /// </summary>
-        public const string LabelPhysicalAvailabilitytSet = ClusterDefinition.ReservedNodePrefix + "physical.availability-set";
-
-        /// <summary>
-        /// Reserved label name for <see cref="LabelPhysicalPower"/>.
-        /// </summary>
-        public const string LabelPhysicalPower = ClusterDefinition.ReservedNodePrefix + "physical.power";
 
         /// <summary>
         /// <b>node.neonkube.io/physical.location</b> [<c>string</c>]: A free format string describing the
@@ -256,6 +220,11 @@ namespace Neon.Kube.ClusterDef
         public string PhysicalLocation { get; set; } = string.Empty;
 
         /// <summary>
+        /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
+        /// </summary>
+        public const string LabelPhysicalMachine = ClusterDefinition.ReservedNodePrefix + "physical.machine";
+
+        /// <summary>
         /// <b>node.neonkube.io/physical.model</b> [<c>string</c>]: A free format string describing the
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
@@ -263,6 +232,11 @@ namespace Neon.Kube.ClusterDef
         [YamlMember(Alias = "physicalMachine", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalMachine { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Reserved label name for <see cref="PhysicalAvailabilitySet"/>.
+        /// </summary>
+        public const string LabelPhysicalAvailabilitytSet = ClusterDefinition.ReservedNodePrefix + "physical.availability-set";
 
         /// <summary>
         /// <para>
@@ -325,180 +299,171 @@ namespace Neon.Kube.ClusterDef
         [DefaultValue("")]
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jefflill): Define the format of this string for APC PDUs.
 
+        /// <summary>
+        /// Reserved label name for <see cref="LabelPhysicalPower"/>.
+        /// </summary>
+        public const string LabelPhysicalPower = ClusterDefinition.ReservedNodePrefix + "physical.power";
+
         //---------------------------------------------------------------------
         // Define the neon-system related labels.
 
         /// <summary>
+        /// Reserved label that an OpenEBS cStor block device should be deployed on the node.
+        /// </summary>
+        public const string LabelOpenEbsStorage = ClusterDefinition.ReservedNodePrefix + "system.openebs-storage";
+
+        /// <summary>
+        /// <b>node.neonkube.io/system.openebs-storage</b> [<c>bool</c>]: Indicates that a NEONKUBE OpenEBS 
+        /// block device will be deployed on this node.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This indicates that this node will provide a cStor block device for the cStorPool
+        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
+        /// This defaults to <c>false</c>
+        /// </para>
+        /// <note>
+        /// If all nodes have <see cref="SystemOpenEbsStorage"/> set to <c>false</c> then most NEONKUBE 
+        /// hosting managers will automatically choose the nodes that will host the cStor
+        /// block devices by configuring up to three nodes to do this, favoring worker nodes
+        /// over control-plane nodes when possible.
+        /// </note>
+        /// <note>
+        /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
+        /// from the others.  It requires that at least one node have <see cref="NodeLabel.SystemOpenEbsStorage"/><c>=true</c>
+        /// and that node must have an empty unpartitioned block device available to be provisoned
+        /// as an cStor.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "SystemOpenEbsStorage", Required = Required.Default)]
+        [YamlMember(Alias = "systemOpenEbsStorage", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool SystemOpenEbsStorage { get; set; } = false;
+
+        /// <summary>
         /// Reserved label name for core NEONKUBE system components.
         /// </summary>
-        public const string LabelNeonSystem = ClusterDefinition.ReservedNodePrefix + "system";
+        public const string LabelSystemServices = ClusterDefinition.ReservedNodePrefix + "system.services";
 
         /// <summary>
-        /// <b>node.neonkube.io/neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
-        /// services may be deployed to this node.  This defaults to <c>false</c>.
+        /// <para>
+        /// <b>node.neonkube.io/system.services</b> [<c>bool</c>]: Indicates that general NEONKUBE 
+        /// system services may be scheduled on this node.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// This currently only applies to deploying the <b>neon-cluster-operator</b>.  Use the
+        /// <see cref="SystemIstioServices"/>, <see cref="SystemDbServices"/>, <see cref="SystemRegistryServices"/>,
+        /// <see cref="SystemMinioServices"/>, <see cref="SystemRegistryServices"/>, <see cref="SystemLogServices"/>,
+        /// <see cref="SystemLogServices"/>, <see cref="LabelSystemMetricServices"/> and <see cref="SystemTraceServices"/>
+        /// properties to enable specific system services.
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "NeonSystem", Required = Required.Default)]
-        [YamlMember(Alias = "neonSystem", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "systemServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool NeonSystem { get; set; } = false;
+        public bool SystemServices { get; set; } = false;
 
         /// <summary>
-        /// Reserved label name for <see cref="Istio"/>.
+        /// Reserved label name for <see cref="SystemIstioServices"/>.
         /// </summary>
-        public const string LabelIstio = ClusterDefinition.ReservedNodePrefix + "system.istio";
+        public const string LabelSystemIstioServices = ClusterDefinition.ReservedNodePrefix + "system.istio-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
-        /// may be deployed to this node.  This defaults to <c>false</c>.
+        /// <b>node.neonkube.io/system.istio-services,</b> [<c>bool</c>]: Indicates that NEONKUBE
+        /// Istio services may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
-        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemIstioServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemIstioServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Istio { get; set; } = false;
+        public bool SystemIstioServices { get; set; } = false;
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// Reserved label name for <see cref="LabelSystemDbServices"/>.
         /// </summary>
-        public const string LabelNeonSystemDb = ClusterDefinition.ReservedNodePrefix + "system.db";
+        public const string LabelSystemDbServices = ClusterDefinition.ReservedNodePrefix + "system.db-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
-        /// Citus/Postgresql database may be deployed to this node.  This defaults to <c>false</c>.
+        /// <b>node.neonkube.io/neon-system.db-services</b> [<c>bool</c>]: Indicates that the NEONKUBE 
+        /// Citus/Postgresql database services may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "NeonSystemDb", Required = Required.Default)]
-        [YamlMember(Alias = "neonSystemDb", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemDbServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemDbServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool NeonSystemDb { get; set; } = false;
+        public bool SystemDbServices { get; set; } = false;
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// Reserved label name for <see cref="LabelSystemDbServices"/>.
         /// </summary>
-        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedNodePrefix + "system.registry";
+        public const string LabelSystemRegistryServices = ClusterDefinition.ReservedNodePrefix + "system.registry-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
-        /// Harbor registry may be deployed to this node.  This defaults to <c>false</c>.
+        /// <b>node.neonkube.io/system.registry-services</b> [<c>bool</c>]: Indicates that the NEONKUBE 
+        /// Harbor registry may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "NeonSystemRegistry", Required = Required.Default)]
-        [YamlMember(Alias = "neonSystemRegistry", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemRegistryServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemRegistryServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool NeonSystemRegistry { get; set; } = false;
+        public bool SystemRegistryServices { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates the user has specified
-        /// that Minio should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// Reserved label name for <see cref="SystemMinioServices"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "Minio", Required = Required.Default)]
-        [YamlMember(Alias = "minio", ApplyNamingConventions = false)]
+        public const string LabelSystemMinioServices = ClusterDefinition.ReservedNodePrefix + "system.minio-services";
+
+        /// <summary>
+        /// <b>node.neonkube.io/system.minio-services</b> [<c>bool</c>]: Indicates the NEONKUBE
+        /// that Minio services can be scheduled on the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "SystemMinioServices", Required = Required.Default)]
+        [YamlMember(Alias = "systeMinioServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Minio { get; set; } = false;
-
-        /// <summary>
-        /// <b>node.neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates that Minio
-        /// will be deployed to the labeled node.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "MinioInternal", Required = Required.Default)]
-        [YamlMember(Alias = "minioInternal", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool MinioInternal { get; set; } = false;
-
-        /// <summary>
-        /// Reserved label name for <see cref="Minio"/>.
-        /// </summary>
-        public const string LabelMinio = ClusterDefinition.ReservedNodePrefix + "system.minio";
-
-        /// <summary>
-        /// Reserved label name for <see cref="MinioInternal"/>.
-        /// </summary>
-        public const string LabelMinioInternal = ClusterDefinition.ReservedNodePrefix + "system.minio-internal";
+        public bool SystemMinioServices { get; set; } = false;
 
         //---------------------------------------------------------------------
-        // Define the logging related labels.
+        // Define the monitoring related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="Logs"/>.
+        /// Reserved label name for <see cref="SystemLogServices"/>.
         /// </summary>
-        public const string LabelLogs = ClusterDefinition.ReservedNodePrefix + "monitor.logs";
+        public const string LabelSystemLogServices = ClusterDefinition.ReservedNodePrefix + "system.monitor.log-services";
 
         /// <summary>
-        /// Reserved label name for <see cref="LogsInternal"/>.
+        /// <b>node.neonkube.io/monitor.log-services</b> [<c>bool</c>]: Indicates that 
+        /// NEONKUBER that Loki logging services may be scheduled on the labeled node.
+        /// This defaults to <c>false</c>.
         /// </summary>
-        public const string LabelLogsInternal = ClusterDefinition.ReservedNodePrefix + "monitor.logs-internal";
-
-        /// <summary>
-        /// Reserved label name for <see cref="Metrics"/>.
-        /// </summary>
-        public const string LabelMetrics = ClusterDefinition.ReservedNodePrefix + "monitor.metrics";
-
-        /// <summary>
-        /// Reserved label name for <see cref="MetricsInternal"/>.
-        /// </summary>
-        public const string LabelMetricsInternal = ClusterDefinition.ReservedNodePrefix + "monitor.metrics-internal";
-
-        /// <summary>
-        /// Reserved label name for <see cref="Traces"/>.
-        /// </summary>
-        public const string LabelTraces = ClusterDefinition.ReservedNodePrefix + "monitor.traces";
-
-        /// <summary>
-        /// Reserved label name for <see cref="TracesInternal"/>.
-        /// </summary>
-        public const string LabelTracesInternal = ClusterDefinition.ReservedNodePrefix + "monitor.traces-internal";
-
-        /// <summary>
-        /// <b>node.neonkube.io/monitor.logs</b> [<c>bool</c>]: Indicates the user has 
-        /// specified that Loki logging should be deployed to the labeled node.  This 
-        /// defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
-        [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemLogServices", Required = Required.Default)]
+        [YamlMember(Alias = "systenmLogServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Logs { get; set; } = false;
+        public bool SystemLogServices { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.logs-internal</b> [<c>bool</c>]: Indicates that Liko
-        /// logging will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// Reserved label name for <see cref="SystemMetricServices"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "LogsInternal", Required = Required.Default)]
-        [YamlMember(Alias = "logsInternal", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool LogsInternal { get; set; } = false;
+        public const string LabelSystemMetricServices = ClusterDefinition.ReservedNodePrefix + "saystem.monitor.metric-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
-        /// that Mimir metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// <b>node.neonkube.io/monitor.metric-services</b> [<c>bool</c>]: Indicates NEONKUBE
+        /// Mimir metrics services may be scheduled on the labeled node.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
-        [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemMetricServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemMetricServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Metrics { get; set; } = false;
+        public bool SystemMetricServices { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Mirmir
-        /// metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// Reserved label name for <see cref="SystemTraceServices"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]
-        [YamlMember(Alias = "metricsInternal", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool MetricsInternal { get; set; } = false;
+        public const string LabelTraceServices = ClusterDefinition.ReservedNodePrefix + "system.monitor.trace-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.traces</b> [<c>bool</c>]: Indicates that the user has specified
-        /// that Tempo traces should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// <b>node.neonkube.io/monitor.trace-services</b> [<c>bool</c>]: Indicates that NEONKUBE
+        /// Tempo tracing services may be scheduled on the labeled node.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
-        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SystemTraceServices", Required = Required.Default)]
+        [YamlMember(Alias = "systemTraceServices", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Traces { get; set; } = false;
-
-        /// <summary>
-        /// <b>node.neonkube.io/monitor.traces-internal</b> [<c>bool</c>]: Indicates that Tempo
-        /// traces will be deployed to the labeled node.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "TracesInternal", Required = Required.Default)]
-        [YamlMember(Alias = "tracesInternal", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool TracesInternal { get; set; } = false;
+        public bool SystemTraceServices { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -530,9 +495,7 @@ namespace Neon.Kube.ClusterDef
         {
             get
             {
-                // WARNING: 
-                //
-                // This method will need to be updated whenever standard labels are added or changed.
+                // WARNING: This method will need to be updated whenever standard labels are added or changed.
 
                 var list = new List<KeyValuePair<string, object>>(50);
 
@@ -540,8 +503,6 @@ namespace Neon.Kube.ClusterDef
 
                 list.Add(new KeyValuePair<string, object>(LabelAddress,                     Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                        Node.Role));
-                list.Add(new KeyValuePair<string, object>(LabelIngress,                     NeonHelper.ToBoolString(Node.Ingress)));
-                list.Add(new KeyValuePair<string, object>(LabelOpenEbs,                     NeonHelper.ToBoolString(Node.OpenEbsStorage)));
 
                 // Standard labels from this class.
 
@@ -556,22 +517,13 @@ namespace Neon.Kube.ClusterDef
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
-                list.Add(new KeyValuePair<string, object>(LabelNeonSystemRegistry,          NeonHelper.ToBoolString(NeonSystemRegistry)));
-
-                list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
-
-                list.Add(new KeyValuePair<string, object>(LabelLogs,                        NeonHelper.ToBoolString(Logs)));
-                list.Add(new KeyValuePair<string, object>(LabelLogsInternal,                NeonHelper.ToBoolString(LogsInternal)));
-
-                list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
-                list.Add(new KeyValuePair<string, object>(LabelMetricsInternal,             NeonHelper.ToBoolString(MetricsInternal)));
-
-                list.Add(new KeyValuePair<string, object>(LabelTraces,                      NeonHelper.ToBoolString(Traces)));
-                list.Add(new KeyValuePair<string, object>(LabelTracesInternal,              NeonHelper.ToBoolString(TracesInternal)));
-
-                list.Add(new KeyValuePair<string, object>(LabelMinio,                       NeonHelper.ToBoolString(Minio)));
-                list.Add(new KeyValuePair<string, object>(LabelMinioInternal,               NeonHelper.ToBoolString(MinioInternal)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemDbServices,            NeonHelper.ToBoolString(SystemDbServices)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemRegistryServices,      NeonHelper.ToBoolString(SystemRegistryServices)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemIstioServices,         NeonHelper.ToBoolString(SystemIstioServices)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemLogServices,           NeonHelper.ToBoolString(SystemLogServices)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemMetricServices,        NeonHelper.ToBoolString(SystemMetricServices)));
+                list.Add(new KeyValuePair<string, object>(LabelTraceServices,               NeonHelper.ToBoolString(SystemTraceServices)));
+                list.Add(new KeyValuePair<string, object>(LabelSystemMinioServices,         NeonHelper.ToBoolString(SystemMinioServices)));
 
                 return list;
             }
@@ -594,64 +546,6 @@ namespace Neon.Kube.ClusterDef
                 }
 
                 return labels;
-            }
-        }
-
-        /// <summary>
-        /// Logs a warning if a label field parse action fails.
-        /// </summary>
-        /// <param name="label">The label being parsed.</param>
-        /// <param name="parseAction">The parse action.</param>
-        private void ParseCheck(KeyValuePair<string, string> label, Action parseAction)
-        {
-            try
-            {
-                parseAction();
-            }
-            catch (Exception e)
-            {
-                log.LogWarningEx(() => $"[node={Node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
-            }
-        }
-
-        /// <summary>
-        /// Parses a dictionary of name/value labels by setting the appropriate
-        /// properties of the parent node.
-        /// </summary>
-        /// <param name="labels">The label dictionary.</param>
-        internal void Parse(Dictionary<string, string> labels)
-        {
-            // WARNING: 
-            //
-            // This method will need to be updated whenever new standard labels are added or changed.
-
-            foreach (var label in labels)
-            {
-                switch (label.Key)
-                {
-                    case LabelAddress:                      Node.Address = label.Value; break;
-                    case LabelRole:                         Node.Role    = label.Value; break;
-                    case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
-                    case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEbsStorage = NeonHelper.ParseBool(label.Value); }); break; 
-
-                    case LabelStorageOSDiskSize:                  ParseCheck(label, () => { Node.Labels.StorageOSDiskSize = ByteUnits.Parse(label.Value).ToString(); }); break;
-                    case LabelStorageOSDiskLocal:                 Node.Labels.StorageOSDiskLocal            = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageOSDiskHDD:                   Node.Labels.StorageOSDiskHDD              = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageOSDiskRedundant:             Node.Labels.StorageOSDiskRedundant        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageOSDiskEphemeral:             Node.Labels.StorageOSDiskEphemeral        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-
-                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine         = label.Value; break;
-                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation        = label.Value; break;
-                    case LabelPhysicalAvailabilitytSet:     Node.Labels.PhysicalAvailabilitySet = label.Value; break;
-                    case LabelPhysicalPower:                Node.Labels.PhysicalPower           = label.Value; break;
-
-                    default:
-
-                        // Must be a custom label.
-
-                        Node.Labels.Custom.Add(label.Key, label.Value);
-                        break;
-                }
             }
         }
 

@@ -160,7 +160,7 @@ backend harbor_backend_http
     mode                    http
     balance                 roundrobin");
 
-            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
+            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.SystemIstioServices))
             {
                 sbHaProxyConfig.Append(
 $@"
@@ -174,7 +174,7 @@ backend harbor_backend
     mode                    tcp
     balance                 roundrobin");
 
-            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
+            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.SystemIstioServices))
             {
                 sbHaProxyConfig.Append(
 $@"
@@ -1807,7 +1807,7 @@ spec:
     pilot:
       k8s:
         nodeSelector:
-          {NodeLabel.LabelIstio}: ""true""
+          {NodeLabel.LabelSystemIstioServices}: ""true""
         env:
           - name: ""GOGC""
             value: ""25""
@@ -1831,7 +1831,7 @@ spec:
       enabled: true
       k8s:
         nodeSelector:
-          {NodeLabel.LabelIstio}: ""true""
+          {NodeLabel.LabelSystemIstioServices}: ""true""
         env:
           - name: ""GOGC""
             value: ""25""
@@ -2003,7 +2003,7 @@ istioctl install --verify -y -f manifest.yaml
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -2059,7 +2059,7 @@ istioctl install --verify -y -f manifest.yaml
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelIngress, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemIstioServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -2655,7 +2655,7 @@ istioctl install --verify -y -f manifest.yaml
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelIstio, "true" }
+                        { NodeLabel.LabelSystemIstioServices, "true" }
                     };
 
                     var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
@@ -2685,7 +2685,7 @@ istioctl install --verify -y -f manifest.yaml
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelIstio, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemIstioServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -2844,7 +2844,7 @@ istioctl install --verify -y -f manifest.yaml
                             controller.LogProgress(controlNode, verb: "configure", message: "openebs-jiva");
 
                             var values       = new Dictionary<string, object>();
-                            var jivaReplicas = Math.Min(3, (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
+                            var jivaReplicas = Math.Min(3, (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemOpenEbsStorage).Count()));
 
                             if (jivaReplicas < 1) 
                             {
@@ -3416,7 +3416,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelMetricsInternal, "true" }
+                        { NodeLabel.LabelSystemMetricServices, "true" }
                     };
 
                     values.Add($"cluster.name", cluster.Name);
@@ -3455,7 +3455,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -3484,7 +3484,7 @@ $@"- name: StorageType
                     values.Add($"resources.requests.memory", ToSiString(blackboxAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(blackboxAdvice.PodMemoryLimit));
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -3631,7 +3631,7 @@ $@"- name: StorageType
 
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelMetricsInternal, "true" }
+                        { NodeLabel.LabelSystemMetricServices, "true" }
                     };
 
                     values.Add("cluster.name", cluster.Name);
@@ -3689,7 +3689,7 @@ $@"- name: StorageType
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.mimirTsdb.quota", clusterAdvice.MetricsQuota);
 
-                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count() == 1)
                     {
                         values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
                         values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
@@ -3732,7 +3732,7 @@ $@"- name: StorageType
                     }
 
                     i = 0;
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         foreach (var component in new string[]
                         {
@@ -3808,7 +3808,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelLogsInternal, "true" }
+                        { NodeLabel.LabelSystemLogServices, "true" }
                     };
 
                     values.Add("cluster.name", cluster.Name);
@@ -3857,7 +3857,7 @@ $@"- name: StorageType
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.quota", clusterAdvice.LogsQuota);
 
-                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemLogServices).Count() >= 3)
                     {
                         values.Add($"config.replication_factor", 3);
                     }
@@ -3896,7 +3896,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelLogsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemLogServices, "true"))
                     {
                         foreach (var component in new string[]
                         {
@@ -3966,7 +3966,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelTracesInternal, "true" }
+                        { NodeLabel.LabelTraceServices, "true" }
                     };
 
                     values.Add("cluster.name", cluster.Name);
@@ -4002,7 +4002,8 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
 
-                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1) {
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count() > 1)
+                    {
                         values.Add($"storage.trace.backend", "s3");
                     }
 
@@ -4020,7 +4021,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelTracesInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelTraceServices, "true"))
                     {
                         foreach (var component in new string[]
                         {
@@ -4086,7 +4087,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelMetricsInternal, "true" }
+                        { NodeLabel.LabelSystemMetricServices, "true" }
                     };
 
                     values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -4104,7 +4105,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -4224,7 +4225,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelMetricsInternal, "true" }
+                        { NodeLabel.LabelSystemMetricServices, "true" }
                     };
 
                     values.Add("cluster.name", cluster.Name);
@@ -4280,7 +4281,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMetricsInternal, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -4436,7 +4437,7 @@ $@"- name: StorageType
                             var values        = new Dictionary<string, object>();
                             var nodeSelectors = new Dictionary<string, string>
                             {
-                                { NodeLabel.LabelMinioInternal, "true" }
+                                { NodeLabel.LabelSystemMinioServices, "true" }
                             };
 
                             values.Add("cluster.name", cluster.Name);
@@ -4494,7 +4495,7 @@ $@"- name: StorageType
 
                             i = 0;
 
-                            foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelMinioInternal, "true"))
+                            foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMinioServices, "true"))
                             {
                                 foreach (var component in new string[]
                                 {
@@ -4679,7 +4680,7 @@ $@"- name: StorageType
                     }
 
                     i = 0;
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelNeonSystemRegistry, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemRegistryServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -4815,7 +4816,7 @@ $@"- name: StorageType
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
-                        { NodeLabel.LabelNeonSystemRegistry, "true" }
+                        { NodeLabel.LabelSystemRegistryServices, "true" }
                     };
 
                     values.Add("cluster.name", cluster.Name);
@@ -4850,7 +4851,7 @@ $@"- name: StorageType
 
                     i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelNeonSystemRegistry, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemRegistryServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -5516,7 +5517,7 @@ $@"- name: StorageType
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelNeonSystemDb, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemDbServices, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);

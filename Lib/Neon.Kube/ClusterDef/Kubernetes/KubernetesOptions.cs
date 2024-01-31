@@ -437,86 +437,86 @@ or decrease:   [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to 
 ");
             }
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystem))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemServices))
             {
                 foreach (var manager in clusterDefinition.ControlNodes)
                 {
-                    manager.Labels.NeonSystem = true;
-                }
-
-                if (clusterDefinition.ControlNodes.Count() < 3)
-                {
-                    foreach (var w in clusterDefinition.Workers)
-                    {
-                        w.Labels.NeonSystem = true;
-                    }
-                }
-            }
-
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemDb))
-            {
-                foreach (var manager in clusterDefinition.ControlNodes)
-                {
-                    manager.Labels.NeonSystemDb = true;
+                    manager.Labels.SystemServices = true;
                 }
 
                 if (clusterDefinition.ControlNodes.Count() < 3)
                 {
                     foreach (var worker in clusterDefinition.Workers)
                     {
-                        worker.Labels.NeonSystemDb = true;
+                        worker.Labels.SystemServices = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemRegistry))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemDbServices))
             {
                 foreach (var manager in clusterDefinition.ControlNodes)
                 {
-                    manager.Labels.NeonSystemRegistry = true;
+                    manager.Labels.SystemDbServices = true;
                 }
 
                 if (clusterDefinition.ControlNodes.Count() < 3)
                 {
                     foreach (var worker in clusterDefinition.Workers)
                     {
-                        worker.Labels.NeonSystemRegistry = true;
+                        worker.Labels.SystemDbServices = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.Istio))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemRegistryServices))
+            {
+                foreach (var manager in clusterDefinition.ControlNodes)
+                {
+                    manager.Labels.SystemRegistryServices = true;
+                }
+
+                if (clusterDefinition.ControlNodes.Count() < 3)
+                {
+                    foreach (var worker in clusterDefinition.Workers)
+                    {
+                        worker.Labels.SystemRegistryServices = true;
+                    }
+                }
+            }
+
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemIstioServices))
             {
                 if (AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.Istio = true;
+                        node.Labels.SystemIstioServices = true;
                     };
                 }
                 else
                 {
                     foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
                     {
-                        worker.Labels.Istio = true;
+                        worker.Labels.SystemIstioServices = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.OpenEbs))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemOpenEbsStorage))
             {
                 if (AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.OpenEbs = true;
+                        node.Labels.SystemOpenEbsStorage = true;
                     };
                 }
                 else
                 {
                     foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
                     {
-                        worker.Labels.OpenEbs = true;
+                        worker.Labels.SystemOpenEbsStorage = true;
                     }
                 }
             }

@@ -263,7 +263,7 @@ namespace NeonNodeAgent
 
         private const string podmanPath = "/usr/bin/podman";
 
-        private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
+        private static readonly ILogger     logger          = TelemetryHub.CreateLogger<ContainerRegistryController>();
         private static string               configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
@@ -381,7 +381,7 @@ rm $0
             using var activity = TelemetryHub.ActivitySource?.StartActivity();
 
             Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1NeonContainerRegistry)));
-            log?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
+            logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
             var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 
@@ -411,7 +411,7 @@ rm $0
 
             if (!crioConfig.Spec.Registries.Any(kvp => kvp.Key == resource.Uid()))
             {
-                log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
+                logger?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
 
                 var addPatch = OperatorHelper.CreatePatch<V1CrioConfiguration>();
 
@@ -423,13 +423,13 @@ rm $0
             }
             else
             {
-                log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] exists, checking for changes.");
+                logger?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] exists, checking for changes.");
                 
                 var registry = crioConfig.Spec.Registries.Where(kvp => kvp.Key == resource.Uid()).Single();
 
                 if (registry.Value != resource.Spec)
                 {
-                    log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] changed, upserting.");
+                    logger?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] changed, upserting.");
                  
                     crioConfig.Spec.Registries.Remove(registry);
                     crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
@@ -444,7 +444,7 @@ rm $0
                 }
             }
 
-            log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+            logger.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
             return null;
         }
@@ -454,7 +454,7 @@ rm $0
         {
             await SyncContext.Clear;
             
-            log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+            logger.LogInformationEx(() => $"DELETED: {resource.Name()}");
         }
 
         /// <summary>
@@ -605,7 +605,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                             // Note that we're not ensuring success here because we may not be
                             // logged-in which is OK: we don't want to see that error.
 
-                            log.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
+                            logger.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
                             
                             if (NeonHelper.IsLinux)
                             {
@@ -618,7 +618,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogErrorEx(e);
+                    logger.LogErrorEx(e);
                 }
             }
 
@@ -633,7 +633,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
-                            log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                            logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                             if (NeonHelper.IsLinux)
                             {
@@ -646,7 +646,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogErrorEx(e);
+                    logger.LogErrorEx(e);
                 }
             }
 
@@ -672,7 +672,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
                 if (registry == null)
                 {
-                    log.LogWarningEx(() => $"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
+                    logger.LogWarningEx(() => $"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
                     continue;
                 }
 
@@ -689,7 +689,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         await retry.InvokeAsync(
                             async () =>
                             {
-                                log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                                logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                                 if (NeonHelper.IsLinux)
                                 {
@@ -702,7 +702,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     catch (Exception e)
                     {
                         loginErrorCounter.Inc();
-                        log.LogErrorEx(e);
+                        logger.LogErrorEx(e);
                     }
                 }
             }

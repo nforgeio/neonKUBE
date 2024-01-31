@@ -262,7 +262,7 @@ namespace NeonNodeAgent
 
         private const string podmanPath = "/usr/bin/podman";
 
-        private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
+        private static readonly ILogger     logger          = TelemetryHub.CreateLogger<CrioConfigController>();
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
@@ -518,7 +518,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                             // Note that we're not ensuring success here because we may not be
                             // logged-in which is OK: we don't want to see that error.
 
-                            log.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
+                            logger.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
 
                             if (NeonHelper.IsLinux)
                             {
@@ -531,7 +531,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogErrorEx(e);
+                    logger.LogErrorEx(e);
                 }
             }
 
@@ -546,7 +546,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
-                            log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                            logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                             if (NeonHelper.IsLinux)
                             {
@@ -559,7 +559,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogErrorEx(e);
+                    logger.LogErrorEx(e);
                 }
             }
 
@@ -585,7 +585,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 
                 if (registry == null)
                 {
-                    log.LogWarningEx(() => $"Cannot locate [{nameof(V1CrioConfiguration)}] resource for [location={loginFile.Location}].");
+                    logger.LogWarningEx(() => $"Cannot locate [{nameof(V1CrioConfiguration)}] resource for [location={loginFile.Location}].");
                     continue;
                 }
 
@@ -602,7 +602,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                         await retry.InvokeAsync(
                             async () =>
                             {
-                                log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                                logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                                 if (NeonHelper.IsLinux)
                                 {
@@ -615,12 +615,12 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                     catch (Exception e)
                     {
                         loginErrorCounter.Inc();
-                        log.LogErrorEx(e);
+                        logger.LogErrorEx(e);
                     }
                 }
             }
 
-            log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+            logger.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
             return null;
         }
@@ -630,7 +630,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
         {
             await SyncContext.Clear;
             
-            log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+            logger.LogInformationEx(() => $"DELETED: {resource.Name()}");
         }
     }
 }

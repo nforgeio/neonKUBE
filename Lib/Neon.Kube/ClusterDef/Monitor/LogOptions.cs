@@ -69,28 +69,21 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"[{logOptionsPrefix}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Logs))
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemLogServices))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var n in clusterDefinition.Nodes)
                     {
-                        n.Labels.LogsInternal = true;
+                        n.Labels.SystemLogServices = true;
                     }
                 }
                 else
                 {
                     foreach (var n in clusterDefinition.Workers)
                     {
-                        n.Labels.LogsInternal = true;
+                        n.Labels.SystemLogServices = true;
                     }
-                }
-            }
-            else
-            {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Logs))
-                {
-                    n.Labels.LogsInternal = true;
                 }
             }
         }

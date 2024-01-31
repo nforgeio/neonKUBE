@@ -283,18 +283,15 @@ namespace Neon.Kube.ClusterDef
                 node.Labels.PhysicalMachine         = null;
                 node.Labels.PhysicalAvailabilitySet = null;
                 node.Labels.PhysicalPower           = null;
-                node.Labels.Istio                   = true;
-                node.Labels.OpenEbs                 = false;
-                node.Labels.NeonSystem              = true;
-                node.Labels.NeonSystemDb            = true;
-                node.Labels.NeonSystemRegistry      = true;
-                node.Labels.Minio                   = true;
-                node.Labels.Metrics                 = true;
-                node.Labels.MetricsInternal         = true;
-                node.Labels.Logs                    = true;
-                node.Labels.LogsInternal            = true;
-                node.Labels.Traces                  = true;
-                node.Labels.TracesInternal          = true;
+                node.Labels.SystemIstioServices     = true;
+                node.Labels.SystemOpenEbsStorage    = false;
+                node.Labels.SystemServices          = true;
+                node.Labels.SystemDbServices        = true;
+                node.Labels.SystemRegistryServices  = true;
+                node.Labels.SystemMinioServices     = true;
+                node.Labels.SystemMetricServices    = true;
+                node.Labels.SystemLogServices       = true;
+                node.Labels.SystemTraceServices     = true;
             }
         }
 

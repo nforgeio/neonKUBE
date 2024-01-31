@@ -62,28 +62,21 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Metrics))
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMetricServices))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.MetricsInternal = true;
+                        node.Labels.SystemMetricServices = true;
                     }
                 }
                 else
                 {
                     foreach (var node in clusterDefinition.Workers)
                     {
-                        node.Labels.MetricsInternal = true;
+                        node.Labels.SystemMetricServices = true;
                     }
-                }
-            }
-            else
-            {
-                foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.Metrics))
-                {
-                    node.Labels.MetricsInternal = true;
                 }
             }
         }
