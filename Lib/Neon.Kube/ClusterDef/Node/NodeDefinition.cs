@@ -70,7 +70,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         public NodeDefinition()
         {
-            Labels = new NodeLabels(this);
+            Labels = new NodeLabel(this);
         }
 
         /// <summary>
@@ -193,13 +193,13 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Specifies the labels to be assigned to the cluster node.  These can describe
-        /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
+        /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabel"/>
         /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "labels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public NodeLabels Labels { get; set; }
+        public NodeLabel Labels { get; set; }
 
         /// <summary>
         /// Specifies the taints to be assigned to the cluster node.  
@@ -328,7 +328,7 @@ namespace Neon.Kube.ClusterDef
 
             if (Labels == null)
             {
-                Labels = new NodeLabels(this);
+                Labels = new NodeLabel(this);
             }
             else
             {

@@ -3068,7 +3068,7 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(authority), nameof(authority));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clientId), nameof(clientId));
 
-            var port     = NetHelper.GetUnusedTcpPort(KubePort.KubeFirstSsoPort, KubePort.KubeLastSsoPort, IPAddress.Loopback);
+            var port     = NetHelper.GetUnusedTcpPort(KubePort.KubeFirstSso, KubePort.KubeLastSso, IPAddress.Loopback);
             var listener = new HttpListener();
 
             listener.Prefixes.Add($"http://localhost:{port}/");

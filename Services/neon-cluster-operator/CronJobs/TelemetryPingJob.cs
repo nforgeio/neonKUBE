@@ -95,7 +95,7 @@ namespace NeonClusterOperator
                         node.OperatingSystem         = k8sNode.Status.NodeInfo.OperatingSystem;
                         node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
                         node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;
-                        node.Role                    = k8sNode.Metadata.GetLabel(NodeLabels.LabelRole);
+                        node.Role                    = k8sNode.Metadata.GetLabel(NodeLabel.LabelRole);
 
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {

@@ -52,7 +52,80 @@ namespace Neon.Kube.ClusterDef
         [JsonProperty(PropertyName = "TraceRetentionDays", Required = Required.Default)]
         [YamlMember(Alias = "traceRetentionDays", ApplyNamingConventions = false)]
         [DefaultValue(14)]
-        public int TraceRetentionDays { get; set; } = 14;
+        public int RetentionDays { get; set; } = 14;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>default</b> namespace.
+        /// This defaults <b>100.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "defaultNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(100.0)]
+        public double DefaultNamespaceSamplingPercentage { get; set; } = 100.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>istio-system</b> namespace.
+        /// This defaults <b>0.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeIstioSystemNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "kubeIstioSystemNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(1.0)]
+        public double KubeIstioSystemNamespaceSamplingPercentage { get; set; } = 1.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>kube-public</b> namespace.
+        /// This defaults <b>100.0</b> percent.
+        /// </summary>
+        /// This defaults <b>1.0</b> percent.
+        [JsonProperty(PropertyName = "KubePublicNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "kubePublicNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(0.0)]
+        public double KubePublicNamespaceSamplingPercentage { get; set; } = 1.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>kube-system</b> namespace.
+        /// This defaults <b>1.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeSystemNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "kubeSystemNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(1.0)]
+        public double KubeSystemNamespaceSamplingPercentage { get; set; } = 1.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>neon-monitor</b> namespace.
+        /// This defaults <b>0.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonMonitorNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "neonMonitorNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(0.0)]
+        public double NeonMonitorNamespaceSamplingPercentage { get; set; } = 0.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>neon-status</b> namespace.
+        /// This defaults <b>0.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonStatusNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "neonStatusNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(0.0)]
+        public double NeonStatusNamespaceSamplingPercentage { get; set; } = 0.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>neon-storage</b> namespace.
+        /// This defaults <b>0.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonStorageNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "neonStorageNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(0.0)]
+        public double NeonStorageNamespaceSamplingPercentage { get; set; } = 0.0;
+
+        /// <summary>
+        /// Specifies the percentage of distributed traces to collect from the cluster's <b>neon-system</b> namespace.
+        /// This defaults <b>100.0</b> percent.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystemNamespaceSamplePercentage", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystemNamespaceSamplePercentage", ApplyNamingConventions = false)]
+        [DefaultValue(1.0)]
+        public double NeonSystemNamespaceSamplingPercentage { get; set; } = 1.0;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -62,35 +135,53 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            var traceOptionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Traces)}";
+            var traceOptionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Trace)}";
 
-            if (TraceRetentionDays < 1)
+            if (RetentionDays < 1)
             {
-                throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{nameof(TraceRetentionDays)}={TraceRetentionDays}] is valid.  This must be at least one day.");
+                throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{nameof(RetentionDays)}={RetentionDays}] is invalid.  This must be at least one day.");
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Traces))
+            Action<string, double> CheckSampleRate =
+                (propertyName, sampleRate) =>
+                {
+                    if (sampleRate < 0 || sampleRate > 100)
+                    {
+                        throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{propertyName}={sampleRate}] is invalid.  This must be between [0.0 ... 100.0] inclusive.");
+                    }
+                };
+
+            CheckSampleRate(nameof(DefaultNamespaceSamplingPercentage), DefaultNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(KubeIstioSystemNamespaceSamplingPercentage), KubeIstioSystemNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(KubePublicNamespaceSamplingPercentage), KubePublicNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(KubeSystemNamespaceSamplingPercentage), KubeSystemNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(NeonMonitorNamespaceSamplingPercentage), NeonMonitorNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(NeonStatusNamespaceSamplingPercentage), NeonStatusNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(NeonStorageNamespaceSamplingPercentage), NeonStorageNamespaceSamplingPercentage);
+            CheckSampleRate(nameof(NeonSystemNamespaceSamplingPercentage), NeonSystemNamespaceSamplingPercentage);
+
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.Traces))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.TracesInternal = true;
+                        node.Labels.TracesInternal = true;
                     }
                 }
                 else
                 {
-                    foreach (var n in clusterDefinition.Workers)
+                    foreach (var node in clusterDefinition.Workers)
                     {
-                        n.Labels.TracesInternal = true;
+                        node.Labels.TracesInternal = true;
                     }
                 }
             }
             else
             {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Traces))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.Traces))
                 {
-                    n.Labels.TracesInternal = true;
+                    node.Labels.TracesInternal = true;
                 }
             }
         }

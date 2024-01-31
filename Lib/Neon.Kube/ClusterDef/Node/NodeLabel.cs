@@ -73,14 +73,14 @@ namespace Neon.Kube.ClusterDef
     /// the <see cref="Custom"/> dictionary to add your own labels.
     /// </para>
     /// </remarks>
-    public class NodeLabels
+    public class NodeLabel
     {
-        private ILogger log = TelemetryHub.CreateLogger<NodeLabels>();
+        private ILogger log = TelemetryHub.CreateLogger<NodeLabel>();
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public NodeLabels()
+        public NodeLabel()
         {
         }
 
@@ -88,7 +88,7 @@ namespace Neon.Kube.ClusterDef
         /// Constructor.
         /// </summary>
         /// <param name="node">The node definition.</param>
-        public NodeLabels(NodeDefinition node)
+        public NodeLabel(NodeDefinition node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -326,23 +326,6 @@ namespace Neon.Kube.ClusterDef
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jefflill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
-        // Define the K8s related labels.
-
-        /// <summary>
-        /// Reserved label name for <see cref="Istio"/>.
-        /// </summary>
-        public const string LabelIstio = ClusterDefinition.ReservedNodePrefix + "system.istio";
-
-        /// <summary>
-        /// <b>node.neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
-        /// will be deployed to this node.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
-        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool Istio { get; set; } = false;
-
-        //---------------------------------------------------------------------
         // Define the neon-system related labels.
 
         /// <summary>
@@ -358,6 +341,20 @@ namespace Neon.Kube.ClusterDef
         [YamlMember(Alias = "neonSystem", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool NeonSystem { get; set; } = false;
+
+        /// <summary>
+        /// Reserved label name for <see cref="Istio"/>.
+        /// </summary>
+        public const string LabelIstio = ClusterDefinition.ReservedNodePrefix + "system.istio";
+
+        /// <summary>
+        /// <b>node.neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+        /// may be deployed to this node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
+        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Istio { get; set; } = false;
 
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
@@ -486,7 +483,7 @@ namespace Neon.Kube.ClusterDef
         public bool MetricsInternal { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.traces</b> [<c>bool</c>]: Indicates the user has specified
+        /// <b>node.neonkube.io/monitor.traces</b> [<c>bool</c>]: Indicates that the user has specified
         /// that Tempo traces should be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Traces", Required = Required.Default)]

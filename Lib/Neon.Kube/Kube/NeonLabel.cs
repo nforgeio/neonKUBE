@@ -28,7 +28,7 @@ namespace Neon.Kube
     /// </para>
     /// <note>
     /// Labels specified by the cluster definition and assigned to nodes are defined
-    /// here: <see cref="NodeLabels"/>.
+    /// here: <see cref="NodeLabel"/>.
     /// </note>
     /// </summary>
     public static class NeonLabel

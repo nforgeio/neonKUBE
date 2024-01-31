@@ -62,10 +62,10 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Tracing options
         /// </summary>
-        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
-        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Tracs", Required = Required.Default)]
+        [YamlMember(Alias = "trace", ApplyNamingConventions = false)]
         [DefaultValue(true)]
-        public TraceOptions Traces { get; set; } = new TraceOptions();
+        public TraceOptions Trace { get; set; } = new TraceOptions();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -77,11 +77,11 @@ namespace Neon.Kube.ClusterDef
         {
             Logs    = Logs ?? new LogOptions();
             Metrics = Metrics ?? new MetricsOptions();
-            Traces  = Traces ?? new TraceOptions();
+            Trace  = Trace ?? new TraceOptions();
 
             Logs.Validate(clusterDefinition);
             Metrics.Validate(clusterDefinition);
-            Traces.Validate(clusterDefinition);
+            Trace.Validate(clusterDefinition);
         }
     }
 }

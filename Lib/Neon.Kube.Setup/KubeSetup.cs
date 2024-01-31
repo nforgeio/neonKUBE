@@ -274,7 +274,7 @@ namespace Neon.Kube.Setup
                 {
                     foreach (var taint in node.Spec.Taints)
                     {
-                        if (!taints.Any(t => t.Key == taint.Key && t.Effect == taint.Effect && t.Value == taint.Value))
+                        if (!taints.Any(taint => taint.Key == taint.Key && taint.Effect == taint.Effect && taint.Value == taint.Value))
                         {
                             taints.Add(taint);
                         }

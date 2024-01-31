@@ -1497,7 +1497,10 @@ systemctl enable kubelet
         /// chart name passed can be the same as the release name in the calling code.
         /// </note>
         /// </param>
-        /// <param name="releaseName">Optionally specifies the component release name.</param>
+        /// <param name="releaseName">
+        /// Optionally specifies the component release name.  This defaults to the Helm
+        /// chart name with any embedded underscores converted to dashes.
+        /// </param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b>.</param>
         /// <param name="prioritySpec">
         /// <para>
