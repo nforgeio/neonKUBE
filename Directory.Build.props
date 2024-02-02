@@ -16,7 +16,7 @@
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-        <NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066;NU1605;MSB3026;MSB3061</NoWarn>
+        <NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066;NU1605;MSB3026;MSB3061;IDE0055</NoWarn>
 
         <!--
         Specifies the NEONSDK nuget package versions to be referenced
