@@ -1266,7 +1266,7 @@ exit 1
                     var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
                     var ciliumAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cilium);
 
-                    var values = new Dictionary<string, object>();
+                    var values = new Dictionary<string, object>(); 
 
                     values.Add("images.registry", KubeConst.LocalClusterRegistry);
                     values.Add($"serviceMonitor.enabled", ciliumAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -1284,20 +1284,20 @@ exit 1
                     }
 
                     controller.ThrowIfCancelled();
-                    await controlNode.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespace.KubeSystem, values: values);
+                    await controlNode.InstallHelmChartAsync(controller, "calico", @namespace: KubeNamespace.KubeSystem, values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "calico-node",
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval,
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     controller.ThrowIfCancelled();
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval,
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     // Spin up a [dnsutils] pod and then exec into it to confirm that
@@ -1344,11 +1344,11 @@ exit 1
                                 KubeNamespace.NeonSystem);
 
                             await k8s.CoreV1.WaitForPodAsync(
-                                name: pod.Name(),
+                                name:               pod.Name(),
                                 namespaceParameter: pod.Namespace(),
-                                timeout: clusterOpTimeout,
-                                pollInterval: clusterOpPollInterval,
-                                cancellationToken: controller.CancellationToken);
+                                timeout:            clusterOpTimeout,
+                                pollInterval:       clusterOpPollInterval,
+                                cancellationToken:  controller.CancellationToken);
                         });
 
 
@@ -2011,7 +2011,9 @@ istioctl install --verify -y -f manifest.yaml
                         i++;
                     }
 
-                    await controlNode.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespace.KubeSystem, values: values);
+                    await controlNode.InstallHelmChartAsync(controller, "metrics-server",
+                        @namespace: KubeNamespace.KubeSystem,
+                        values:     values);
                 });
 
             controller.ThrowIfCancelled();
@@ -2020,7 +2022,10 @@ istioctl install --verify -y -f manifest.yaml
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "metrics-server");
 
-                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "metrics-server",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -2068,7 +2073,6 @@ istioctl install --verify -y -f manifest.yaml
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "cert-manager",
-                        releaseName:  "cert-manager",
                         @namespace:   KubeNamespace.IstioSystem,
                         prioritySpec: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}",
                         values:       values);
@@ -2221,7 +2225,6 @@ istioctl install --verify -y -f manifest.yaml
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-acme",
-                        releaseName: "neon-acme",
                         @namespace:   KubeNamespace.IstioSystem,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
@@ -2544,7 +2547,6 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     await controlNode.InstallHelmChartAsync(controller, "kubernetes-dashboard",
-                        releaseName:     "kubernetes-dashboard",
                         @namespace:      KubeNamespace.NeonSystem,
                         prioritySpec:    PriorityClass.NeonApp.Name,
                         values:          values,
@@ -2623,7 +2625,6 @@ istioctl install --verify -y -f manifest.yaml
                     controller.LogProgress(controlNode, verb: "Install", message: "Cluster CRDs");
 
                     await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
-                        releaseName: "cluster-crds",
                         @namespace:  KubeNamespace.NeonSystem);
                 });
         }
@@ -2694,10 +2695,10 @@ istioctl install --verify -y -f manifest.yaml
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "kiali",
-                        releaseName: "kiali-operator",
-                        @namespace: KubeNamespace.NeonSystem,
+                        releaseName:  "kiali-operator",
+                        @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonApp.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -2747,7 +2748,6 @@ istioctl install --verify -y -f manifest.yaml
                 async () =>
                 {
                     await controlNode.InstallHelmChartAsync(controller, "node-problem-detector",
-                        releaseName: "node-problem-detector",
                         prioritySpec: PriorityClass.NeonOperator.Name,
                         @namespace:   KubeNamespace.NeonSystem);
                 });
@@ -2831,7 +2831,6 @@ istioctl install --verify -y -f manifest.yaml
                             values.Add($"ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
-                                releaseName:  "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
@@ -2854,7 +2853,6 @@ istioctl install --verify -y -f manifest.yaml
                             values.Add("defaultPolicy.replicas", jivaReplicas);
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs-jiva-operator",
-                                releaseName:  "openebs-jiva-operator",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
@@ -2862,7 +2860,6 @@ istioctl install --verify -y -f manifest.yaml
 
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
                     await CreateStorageClass(controller, controlNode, "default", isDefault: true);
-
                     await WaitForOpenEbsReady(controller, controlNode);
 
                     switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
@@ -2896,7 +2893,6 @@ istioctl install --verify -y -f manifest.yaml
                             values.Add("nfsStorageClass.backendStorageClass", "neon-internal-nfs");
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs-nfs-provisioner",
-                                releaseName:  "openebs-nfs-provisioner",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
@@ -2967,7 +2963,10 @@ istioctl install --verify -y -f manifest.yaml
 
                     values.Add("admissionServer.image.registry", KubeConst.LocalClusterRegistry);
 
-                    await controlNode.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespace.NeonStorage);
+                    await controlNode.InstallHelmChartAsync(controller, "openebs-cstor-operator",
+                        releaseName: "openebs-cstor",
+                        values:      values,
+                        @namespace:  KubeNamespace.NeonStorage);
                 });
 
             controller.LogProgress(controlNode, verb: "configure", message: "openebs-pool");
@@ -3464,10 +3463,9 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "grafana-agent",
-                        releaseName: "grafana-agent",
-                        @namespace: KubeNamespace.NeonMonitor,
+                        @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -3493,7 +3491,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "blackbox-exporter",
-                        releaseName:  "blackbox-exporter",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
                         values:       values);
@@ -3580,10 +3577,10 @@ $@"- name: StorageType
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
 
                     await controlNode.InstallHelmChartAsync(controller, "memcached",
-                        releaseName: "neon-memcached",
-                        @namespace: KubeNamespace.NeonSystem,
+                        releaseName:  "neon-memcached",
+                        @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -3749,9 +3746,8 @@ $@"- name: StorageType
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
 
                     await controlNode.InstallHelmChartAsync(controller, "mimir",
-                        releaseName: "mimir",
-                        @namespace:   KubeNamespace.NeonMonitor,
-                        values:       values);
+                        @namespace: KubeNamespace.NeonMonitor,
+                        values:     values);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-ready",
@@ -3911,7 +3907,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "loki",
-                        releaseName:  "loki",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
                         values:       values);
@@ -4041,7 +4036,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "tempo",
-                        releaseName: "tempo",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
                         values:       values);
@@ -4114,7 +4108,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "kube-state-metrics",
-                        releaseName:  "kube-state-metrics",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
                         values:       values);
@@ -4183,7 +4176,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "reloader",
-                        releaseName:  "reloader",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: $"reloader.deployment.priorityClassName={PriorityClass.NeonOperator.Name}",
                         values:       values);
@@ -4297,7 +4289,6 @@ $@"- name: StorageType
 
                     controller.ThrowIfCancelled();
                     await controlNode.InstallHelmChartAsync(controller, "grafana",
-                        releaseName:  "grafana",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
                         values:       values);
@@ -4512,7 +4503,6 @@ $@"- name: StorageType
                             values.Add("tenants[0].priorityClassName", PriorityClass.NeonStorage.Name);
 
                             await controlNode.InstallHelmChartAsync(controller, "minio",
-                                releaseName:  "minio",
                                 @namespace:   KubeNamespace.NeonSystem,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
@@ -5090,7 +5080,6 @@ $@"- name: StorageType
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-cluster-operator",
-                        releaseName: "neon-cluster-operator",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonOperator.Name,
                         values:       values);
@@ -5278,7 +5267,6 @@ $@"- name: StorageType
                     values.Add("metrics.port", KubePort.NeonNodeAgent);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
-                        releaseName:  "neon-node-agent",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonOperator.Name,
                         values:       values);
@@ -5636,7 +5624,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     await controlNode.InstallHelmChartAsync(controller, "dex",
-                        releaseName:     "dex",
                         @namespace:      KubeNamespace.NeonSystem,
                         prioritySpec:    PriorityClass.NeonApi.Name,
                         values:          values,
@@ -5773,7 +5760,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     await controlNode.InstallHelmChartAsync(controller, "neon-sso-session-proxy",
-                        releaseName:  "neon-sso-session-proxy",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
@@ -5830,7 +5816,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     await controlNode.InstallHelmChartAsync(controller, "glauth",
-                        releaseName:  "glauth",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonApp.Name,
                         values:       values);
