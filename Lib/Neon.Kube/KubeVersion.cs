@@ -303,69 +303,78 @@ namespace Neon.Kube
         /// Specifies the version of <b>Cilium</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Cilium = "v1.14.5";
+        public const string Cilium = "v1.15.0";
 
         /// <summary>
         /// Specifies the version of Cilium-Certgen to be used for
         /// regenerating MTLS certificates.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium: https://quay.io/repository/cilium/certgen?tab=tags
+        /// </note>
+        /// </remarks>
         [KubeValue]
-        public const string CiliumCertGen = "v0.1.9";
+        public const string CiliumCertGen = "v0.1.10";
 
         /// <summary>
         /// Specifies the version of <b>Cilium CLI</b> to be installed.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium:https://github.com/cilium/cilium-cli/releases
+        /// </note>
+        /// </remarks>
         [KubeValue]
-        public const string CiliumCli = "v0.15.19";
+        public const string CiliumCli = "v0.15.22";
 
         /// <summary>
         /// Specifies the version of <b>Etcd</b> to be installed for Cilium (when enabled).
         /// </summary>
-        public const string CiliumEtcd = "v3.5.10";
+        /// <remarks>
+        /// <note>
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium: https://github.com/etcd-io/etcd/releases
+        /// </note>
+        /// </remarks>
+        public const string CiliumEtcd = "v3.5.12";
 
         /// <summary>
         /// Specifies the version of <b>Cilium Envoy</b> to be installed.
         /// </summary>
-        public const string CiliumEnvoy = "v1.26.6-ad82c7c56e88989992fd25d8d67747de865c823b";
+        /// <remarks>
+        /// <note>
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium: https://istio.io/latest/docs/releases/supported-releases/#supported-envoy-versions
+        /// and https://quay.io/repository/cilium/cilium-envoy?tab=tags
+        /// </note>
+        /// </remarks>
+        public const string CiliumEnvoy = "v1.28.0-f96925bcd0f2c80efe9d38a3a6346eff852189c3";
 
         /// <summary>
         /// Specifies the version of <b>Cilium Etcd Operator</b> to be installed.
         /// </summary>
-        public const string CiliumEtcdOperator = "v2.0.7";
-
-        /// <summary>
-        /// Specifies the version of the Cilium generic operator to base our custom image on.
-        /// </summary>
         /// <remarks>
-        /// <para>
-        /// Using the <see cref="Cilium"/> version as the tag for our base image doesn't
-        /// work, even though Cilium has an image named with this tag up on quay.io.  The
-        /// problem is that the Cilium Helm chart explicitly specifies the entrypoint command
-        /// as <b>/usr/bin/cilium-operator-generic</b> but this file isn't actually present
-        /// in the image, but <b>/usr/bin/cilium-operator</b> is present.
-        /// </para>
-        /// <para>
-        /// To workaround this, we need to manually set this constant to <b>genericDigest</b>
-        /// value from the Cilium Helm chart's <b>values.yaml file</b>, located at:
-        /// <c>$\neonKUBE\Lib\Neon.Kube.Setup\Resources\Helm\cilium\values.yaml</c>
-        /// </para>
-        /// <para>
-        /// Open the <c>values.yaml</c> file, search for <b>genericDigest</b> and then
-        /// set this constant to the value there.
-        /// </para>
         /// <note>
-        /// The NEONCLOUD base image script for <b>cilium-operator</b> performs a check
-        /// against the Helm chart to ensure that this constant has been set correctly.
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium: https://quay.io/repository/cilium/cilium-etcd-operator?tab=tags
         /// </note>
         /// </remarks>
-        [KubeValue]
-        public const string CiliumGenericOperatorDigest = "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a";
+        public const string CiliumEtcdOperator = "v2.0.7";
 
         /// <summary>
         /// Specifies the version of <b>Cilium Node Startup Script</b> to be installed.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Look here for the currently published container tags when upgrading
+        /// Cilium: https://quay.io/repository/cilium/startup-script?tab=tags
+        /// </note>
+        /// </remarks>
         [KubeValue]
-        public const string CiliumStartupScript = "62093c5c233ea914bfa26a10ba41f8780d9b737f";
+        public const string CiliumStartupScript = "d4a928681364ea87634b79c11e4dff5d9ef61b05";
 
         /// <summary>
         /// Specifies the version of <b>dnsutils</b> to be installed.

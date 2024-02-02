@@ -1,3 +1,25 @@
+apiVersion: v2
+name: cilium
+displayName: Cilium
+home: https://cilium.io/
+version: 1.15.0
+appVersion: 1.15.0
+kubeVersion: ">= 1.16.0-0"
+icon: https://cdn.jsdelivr.net/gh/cilium/cilium@v1.15/Documentation/images/logo-solo.svg
+description: eBPF-based Networking, Security, and Observability
+keywords:
+  - BPF
+  - eBPF
+  - Kubernetes
+  - Networking
+  - Security
+  - Observability
+  - Troubleshooting
+sources:
+  - https://github.com/cilium/cilium
+links:
+  - name: eBPF.io
+    url: https://ebpf.io/
 annotations:
   artifacthub.io/crds: |
     - kind: CiliumNetworkPolicy
@@ -52,7 +74,7 @@ annotations:
       description: |
         Cilium Endpoint represents the status of individual pods or nodes in
         the cluster which are managed by Cilium, including enforcement status,
-        IP addressing and whether the networking is succesfully operational.
+        IP addressing and whether the networking is successfully operational.
     - kind: CiliumEndpointSlice
       version: v2alpha1
       name: ciliumendpointslices.cilium.io
@@ -60,7 +82,7 @@ annotations:
       description: |
         Cilium Endpoint Slice represents the status of groups of pods or nodes
         in the cluster which are managed by Cilium, including enforcement status,
-        IP addressing and whether the networking is succesfully operational.
+        IP addressing and whether the networking is successfully operational.
     - kind: CiliumEgressGatewayPolicy
       version: v2
       name: ciliumegressgatewaypolicies.cilium.io
@@ -89,6 +111,40 @@ annotations:
       description: |
         Cilium BGP Peering Policy instructs Cilium to create specific BGP peering
         configurations.
+    - kind: CiliumBGPClusterConfig
+      version: v2alpha1
+      name: ciliumbgpclusterconfigs.cilium.io
+      displayName: Cilium BGP Cluster Config
+      description: |
+        Cilium BGP Cluster Config instructs Cilium operator to create specific BGP cluster
+        configurations.
+    - kind: CiliumBGPPeerConfig
+      version: v2alpha1
+      name: ciliumbgppeerconfigs.cilium.io
+      displayName: Cilium BGP Peer Config
+      description: |
+        CiliumBGPPeerConfig is a common set of BGP peer configurations. It can be referenced 
+        by multiple peers from CiliumBGPClusterConfig.
+    - kind: CiliumBGPAdvertisement
+      version: v2alpha1
+      name: ciliumbgpadvertisements.cilium.io
+      displayName: Cilium BGP Advertisement
+      description: |
+        CiliumBGPAdvertisement is used to define source of BGP advertisement as well as BGP attributes 
+        to be advertised with those prefixes.
+    - kind: CiliumBGPNodeConfig
+      version: v2alpha1
+      name: ciliumbgpnodeconfigs.cilium.io
+      displayName: Cilium BGP Node Config
+      description: |
+        CiliumBGPNodeConfig is read only node specific BGP configuration. It is constructed by Cilium operator.
+        It will also contain node local BGP state information.
+    - kind: CiliumBGPNodeConfigOverride
+      version: v2alpha1
+      name: ciliumbgpnodeconfigoverrides.cilium.io
+      displayName: Cilium BGP Node Config Override
+      description: |
+        CiliumBGPNodeConfigOverride can be used to override node specific BGP configuration.
     - kind: CiliumLoadBalancerIPPool
       version: v2alpha1
       name: ciliumloadbalancerippools.cilium.io
@@ -121,21 +177,3 @@ annotations:
       displayName: Cilium Pod IP Pool
       description: |
         CiliumPodIPPool defines an IP pool that can be used for pooled IPAM (i.e. the multi-pool IPAM mode).
-apiVersion: v2
-appVersion: 1.14.5
-description: eBPF-based Networking, Security, and Observability
-home: https://cilium.io/
-icon: https://cdn.jsdelivr.net/gh/cilium/cilium@v1.14/Documentation/images/logo-solo.svg
-keywords:
-- BPF
-- eBPF
-- Kubernetes
-- Networking
-- Security
-- Observability
-- Troubleshooting
-kubeVersion: '>= 1.16.0-0'
-name: cilium
-sources:
-- https://github.com/cilium/cilium
-version: 1.14.5
