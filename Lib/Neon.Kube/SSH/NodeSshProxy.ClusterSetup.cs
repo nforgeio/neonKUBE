@@ -1320,6 +1320,7 @@ EOF
 
                     controller.ThrowIfCancelled();
                     InstallCiliumCli(controller);
+
                     controller.ThrowIfCancelled();
                     InstallIstioCli(controller);
                 });

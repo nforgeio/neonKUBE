@@ -414,6 +414,10 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
+                    await ConfigureCoreDnsAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
                     await ConfigureNamespaceTraceSamplingAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -1071,6 +1075,226 @@ exit 1
         }
 
         /// <summary>
+        /// Configures CoreDns.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ConfigureCoreDnsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            // NOTE: CoreDNS is deployed by [kubeadm]
+
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s               = GetK8sClient(controller);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var clusterAdvice     = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/coredns",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "configure", message: "coredns");
+
+                    // Wait for CoreDNS deployment to report that it's deployed.
+
+                    controller.ThrowIfCancelled();
+                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "coredns",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
+
+                    // Configure CoreDNS to deploy only on the control-plane, set the number of
+                    // replicas to match the number of control-plane nodes, and also configure
+                    // the CoreDNS memory request/limit.
+
+                    controller.ThrowIfCancelled();
+                    await controlNode.InvokeIdempotentAsync("setup/coredns-configure",
+                        async () =>
+                        {
+                            var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
+
+                            // We're going to schedule this only on control-plane nodes (note that
+                            // we also need to tolerate any control-plane node taints.
+
+                            coreDnsDeployment.Spec.Template.Spec.NodeSelector = new Dictionary<string, string>()
+                            {
+                                { $"{NodeLabel.LabelRole}", "control-plane" }
+                            };
+
+                            coreDnsDeployment.Spec.Template.Spec.Tolerations = new List<V1Toleration>()
+                            {
+                                { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                            };
+
+                            // $todo(jefflill):
+                            //
+                            // We need to configure pod affinity/anti-affinity to prevent multiple
+                            // replicas from being scheduled on the same control-plane node.
+
+                            // Configure the memory request/limit.
+
+                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
+                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Limits["memory"]   = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+
+                            // Deploy a replica on every control-plane node.
+
+                            coreDnsDeployment.Spec.Replicas = clusterDefinition.ControlNodes.Count();
+
+                            await k8s.AppsV1.ReplaceNamespacedDeploymentAsync(coreDnsDeployment, "coredns", KubeNamespace.KubeSystem);
+                        });
+
+                    // Deploy a dnsutils container and then verify DNS is actually working.
+
+                    controller.ThrowIfCancelled();
+                    await controlNode.InvokeIdempotentAsync("setup/coredns-utils",
+                        async () =>
+                        {
+                            controller.LogProgress(controlNode, verb: "install", message: "dnsutils");
+
+                            var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
+                                new V1Pod()
+                                {
+                                    Metadata = new V1ObjectMeta()
+                                    {
+                                        Name              = "dnsutils",
+                                        NamespaceProperty = KubeNamespace.NeonSystem,
+                                        Labels            = new Dictionary<string, string>()
+                                        {
+                                            { "neonkube.io/setup-pod", "dnsutils" }
+                                        }
+                                    },
+                                    Spec = new V1PodSpec()
+                                    {
+                                        Containers = new List<V1Container>()
+                                        {
+                                            new V1Container()
+                                            {
+                                                Name            = "dnsutils",
+                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersion.DnsUtils}",
+                                                Command         = new List<string>() {"sleep", "3600" },
+                                                ImagePullPolicy = "IfNotPresent"
+                                            }
+                                        },
+                                        RestartPolicy = "Always",
+                                        Tolerations   = new List<V1Toleration>()
+                                        {
+                                            { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                            { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                        }
+                                    }
+                                },
+                                KubeNamespace.NeonSystem);
+
+                            await k8s.CoreV1.WaitForPodAsync(
+                                name:               pod.Name(),
+                                namespaceParameter: pod.Namespace(),
+                                timeout:            clusterOpTimeout,
+                                pollInterval:       clusterOpPollInterval,
+                                cancellationToken:  controller.CancellationToken);
+                        });
+
+                    controller.ThrowIfCancelled();
+                    await controlNode.InvokeIdempotentAsync("setup/coredns-verify",
+                        async () =>
+                        {
+                            controller.LogProgress(controlNode, verb: "verify", message: "dns");
+
+                            // Verify that [coredns] is actually working.
+
+                            var cmd = new string[]
+                            {
+                                "nslookup",
+                                "kubernetes.default"
+                            };
+
+                            var pod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "neonkube.io/setup-pod=dnsutils");
+
+                            await operationRetry.InvokeAsync(
+                                async () =>
+                                {
+                                    try
+                                    {
+                                        var result = await k8s.NamespacedPodExecWithRetryAsync(
+                                            retryPolicy:        podExecRetry,
+                                            name:               pod.Name(),
+                                            namespaceParameter: pod.Namespace(),
+                                            container:          "dnsutils",
+                                            command:            cmd);
+
+                                        result.EnsureSuccess();
+                                    }
+                                    catch
+                                    {
+                                        // Restart COREDNS and try again.
+
+                                        var coredns = await k8s.AppsV1.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+
+                                        await coredns.RestartAsync(k8s);
+                                        throw;
+                                    }
+                                },
+                                cancellationToken: controller.CancellationToken);
+
+                            await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
+                        });
+                });
+
+            // Enable CoreDNS metrics when enabled.
+
+            if (coreDnsAdvice.MetricsEnabled ?? false)
+            {
+                controller.ThrowIfCancelled();
+                await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
+                    async () =>
+                    {
+                        var serviceMonitor = new V1ServiceMonitor()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name              = "kube-dns",
+                                NamespaceProperty = KubeNamespace.KubeSystem
+                            },
+                            Spec = new V1ServiceMonitorSpec()
+                            {
+                                Endpoints = new List<Endpoint>()
+                                {
+                                new Endpoint()
+                                {
+                                    Interval      = coreDnsAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval,
+                                    Path          = "/metrics",
+                                    ScrapeTimeout = "10s",
+                                    TargetPort    = 9153
+                                }
+                                },
+                                NamespaceSelector = new NamespaceSelector()
+                                {
+                                    MatchNames = new List<string>() { { KubeNamespace.KubeSystem } }
+                                },
+                                Selector = new V1LabelSelector()
+                                {
+                                    MatchLabels = new Dictionary<string, string>()
+                                    {
+                                        { "k8s-app", "kube-dns"}
+                                    }
+                                }
+                            }
+                        };
+
+                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(
+                            body:               serviceMonitor,
+                            name:               serviceMonitor.Name(),
+                            namespaceParameter: serviceMonitor.Namespace());
+                    });
+            }
+        }
+
+        /// <summary>
         /// Configures the local workstation.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -1106,25 +1330,25 @@ exit 1
             var newCluster = newConfig.Clusters.Single();
             var newContext = newConfig.Contexts.Single();
 
-            newUser.ClusterName = cluster.Name;
+            newUser.ClusterName           = cluster.Name;
 
-            newCluster.ClusterInfo = cluster.SetupState.ToKubeClusterInfo();
+            newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
             newCluster.HostingEnvironment = cluster.Hosting.Environment;
-            newCluster.Hosting = cluster.Hosting;
-            newCluster.IsNeonDesktop = desktopReadyToGo;
-            newCluster.IsNeonKube = true;
-            newCluster.SsoUsername = cluster.SetupState.SsoUsername;
-            newCluster.SsoPassword = cluster.SetupState.SsoPassword;
-            newCluster.SshUsername = cluster.SetupState.SshUsername;
-            newCluster.SshPassword = cluster.SetupState.SshPassword;
+            newCluster.Hosting            = cluster.Hosting;
+            newCluster.IsNeonDesktop      = desktopReadyToGo;
+            newCluster.IsNeonKube         = true;
+            newCluster.SsoUsername        = cluster.SetupState.SsoUsername;
+            newCluster.SsoPassword        = cluster.SetupState.SsoPassword;
+            newCluster.SshUsername        = cluster.SetupState.SshUsername;
+            newCluster.SshPassword        = cluster.SetupState.SshPassword;
 
             if (cluster.Hosting.Hypervisor != null)
             {
                 newCluster.HostingNamePrefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
             }
 
-            newContext.Name = newUser.Name;
-            newContext.Context.User = newUser.Name;
+            newContext.Name            = newUser.Name;
+            newContext.Context.User    = newUser.Name;
             newContext.Context.Cluster = newCluster.Name;
 
             if (!File.Exists(kubeConfigPath))
@@ -1219,304 +1443,6 @@ exit 1
                         await k8s.SchedulingV1.CreatePriorityClassAsync(priorityClass);
                     }
                 });
-        }
-
-        /// <summary>
-        /// Installs Calico.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCalicoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            var cluster       = controlNode.Cluster;
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
-
-            if (cluster.Hosting.Environment == HostingEnvironment.Azure)
-            {
-                // On Azure, Calico needs to run in VXLAN mode.
-
-                controller.ThrowIfCancelled();
-                await controlNode.InvokeIdempotentAsync("setup/dns-service",
-                    async () =>
-                    {
-                        var kubeDns = await k8s.CoreV1.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
-
-                        kubeDns.Spec.InternalTrafficPolicy = "Local";
-
-                        await k8s.CoreV1.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
-                    });
-            }
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/cni",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "install", message: "calico");
-
-                    var cluster        = controlNode.Cluster;
-                    var k8s            = GetK8sClient(controller);
-                    var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-                    var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var ciliumAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cilium);
-
-                    var values = new Dictionary<string, object>(); 
-
-                    values.Add("images.registry", KubeConst.LocalClusterRegistry);
-                    values.Add($"serviceMonitor.enabled", ciliumAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-
-                    if (hostingManager.NodeMtu > 0)
-                    {
-                        values.Add($"vEthMtu", hostingManager.NodeMtu);
-                    }
-
-                    if (cluster.Hosting.Environment == HostingEnvironment.Azure)
-                    {
-                        values.Add($"ipipMode", "Never");
-                        values.Add($"vxlanMode", "Always");
-                        values.Add("backend", "vxlan");
-                    }
-
-                    controller.ThrowIfCancelled();
-                    await controlNode.InstallHelmChartAsync(controller, "calico", @namespace: KubeNamespace.KubeSystem, values: values);
-
-                    // Wait for Calico and CoreDNS pods to report that they're running.
-
-                    controller.ThrowIfCancelled();
-                    await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "calico-node",
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
-                        cancellationToken: controller.CancellationToken);
-
-                    controller.ThrowIfCancelled();
-                    await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
-                        cancellationToken: controller.CancellationToken);
-
-                    // Spin up a [dnsutils] pod and then exec into it to confirm that
-                    // CoreDNS is answering DNS queries.
-
-                    controller.ThrowIfCancelled();
-                    await controlNode.InvokeIdempotentAsync("setup/dnsutils",
-                        async () =>
-                        {
-                            controller.LogProgress(controlNode, verb: "install", message: "dnsutils");
-
-                            var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
-                                new V1Pod()
-                                {
-                                    Metadata = new V1ObjectMeta()
-                                    {
-                                        Name              = "dnsutils",
-                                        NamespaceProperty = KubeNamespace.NeonSystem,
-                                        Labels            = new Dictionary<string, string>()
-                                        {
-                                            { "neonkube.io/setup-pod", "dnsutils" }
-                                        }
-                                    },
-                                    Spec = new V1PodSpec()
-                                    {
-                                        Containers = new List<V1Container>()
-                                        {
-                                            new V1Container()
-                                            {
-                                                Name            = "dnsutils",
-                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersion.DnsUtils}",
-                                                Command         = new List<string>() {"sleep", "3600" },
-                                                ImagePullPolicy = "IfNotPresent"
-                                            }
-                                        },
-                                        RestartPolicy = "Always",
-                                        Tolerations = new List<V1Toleration>()
-                                        {
-                                            { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                            { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                        }
-                                    }
-                                },
-                                KubeNamespace.NeonSystem);
-
-                            await k8s.CoreV1.WaitForPodAsync(
-                                name:               pod.Name(),
-                                namespaceParameter: pod.Namespace(),
-                                timeout:            clusterOpTimeout,
-                                pollInterval:       clusterOpPollInterval,
-                                cancellationToken:  controller.CancellationToken);
-                        });
-
-
-                    controller.ThrowIfCancelled();
-                    await controlNode.InvokeIdempotentAsync("setup/dns",
-                        async () =>
-                        {
-                            var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
-                            var spec              = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
-                            var coreDnsDaemonset  = new V1DaemonSet()
-                            {
-                                Metadata = new V1ObjectMeta()
-                                {
-                                    Name              = "coredns",
-                                    NamespaceProperty = KubeNamespace.KubeSystem,
-                                    Labels            = coreDnsDeployment.Metadata.Labels
-                                },
-                                Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
-                            };
-
-                            coreDnsDaemonset.Spec.Template.Spec.Tolerations = new List<V1Toleration>()
-                            {
-                                { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                            };
-
-                            coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
-                            coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
-
-                            await k8s.AppsV1.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
-                            await k8s.AppsV1.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
-                        });
-
-                    if (cluster.Hosting.Environment == HostingEnvironment.Azure)
-                    {
-                        controller.ThrowIfCancelled();
-                        await controlNode.InvokeIdempotentAsync("setup/dns-service",
-                            async () =>
-                            {
-                                var kubeDns = await k8s.CoreV1.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
-
-                                kubeDns.Spec.InternalTrafficPolicy = "Local";
-
-                                await k8s.CoreV1.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
-                            });
-                    }
-
-                    controller.ThrowIfCancelled();
-                    await controlNode.InvokeIdempotentAsync("setup/dns-verify",
-                        async () =>
-                        {
-                            controller.LogProgress(controlNode, verb: "verify", message: "dns");
-
-                            // Verify that [coredns] is actually working.
-
-                            var cmd = new string[]
-                            {
-                                "nslookup",
-                                "kubernetes.default"
-                            };
-
-                            var pod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "neonkube.io/setup-pod=dnsutils");
-
-                            await operationRetry.InvokeAsync(
-                                async () =>
-                                {
-                                    try
-                                    {
-                                        var result = await k8s.NamespacedPodExecWithRetryAsync(
-                                            retryPolicy:        podExecRetry,
-                                            name:               pod.Name(),
-                                            namespaceParameter: pod.Namespace(),
-                                            container:          "dnsutils",
-                                            command:            cmd);
-
-                                        result.EnsureSuccess();
-                                    }
-                                    catch
-                                    {
-                                        // Restart COREDNS and try again.
-
-                                        var coredns = await k8s.AppsV1.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
-
-                                        await coredns.RestartAsync(k8s);
-                                        throw;
-                                    }
-                                },
-                                cancellationToken: controller.CancellationToken);
-
-                            await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
-                        });
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/calico-metrics",
-                async () =>
-                {
-                    await operationRetry.InvokeAsync(
-                        async () =>
-                        {
-                            var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
-
-                            if (configs.Items.Count() == 0)
-                            {
-                                throw new TimeoutException($"No [{nameof(V1FelixConfiguration)}] objects found.");
-                            }
-                        },
-                        cancellationToken: controller.CancellationToken);
-
-                    var configs          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
-                    dynamic patchContent = new JObject();
-
-                    patchContent.spec = new JObject();
-                    patchContent.spec.prometheusMetricsEnabled = true;
-
-                    var patch = new V1Patch(NeonHelper.JsonSerialize(patchContent), V1Patch.PatchType.MergePatch);
-
-                    foreach (var felix in configs.Items)
-                    {
-                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1FelixConfiguration>(patch, felix.Name());
-                    }
-                });
-
-            if (coreDnsAdvice.MetricsEnabled ?? false)
-            {
-                controller.ThrowIfCancelled();
-                await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
-                    async () =>
-                    {
-                        var serviceMonitor = new V1ServiceMonitor()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name              = "kube-dns",
-                                NamespaceProperty = KubeNamespace.KubeSystem
-                            },
-                            Spec = new V1ServiceMonitorSpec()
-                            {
-                                Endpoints = new List<Endpoint>()
-                                {
-                                new Endpoint()
-                                {
-                                    Interval      = coreDnsAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval,
-                                    Path          = "/metrics",
-                                    ScrapeTimeout = "10s",
-                                    TargetPort    = 9153
-                                }
-                                },
-                                NamespaceSelector = new NamespaceSelector()
-                                {
-                                    MatchNames = new List<string>() { { KubeNamespace.KubeSystem } }
-                                },
-                                Selector = new V1LabelSelector()
-                                {
-                                    MatchLabels = new Dictionary<string, string>()
-                                    {
-                                        { "k8s-app", "kube-dns"}
-                                    }
-                                }
-                            }
-                        };
-
-                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(
-                            body: serviceMonitor,
-                            name: serviceMonitor.Name(),
-                            namespaceParameter: serviceMonitor.Namespace());
-                    });
-            }
         }
 
         /// <summary>
@@ -1644,21 +1570,27 @@ set -euo pipefail
 #       generic image.  [cilium-cli] appends [-generic] to the
 #       [cilium-operator] container name below for us.
 
+# $note(jefflill):
+#
+# I've removed this option to verify that we actually need it.  Cilium
+# claims that they auto detect the MTU.
+#
+#   --set MTU={mtu}
+
 cilium install --version {KubeVersion.Cilium} \
     --chart-directory={KubeNodeFolder.Helm}/cilium \
-    --set cni-exclusive=false \
+    --set cni.exclusive=false \
     --set ipam.mode=Kubernetes \
     --set kubeProxyReplacement=strict \
     --set k8sServiceHost=127.0.0.1 \
     --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
-    --set MTU={mtu} \
     --set image.repository={KubeConst.LocalClusterRegistry}/cilium \
     --set image.useDigest=false \
     --set operator.image.repository={KubeConst.LocalClusterRegistry}/cilium-operator \
     --set operator.image.useDigest=false \
     --set socketLB.hostNamespaceOnly=true
 
-# We need to restart CRI-O, presumably so it can react to
+# We need to restart CRI-O, presumably so it can initialize using
 # the new cilium-proxy CNI.
 
 systemctl restart cri-o
@@ -1908,13 +1840,13 @@ istioctl install --verify -y -f manifest.yaml
                 });
         }
 
-        /// <summary>
-        /// Configures the default trace sampling rates for cluster namespaces. 
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ConfigureNamespaceTraceSamplingAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+    /// <summary>
+    /// Configures the default trace sampling rates for cluster namespaces. 
+    /// </summary>
+    /// <param name="controller">The setup controller.</param>
+    /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+    /// <returns>The tracking <see cref="Task"/>.</returns>
+    public static async Task ConfigureNamespaceTraceSamplingAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));

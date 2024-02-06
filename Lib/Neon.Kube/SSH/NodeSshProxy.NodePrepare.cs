@@ -342,8 +342,7 @@ rm -r istio-{KubeVersion.Istio}*
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             InvokeIdempotent("base/prepare-node",
                 () =>
@@ -358,9 +357,6 @@ rm -r istio-{KubeVersion.Istio}*
 
                     controller.ThrowIfCancelled();
                     NodeInstallTools(controller);
-
-                    controller.ThrowIfCancelled();
-                    BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
 
                     controller.ThrowIfCancelled();
                     DisableSnap(controller);
@@ -1437,7 +1433,7 @@ rm kubeadm.config.yaml
 mkdir -p /opt/cni/bin
 mkdir -p /etc/cni/net.d
 
-echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' --node-ip='{NodeDefinition.Address}' > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
 
 # Stop and disable [kubelet] for now.  We'll re-enable this later during cluster setup.
 
@@ -1445,8 +1441,6 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                            controller.LogProgress(this, verb: "install", message: "kubernetes");
-
                             SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
                         });
                 });
