@@ -57,14 +57,14 @@ spec:
                 description: |-
                   Specifies the maximum time in seconds to retain the task after 
                    it has been ended, for any reason.  neon-cluster-operator will add
-                   this to Neon.Kube.Resources.Cluster.V1NeonNodeTask.TaskStatus.FinishTimestamp  to determine
+                   this to Neon.Kube.Resources.Cluster.V1NeonNodeTask.TaskStatus.FinishTimestamp to determine
                    when it should delete the task.  This defaults to 10 minutes.
                 format: int32
                 type: integer
               captureOutput:
                 description: |-
                   Controls whether the command output is to be captured.  This defaults to true.
-                  Neon.Kube.Resources.Cluster.V1NeonNodeTask  is designed to capture command output as UTF-8 or
+                  Neon.Kube.Resources.Cluster.V1NeonNodeTask is designed to capture command output as UTF-8 or
                    ASCII text.  Binary output or other text encodings are not supported.  You
                    should set this to false for commands with unsupported output or
                    when the command output may include secrets.
@@ -87,7 +87,7 @@ spec:
                    for the next node-agent to clean things up.
                 type: string
               phase:
-                description: Indicates the current task phase.  This defaults to Neon.Kube.Resources.Cluster.V1NeonNodeTask.Phase.New .
+                description: Indicates the current task phase.  This defaults to Neon.Kube.Resources.Cluster.V1NeonNodeTask.Phase.New.
                 enum:
                 - new
                 - pending

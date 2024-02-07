@@ -21,7 +21,7 @@ spec:
             description: The spec.
             properties:
               registries:
-                description: The list of Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec .
+                description: The list of Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.
                 items:
                   properties:
                     key:
@@ -41,8 +41,8 @@ spec:
                              assume this default due to the popularity of Docker.
 
                              Specify a non-negative number here to enable this.  Registries will be added to
-                             the search list in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.SearchOrder  and when two
-                             registries have the same order value, in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix  (lowercase).
+                             the search list in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.SearchOrder and when two
+                             registries have the same order value, in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix (lowercase).
                           format: int32
                           type: integer
                         insecure:
@@ -58,8 +58,8 @@ spec:
                         location:
                           description: |-
                             Optionally enables registry redirection.  When specified, this indicates that images 
-                             specified to be pulled from Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix  will actually be pulled from 
-                            Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Location  instead.  This is a nice way to be able to reuse manifests
+                             specified to be pulled from Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix will actually be pulled from 
+                            Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Location instead.  This is a nice way to be able to reuse manifests
                              and Helm charts such that they pull images from an alternate registry without
                              modification.  This defaults to null.
                           type: string

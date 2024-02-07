@@ -21,7 +21,7 @@ spec:
             description: The SSO client specification.
             properties:
               ssoClient:
-                description: The name of the Neon.Kube.Resources.Cluster.V1NeonSsoClient .
+                description: The name of the Neon.Kube.Resources.Cluster.V1NeonSsoClient.
                 type: string
               url:
                 description: The callback URL.
