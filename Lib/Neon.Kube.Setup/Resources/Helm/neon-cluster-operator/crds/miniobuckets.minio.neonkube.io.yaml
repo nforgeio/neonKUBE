@@ -15,28 +15,47 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Used for unit testing Kubernetes clients.
         properties:
           spec:
+            description: The spec.
             properties:
               tenant:
+                description: The Minio tenant where the bucket should be created.
                 type: string
               region:
+                description: The bucket Region.
                 type: string
               versioning:
+                description: The bucket versioning mode.
+                enum:
+                - "off"
+                - enabled
+                - suspended
                 type: string
               objectLocking:
+                description: |-
+                  Prevents objects from being deleted. Required to support retention and legal hold. 
+                   Can only be enabled at bucket creation.
                 type: boolean
               quota:
+                description: Specifies bucket quota.
                 properties:
                   limit:
+                    description: The quota limit.
                     type: string
                   hard:
+                    description: |-
+                      Sets a maximum limit to the bucket storage size. The MinIO server rejects any 
+                       incoming PUT request whose contents would exceed the bucket’s configured quota.
                     type: boolean
                 type: object
             type: object
           status:
+            description: The status.
             properties:
               conditions:
+                description: Conditions.
                 items:
                   properties:
                     lastTransitionTime:
@@ -56,6 +75,7 @@ spec:
                   type: object
                 type: array
               state:
+                description: The state.
                 type: string
             type: object
         type: object

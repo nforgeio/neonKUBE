@@ -15,16 +15,29 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Specifies Neon SSO client settings.
         properties:
           spec:
+            description: Configuration for backend connectors.
             properties:
               id:
+                description: Connector ID
                 type: string
               name:
+                description: |-
+                  Connector name.
+                   information.
                 type: string
               type:
+                description: Enumerates Dex storage types.
+                enum:
+                - ldap
+                - oidc
                 type: string
               config:
+                description: |-
+                  Connector config.
+                   information.
                 properties: {}
                 type: object
             type: object
