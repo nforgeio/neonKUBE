@@ -406,11 +406,11 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallCiliumAsync(controller, controlNode);
+                    InstallCilium(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallIstioAsync(controller, controlNode);
+                    InstallIstio(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
@@ -1536,10 +1536,8 @@ exit 1
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCiliumAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static void InstallCilium(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
-            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -1553,8 +1551,8 @@ exit 1
             var mtu              = hostingManager.NodeMtu;
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/install-cilium",
-                async () =>
+            controlNode.InvokeIdempotent("setup/install-cilium",
+                () =>
                 {
                     controller.LogProgress(controlNode, verb: "install", message: "cilium");
 
@@ -1590,20 +1588,16 @@ cilium install --version {KubeVersion.Cilium} \
     --set operator.image.useDigest=false \
     --set socketLB.hostNamespaceOnly=true
 
-# We need to restart CRI-O, presumably so it can initialize using
-# the new cilium-proxy CNI.
-
-systemctl restart cri-o
-
-# Validate and wait for the Cilium installation to complete.
+# Wait for the Cilium installation to complete.
 
 cilium status --wait --wait-duration={clusterOpTimeoutSeconds}s
+
+# We need to restart CRI-O, presumably so it can initialize using
+# the new [cilium-proxy] CNI.
+
+systemctl restart cri-o
 ";
-
-                    firstControlNode.SudoCommand(script)
-                        .EnsureSuccess();
-
-                    await Task.CompletedTask;
+                    firstControlNode.SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 
@@ -1612,10 +1606,8 @@ cilium status --wait --wait-duration={clusterOpTimeoutSeconds}s
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static void InstallIstio(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
-            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -3663,15 +3655,13 @@ $@"- name: StorageType
                     i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
-                        foreach (var component in new string[]
-                        {
-                            "alertmanager", "distributor", "ingester", "overrides_exporter", "ruler", "querier", "query_frontend", "store_gateway", "compactor"
-                        })
+                        foreach (var component in new string[] { "alertmanager", "distributor", "ingester", "overrides_exporter", "ruler", "querier", "query_frontend", "store_gateway", "compactor" })
                         {
                             values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                             values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
                             values.Add($"{component}.tolerations[{i}].operator", "Exists");
                         }
+
                         i++;
                     }
 
@@ -3826,15 +3816,13 @@ $@"- name: StorageType
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemLogServices, "true"))
                     {
-                        foreach (var component in new string[]
-                        {
-                            "ingester", "distributor", "querier", "queryFrontend", "tableManager", "compactor", "ruler", "indexGateway"
-                        })
+                        foreach (var component in new string[] { "ingester", "distributor", "querier", "queryFrontend", "tableManager", "compactor", "ruler", "indexGateway" })
                         {
                             values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                             values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
                             values.Add($"{component}.tolerations[{i}].operator", "Exists");
                         }
+
                         i++;
                     }
 
@@ -3950,14 +3938,7 @@ $@"- name: StorageType
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelTraceServices, "true"))
                     {
-                        foreach (var component in new string[]
-                        {
-                            "ingester",
-                            "distributor",
-                            "compactor",
-                            "querier",
-                            "queryFrontend"
-                        })
+                        foreach (var component in new string[] { "ingester", "distributor", "compactor", "querier", "queryFrontend" })
                         {
                             values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                             values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
@@ -4420,15 +4401,13 @@ $@"- name: StorageType
 
                             foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMinioServices, "true"))
                             {
-                                foreach (var component in new string[]
-                                {
-                                    "tenants[0].pools[0]", "console", "operator"
-                                })
+                                foreach (var component in new string[] { "tenants[0].pools[0]", "console", "operator" })
                                 {
                                     values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                                     values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
                                     values.Add($"{component}.tolerations[{i}].operator", "Exists");
                                 }
+
                                 i++;
                             }
 

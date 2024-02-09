@@ -1194,16 +1194,18 @@ rm -rf linux-amd64
                 });
         }
 
+        private static bool containerImagesAlreadyPulled = false;
+
         /// <summary>
         /// Loads the docker images onto the node. This is used for debug mode only.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
-        /// <param name="downloadParallel">Optionally specifies the limit for parallelism when downloading images from GitHub registry.</param>
-        /// <param name="loadParallel">Optionally specifies the limit for parallelism when loading images into the cluster.</param>
+        /// <param name="downloadParallelization">Optionally specifies the limit for parallelism when downloading images from GitHub registry.</param>
+        /// <param name="loadParallelization">Optionally specifies the limit for parallelism when loading images into the cluster.</param>
         public async Task NodeDebugLoadImagesAsync(
             ISetupController    controller, 
-            int                 downloadParallel = 5, 
-            int                 loadParallel     = 2)
+            int                 downloadParallelization = 5, 
+            int                 loadParallelization     = 2)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1223,53 +1225,72 @@ rm -rf linux-amd64
                     var images     = new List<NodeImageInfo>();
 
                     var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
-                    .Select(path => Path.GetFullPath(path))
-                    .ToArray();
+                        .Select(path => Path.GetFullPath(path))
+                        .ToArray();
 
-                    var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-stage";
-                    var pullImageTasks = new List<Task>();
+                    // Pull all container images to the workstation.
+                    //
+                    // NOTE: We're only going to do this once per process invocation to speed
+                    //       up multi-node cluster deployments.
 
-                    foreach (var imageFolder in setupImageFolders)
+                    if (!containerImagesAlreadyPulled)
                     {
-                        var imageName   = Path.GetFileName(imageFolder);
-                        var versionPath = Path.Combine(imageFolder, ".version");
-                        var importPath  = Path.Combine(imageFolder, ".import");
-                        var targetTag   = (string)null;
+                        var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-stage";
+                        var pullImageTasks = new List<Task>();
 
-                        if (File.Exists(versionPath))
+                        foreach (var imageFolder in setupImageFolders)
                         {
-                            targetTag = File.ReadAllLines(versionPath).First().Trim();
+                            var imageName   = Path.GetFileName(imageFolder);
+                            var versionPath = Path.Combine(imageFolder, ".version");
+                            var ignorePath  = Path.Combine(imageFolder, ".ignore");
+                            var importPath  = Path.Combine(imageFolder, ".import");
+                            var targetTag   = (string)null;
 
-                            if (string.IsNullOrEmpty(targetTag))
+                            if (File.Exists(ignorePath))
                             {
-                                throw new FileNotFoundException($"Setup image folder [{imageFolder}] has an empty a [.version] file.");
+                                continue;
                             }
+
+                            if (File.Exists(versionPath))
+                            {
+                                targetTag = File.ReadAllLines(versionPath).First().Trim();
+
+                                if (string.IsNullOrWhiteSpace(targetTag))
+                                {
+                                    throw new FileNotFoundException($"Setup image folder [{imageFolder}] has an empty [.version] file.");
+                                }
+                            }
+                            else
+                            {
+                                Covenant.Assert(File.Exists(importPath));
+
+                                targetTag = KubeVersion.NeonKubeContainerImageTag;
+                            }
+
+                            var sourceImage = $"{registry}/{imageName}:{targetTag}";
+
+                            while (pullImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= downloadParallelization)
+                            {
+                                await Task.Delay(100);
+                            }
+
+                            images.Add(new NodeImageInfo(imageFolder, imageName, targetTag, registry));
+                            pullImageTasks.Add(NeonHelper.ExecuteCaptureAsync(dockerPath, new string[] { "pull", sourceImage }));
                         }
-                        else
-                        {
-                            Covenant.Assert(File.Exists(importPath));
 
-                            targetTag = $"neonkube-{KubeVersion.NeonKube}{KubeVersion.BranchPart}";
-                        }
+                        await NeonHelper.WaitAllAsync(pullImageTasks);
 
-                        var sourceImage = $"{registry}/{imageName}:{targetTag}";
-
-                        while (pullImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= downloadParallel)
-                        {
-                            await Task.Delay(100);
-                        }
-
-                        images.Add(new NodeImageInfo(imageFolder, imageName, targetTag, registry));
-                        pullImageTasks.Add(NeonHelper.ExecuteCaptureAsync(dockerPath, new string[] { "pull", sourceImage }));
+                        containerImagesAlreadyPulled = true;
                     }
 
-                    await NeonHelper.WaitAllAsync(pullImageTasks);
+                    // Extract the container images one-by-one from the workstation docker
+                    // and then upload and install them on the node.
 
                     var loadImageTasks = new List<Task>();
 
                     foreach (var image in images)
                     {
-                        while (loadImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= loadParallel)
+                        while (loadImageTasks.Where(task => task.Status < TaskStatus.RanToCompletion).Count() >= loadParallelization)
                         {
                             await Task.Delay(100);
                         }
@@ -1278,17 +1299,15 @@ rm -rf linux-amd64
                     }
 
                     await NeonHelper.WaitAllAsync(loadImageTasks);
-
-                    SudoCommand($"rm -rf /tmp/container-image-*");
                 });
         }
 
         /// <summary>
-        /// Method to load specific container image onto the the node.
+        /// Loads a container image onto the node.
         /// </summary>
         /// <param name="image">The image.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task LoadImageAsync(NodeImageInfo image)
+        private async Task LoadImageAsync(NodeImageInfo image)
         {
             await SyncContext.Clear;
 
@@ -1301,20 +1320,19 @@ rm -rf linux-amd64
 
                     using (var tempFile = new TempFile(suffix: ".image.tar", null))
                     {
-                        NeonHelper.ExecuteCapture(dockerPath,
-                            new string[] {
-                                "save",
-                                "--output", tempFile.Path,
-                                image.SourceImage }).EnsureSuccess();
+                        NeonHelper.ExecuteCapture(dockerPath, new string[] { "save", "--output", tempFile.Path, image.SourceImage })
+                            .EnsureSuccess();
 
                         using (var imageStream = new FileStream(tempFile.Path, FileMode.Open, FileAccess.ReadWrite))
                         {
-                            Upload($"/tmp/container-image-{id}.tar", imageStream);
+                            var imagePath = $"/tmp/container-image-{id}.tar";
+
+                            Upload(imagePath, imageStream);
 
                             SudoCommand("podman load", RunOptions.Defaults | RunOptions.FaultOnError,
                                 new string[]
                                 {
-                                    "--input", $"/tmp/container-image-{id}.tar"
+                                    "--input", imagePath
                                 });
 
                             SudoCommand("podman tag", RunOptions.Defaults | RunOptions.FaultOnError,
@@ -1323,12 +1341,91 @@ rm -rf linux-amd64
                                     image.SourceImage, image.TargetImage
                                 });
 
-                            SudoCommand($"rm /tmp/container-image-{id}.tar");
+                            SudoCommand($"rm {imagePath}");
                         }
                     }
                 });
         }
-  
+
+        /// <summary>
+        /// Removes any container images coming from container registries whose names are
+        /// <b>not</b> in the set of valid registries.  This is used to remove image references
+        /// to images coming from registries like <b>ghcr.io/neonkube-stage</b>,
+        /// ;eaving just the local references.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        public void PruneContainerImageReferences(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            // $todo(jefflill):
+            //
+            // We should probably figure out how to remap [registry.k8s.io] to
+            // [registry.neon.local] as well.  Here's what we'd need to do:
+            //
+            //      1. Add the Kubernetes image SHA256 hashes to the cluster manifest
+            //      2. Rename the Kubernetes images in podman.
+            //      3. Modify the image references in the static pod manifests
+            //         deployed by [kubeadm].
+            //      4. Modify the code syncing images to Harbor?
+
+            InvokeIdempotent("base/clean-container-image-refs",
+                () =>
+                {
+                    // We're going to remove any containers from repositorires
+                    // other than these.
+
+                    var validRegistries = new HashSet<string>()
+                    {
+                        "registry.k8s.io",
+                        "registry.k8s.io/coredns",
+                        KubeConst.LocalClusterRegistry
+                    };
+
+                    // Build a list of fully qualifed image names from the node.
+
+                    var response   = SudoCommand("podman image ls", RunOptions.Defaults | RunOptions.FaultOnError);
+                    var imageNames = new List<string>();
+
+                    foreach (var line in response.OutputText
+                        .ToLines()
+                        .Skip(1)    // Ignore the column headers
+                        .Where(line => !string.IsNullOrWhiteSpace(line)))
+                    {
+                        // The output contains multiple space separated columns, with the
+                        // first two columns specifying the registry and image name followed
+                        // by the image tag.
+
+                        var columns         = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var registryAndName = columns[0];
+                        var tag             = columns[1];
+
+                        imageNames.Add($"{registryAndName}:{tag}");
+                    }
+
+                    // We're going to generate a script that removes the images that don't
+                    // match one of the valid registries.
+
+                    var sbScript = new StringBuilder();
+
+                    sbScript.AppendLine("set -euo pipefail");
+                    sbScript.AppendLine();
+
+                    foreach (var imageName in imageNames)
+                    {
+                        var lastSlashPos = imageName.LastIndexOf('/');
+                        var registry     = imageName.Substring(0, lastSlashPos);
+
+                        if (!validRegistries.Contains(registry))
+                        {
+                            sbScript.AppendLine($"podman image rm {imageName}");
+                        }
+                    }
+
+                    SudoCommand(sbScript.ToString(), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
         /// <summary>
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kubelet</b>.
         /// </summary>

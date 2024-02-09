@@ -284,7 +284,20 @@ namespace Neon.Kube.Setup
 
             if (options.DebugMode)
             {
-                controller.AddNodeStep("load container images", (controller, node) => node.NodeDebugLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
+                controller.AddNodeStep("load container images",
+                    async (controller, node) =>
+                    {
+                        await node.NodeDebugLoadImagesAsync(controller, downloadParallelization: 5, loadParallelization: 3);
+                    });
+
+                controller.AddNodeStep("prune container image refs",
+                    (controller, node) =>
+                    {
+                        // We're going to remove any container images on the node that
+                        // aren't local or from [registry.k8s.io].
+
+                        node.PruneContainerImageReferences(controller);
+                    });
             }
 
             controller.AddNodeStep("install helm",
