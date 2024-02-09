@@ -1422,7 +1422,7 @@ rm -rf linux-amd64
                         }
                     }
 
-                    SudoCommand(sbScript.ToString(), RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 

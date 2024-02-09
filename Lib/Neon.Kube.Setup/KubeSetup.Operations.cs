@@ -3399,7 +3399,7 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "configure", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
-                    var i = 0;
+                    var i      = 0;
 
                     values.Add($"replicas", blackboxAdvice.ReplicaCount);
                     values.Add($"serviceMesh.enabled", false);
