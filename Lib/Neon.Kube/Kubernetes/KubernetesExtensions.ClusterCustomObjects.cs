@@ -574,9 +574,11 @@ namespace Neon.Kube.K8s
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create a new resource otherwise we'll replace the existing resource.
 
+            T existing;
+
             try
             {
-                await k8s.ReadClusterCustomObjectAsync<T>(name, cancellationToken);
+                existing = await k8s.ReadClusterCustomObjectAsync<T>(name, cancellationToken);
             }
             catch (HttpOperationException e)
             {
@@ -589,6 +591,11 @@ namespace Neon.Kube.K8s
                     throw;
                 }
             }
+
+            body.Metadata.ResourceVersion   = existing.Metadata.ResourceVersion;
+            body.Metadata.Generation        = existing.Metadata.Generation;
+            body.Metadata.CreationTimestamp = existing.Metadata.CreationTimestamp;
+            body.Metadata.Uid               = existing.Metadata.Uid;
 
             return await k8s.ReplaceClusterCustomObjectAsync<T>(
                 body:              body, 

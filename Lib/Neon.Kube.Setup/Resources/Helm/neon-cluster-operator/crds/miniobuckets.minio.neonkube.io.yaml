@@ -15,47 +15,90 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Used for unit testing Kubernetes clients.
         properties:
           spec:
+            description: The spec.
             properties:
               tenant:
+                description: The Minio tenant where the bucket should be created.
                 type: string
               region:
+                description: The bucket Region.
                 type: string
               versioning:
+                description: The bucket versioning mode.
+                enum:
+                - "off"
+                - enabled
+                - suspended
                 type: string
               objectLocking:
+                description: |-
+                  Prevents objects from being deleted. Required to support retention and legal hold. 
+                   Can only be enabled at bucket creation.
                 type: boolean
               quota:
+                description: Specifies bucket quota.
                 properties:
                   limit:
+                    description: The quota limit.
                     type: string
                   hard:
+                    description: |-
+                      Sets a maximum limit to the bucket storage size. The MinIO server rejects any 
+                       incoming PUT request whose contents would exceed the bucket’s configured quota.
                     type: boolean
                 type: object
             type: object
           status:
+            description: The status.
             properties:
               conditions:
+                description: Conditions.
                 items:
+                  description: |-
+                    Condition contains details for one aspect of the current state of this API
+                     Resource.
                   properties:
                     lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status
+                         to another. This should be when the underlying condition changed.  If that is
+                         not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                         This may be an empty string.
                       type: string
                     observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was
+                         set based upon. For instance, if .metadata.generation is currently 12, but the
+                         .status.conditions[x].observedGeneration is 9, the condition is out of date with
+                         respect to the current state of the instance.
                       format: int64
                       type: integer
                     reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the
+                         condition's last transition. Producers of specific condition types may define
+                         expected values and meanings for this field, and whether the values are
+                         considered a guaranteed API. The value should be a CamelCase string. This field
+                         may not be empty.
                       type: string
                     status:
+                      description: status of the condition, one of True, False, Unknown.
                       type: string
                     type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       type: string
                   type: object
                 type: array
               state:
+                description: The state.
                 type: string
             type: object
         type: object

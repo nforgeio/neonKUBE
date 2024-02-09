@@ -15,26 +15,59 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: |-
+          Describes a task to be executed as a Bash script on a node by the neon-node-agent pod
+           running on the target cluster node.
+           The node agent currently executes one node task at a time in no guaranteed order.
         properties:
           spec:
+            description: The spec.
             properties:
               node:
+                description: Identifies the target node where the command will be executed.
                 type: string
               bashScript:
+                description: Specifies the Bash script to be executed on the target node.
                 type: string
               startAfterTimestamp:
+                description: |-
+                  Optionally specifies that the task should be started after a specific time.
+                   This is intended to make it easier for operators to schedule tasks across
+                   the cluster nodes while reducing the chance that all of the tasks will
+                   execute at the same time.
+                   This property only guarentees that the task will be started after the
+                   specified time, not at that time.  Task execution may happen some minutes 
+                   afterwards.
                 format: date-time
                 type: string
               startBeforeTimestamp:
+                description: |-
+                  Optionally specifies the time after which the task should not be executed.
+                   This is useful for ensuring that tasks don't accumulate for some reason
+                   and then perhaps, execute all at once.
                 format: date-time
                 type: string
               timeoutSeconds:
+                description: |-
+                  Specifies the maximum time the command will be allowed to execute
+                   in seconds.  Defaults to 5 minutes.
                 format: int32
                 type: integer
               retentionSeconds:
+                description: |-
+                  Specifies the maximum time in seconds to retain the task after 
+                   it has been ended, for any reason.  neon-cluster-operator will add
+                   this to Neon.Kube.Resources.Cluster.V1NeonNodeTask.TaskStatus.FinishTimestamp to determine
+                   when it should delete the task.  This defaults to 10 minutes.
                 format: int32
                 type: integer
               captureOutput:
+                description: |-
+                  Controls whether the command output is to be captured.  This defaults to true.
+                  Neon.Kube.Resources.Cluster.V1NeonNodeTask is designed to capture command output as UTF-8 or
+                   ASCII text.  Binary output or other text encodings are not supported.  You
+                   should set this to false for commands with unsupported output or
+                   when the command output may include secrets.
                 type: boolean
             required:
             - node
@@ -44,33 +77,61 @@ spec:
             - captureOutput
             type: object
           status:
+            description: The spec.
             properties:
               agentId:
+                description: |-
+                  The globally unique ID of the neon-node-agent instance that executed
+                   the command.  This is used to detect tasks that started executing but didn't
+                   finish before node agent crashed or was otherwise terminated, providing a way
+                   for the next node-agent to clean things up.
                 type: string
               phase:
+                description: Indicates the current task phase.  This defaults to Neon.Kube.Resources.Cluster.V1NeonNodeTask.Phase.New.
+                enum:
+                - new
+                - pending
+                - running
+                - timeout
+                - orphaned
+                - tardy
+                - failed
+                - success
                 type: string
               startTimestamp:
+                description: Indicates when the task started executing.
                 format: date-time
                 type: string
               finishTimestamp:
+                description: Indicates when the task finished executing.
                 format: date-time
                 type: string
               runtimeSeconds:
+                description: Set to the task execution time.
                 format: int32
                 type: integer
               commandLine:
+                description: The command line invoked for the task.  This is used for detecting orphaned tasks.
                 type: string
               runId:
+                description: |-
+                  Set to a UUID identifying the task execution.  This will be used to name the Bash
+                   script when persisted to the host node as well as to help identify the process
+                   when it's running.
                 type: string
               processId:
+                description: Set to the ID of the task process while its running.
                 format: int32
                 type: integer
               exitCode:
+                description: The exit code returned by the command.
                 format: int32
                 type: integer
               output:
+                description: The text written to standard output by the command.
                 type: string
               error:
+                description: The text written to standard error by the command.
                 type: string
             type: object
         type: object

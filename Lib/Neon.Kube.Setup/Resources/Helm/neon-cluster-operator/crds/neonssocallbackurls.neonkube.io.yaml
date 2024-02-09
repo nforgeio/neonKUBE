@@ -15,24 +15,32 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Specifies Neon SSO client settings.
         properties:
           spec:
+            description: The SSO client specification.
             properties:
               ssoClient:
+                description: The name of the Neon.Kube.Resources.Cluster.V1NeonSsoClient.
                 type: string
               url:
+                description: The callback URL.
                 type: string
             required:
             - ssoClient
             - url
             type: object
           status:
+            description: The status.
             properties:
               state:
+                description: The state.
                 type: string
               lastAppliedSsoClient:
+                description: The last applied SSO Client.
                 type: string
               lastAppliedUrl:
+                description: The last applied URL.
                 type: string
             type: object
         type: object

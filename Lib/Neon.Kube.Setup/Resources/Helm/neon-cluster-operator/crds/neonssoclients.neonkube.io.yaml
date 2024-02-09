@@ -15,50 +15,92 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Specifies Neon SSO client settings.
         properties:
           spec:
+            description: The SSO client specification.
             properties:
               id:
+                description: The client ID used to identify the client.
                 type: string
               secret:
+                description: The client Secret used to identify the client.
                 type: string
               redirectUris:
+                description: |-
+                  A registered set of redirect URIs. When redirecting from dex to the client, the URI
+                   requested to redirect to MUST match one of these values, unless the client is "public".
                 items:
                   type: string
                 type: array
               trustedPeers:
+                description: |-
+                  TrustedPeers are a list of peers which can issue tokens on this client's behalf using
+                   the dynamic "oauth2:server:client_id:(client_id)" scope. If a peer makes such a request,
+                   this client's ID will appear as the ID Token's audience.
+
+                   Clients inherently trust themselves.
                 items:
                   type: string
                 type: array
               public:
+                description: Public clients must use either use a redirectURL 127.0.0.1:X or "urn:ietf:wg:oauth:2.0:oob"
                 type: boolean
               name:
+                description: Name used when displaying this client to the end user.
                 type: string
               logoUrl:
+                description: Logo used when displaying this client to the end user.
                 type: string
             type: object
           status:
+            description: The status.
             properties:
               conditions:
+                description: Conditions.
                 items:
+                  description: |-
+                    Condition contains details for one aspect of the current state of this API
+                     Resource.
                   properties:
                     lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status
+                         to another. This should be when the underlying condition changed.  If that is
+                         not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                         This may be an empty string.
                       type: string
                     observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was
+                         set based upon. For instance, if .metadata.generation is currently 12, but the
+                         .status.conditions[x].observedGeneration is 9, the condition is out of date with
+                         respect to the current state of the instance.
                       format: int64
                       type: integer
                     reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the
+                         condition's last transition. Producers of specific condition types may define
+                         expected values and meanings for this field, and whether the values are
+                         considered a guaranteed API. The value should be a CamelCase string. This field
+                         may not be empty.
                       type: string
                     status:
+                      description: status of the condition, one of True, False, Unknown.
                       type: string
                     type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       type: string
                   type: object
                 type: array
               state:
+                description: The state.
                 type: string
             type: object
         type: object
