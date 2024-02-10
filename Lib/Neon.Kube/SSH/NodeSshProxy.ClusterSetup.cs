@@ -1671,7 +1671,7 @@ if [ ! $exitcode ] ; then
 
     echo ""===============================================================================""
     echo ""HELM INSTALL ERROR: $exitcode""
-    echo ""---------------------""
+    echo ""-------------------""
     cat $helmLogPath
     echo ""===============================================================================""
 
@@ -1695,7 +1695,7 @@ do
    sleep 1
 done
 ");
-                    var scriptString = helmChartScript.ToString();
+                    var script = helmChartScript.ToString();
 
                     try
                     {
@@ -1704,7 +1704,8 @@ done
                             {
                                 try
                                 {
-                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(script))
+                                        .EnsureSuccess();
 
                                     return await Task.FromResult(true);
                                 }
@@ -1722,7 +1723,8 @@ done
                         controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
                         controller.LogProgressError(e.Message);
 
-                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
+                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
+                            .EnsureSuccess();
 
                         controller.LogProgressError(status.AllText);
                         throw;
