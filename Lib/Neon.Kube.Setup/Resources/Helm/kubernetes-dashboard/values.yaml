@@ -23,7 +23,7 @@ image:
   ## Repository for container
   registry: $<KubeConst.LocalClusterRegistry>
   repository: kubernetesui-dashboard
-  tag: v2.6.0
+  tag: $<KubeVersion.KubernetesDashboard>
   pullPolicy: IfNotPresent
   pullSecrets: []
 
