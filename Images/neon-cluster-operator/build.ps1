@@ -3,10 +3,8 @@
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
-#
-# Builds the Neon [neon-cluster-operator] image.
-#
-# USAGE: pwsh -f build.ps1 REGISTRY VERSION TAG
+
+# Builds the container image.
 
 param 
 (

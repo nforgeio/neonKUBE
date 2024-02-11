@@ -1596,8 +1596,8 @@ systemctl enable kubelet
 
             // Install the chart when we haven't already done so.
 
-            await InvokeIdempotentAsync($"setup/helm-install-{releaseName}",
-                async () =>
+            InvokeIdempotent($"setup/helm-install-{releaseName}",
+                () =>
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
@@ -1640,85 +1640,24 @@ systemctl enable kubelet
                         }
                     }
 
-                    var helmChartScript = new StringBuilder();
-                    var timeoutSeconds  = (int)Math.Ceiling(timeout.TotalSeconds);
-
-                    helmChartScript.AppendLineLinux(
-$@"
-set +e
-
-cd { KubeNodeFolder.Helm}"
-);
-
-                    if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
-                    {
-                        helmChartScript.AppendLine(
-$@"
-if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
-    helm uninstall {releaseName} --namespace {@namespace}
-fi
-");
-                    }
-
-                    helmChartScript.AppendLineLinux(
-$@"
-helmLogPath=/tmp/{chartName}.helm.log
-
-helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
-exitcode=$?
-
-if [ ! $exitcode ] ; then
-
-    echo ""===============================================================================""
-    echo ""HELM INSTALL ERROR: $exitcode""
-    echo ""-------------------""
-    cat $helmLogPath
-    echo ""===============================================================================""
-
-    rm $helmLogPath
-    exit $exitcode
-fi
-
-rm $helmLogPath
-
-START=`date +%s`
-DEPLOY_END=$((START+{timeoutSeconds}))
-
-until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
-do
-    if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.'
-        helm uninstall {releaseName} --namespace {@namespace} || true
-        exit 1
-   fi
-
-   sleep 1
-done
-");
-                    var script = helmChartScript.ToString();
+                    SudoCommand($"helm install {releaseName} --debug --namespace {@namespace} -f {KubeNodeFolder.Helm}/{chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName}")
+                        .EnsureSuccess();
 
                     try
                     {
-                        await NeonHelper.WaitForAsync(
-                            async () =>
+                        NeonHelper.WaitFor(
+                            () =>
                             {
-                                try
-                                {
-                                    SudoCommand(CommandBundle.FromScript(script))
-                                        .EnsureSuccess();
+                                var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
+                                    .EnsureSuccess();
 
-                                    return await Task.FromResult(true);
-                                }
-                                catch
-                                {
-                                    return await Task.FromResult(false);
-                                }
+                                return response.OutputText.Contains("STATUS: deployed");
                             },
                             timeout:           TimeSpan.FromSeconds(300),
                             pollInterval:      TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
                     }
-                    catch (Exception e)
+                    catch (TimeoutException e)
                     {
                         controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
                         controller.LogProgressError(e.Message);

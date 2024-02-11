@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neon-cluster-operator images and pushes them to Docker Hub.
+# Publishes the container image.
 #
 # NOTE: You must be already logged into the target container registry.
 
