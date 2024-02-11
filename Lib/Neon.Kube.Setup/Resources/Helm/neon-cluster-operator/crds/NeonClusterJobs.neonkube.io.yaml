@@ -24,39 +24,30 @@ spec:
                 description: CRON schedule for renewing the control plane certificate.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
               nodeCaCertificateUpdate:
                 description: CRON schedule for updating for Node CA certificates.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
               linuxSecurityPatches:
                 description: CRON schedule for applying Linux security patches to the cluster nodes.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
               harborImagePush:
@@ -65,39 +56,30 @@ spec:
                    are loaded into Harbor.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
               telemetryPing:
                 description: CRON schedule for sending telemerty pings to the headend.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
               clusterCertificateRenewal:
                 description: CRON schedule for renewing the cluster certficate.
                 properties:
                   enabled:
-                    description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                    description: Represents a Boolean (true or false) value.
                     type: boolean
                   schedule:
-                    description: |-
-                      The update schedule. This is enxtended Quartz cron expression.  This defaults
-                       to "R R 0 ? * *" which fires every day at a random minute and second
-                       between 12:00am and 1:00am.
+                    description: Represents text as a sequence of UTF-16 code units.
                     type: string
                 type: object
             type: object
@@ -108,7 +90,7 @@ spec:
                 description: Control plane certificate update status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object
@@ -116,7 +98,7 @@ spec:
                 description: Node CA certificate update status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object
@@ -124,7 +106,7 @@ spec:
                 description: Update spec for security status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object
@@ -132,7 +114,7 @@ spec:
                 description: Container images push to Harbor update status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object
@@ -140,7 +122,7 @@ spec:
                 description: Cluster telemetry update status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object
@@ -148,7 +130,7 @@ spec:
                 description: Neon Desktop certificate update status.
                 properties:
                   lastCompleted:
-                    description: The time that the job last completed.
+                    description: Represents a value type that can be assigned null.
                     format: date-time
                     type: string
                 type: object

@@ -21,12 +21,10 @@ spec:
             description: Configuration for backend connectors.
             properties:
               id:
-                description: Connector ID
+                description: Represents text as a sequence of UTF-16 code units.
                 type: string
               name:
-                description: |-
-                  Connector name.
-                   information.
+                description: Represents text as a sequence of UTF-16 code units.
                 type: string
               type:
                 description: Enumerates Dex storage types.
@@ -35,9 +33,7 @@ spec:
                 - oidc
                 type: string
               config:
-                description: |-
-                  Connector config.
-                   information.
+                description: Supports all classes in the .NET Framework class hierarchy and provides low-level services to derived classes. This is the ultimate base class of all classes in the .NET Framework; it is the root of the type hierarchy.
                 properties: {}
                 type: object
             type: object
