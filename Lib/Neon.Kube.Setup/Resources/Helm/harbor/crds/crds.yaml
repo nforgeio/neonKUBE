@@ -25363,7 +25363,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>v/serving-cert'
+    cert-manager.io/inject-ca-from: '$<KubeNamespace.NeonSystem>/serving-cert'
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
   name: pullsecretbindings.goharbor.io

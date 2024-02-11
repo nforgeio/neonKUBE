@@ -18,7 +18,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: neon-acme-webhook-tls
-  namespace: $<KubeNamespace.IstioSystem>v
+  namespace: $<KubeNamespace.IstioSystem>
   labels:
     app: neon-acme
 spec:
