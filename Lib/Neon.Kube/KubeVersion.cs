@@ -707,22 +707,34 @@ namespace Neon.Kube
         public const string StakaterReloader = "v0.0.95";
 
         /// <summary>
-        /// Specifies the version of <b>zalan-acid-pgbouncer</b> to be installed.
+        /// Specifies the version of <b>zalando-acid-pgbouncer</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string ZalanAcidPgBouncer = "master-19";
+        public const string ZalandoAcidPgBouncer = "master-27";
 
         /// <summary>
-        /// Specifies the version of <b>zalan-postgres-operator</b> to be installed.
+        /// <summary>
+        /// Specifies the version of <b>zalando-logical-backup</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string ZalanPostgresOperator = "v1.8.2";
+        public const string ZalandoLogicalBackup = "v1.10.0";
+
+        /// Specifies the version of <b>zalando-postgres-health-check</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string ZalandoPostgresHeatlhCheck = "v1";
 
         /// <summary>
-        /// Specifies the version of <b>zalan-spilo-14</b> to be installed.
+        /// Specifies the version of <b>zalando-postgres-operator</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string ZalanSpilo14 = "2.1-p6";
+        public const string ZalandoPostgresOperator = "v1.10.1";
+
+        /// <summary>
+        /// Specifies the version of <b>zalando-spilo</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string ZalandoSpilo = "3.0-p1";
 
         /// <summary>
         /// Specifies the version of the GOLANG compiler to use for building Kubernetes

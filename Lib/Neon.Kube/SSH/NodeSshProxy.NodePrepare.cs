@@ -1284,7 +1284,7 @@ rm -rf linux-amd64
                     }
 
                     // Extract the container images one-by-one from the workstation docker
-                    // and then upload and install them on the node.
+                    // service and then upload and install them on the node.
 
                     var loadImageTasks = new List<Task>();
 
@@ -1294,6 +1294,8 @@ rm -rf linux-amd64
                         {
                             await Task.Delay(100);
                         }
+
+                        controller.LogProgress(this, verb: "load", message: $"container image: {image.SourceImage}");
 
                         loadImageTasks.Add(LoadImageAsync(image));
                     }
