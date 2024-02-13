@@ -280,7 +280,7 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
         {
-            if (Program.Service.DebugMode)
+            if (DebugMode)
             {
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
 
