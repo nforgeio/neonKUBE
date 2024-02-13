@@ -71,6 +71,10 @@ Flatten nested config options when ConfigMap is used as ConfigTarget
 {{- end }}
 {{- end }}
 
+##############################################################################
+# NEONKUBE CUSTOM HELPERS                                                    #
+##############################################################################
+
 {{/*
 Define node selectors.
 */}}

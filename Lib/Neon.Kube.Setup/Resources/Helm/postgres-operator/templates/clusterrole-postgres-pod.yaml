@@ -9,7 +9,8 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
-# Patroni needs to watch and manage endpoints
+# Patroni needs to watch and manage config maps or endpoints
+{{- if toString .Values.configGeneral.kubernetes_use_configmaps | eq "true" }}
 - apiGroups:
   - ""
   resources:
@@ -23,6 +24,7 @@ rules:
   - patch
   - update
   - watch
+{{- else }}
 - apiGroups:
   - ""
   resources:
@@ -36,6 +38,7 @@ rules:
   - patch
   - update
   - watch
+{{- end }}
 # Patroni needs to watch pods
 - apiGroups:
   - ""
