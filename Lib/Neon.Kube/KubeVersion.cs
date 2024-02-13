@@ -698,7 +698,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>Redis</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Redis = "6.0.7-alpine";
+        public const string Redis = "7.2.4-alpine";
 
         /// <summary>
         /// Specifies the version of <b>stakater-reloader</b> to be installed.

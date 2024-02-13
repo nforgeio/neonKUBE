@@ -4,7 +4,7 @@
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: redis
-  tag: 6.0.7-alpine
+  tag: $<KubeVersion.Redis>
   pullPolicy: IfNotPresent
 
 ## Reference to one or more secrets to be used when pulling images

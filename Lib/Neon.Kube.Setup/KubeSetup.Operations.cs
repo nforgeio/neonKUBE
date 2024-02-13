@@ -5454,7 +5454,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs Keycloak.
+        /// Installs SSO related components.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
@@ -5466,15 +5466,19 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             controller.ThrowIfCancelled();
+            controller.LogProgress("install", "glauth");
             await InstallGlauthAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
+            controller.LogProgress("install", "dex");
             await InstallDexAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
+            controller.LogProgress("install", "neon-sso-proxy");
             await InstallNeonSsoProxyAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
+            controller.LogProgress("install", "oauth2-proxy");
             await InstallOauth2ProxyAsync(controller, controlNode);
         }
 
