@@ -428,19 +428,19 @@ namespace Neon.Kube
         /// Specifies the version of <b>busybox</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Busybox = "1.32.0";
+        public const string Busybox = "1.36.1";
 
         /// <summary>
         /// Specifies the version of <b>bitnami-kubectl</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string BitnamiKubectl = "1.21.4";
+        public const string BitnamiKubectl = "1.27.10";
 
         /// <summary>
         /// Specifies the version of <b>bitnami-memcached-exporter</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string BitnamiMemcachedExporter = "0.9.0-debian-10-r348";
+        public const string BitnamiMemcachedExporter = "0.14.2-debian-11-r11";
 
         /// <summary>
         /// Specifies the version of <b>dexidp-dex</b> to be installed.
@@ -707,18 +707,24 @@ namespace Neon.Kube
         public const string StakaterReloader = "v0.0.95";
 
         /// <summary>
+        /// Specifies the Ubuntu version to use for the base <b>ubuntu-layer</b>.
+        /// </summary>
+        [KubeValue]
+        public const string UbuntuLayer = "ubuntu@sha256:4e4bc990609ed865e07afc8427c30ffdddca5153fd4e82c20d8f0783a291e241";
+
+        /// <summary>
         /// Specifies the version of <b>zalando-acid-pgbouncer</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string ZalandoAcidPgBouncer = "master-27";
 
         /// <summary>
-        /// <summary>
         /// Specifies the version of <b>zalando-logical-backup</b> to be installed.
         /// </summary>
         [KubeValue]
         public const string ZalandoLogicalBackup = "v1.10.0";
 
+        /// <summary>
         /// Specifies the version of <b>zalando-postgres-health-check</b> to be installed.
         /// </summary>
         [KubeValue]
