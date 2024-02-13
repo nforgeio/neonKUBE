@@ -21,37 +21,53 @@ spec:
             description: The spec.
             properties:
               registries:
-                description: Represents a strongly typed list of objects that can be accessed by index. Provides methods to search, sort, and manipulate lists.
+                description: The list of Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.
                 items:
-                  description: Defines a key/value pair that can be set or retrieved.
                   properties:
                     key:
-                      description: Represents text as a sequence of UTF-16 code units.
                       type: string
                     value:
-                      description: Gets the value in the key/value pair.
                       properties:
                         prefix:
-                          description: Represents text as a sequence of UTF-16 code units.
+                          description: |-
+                            The target registry's hostname and optional path.  This is required.
+                             The prefix may include a leading "*" wildcard character for subdomain matching.
                           type: string
                         searchOrder:
-                          description: Represents a 32-bit signed integer.
+                          description: |-
+                            Optionally indicates that the registry will be searched for image pulls that
+                             don't specify a registry host/prefix.  This is often used to specify Docker Hub
+                            docker.io as the default prefix since many tutotials and Helm charts 
+                             assume this default due to the popularity of Docker.
+
+                             Specify a non-negative number here to enable this.  Registries will be added to
+                             the search list in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.SearchOrder and when two
+                             registries have the same order value, in ascending order by Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix (lowercase).
                           format: int32
                           type: integer
                         insecure:
-                          description: Represents a Boolean (true or false) value.
+                          description: |-
+                            Indicates that the registry may be accessed via HTTP.  This defaults
+                             to false.
                           type: boolean
                         blocked:
-                          description: Represents a Boolean (true or false) value.
+                          description: |-
+                            Indicates that access to the registry is to be blocked.  This defaults
+                             to false.
                           type: boolean
                         location:
-                          description: Represents text as a sequence of UTF-16 code units.
+                          description: |-
+                            Optionally enables registry redirection.  When specified, this indicates that images 
+                             specified to be pulled from Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Prefix will actually be pulled from 
+                            Neon.Kube.Resources.Cluster.V1NeonContainerRegistry.RegistrySpec.Location instead.  This is a nice way to be able to reuse manifests
+                             and Helm charts such that they pull images from an alternate registry without
+                             modification.  This defaults to null.
                           type: string
                         username:
-                          description: Represents text as a sequence of UTF-16 code units.
+                          description: Optionally specifies the username to be used to authenticate against the upstream registry.
                           type: string
                         password:
-                          description: Represents text as a sequence of UTF-16 code units.
+                          description: Optionally specifies the password to be used to authenticate against the upstream registry.
                           type: string
                       required:
                       - prefix

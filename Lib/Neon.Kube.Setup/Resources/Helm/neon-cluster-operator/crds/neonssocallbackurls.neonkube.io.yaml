@@ -21,10 +21,10 @@ spec:
             description: The SSO client specification.
             properties:
               ssoClient:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The name of the Neon.Kube.Resources.Cluster.V1NeonSsoClient.
                 type: string
               url:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The callback URL.
                 type: string
             required:
             - ssoClient
@@ -34,13 +34,13 @@ spec:
             description: The status.
             properties:
               state:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The state.
                 type: string
               lastAppliedSsoClient:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The last applied SSO Client.
                 type: string
               lastAppliedUrl:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The last applied URL.
                 type: string
             type: object
         type: object

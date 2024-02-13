@@ -21,20 +21,20 @@ spec:
             description: The spec.
             properties:
               url:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The target dashboard's Url. This is required.
                 type: string
               displayName:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The display name. This is what will show up in the Neon Dashboard.
                 type: string
               description:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: Describes the dashboard.
                 type: string
               displayOrder:
-                description: Represents a 32-bit signed integer.
+                description: Optionally indicates that the order in which the dashboard will be displayed.
                 format: int32
                 type: integer
               enabled:
-                description: Represents a Boolean (true or false) value.
+                description: Optionally indicates whether the dashboard is enabled or disabled.
                 type: boolean
             required:
             - url
