@@ -602,7 +602,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>memcached</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Memcached = "1.6.15-alpine3.15";
+        public const string Memcached = "1.6.23-alpine";
 
         /// <summary>
         /// Specifies the version of <b>minio</b> to be installed.

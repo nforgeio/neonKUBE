@@ -10,7 +10,9 @@ image:
 # imagePullSecrets:
 # - name: myRegistryKeySecretName
 
-podAnnotations: {}
+podAnnotations:
+  sidecar.istio.io/inject: 'true'
+
 podLabels: {}
 
 configTarget: "OperatorConfigurationCRD"
@@ -112,7 +114,7 @@ configKubernetes:
   cluster_domain: cluster.local
   # additional labels assigned to the cluster objects
   cluster_labels:
-    application: neon-system-db
+    app: neon-system-db
   # label assigned to Kubernetes objects created by the operator
   cluster_name_label: cluster-name
   # additional annotations to add to every database pod
@@ -200,7 +202,7 @@ configKubernetes:
   # here username contains the namespace in the format namespace.username
   # if the user is in different namespace than cluster and cross namespace secrets
   # are enabled via `enable_cross_namespace_secret` flag in the configuration.
-  secret_name_template: "{username}.{cluster}.credentials.{tprkind}.{tprgroup}"
+  secret_name_template: "{username}.{cluster}.credentials.{tprkind}"
   # sharing unix socket of PostgreSQL (`pg_socket`) with the sidecars
   share_pgsocket_with_sidecars: false
   # set user and group for the spilo container (required to run Spilo as non-root process)

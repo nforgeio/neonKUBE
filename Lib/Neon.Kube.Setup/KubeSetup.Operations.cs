@@ -473,15 +473,15 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await CreateDashboardsAsync(controller, controlNode);
-
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelled();
                     await InstallNodeAgentAsync(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
+                    await CreateDashboardsAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
@@ -1568,13 +1568,6 @@ set -euo pipefail
 #       generic image.  [cilium-cli] appends [-generic] to the
 #       [cilium-operator] container name below for us.
 
-# $note(jefflill):
-#
-# I've removed this option to verify that we actually need it.  Cilium
-# claims that they auto detect the MTU.
-#
-#   --set MTU={mtu}
-
 cilium install --version {KubeVersion.Cilium} \
     --chart-directory={KubeNodeFolder.Helm}/cilium \
     --set cni.exclusive=false \
@@ -1582,6 +1575,7 @@ cilium install --version {KubeVersion.Cilium} \
     --set kubeProxyReplacement=strict \
     --set k8sServiceHost=127.0.0.1 \
     --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
+    --set MTU={mtu}
     --set image.repository={KubeConst.LocalClusterRegistry}/cilium \
     --set image.useDigest=false \
     --set operator.image.repository={KubeConst.LocalClusterRegistry}/cilium-operator \
@@ -5466,19 +5460,15 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             controller.ThrowIfCancelled();
-            controller.LogProgress("install", "glauth");
             await InstallGlauthAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
-            controller.LogProgress("install", "dex");
             await InstallDexAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
-            controller.LogProgress("install", "neon-sso-proxy");
             await InstallNeonSsoProxyAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
-            controller.LogProgress("install", "oauth2-proxy");
             await InstallOauth2ProxyAsync(controller, controlNode);
         }
 
@@ -5494,13 +5484,14 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
+            controller.LogProgress(controlNode, "install", "neon-sso-dex");
+
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Dex);
             var serviceUser   = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
-
-            var values = new Dictionary<string, object>();
+            var values        = new Dictionary<string, object>();
 
             values.Add("cluster.name", cluster.Name);
             values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
@@ -5549,7 +5540,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/dex-ready",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso");
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-dex");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
@@ -5560,7 +5551,8 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-clients");
 
-                    var publicClient           = new V1NeonSsoClient().Initialize();
+                    var publicClient = new V1NeonSsoClient().Initialize();
+
                     publicClient.Metadata.Name = KubeConst.NeonSsoPublicClientId;
                     publicClient.Spec          = new V1SsoClientSpec()
                     {
@@ -5674,6 +5666,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
+                    controller.LogProgress(controlNode, "install", "neon-sso-proxy");
+
                     await controlNode.InstallHelmChartAsync(controller, "neon-sso-session-proxy",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
@@ -5730,6 +5724,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/glauth-install",
                 async () =>
                 {
+                    controller.LogProgress(controlNode, "install", "neon-sso-glauth");
+
                     await controlNode.InstallHelmChartAsync(controller, "glauth",
                         @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonApp.Name,
@@ -5858,10 +5854,10 @@ $@"- name: StorageType
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Oauth2Proxy);
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/oauth2-proxy",
+            await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "install", message: "oauth2 proxy");
+                    controller.LogProgress(controlNode, verb: "install", message: "neon-sso-oauth2-proxy");
 
                     var values = new Dictionary<string, object>();
 
