@@ -21,67 +21,86 @@ spec:
             description: The SSO client specification.
             properties:
               id:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The client ID used to identify the client.
                 type: string
               secret:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The client Secret used to identify the client.
                 type: string
               redirectUris:
-                description: Represents a strongly typed list of objects that can be accessed by index. Provides methods to search, sort, and manipulate lists.
+                description: |-
+                  A registered set of redirect URIs. When redirecting from dex to the client, the URI
+                   requested to redirect to MUST match one of these values, unless the client is "public".
                 items:
-                  description: Represents text as a sequence of UTF-16 code units.
                   type: string
                 type: array
               trustedPeers:
-                description: Represents a strongly typed list of objects that can be accessed by index. Provides methods to search, sort, and manipulate lists.
+                description: |-
+                  TrustedPeers are a list of peers which can issue tokens on this client's behalf using
+                   the dynamic "oauth2:server:client_id:(client_id)" scope. If a peer makes such a request,
+                   this client's ID will appear as the ID Token's audience.
+
+                   Clients inherently trust themselves.
                 items:
-                  description: Represents text as a sequence of UTF-16 code units.
                   type: string
                 type: array
               public:
-                description: Represents a Boolean (true or false) value.
+                description: Public clients must use either use a redirectURL 127.0.0.1:X or "urn:ietf:wg:oauth:2.0:oob"
                 type: boolean
               name:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: Name used when displaying this client to the end user.
                 type: string
               logoUrl:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: Logo used when displaying this client to the end user.
                 type: string
             type: object
           status:
             description: The status.
             properties:
               conditions:
-                description: Represents a strongly typed list of objects that can be accessed by index. Provides methods to search, sort, and manipulate lists.
+                description: Conditions.
                 items:
                   description: |-
                     Condition contains details for one aspect of the current state of this API
                      Resource.
                   properties:
                     lastTransitionTime:
-                      description: Represents an instant in time, typically expressed as a date and time of day.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status
+                         to another. This should be when the underlying condition changed.  If that is
+                         not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: Represents text as a sequence of UTF-16 code units.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                         This may be an empty string.
                       type: string
                     observedGeneration:
-                      description: Represents a value type that can be assigned null.
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was
+                         set based upon. For instance, if .metadata.generation is currently 12, but the
+                         .status.conditions[x].observedGeneration is 9, the condition is out of date with
+                         respect to the current state of the instance.
                       format: int64
                       type: integer
                     reason:
-                      description: Represents text as a sequence of UTF-16 code units.
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the
+                         condition's last transition. Producers of specific condition types may define
+                         expected values and meanings for this field, and whether the values are
+                         considered a guaranteed API. The value should be a CamelCase string. This field
+                         may not be empty.
                       type: string
                     status:
-                      description: Represents text as a sequence of UTF-16 code units.
+                      description: status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Represents text as a sequence of UTF-16 code units.
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       type: string
                   type: object
                 type: array
               state:
-                description: Represents text as a sequence of UTF-16 code units.
+                description: The state.
                 type: string
             type: object
         type: object
