@@ -1575,7 +1575,7 @@ cilium install --version {KubeVersion.Cilium} \
     --set kubeProxyReplacement=strict \
     --set k8sServiceHost=127.0.0.1 \
     --set k8sServicePort={NetworkPorts.KubernetesApiServer} \
-    --set MTU={mtu}
+    --set MTU={mtu} \
     --set image.repository={KubeConst.LocalClusterRegistry}/cilium \
     --set image.useDigest=false \
     --set operator.image.repository={KubeConst.LocalClusterRegistry}/cilium-operator \
