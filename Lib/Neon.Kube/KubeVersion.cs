@@ -567,43 +567,43 @@ namespace Neon.Kube
         /// Specifies the version of <b>k8scsi-csi-attacher</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string K8sCsiAttacher = "v3.1.0";
-
-        /// <summary>
-        /// Specifies the version of <b>k8scsi-csi-node-driver-registrar</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string K8sCsiNodeDriverRegistrar = "v2.3.0";
-
-        /// <summary>
-        /// Specifies the version of <b>k8scsi-csi-provisioner</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string K8sCsiProvisioner = "v3.0.0";
-
-        /// <summary>
-        /// Specifies the version of <b>k8scsi-csi-resizer</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string K8sCsiResizer = "v1.2.0";
-
-        /// <summary>
-        /// Specifies the version of <b>k8scsi-csi-snapshotter</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string K8sCsiSnapshotter = "v3.0.3";
+        public const string K8sCsiAttacher = "v4.5.0";
 
         /// <summary>
         /// Specifies the version of <b>k8scsi-livenessprobe</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string K8sCsiLivenessProbe = "v2.3.0";
+        public const string K8sCsiLivenessProbe = "v2.12.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-node-driver-registrar</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiNodeDriverRegistrar = "v2.10.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-provisioner</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiProvisioner = "v4.0.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-resizer</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiResizer = "v1.10.0";
+
+        /// <summary>
+        /// Specifies the version of <b>k8scsi-csi-snapshotter</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string K8sCsiSnapshotter = "v7.0.1";
 
         /// <summary>
         /// Specifies the version of <b>k8scsi-snapshot-controller</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string K8sCsiSnapshotController = "v3.0.3";
+        public const string K8sCsiSnapshotController = "v7.0.1";
 
         /// <summary>
         /// Specifies the version of <b>kubernetes-e2e-test-images-dnsutils</b> to be installed.

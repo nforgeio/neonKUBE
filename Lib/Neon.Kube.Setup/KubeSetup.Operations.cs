@@ -3352,7 +3352,7 @@ $@"- name: StorageType
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
-                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
@@ -3600,7 +3600,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.mimirTsdb.quota", clusterAdvice.MetricsQuota);
 
@@ -3764,7 +3764,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
 
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.quota", clusterAdvice.LogsQuota);
@@ -3909,7 +3909,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
 
                     if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count() > 1)
                     {
@@ -4136,7 +4136,7 @@ $@"- name: StorageType
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("replicas", serviceAdvice.ReplicaCount);
 
@@ -4509,7 +4509,7 @@ $@"- name: StorageType
             tasks.Add(InstallLokiAsync(controller, controlNode));
             tasks.Add(InstallKubeStateMetricsAsync(controller, controlNode));
 
-            if (cluster.SetupState.ClusterDefinition.Features.Tracing)
+            if (cluster.SetupState.ClusterDefinition.Features.Tempo)
             {
                 tasks.Add(InstallTempoAsync(controller, controlNode));
             }

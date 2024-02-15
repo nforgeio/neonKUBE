@@ -70,7 +70,7 @@ csiController:
       repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.1.0
+      tag: $<KubeVersion.K8sCsiAttacher>
   livenessprobe:
     name: "liveness-probe"
     image:
@@ -80,7 +80,7 @@ csiController:
       repository: k8scsi-livenessprobe
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v2.3.0
+      tag: $<KubeVersion.K8sCsiLivenessProbe>
   provisioner:
     name: "csi-provisioner"
     image:
@@ -90,7 +90,7 @@ csiController:
       repository: k8scsi-csi-provisioner
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.0.0
+      tag: $<KubeVersion.K8sCsiProvisioner>
   resizer:
     name: "csi-resizer"
     image:
@@ -100,7 +100,7 @@ csiController:
       repository: k8scsi-csi-resizer
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v1.2.0
+      tag: $<KubeVersion.K8sCsiResizer>
   annotations: {}
   podAnnotations: {}
   podLabels: {}
@@ -135,7 +135,7 @@ csiNode:
       repository: k8scsi-csi-node-driver-registrar
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v2.3.0
+      tag: $<KubeVersion.K8sCsiNodeDriverRegistrar>
   livenessprobe:
     name: "liveness-probe"
     image:
@@ -145,7 +145,7 @@ csiNode:
       repository: k8scsi-livenessprobe
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v2.3.0
+      tag: $<KubeVersion.K8sCsiLivenessProbe>
   updateStrategy:
     type: RollingUpdate
   annotations: {}

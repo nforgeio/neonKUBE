@@ -36,7 +36,7 @@ cspcOperator:
       repository: openebs-m-exporter
       tag: 3.2.0
   image:
-    # Make sure that registry name end with a '/'.
+    # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-cspc-operator
@@ -70,7 +70,7 @@ cvcOperator:
       repository: openebs-m-exporter
       tag: 3.2.0
   image:
-    # Make sure that registry name end with a '/'.
+    # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-cvc-operator
@@ -91,7 +91,7 @@ csiController:
   resizer:
     name: "csi-resizer"
     image:
-      # Make sure that registry name end with a '/'.
+      # Make sure that registry name ends with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
       registry: $<KubeConst.LocalClusterRegistry>
       repository: k8scsi-csi-resizer
@@ -101,43 +101,43 @@ csiController:
   snapshotter:
     name: "csi-snapshotter"
     image:
-      # Make sure that registry name end with a '/'.
+      # Make sure that registry name ends with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
       registry: $<KubeConst.LocalClusterRegistry>
       repository: k8scsi-csi-snapshotter
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.0.3
+      tag: $<KubeVersion.K8sCsiSnapshotter>
   snapshotController:
     name: "snapshot-controller"
     image:
-      # Make sure that registry name end with a '/'.
+      # Make sure that registry name ends with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
       registry: $<KubeConst.LocalClusterRegistry>
       repository: k8scsi-snapshot-controller
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.0.3
+      tag: $<KubeVersion.K8sCsiSnapshotController>
   attacher:
     name: "csi-attacher"
     image:
-      # Make sure that registry name end with a '/'.
+      # Make sure that registry name ends with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
       registry: $<KubeConst.LocalClusterRegistry>
       repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.1.0
+      tag: $<KubeVersion.K8sCsiAttacher>
   provisioner:
     name: "csi-provisioner"
     image:
-      # Make sure that registry name end with a '/'.
+      # Make sure that registry name ends with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
       registry: $<KubeConst.LocalClusterRegistry>
       repository: k8scsi-csi-provisioner
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: v3.0.0
+      tag: $<KubeVersion.K8sCsiProvisioner>
   annotations: {}
   podAnnotations: {}
   podLabels: {}
@@ -149,7 +149,7 @@ csiController:
 cstorCSIPlugin:
   name: cstor-csi-plugin
   image:
-    # Make sure that registry name end with a '/'.
+    # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-cstor-csi-driver
@@ -201,7 +201,7 @@ csiDriver:
 admissionServer:
   componentName: cstor-admission-webhook
   image:
-    # Make sure that registry name end with a '/'.
+    # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-cstor-webhook
