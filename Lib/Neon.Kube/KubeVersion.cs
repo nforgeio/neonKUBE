@@ -455,6 +455,12 @@ namespace Neon.Kube
         public const string Glauth = "v2.1.0-rc1";
 
         /// <summary>
+        /// Specifies the version of <b>grafana (dashboard)</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaDeployment = "9.3.6-ubuntu";
+
+        /// <summary>
         /// Specifies the version of <b>grafana agent</b> to be installed.
         /// </summary>
         [KubeValue]
@@ -467,10 +473,17 @@ namespace Neon.Kube
         public const string GrafanaAgentOperator = "v0.31.3";
 
         /// <summary>
-        /// Specifies the version of <b>grafana deployment/dashboard</b> to be installed.
+        /// Specifies the version of <b>grafana curl</b> to be installed.
+        /// This is used to download dashboards.
         /// </summary>
         [KubeValue]
-        public const string GrafanaDeployment = "9.3.6-ubuntu";
+        public const string GrafanaCurl = "7.70.0";
+
+        /// <summary>
+        /// Specifies the version of <b>grafana kiwi-gird-sidecar</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string GrafanaKiwiGridSidecar = "0.1.151";
 
         /// <summary>
         /// Specifies the version of <b>grafana loki</b> to be installed.

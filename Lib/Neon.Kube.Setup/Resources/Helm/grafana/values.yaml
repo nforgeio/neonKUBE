@@ -67,7 +67,7 @@ pluginsInit:
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: grafana-grafana
-  tag: $<KubeVersion.GrafanaDeployment>
+  tag: $<KubeVersion.Grafana>
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -106,8 +106,8 @@ extraEmptyDirMounts: []
 
 downloadDashboardsImage:
   registry: $<KubeConst.LocalClusterRegistry>
-  repository: curlimages-curl
-  tag: 7.70.0
+  repository: grafana-curl
+  tag: $<KubeVersion.GrafanaCurl>
   pullPolicy: IfNotPresent
 
 downloadDashboards:
@@ -502,8 +502,8 @@ smtp:
 sidecar:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
-    repository: kiwigrid-sidecar
-    tag: 0.1.151
+    repository: grafana-kiwigrid-sidecar
+    tag: $<KubeVersion.GrafanaKiwiGridSidecar>
     sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}

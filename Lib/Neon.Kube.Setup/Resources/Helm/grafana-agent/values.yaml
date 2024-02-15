@@ -25,7 +25,7 @@ configReloader:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: prometheus-operator-prometheus-config-reloader
-    tag: v0.47.0
+    tag: $<KubeVersion.PrometheusConfigReloader>
     pullPolicy: IfNotPresent
 
 integrations:
