@@ -276,7 +276,7 @@ systemctl restart rsyslog.service
             InvokeIdempotent("base/cilium-cli",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "cilium cli");
+                    controller.LogProgress(this, verb: "install", message: "cilium-cli");
 
                     var script =
 $@"
@@ -314,7 +314,7 @@ popd
             InvokeIdempotent("base/istio-cli",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "istiocli");
+                    controller.LogProgress(this, verb: "install", message: "istio-cli");
 
                     // Download the Istio release and relocate its CLI to: /usr/local/bin
 

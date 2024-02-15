@@ -133,7 +133,7 @@ cluster:
 image:
   registry: $<KubeConst.LocalClusterRegistry>
   repository: oauth2-proxy-oauth2-proxy
-  tag: v7.4.0
+  tag: $<KubeVersion.Oauth2Proxy>
   pullPolicy: IfNotPresent
 
 # Optionally specify an array of imagePullSecrets.

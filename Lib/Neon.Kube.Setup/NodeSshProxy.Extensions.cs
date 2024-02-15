@@ -77,7 +77,7 @@ namespace Neon.Kube.SSH
 
             using (var ms = new MemoryStream())
             {
-                controller.LogProgress(node, verb: "install", message: "helm charts (zip)");
+                controller.LogProgress(node, verb: "install", message: "helm charts");
 
                 var helmFolder   = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
                 var preprocessor = new ZipPreprocessor(

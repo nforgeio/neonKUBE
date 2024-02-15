@@ -5253,17 +5253,17 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
-            var poolerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbPooler);
-            var metricsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbMetrics);
+            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s            = GetK8sClient(controller);
+            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
+            var poolerAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbPooler);
+            var metricsAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbMetrics);
 
             var values = new Dictionary<string, object>();
 
-            values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-            values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+            values.Add($"metrics.enabled", operatorAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+            values.Add($"metrics.interval", operatorAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
             if (cluster.SetupState.ClusterDefinition.IsDesktop)
             {
@@ -5273,10 +5273,10 @@ $@"- name: StorageType
             controller.ThrowIfCancelled();
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-system-db");
 
-            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
+            if (operatorAdvice.PodMemoryRequest.HasValue && operatorAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                values.Add($"resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
             }
 
             if (poolerAdvice.PodMemoryRequest.HasValue && poolerAdvice.PodMemoryLimit.HasValue)
@@ -5353,9 +5353,9 @@ $@"- name: StorageType
                 {
                     var nodes = cluster.SetupState.ClusterDefinition.SortedControlNodes.ToList();
 
-                    if (nodes.Count > serviceAdvice.ReplicaCount.Value)
+                    if (nodes.Count > operatorAdvice.ReplicaCount.Value)
                     {
-                        serviceAdvice.ReplicaCount = nodes.Count;
+                        operatorAdvice.ReplicaCount = nodes.Count;
                     }
 
                     var labels = new Dictionary<string, string>()
@@ -5364,7 +5364,7 @@ $@"- name: StorageType
                         { "cluster-name", KubeService.NeonSystemDb }
                     };
 
-                    for (int i=0; i < serviceAdvice.ReplicaCount; i++)
+                    for (int i=0; i < operatorAdvice.ReplicaCount; i++)
                     {
                         var pvc = new V1PersistentVolumeClaim()
                         {
@@ -5403,7 +5403,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "neon-system-db");
 
-                    values.Add($"replicas", serviceAdvice.ReplicaCount);
+                    values.Add($"replicas", operatorAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add($"neonSystemDb.enableConnectionPooler", true);
@@ -5814,6 +5814,16 @@ $@"- name: StorageType
                         prioritySpec:    PriorityClass.NeonApi.Name,
                         values:          values,
                         progressMessage: "neon-sso-oauth2-proxy");
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy-ready",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-oauth2-proxy");
+
+                    await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-oauth2-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+
                 });
         }
 
