@@ -458,7 +458,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>grafana (dashboard)</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string GrafanaDeployment = "9.3.6-ubuntu";
+        public const string Grafana = "9.3.6-ubuntu";
 
         /// <summary>
         /// Specifies the version of <b>grafana agent</b> to be installed.
