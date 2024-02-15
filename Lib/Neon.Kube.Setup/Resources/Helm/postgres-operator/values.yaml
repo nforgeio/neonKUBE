@@ -517,6 +517,15 @@ controllerID:
 # NEONKUBE CUSTOM VALUES                                                     #
 ##############################################################################
 
+neonSystemDb:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
 # This configures a health-check sidecar for [neon-system-db.yaml] although
 # that is currently commented out there, so we'll comment this out here too.
 

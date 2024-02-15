@@ -139,6 +139,11 @@ namespace Neon.Kube
         public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
+        /// Identifies the NEONKUBE cluster's system database operator.
+        /// </summary>
+        public static string NeonSystemDbOperator = "neon-system-db-operator";
+
+        /// <summary>
         /// Identifies the NEONKUBE cluster's system database pooler.
         /// </summary>
         public static string NeonSystemDbPooler = "neon-system-db-pooler";

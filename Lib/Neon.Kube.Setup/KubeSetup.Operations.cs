@@ -5256,9 +5256,10 @@ $@"- name: StorageType
             var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s            = GetK8sClient(controller);
             var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbOperator);
             var poolerAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbPooler);
             var metricsAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbMetrics);
+            var databaseAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
 
             var values = new Dictionary<string, object>();
 
@@ -5277,6 +5278,12 @@ $@"- name: StorageType
             {
                 values.Add($"resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
                 values.Add($"resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
+            }
+
+            if (databaseAdvice.PodMemoryRequest.HasValue && databaseAdvice.PodMemoryLimit.HasValue)
+            {
+                values.Add($"neonSystemDb.resources.requests.memory", ToSiString(databaseAdvice.PodMemoryRequest));
+                values.Add($"neonSystemDb.resources.limits.memory", ToSiString(databaseAdvice.PodMemoryLimit));
             }
 
             if (poolerAdvice.PodMemoryRequest.HasValue && poolerAdvice.PodMemoryLimit.HasValue)
