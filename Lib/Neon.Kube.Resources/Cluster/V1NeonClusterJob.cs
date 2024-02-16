@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        V1NeonClusterJobs.cs
+// FILE:        V1NeonClusterJob.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonClusterJobs : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterJobs.NeonClusterJobsSpec>, IStatus<V1NeonClusterJobs.NeonClusterJobsStatus>
+    public class V1NeonClusterJob : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterJob.NeonClusterJobsSpec>, IStatus<V1NeonClusterJob.NeonClusterJobsStatus>
     {
         /// <summary>
         /// Object API group.
@@ -57,9 +57,19 @@ namespace Neon.Kube.Resources.Cluster
         public const string KubePlural = "neonclusterjobs";
 
         /// <summary>
+        /// <para>
+        /// Specifies the name for the <b>singular</b> jobs resource.
+        /// </para>
+        /// <note>
+        /// <b>neon-cluster-operator</b> ignores any resources not named by this.
+        /// </note>
+        /// </summary>
+        public const string SingularName = "job";
+
+        /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonClusterJobs()
+        public V1NeonClusterJob()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind       = KubeKind;

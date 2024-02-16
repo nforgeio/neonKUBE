@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        NeonJobController.cs
+// FILE:        NeonClusterJobController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -54,20 +54,20 @@ namespace NeonClusterOperator
     /// control-plane certificates, ensuring that required container images are pushed to
     /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
     /// </summary>
-    [RbacRule<V1NeonClusterJobs>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1NeonClusterJob>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(MaxConcurrentReconciles = 1)]
-    public class NeonJobController : ResourceControllerBase<V1NeonClusterJobs>
+    public class NeonClusterJobController : ResourceControllerBase<V1NeonClusterJob>
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
+        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJob"/>
         /// resource because we don't want the user to be able to disable this.  We're going to fix this to
         /// run every couple hours.
         /// </summary>
@@ -86,7 +86,7 @@ namespace NeonClusterOperator
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonJobController() 
+        static NeonClusterJobController() 
         {
             schedulerFactory                 = new StdSchedulerFactory();
             nodeCaCertificatesUpdateJob      = new NodeCaCertificatesUpdateJob();
@@ -100,22 +100,22 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                    k8s;
-        private readonly ILogger<NeonJobController>     logger;
-        private readonly HeadendClient                  headendClient;
-        private readonly HarborClient                   harborClient;
-        private readonly ClusterInfo                    clusterInfo;
-        private bool                                    startedWorkerNodeVcpuSchedule = false;
+        private readonly IKubernetes                        k8s;
+        private readonly ILogger<NeonClusterJobController>  logger;
+        private readonly HeadendClient                      headendClient;
+        private readonly HarborClient                       harborClient;
+        private readonly ClusterInfo                        clusterInfo;
+        private bool                                        startedWorkerNodeVcpuSchedule = false;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonJobController(
-            IKubernetes                 k8s,
-            ILogger<NeonJobController>  logger,
-            HeadendClient               headendClient,
-            HarborClient                harborClient,
-            ClusterInfo                 clusterInfo)
+        public NeonClusterJobController(
+            IKubernetes                         k8s,
+            ILogger<NeonClusterJobController>   logger,
+            HeadendClient                       headendClient,
+            HarborClient                        harborClient,
+            ClusterInfo                         clusterInfo)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -130,20 +130,21 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobs resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJob resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJobs)));
+                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJob)));
 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resource.Name() != KubeService.NeonClusterOperator)
+                if (resource.Name() != V1NeonClusterJob.SingularName)
                 {
+                    logger?.LogInformationEx(() => $"Ignorning resource [{resource.Name()}].  Only [{V1NeonClusterJob.SingularName}] is recognized.");
                     return null;
                 }
 
@@ -152,7 +153,7 @@ namespace NeonClusterOperator
                     await InitializeSchedulerAsync();
                 }
 
-                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than picking up its
+                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than gpicking up its
                 // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
                 // only on the first reconcile callback.
 
@@ -267,19 +268,12 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonClusterJobs resource)
+        public override async Task DeletedAsync(V1NeonClusterJob resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                // Ignore all events when the controller hasn't been started.
-
-                if (resource.Name() != KubeService.NeonClusterOperator)
-                {
-                    return;
-                }
-                
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
                 await ShutDownAsync();
             }

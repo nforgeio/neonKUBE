@@ -119,20 +119,20 @@ namespace NeonClusterOperator
                         await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
+                    var jobResource  = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJob>(V1NeonClusterJob.SingularName);
+                    var patch        = OperatorHelper.CreatePatch<V1NeonClusterJob>();
 
-                    if (clusterOperator.Status == null)
+                    if (jobResource.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJob.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJob.JobStatus());
                     patch.Replace(path => path.Status.TelemetryPing.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
-                        name:  clusterOperator.Name());
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJob>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJob>(patch),
+                        name:  jobResource.Name());
                 }
                 catch (Exception e)
                 {
