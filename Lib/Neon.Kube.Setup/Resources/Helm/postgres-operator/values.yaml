@@ -22,12 +22,6 @@ enableJsonLogging: true
 
 replicas: 1
 
-neonSystemDb:
-  enableMasterLoadBalancer: false
-  enableReplicaLoadBalancer: false
-  enableConnectionPooler: false
-  enableReplicaConnectionPooler: false
-  
 serviceMesh:
   enabled: true
 # general configuration parameters
@@ -518,6 +512,10 @@ controllerID:
 ##############################################################################
 
 neonSystemDb:
+  enableMasterLoadBalancer: false
+  enableReplicaLoadBalancer: false
+  enableConnectionPooler: false
+  enableReplicaConnectionPooler: false
   resources:
     limits:
       cpu: 500m
