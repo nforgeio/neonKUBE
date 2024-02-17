@@ -112,19 +112,19 @@ namespace NeonClusterOperator
                         await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
                     }
 
-                    var jobs  = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJob>(V1NeonClusterJob.SingularName);
-                    var patch = OperatorHelper.CreatePatch<V1NeonClusterJob>();
+                    var jobs  = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobConfig>(V1NeonClusterJobConfig.SingularName);
+                    var patch = OperatorHelper.CreatePatch<V1NeonClusterJobConfig>();
 
                     if (jobs.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterJob.NeonClusterJobsStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobConfig.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.ClusterCertificateRenewal, new V1NeonClusterJob.JobStatus());
+                    patch.Replace(path => path.Status.ClusterCertificateRenewal, new V1NeonClusterJobConfig.JobStatus());
                     patch.Replace(path => path.Status.ClusterCertificateRenewal.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJob>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJob>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
                         name:  jobs.Name());
                 }
                 catch (Exception e)

@@ -39,15 +39,15 @@ namespace Neon.Kube.ClusterDef
         private const string defaultSchedule = "R R 0 ? * *";
 
         /// <summary>
-        /// Casts a <see cref="JobSchedule"/> into a <see cref="V1NeonClusterJob.JobSchedule"/>.
+        /// Casts a <see cref="JobSchedule"/> into a <see cref="V1NeonClusterJobConfig.JobSchedule"/>.
         /// </summary>
         /// <param name="jobSchedule">Specifies the schedule being converted.</param>
         /// <returns>The converted schedule.</returns>
-        public static implicit operator V1NeonClusterJob.JobSchedule(JobSchedule jobSchedule)
+        public static implicit operator V1NeonClusterJobConfig.JobSchedule(JobSchedule jobSchedule)
         {
             Covenant.Requires<ArgumentNullException>(jobSchedule != null, nameof(jobSchedule));
 
-            return new V1NeonClusterJob.JobSchedule(jobSchedule.Enabled, jobSchedule.Schedule);
+            return new V1NeonClusterJobConfig.JobSchedule(jobSchedule.Enabled, jobSchedule.Schedule);
         }
 
         //---------------------------------------------------------------------

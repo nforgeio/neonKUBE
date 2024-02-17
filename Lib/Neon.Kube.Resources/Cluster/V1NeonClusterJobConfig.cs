@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        V1NeonClusterJob.cs
+// FILE:        V1NeonClusterJobConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonClusterJob : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterJob.NeonClusterJobsSpec>, IStatus<V1NeonClusterJob.NeonClusterJobsStatus>
+    public class V1NeonClusterJobConfig : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterJobConfig.NeonClusterJobsSpec>, IStatus<V1NeonClusterJobConfig.NeonClusterJobsStatus>
     {
         /// <summary>
         /// Object API group.
@@ -64,12 +64,12 @@ namespace Neon.Kube.Resources.Cluster
         /// <b>neon-cluster-operator</b> ignores any resources not named by this.
         /// </note>
         /// </summary>
-        public const string SingularName = "job";
+        public const string SingularName = "jobconfig";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonClusterJob()
+        public V1NeonClusterJobConfig()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind       = KubeKind;

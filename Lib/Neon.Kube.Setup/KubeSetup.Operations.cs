@@ -5002,7 +5002,7 @@ $@"- name: StorageType
                         new List<Task>()
                         {
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1MinioBucket>(),
-                            k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonClusterJob>(),
+                            k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonClusterJobConfig>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
@@ -5017,13 +5017,13 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "create", message: "jobs");
 
                     var jobOptions  = cluster.SetupState.ClusterDefinition.Jobs;
-                    var jobResource = new V1NeonClusterJob()
+                    var jobResource = new V1NeonClusterJobConfig()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name = KubeService.NeonClusterOperator
                         },
-                        Spec = new V1NeonClusterJob.NeonClusterJobsSpec()
+                        Spec = new V1NeonClusterJobConfig.NeonClusterJobsSpec()
                         {
                             HarborImagePush                = jobOptions.HarborImagePush,
                             ControlPlaneCertificateRenewal = jobOptions.ControlPlaneCertificateRenewal,
@@ -5038,7 +5038,7 @@ $@"- name: StorageType
                         jobResource.Spec.ClusterCertificateRenewal = jobOptions.ClusterCertificateRenewal;
                     }
 
-                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonClusterJob>(jobResource, jobResource.Name());
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonClusterJobConfig>(jobResource, jobResource.Name());
                 });
         }
 

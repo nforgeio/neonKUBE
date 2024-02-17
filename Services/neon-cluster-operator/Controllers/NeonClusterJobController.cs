@@ -54,20 +54,20 @@ namespace NeonClusterOperator
     /// control-plane certificates, ensuring that required container images are pushed to
     /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
     /// </summary>
-    [RbacRule<V1NeonClusterJob>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
+    [RbacRule<V1NeonClusterJobConfig>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [ResourceController(MaxConcurrentReconciles = 1)]
-    public class NeonClusterJobController : ResourceControllerBase<V1NeonClusterJob>
+    public class NeonClusterJobController : ResourceControllerBase<V1NeonClusterJobConfig>
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJob"/>
+        /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobConfig"/>
         /// resource because we don't want the user to be able to disable this.  We're going to fix this to
         /// run every couple hours.
         /// </summary>
@@ -130,21 +130,21 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJob resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobConfig resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJob)));
+                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterJobConfig)));
 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resource.Name() != V1NeonClusterJob.SingularName)
+                if (resource.Name() != V1NeonClusterJobConfig.SingularName)
                 {
-                    logger?.LogInformationEx(() => $"Ignorning resource [{resource.Name()}].  Only [{V1NeonClusterJob.SingularName}] is recognized.");
+                    logger?.LogInformationEx(() => $"Ignorning resource [{resource.Name()}].  Only [{V1NeonClusterJobConfig.SingularName}] is recognized.");
                     return null;
                 }
 
@@ -268,7 +268,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonClusterJob resource)
+        public override async Task DeletedAsync(V1NeonClusterJobConfig resource)
         {
             await SyncContext.Clear;
 
