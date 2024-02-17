@@ -37,7 +37,7 @@ nfsProvisioner:
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-provisioner-nfs
-    tag: 0.9.0
+    tag: $<KubeVersion.OpenEbsProvisionerNfs>
     pullPolicy: IfNotPresent
   enableLeaderElection: "true"
   # Specify image name of nfs-server-alpine used for creating nfs server deployment
@@ -46,7 +46,7 @@ nfsProvisioner:
   nfsServerAlpineImage:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-nfs-server-alpine
-    tag: 0.9.0
+    tag: $<KubeVersion.OpenEbsNfsServerAlpine>
   resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little

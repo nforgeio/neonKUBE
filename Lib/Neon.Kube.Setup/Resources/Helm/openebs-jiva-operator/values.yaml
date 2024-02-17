@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 release:
-  version: "3.2.0"
+  version: "$<KubeVersion.OpenEbs>"
 
 
 # If false, openebs localpv sub-chart will not be installed
@@ -25,17 +25,17 @@ jivaOperator:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-jiva
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   replica:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-jiva
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   exporter:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-m-exporter
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
@@ -43,7 +43,7 @@ jivaOperator:
     repository: openebs-jiva-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   annotations: {}
   resyncInterval: "30"
   podAnnotations: {}
@@ -118,7 +118,7 @@ jivaCSIPlugin:
     repository: openebs-jiva-csi
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   remount: "true"
 
 csiNode:

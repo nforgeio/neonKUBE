@@ -13,7 +13,7 @@ serviceAccount:
 
 release:
   # "openebs.io/version" label for control plane components
-  version: "3.2.0"
+  version: "$<KubeVersion.OpenEbs>"
 
 image:
   pullPolicy: IfNotPresent
@@ -32,7 +32,7 @@ localprovisioner:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-provisioner-localpv
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   replicas: 1
   enableLeaderElection: true
   basePath: "/var/openebs/local"
@@ -53,7 +53,7 @@ ndm:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-manager
-    tag: 1.9.0
+    tag: $<KubeVersion.OpenEbsNodeDiskManager>
   sparse:
     path: "/var/openebs/sparse"
     size: "10737418240"
@@ -82,7 +82,7 @@ ndmOperator:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-operator
-    tag: 1.9.0
+    tag: $<KubeVersion.OpenEbsNodeDiskOperator>
   replicas: 1
   upgradeStrategy: Recreate
   nodeSelector: {}
@@ -104,7 +104,7 @@ ndmExporter:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-node-disk-exporter
-    tag: 1.9.0
+    tag: $<KubeVersion.OpenEbsNodeDiskExporter>
     pullPolicy: IfNotPresent
   nodeExporter:
     name: ndm-node-exporter
@@ -128,28 +128,28 @@ cstor:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   poolMgmt:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool-manager
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   target:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-istgt
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   webhook:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-webhook
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
 
 helper:
   image:
     registry: $<KubeConst.LocalClusterRegistry>
     repository: openebs-linux-utils
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
 
 featureGates:
   enabled: true
@@ -179,7 +179,7 @@ policies:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-m-exporter
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
 
 analytics:
   enabled: false

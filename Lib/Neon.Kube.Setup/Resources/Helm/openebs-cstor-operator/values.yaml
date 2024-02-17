@@ -24,17 +24,17 @@ cspcOperator:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool-manager
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   cstorPool:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-pool
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   cstorPoolExporter:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-m-exporter
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   image:
     # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
@@ -42,7 +42,7 @@ cspcOperator:
     repository: openebs-cspc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   annotations: {}
   resyncInterval: "30"
   podAnnotations: {}
@@ -58,17 +58,17 @@ cvcOperator:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-istgt
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   volumeMgmt:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-cstor-volume-manager
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   volumeExporter:
     image:
       registry: $<KubeConst.LocalClusterRegistry>
       repository: openebs-m-exporter
-      tag: 3.2.0
+      tag: $<KubeVersion.OpenEbs>
   image:
     # Make sure that registry name ends with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
@@ -76,7 +76,7 @@ cvcOperator:
     repository: openebs-cvc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   annotations: {}
   resyncInterval: "30"
   podAnnotations: {}
@@ -155,7 +155,7 @@ cstorCSIPlugin:
     repository: openebs-cstor-csi-driver
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   remount: "true"
 
 csiNode:
@@ -207,7 +207,7 @@ admissionServer:
     repository: openebs-cstor-webhook
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.2.0
+    tag: $<KubeVersion.OpenEbs>
   failurePolicy: "Fail"
   annotations: {}
   podAnnotations: {}
