@@ -227,14 +227,41 @@ fi
                     //-----------------------------------------------------------------
                     // We need to install nfs-common tools for NFS to work.
 
-                    var InstallNfsScript =
+                    var script =
 $@"
 set -euo pipefail
 
 {KubeConst.SafeAptGetToolPath} update -y
 {KubeConst.SafeAptGetToolPath} install -y nfs-common
 ";
-                    SudoCommand(CommandBundle.FromScript(InstallNfsScript), RunOptions.FaultOnError);
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs <b>iSCSI initiator utils</b> required by OpenEBS/cStor.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        public void PrepareForOpenEbs(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/openebs-prep",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "prepare", message: "for OpenEBS");
+
+                    // https://github.com/openebs/cstor-operators/blob/develop/docs/quick.md#prerequisites
+
+                    var script =
+$@"
+set -euo pipefail
+
+{KubeConst.SafeAptGetToolPath} update -y
+{KubeConst.SafeAptGetToolPath} install -y open-iscsi
+systemctl enable --now iscsid
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
                 });
         }
 
@@ -366,6 +393,9 @@ rm -r istio-{KubeVersion.Istio}*
 
                     controller.ThrowIfCancelled();
                     InstallNFS(controller);
+
+                    controller.ThrowIfCancelled();
+                    PrepareForOpenEbs(controller);
                 });
         }
 

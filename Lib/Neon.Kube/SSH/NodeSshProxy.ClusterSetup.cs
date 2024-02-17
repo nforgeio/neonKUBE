@@ -691,10 +691,10 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-# Enable the new services.
+# Enable the services.
 
 systemctl enable neon-cleaner
-systemctl enable iscsid
+systemctl enable iscsid         # We need this for OpenEBS
 systemctl daemon-reload
 ";
             InvokeIdempotent("setup/initialize",
