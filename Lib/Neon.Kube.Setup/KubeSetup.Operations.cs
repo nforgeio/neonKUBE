@@ -4991,7 +4991,7 @@ $@"- name: StorageType
                         retry.Invoke(
                             () =>
                             {
-                                controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
+                                controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.Redact)
                                     .EnsureSuccess();
                             },
                             cancellationToken: controller.CancellationToken);
