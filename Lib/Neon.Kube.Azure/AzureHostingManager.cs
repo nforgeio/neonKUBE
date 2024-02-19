@@ -1138,7 +1138,11 @@ namespace Neon.Kube.Hosting.Azure
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
-            controller.AddGlobalStep("accept plan terms", state => AcceptPlanTermsAsync());
+
+            // todo(marcusbooyah): Add UI to neon-desktop to show these terms
+            // for now we have docs on how to accept these using the azure cli.
+            //controller.AddGlobalStep("accept plan terms", state => AcceptPlanTermsAsync());
+
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
             controller.AddGlobalStep("resource group", state => GetClusterResourceGroup());
 
@@ -1930,6 +1934,7 @@ namespace Neon.Kube.Hosting.Azure
 
             await terms.UpdateAsync(WaitUntil.Completed, terms.Data);
         }
+
         /// <summary>
         /// Loads virtual machine size related information for the current region into the
         /// <see cref="nodeNameToVmSku"/> field when not already initialized.
