@@ -3715,7 +3715,7 @@ TCPKeepAlive yes
                 VariableExpansionRegex = variableRegex ?? PreprocessReader.DefaultVariableExpansionRegex
             };
 
-            preprocessReader.SetYamlMode();
+            preprocessReader.ProcessStatements = false;
 
             return preprocessReader;
         }
