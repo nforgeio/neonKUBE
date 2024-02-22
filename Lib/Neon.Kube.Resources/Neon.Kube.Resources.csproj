@@ -48,10 +48,6 @@
         <PackageReference Include="YamlDotNet" Version="13.3.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\..\operator-sdk\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
-    </ItemGroup>
-
     <!-- NEONFORGE package or project references -->
 
     <Choose>
