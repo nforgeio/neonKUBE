@@ -28,4 +28,4 @@ webhooks:
     - deployments
     scope: '*'
   sideEffects: None
-  timeoutSeconds: 5
+  timeoutSeconds: 10

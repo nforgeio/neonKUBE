@@ -211,7 +211,7 @@ namespace NeonClusterOperator
                {
                    settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
-                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.PodNamespace            = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)

@@ -217,7 +217,7 @@ namespace NeonNodeAgent
                    settings.Port                    = KubePort.NeonNodeAgent;
                    settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
-                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.PodNamespace            = KubeNamespace.NeonSystem;
                })
                .AddSingleton(typeof(Service), this)
                .AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)

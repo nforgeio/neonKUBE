@@ -46,7 +46,7 @@ namespace NeonClusterOperator
     [Webhook(
         name:                    "deployment-policy.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy:           FailurePolicy.Ignore)]
+        FailurePolicy            = FailurePolicy.Ignore)]
     [WebhookRule(
         apiGroups:   V1Deployment.KubeGroup,
         apiVersions: V1Deployment.KubeApiVersion, 
