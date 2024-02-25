@@ -1515,7 +1515,11 @@ systemctl enable kubelet
         /// name is specified.
         /// </note>
         /// </param>
-        /// <param name="valuesYaml">Optionally specifies Helm chart values as YAML.</param>
+        /// <param name="valuesFiles">
+        /// Optionally specifies Helm chart values as YAML as an enumeration of values file strings.
+        /// These strings will be persisted as individual YAML files on the node and are applied when
+        /// installing the chart in the order passed.
+        /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
@@ -1537,7 +1541,7 @@ systemctl enable kubelet
         /// Values from the <b>values.yaml</b> file within the chart.
         /// </item>
         /// <item>
-        /// YAML formmatted values from the <paramref name="valuesYaml"/> parameter (if present).
+        /// YAML formmatted values from the <paramref name="valuesFiles"/> parameter (if present).
         /// </item>
         /// <item>
         /// Values from the <paramref name="values"/> (if present).
@@ -1551,7 +1555,7 @@ systemctl enable kubelet
             string                              releaseName     = null,
             string                              @namespace      = "default",
             string                              prioritySpec    = null,
-            string                              valuesYaml      = null,
+            IEnumerable<string>                 valuesFiles     = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null,
             TimeSpan                            timeout         = default)
@@ -1621,8 +1625,6 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
-                    const string valuesFileName = "_values.yaml";
-
                     var sbScript = new StringBuilder();
 
                     sbScript.AppendLine($"helm install {releaseName} \\");
@@ -1630,9 +1632,15 @@ systemctl enable kubelet
                     sbScript.AppendLine($"    --namespace {@namespace} \\");
                     sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
 
-                    if (!string.IsNullOrWhiteSpace(valuesYaml))
+                    if (valuesFiles != null)
                     {
-                        sbScript.AppendLine($"    -f {valuesFileName} \\");
+                        var index = 0;
+
+                        foreach (var values in valuesFiles)
+                        {
+                            sbScript.AppendLine($"    -f _values-{index}.yaml \\");
+                            index++;
+                        }
                     }
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
@@ -1676,9 +1684,15 @@ systemctl enable kubelet
 
                     var bundle = CommandBundle.FromScript(sbScript);
 
-                    if (!string.IsNullOrWhiteSpace(valuesYaml))
+                    if (valuesFiles != null)
                     {
-                        bundle.AddFile(valuesFileName, valuesYaml, linuxCompatible: true);
+                        var index = 0;
+
+                        foreach (var values in valuesFiles)
+                        {
+                            bundle.AddFile($"_values-{index}.yaml", values, linuxCompatible: true);
+                            index++;
+                        }
                     }
 
                     SudoCommand(bundle)
