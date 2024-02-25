@@ -1515,16 +1515,35 @@ systemctl enable kubelet
         /// name is specified.
         /// </note>
         /// </param>
+        /// <param name="valuesYaml">Optionally specifies Helm chart values as YAML.</param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
+        /// <para>
         /// NEONKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
         /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
         /// method unzips that file to the same folder (if it hasn't been unzipped already) and then installs
         /// the helm chart (if it hasn't already been installed).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// Values are applied in this order, with the last named value set "winning":
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// Values from the <b>values.yaml</b> file within the chart.
+        /// </item>
+        /// <item>
+        /// YAML formmatted values from the <paramref name="valuesYaml"/> parameter (if present).
+        /// </item>
+        /// <item>
+        /// Values from the <paramref name="values"/> (if present).
+        /// </item>
+        /// </list>
+        /// </note>
         /// </remarks>
         public async Task InstallHelmChartAsync(
             ISetupController                    controller,
@@ -1532,6 +1551,7 @@ systemctl enable kubelet
             string                              releaseName     = null,
             string                              @namespace      = "default",
             string                              prioritySpec    = null,
+            string                              valuesYaml      = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null,
             TimeSpan                            timeout         = default)
@@ -1601,11 +1621,23 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
-                    var valueOverrides = new StringBuilder();
+                    const string valuesFileName = "_values.yaml";
+
+                    var sbScript = new StringBuilder();
+
+                    sbScript.AppendLine($"helm install {releaseName} \\");
+                    sbScript.AppendLine($"    --debug \\");
+                    sbScript.AppendLine($"    --namespace {@namespace} \\");
+                    sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
+
+                    if (!string.IsNullOrWhiteSpace(valuesYaml))
+                    {
+                        sbScript.AppendLine($"    -f {valuesFileName} \\");
+                    }
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
                     {
-                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}=\"{priorityClassName}\"");
+                        sbScript.AppendLine($"   --set {priorityClassVariable}=\"{priorityClassName}\" \\");
                     }
 
                     if (values != null)
@@ -1614,7 +1646,7 @@ systemctl enable kubelet
                         {
                             if (value.Value == null)
                             {
-                                valueOverrides.AppendWithSeparator($"--set {value.Key}=null");
+                                sbScript.AppendLine($"    --set {value.Key}=null \\");
                                 continue;
                             }
 
@@ -1624,23 +1656,32 @@ systemctl enable kubelet
                             {
                                 case string s:
 
-                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\"");
+                                    sbScript.AppendLine($"    --set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\" \\");
                                     break;
 
                                 case Boolean b:
 
-                                    valueOverrides.AppendWithSeparator($"--set {value.Key}=\"{value.Value.ToString().ToLower()}\"");
+                                    sbScript.AppendLine($"    --set {value.Key}=\"{value.Value.ToString().ToLower()}\" \\");
                                     break;
 
                                 default:
 
-                                    valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                    sbScript.AppendLine($"    --set {value.Key}={value.Value} \\");
                                     break;
                             }
                         }
                     }
 
-                    SudoCommand(CommandBundle.FromScript($"helm install {releaseName} --debug --namespace {@namespace} -f {KubeNodeFolder.Helm}/{chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName}"))
+                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}");
+
+                    var bundle = CommandBundle.FromScript(sbScript);
+
+                    if (!string.IsNullOrWhiteSpace(valuesYaml))
+                    {
+                        bundle.AddFile(valuesFileName, valuesYaml, linuxCompatible: true);
+                    }
+
+                    SudoCommand(bundle)
                         .EnsureSuccess();
 
                     try
