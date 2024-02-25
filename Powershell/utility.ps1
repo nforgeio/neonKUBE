@@ -872,9 +872,8 @@ function Remove-HelmRepositories
 }
 
 #------------------------------------------------------------------------------
-# Executes the [helm-munger dependency remove-repositories CHART-FOLDER] command
-# to recursively remove [dependency.repository] properties from [v2] [Chart.yaml]
-# files.
+# Executes the [helm-munger dependency dependency remove CHART-FOLDER DEPENDENCY]
+# command to remove a specific chart dependency.
 
 function Remove-HelmDependency
 {

@@ -93,6 +93,7 @@ helm-munger dependency remove CHART-FOLDER DEPENDENCY
 
             chart.Dependencies.Remove(dependency);
             await File.WriteAllTextAsync(chartPath, Program.YamlSerializer().Serialize(chart));
+            NeonHelper.DeleteFolder(Path.Combine(chartFolder, "charts", dependencyName));
             Console.WriteLine($"[{dependencyName}] dependency removed.");
         }
     }
