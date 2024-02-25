@@ -392,7 +392,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>Helm</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Helm = "3.12.0";
+        public const string Helm = "3.14.2";
 
         /// <summary>
         /// Specifies the version of <b>CoreDNS</b> to be installed.
