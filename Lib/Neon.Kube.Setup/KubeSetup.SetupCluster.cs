@@ -303,7 +303,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("install helm",
                 (controller, node) =>
                 {
-                    node.NodeInstallHelm(controller);
+                    node.NodeInstallHelmCli(controller);
                 });
 
             if (options.UploadCharts || options.DebugMode)
@@ -312,7 +312,7 @@ namespace Neon.Kube.Setup
                     async (controller, node) =>
                     {
                         cluster.DeploymentControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
-                        await cluster.DeploymentControlNode.NodeInstallHelmArchiveAsync(controller);
+                        await node.NodeInstallHelmArchiveAsync(controller);
 
                         var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 
@@ -362,11 +362,12 @@ namespace Neon.Kube.Setup
             // we don't do this when telemetry is disabled or when the cluster was
             // deployed without redaction.
 
-            controller.Finished += (s, a) =>
-            {
-                CaptureClusterState(controller);
-                UploadFailedDeploymentLogs((ISetupController)s, a);
-            };
+            controller.Finished +=
+                (s, a) =>
+                {
+                    CaptureClusterState(controller);
+                    UploadFailedDeploymentLogs((ISetupController)s, a);
+                };
 
             // Add a [Finished] event handler that removes the cluster setup state
             // when cluster setup completed successfully.
@@ -384,7 +385,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Executes a <b>kubectl/neon</b> command on the cluster node and then writes a summary of
+        /// Executes a <b>kubectl</b> command on the cluster node and then writes a summary of
         /// the command and its output to a file.
         /// </summary>
         /// <param name="cluster">Specifies the cluster proxy.</param>

@@ -1,19 +1,46 @@
-apiVersion: v1
-version: 2.1.0
+apiVersion: v2
 name: openebs
-appVersion: 2.1.0
-description: Containerized Storage for Containers
-icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/icon/color/openebs-icon-color.png
-home: http://www.openebs.io/
+version: 3.10.0
+description: Containerized Attached Storage for Kubernetes
 keywords:
-  - cloud-native-storage
-  - block-storage
-  - iSCSI
-  - storage
+- cloud-native-storage
+- block-storage
+- local-storage
+- iSCSI
+- NVMe
+- storage
+- kubernetes
+home: http://www.openebs.io/
 sources:
-  - https://github.com/openebs/openebs
+- https://github.com/openebs/openebs
+dependencies:
+- name: openebs-ndm
+  version: 2.1.0
+  condition: openebs-ndm.enabled
+- name: localpv-provisioner
+  version: 3.5.0
+  condition: localpv-provisioner.enabled
+- name: cstor
+  version: 3.6.0
+  condition: cstor.enabled
+- name: jiva
+  version: 3.6.0
+  condition: jiva.enabled
+- name: zfs-localpv
+  version: 2.4.0
+  condition: zfs-localpv.enabled
+- name: lvm-localpv
+  version: 1.4.0
+  condition: lvm-localpv.enabled
+- name: nfs-provisioner
+  version: 0.11.0
+  condition: nfs-provisioner.enabled
 maintainers:
-  - name: kmova
-    email: kiran.mova@openebs.io
-  - name: prateekpandey14
-    email: prateek.pandey@openebs.io
+- name: kmova
+  email: kiran.mova@mayadata.io
+- name: prateekpandey14
+  email: prateek.pandey@mayadata.io
+- name: shovanmaity
+  email: shovan.maity@mayadata.io
+icon: https://raw.githubusercontent.com/cncf/artwork/HEAD/projects/openebs/icon/color/openebs-icon-color.png
+appVersion: 3.10.0

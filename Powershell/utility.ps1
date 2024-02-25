@@ -830,3 +830,62 @@ function Get-KubeVersion
 
     return $version
 }
+
+#------------------------------------------------------------------------------
+# Returns the path to the [helm-munger] tool in the NEONKUBE solution, throwing
+# an exception tool binary does not exist.
+
+function Get-HelmMungerPath
+{
+    $nkRoot = $env:NK_ROOT
+
+    if ([String]::IsNullOrEmpty($nkRoot))
+    {
+        throw "[NK_ROOT] environment variable does not exist.  NEONKUBE git repo must be cloned locally."
+    }
+
+    $helmMungerPath = [System.IO.Path]::Combine($nkRoot, "Tools", "helm-munger", "bin", "Debug", "net8.0", "win-x64", "helm-munger.exe")
+
+    if (-not [System.IO.File]::Exists($helmMungerPath))
+    {
+        throw "Cannot locate the [helm-munger] tool at [$helmMungerPath].  Rebuild it and try again."
+    }
+
+    return $helmMungerPath
+}
+
+#------------------------------------------------------------------------------
+# Executes the [helm-munger dependency remove-repositories CHART-FOLDER] command
+# to recursively remove [dependency.repository] properties from [v2] [Chart.yaml]
+# files.
+
+function Remove-HelmRepositories
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$chartFolder
+    )
+
+    $helmMungerPath = Get-HelmMungerPath
+    Invoke-Program "`"$helmMungerPath`" dependency remove-repositories `"$chartFolder`""
+}
+
+#------------------------------------------------------------------------------
+# Executes the [helm-munger dependency remove-repositories CHART-FOLDER] command
+# to recursively remove [dependency.repository] properties from [v2] [Chart.yaml]
+# files.
+
+function Remove-HelmDependency
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$chartFolder,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$dependencyName
+    )
+
+    $helmMungerPath = Get-HelmMungerPath
+    Invoke-Program "`"$helmMungerPath`" dependency remove `"$chartFolder`" $dependencyName"
+}

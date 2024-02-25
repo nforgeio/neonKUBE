@@ -1,0 +1,29 @@
+apiVersion: v2
+name: prometheus
+version: 15.5.4
+description: Prometheus is a monitoring system and time series database.
+type: application
+home: https://prometheus.io/
+sources:
+- https://github.com/prometheus/alertmanager
+- https://github.com/prometheus/prometheus
+- https://github.com/prometheus/pushgateway
+- https://github.com/prometheus/node_exporter
+- https://github.com/kubernetes/kube-state-metrics
+dependencies:
+- name: kube-state-metrics
+  version: 4.4.*
+  condition: kubeStateMetrics.enabled
+maintainers:
+- name: gianrubio
+  email: gianrubio@gmail.com
+- name: zanhsieh
+  email: zanhsieh@gmail.com
+- name: Xtigyro
+  email: miroslav.hadzhiev@gmail.com
+- name: monotek
+  email: monotek23@gmail.com
+- name: naseemkullah
+  email: naseem@transit.app
+icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+appVersion: 2.34.0

@@ -1199,7 +1199,7 @@ podman system reset --force
         /// Installs the <b>Helm</b> client.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
-        public void NodeInstallHelm(ISetupController controller)
+        public void NodeInstallHelmCli(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -1260,8 +1260,8 @@ rm -rf linux-amd64
 
                     // Pull all container images to the workstation.
                     //
-                    // NOTE: We're only going to do this once per process invocation to speed
-                    //       up multi-node cluster deployments.
+                    // NOTE: We're only going to do this only once per process to speed
+                    //       up multi-node cluster deployments for debiug mode.
 
                     if (!containerImagesAlreadyPulled)
                     {
@@ -1292,7 +1292,10 @@ rm -rf linux-amd64
                             }
                             else
                             {
-                                Covenant.Assert(File.Exists(importPath));
+                                if (!File.Exists(importPath))
+                                {
+                                    throw new FileNotFoundException($"Setup image folder [{imageFolder}] has no [.import] file.");
+                                }
 
                                 targetTag = KubeVersion.NeonKubeContainerImageTag;
                             }

@@ -657,7 +657,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>OpenEbs</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbs = "3.2.0";
+        public const string OpenEbs = "3.10.0";
 
         /// <summary>
         /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.

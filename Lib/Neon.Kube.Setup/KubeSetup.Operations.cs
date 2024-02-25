@@ -2717,36 +2717,44 @@ istioctl install --verify -y -f manifest.yaml
 
                             var values = new Dictionary<string, object>();
 
-                            values.Add("apiserver.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("helper.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("localprovisioner.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("policies.monitoring.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("snapshotOperator.controller.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("snapshotOperator.provisioner.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("provisioner.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("webhook.image.registry", KubeConst.LocalClusterRegistry);
-                            values.Add("jiva.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("apiserver.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("apiserver.replicas", apiServerAdvice.ReplicaCount);
 
-                            values.Add($"apiserver.replicas", apiServerAdvice.ReplicaCount);
-                            values.Add($"provisioner.replicas", provisionerAdvice.ReplicaCount);
-                            values.Add($"localprovisioner.replicas", localPvAdvice.ReplicaCount);
-                            values.Add($"snapshotOperator.replicas", snapshotOperatorAdvice.ReplicaCount);
-                            values.Add($"ndmOperator.replicas", ndmOperatorAdvice.ReplicaCount);
-                            values.Add($"webhook.replicas", webhookAdvice.ReplicaCount);
-                            values.Add($"serviceMonitor.interval", clusterAdvice.MetricsInterval);
+                            //values.Add("helper.image.registry", KubeConst.LocalClusterRegistry);
 
-                            values.Add($"openebsMonitoringAddon.cStor.serviceMonitor.enabled", cStorAdvice.MetricsEnabled);
-                            values.Add($"openebsMonitoringAddon.jiva.serviceMonitor.enabled", jivaAdvice.MetricsEnabled);
-                            values.Add($"openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
-                            values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
-                            values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
+                            //values.Add("jiva.image.registry", KubeConst.LocalClusterRegistry);
 
-                            values.Add($"ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
-                            values.Add($"ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
+                            //values.Add("localprovisioner.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("localprovisioner.image.repository", "openebs-provisioner-localpv");
+                            //values.Add("localprovisioner.replicas", localPvAdvice.ReplicaCount);
 
-                            values.Add($"ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
+                            //values.Add("policies.monitoring.image.registry", KubeConst.LocalClusterRegistry);
+
+                            //values.Add("snapshotOperator.controller.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("snapshotOperator.provisioner.image.registry", KubeConst.LocalClusterRegistry);
+
+                            //values.Add("ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
+                            //values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
+                            //values.Add("ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
+
+                            //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("ndmOperator.replicas", ndmOperatorAdvice.ReplicaCount);
+
+                            //values.Add("openebsMonitoringAddon.cStor.serviceMonitor.enabled", cStorAdvice.MetricsEnabled);
+                            //values.Add("openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            //values.Add("openebsMonitoringAddon.jiva.serviceMonitor.enabled", jivaAdvice.MetricsEnabled);
+                            //values.Add("openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
+
+                            //values.Add("provisioner.replicas", provisionerAdvice.ReplicaCount);
+
+                            //values.Add("serviceMonitor.interval", clusterAdvice.MetricsInterval);
+
+                            //values.Add("snapshotOperator.replicas", snapshotOperatorAdvice.ReplicaCount);
+
+                            //values.Add("webhook.image.registry", KubeConst.LocalClusterRegistry);
+                            //values.Add("webhook.replicas", webhookAdvice.ReplicaCount);
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
@@ -2829,8 +2837,6 @@ istioctl install --verify -y -f manifest.yaml
                                 timeoutMessage:    "setup/openebs-ready",
                                 cancellationToken: controller.CancellationToken);
                         });
-
-
                 });
         }
 

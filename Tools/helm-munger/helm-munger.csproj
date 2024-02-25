@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>HelmMunger</RootNamespace>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <AssemblyName>helm-munger</AssemblyName>
+        <Configurations>Debug</Configurations>
+    </PropertyGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
+        <PackageReference Include="YamlDotNet" Version="13.3.1" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
+
+    <!-- NEONFORGE package or project references -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
+
+</Project>

@@ -85,10 +85,12 @@ namespace Neon.Kube.SSH
                     {
                         try
                         {
-                            var preprocessor = KubeHelper.CreateKubeValuePreprocessor(new StreamReader(input));
-                            var output       = new MemoryStream();
+                            // Preprocess value references like: $<KubeVersion.VERSION>
 
-                            foreach (var line in preprocessor.Lines())
+                            var valuePreprocessor = KubeHelper.CreateKubeValuePreprocessor(new StreamReader(input));
+                            var output            = new MemoryStream();
+
+                            foreach (var line in valuePreprocessor.Lines())
                             {
                                 output.Write(Encoding.UTF8.GetBytes(line));
                                 output.WriteByte(NeonHelper.LF);    // Using Linux line endings

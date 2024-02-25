@@ -1310,7 +1310,7 @@ EOF
                     NodeInstallPodman(controller);
 
                     controller.ThrowIfCancelled();
-                    NodeInstallHelm(controller);
+                    NodeInstallHelmCli(controller);
 
                     controller.ThrowIfCancelled();
                     NodeInstallKubernetes(controller);
@@ -1605,7 +1605,7 @@ systemctl enable kubelet
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
                     {
-                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}={priorityClassName}");
+                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}=\"{priorityClassName}\"");
                     }
 
                     if (values != null)
@@ -1640,7 +1640,7 @@ systemctl enable kubelet
                         }
                     }
 
-                    SudoCommand($"helm install {releaseName} --debug --namespace {@namespace} -f {KubeNodeFolder.Helm}/{chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName}")
+                    SudoCommand(CommandBundle.FromScript($"helm install {releaseName} --debug --namespace {@namespace} -f {KubeNodeFolder.Helm}/{chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName}"))
                         .EnsureSuccess();
 
                     try
