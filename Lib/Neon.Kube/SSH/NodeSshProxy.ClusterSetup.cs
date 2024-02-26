@@ -463,25 +463,6 @@ kernel.perf_event_paranoid = 2
 EOF
 
 #------------------------------------------------------------------------------
-# iptables may be configured to track only a small number of TCP connections by
-# default.  We're going to explicitly set the limit to 1 million connections.
-# This will consume about 8MiB of RAM (so not too bad).
-
-# cat <<EOF > /etc/modprobe.d/NK_conntrack.conf
-# Explicitly set the maximum number of TCP connections that iptables can track.
-# Note that this number is multiplied by 8 to obtain the connection count.
-# options NK_conntrack hashsize = 393216
-# EOF
-
-cat > /etc/modules <<EOF
-ip_vs
-ip_vs_rr
-ip_vs_wrr
-ip_vs_sh
-NK_conntrack
-EOF
-
-#------------------------------------------------------------------------------
 # Databases are generally not compatible with transparent huge pages.  It appears
 # that the best way to disable this is with a simple service.
 

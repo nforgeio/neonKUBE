@@ -236,24 +236,6 @@ namespace Neon.Kube.Setup
 
             controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller));
-
-            controller.AddNodeStep("upgrade linux kernel",
-                (controller, node) =>
-                {
-                    node.InvokeIdempotent("setup/upgrade-kernel",
-                        () =>
-                        {
-                            node.Status = "upgrade linux kernel";
-
-                            if (node.UpgradeLinuxDistribution(aptGetTool: KubeConst.SafeAptGetToolPath, upgradeKernel: true))
-                            {
-                                node.Reboot(wait: true);
-                            }
-                        });
-
-                    node.Status = null;
-                });
-
             controller.AddNodeStep("certificate authorities", (controller, node) => node.UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath));
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
             controller.AddNodeStep("cluster manifest", InstallClusterManifestAsync);
@@ -262,7 +244,7 @@ namespace Neon.Kube.Setup
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            controller.AddNodeStep("setup control-plane",
+            controller.AddNodeStep("bootstrap control-plane node",
                 (controller, node) =>
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest(options.DebugMode));

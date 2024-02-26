@@ -71,6 +71,7 @@ namespace Neon.Kube.SSH
 
             WaitForBoot();
             VerifyNodeOS(controller);
+            UpgradeLinuxKernel(controller);
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);

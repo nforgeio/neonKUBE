@@ -507,7 +507,7 @@ namespace Neon.Kube.Setup
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddWaitUntilOnlineStep(
-            string                                                      stepLabel     = "connect",
+            string                                                      stepLabel     = "wait for cluster nodes",
             string                                                      status        = null,
             Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null,
             bool                                                        quiet         = false,

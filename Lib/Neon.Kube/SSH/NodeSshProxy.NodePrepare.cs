@@ -212,6 +212,74 @@ fi
         }
 
         /// <summary>
+        /// Ensures that the <b>XFS</b> tools and related Kernel module are installed.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        public void InstallXfs(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/xfs-module",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "configure", message: "xfs");
+
+                    const string confPath = "/etc/modules-load.d//xfs.conf";
+
+                    var config =
+@"# NEONKUBE: Enable XFS for Mayastor.
+
+xfs
+";
+                    UploadText(confPath, config, permissions: "660");
+
+                    var script =
+$@"
+set -euo pipefail
+
+{KubeConst.SafeAptGetToolPath} update
+{KubeConst.SafeAptGetToolPath} install -yq xfsprogs
+
+modprobe -v xfs
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Ensures that the Kernel <b>NVMe</b> modules are installed and running.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        public void InstallNVMe(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/nvme-modules",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "configure", message: "nvme");
+
+                    const string confPath = "/etc/modules-load.d//nvme.conf";
+
+                    var config =
+@"# NEONKUBE: Enable NVMe for Mayastor.
+
+nvmet
+nvmet-tcp
+";
+                    UploadText(confPath, config, permissions: "660");
+
+                    var script  =
+@"set -euo pipefail
+
+modprobe -v nvmet
+modprobe -v nvmet-tcp
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Installs NFS.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
@@ -377,6 +445,9 @@ rm -r istio-{KubeVersion.Istio}*
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
                     controller.ThrowIfCancelled();
+                    UpgradeLinuxKernel(controller);
+
+                    controller.ThrowIfCancelled();
                     UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath);
 
                     controller.ThrowIfCancelled();
@@ -392,10 +463,36 @@ rm -r istio-{KubeVersion.Istio}*
                     ConfigureJournald(controller);
 
                     controller.ThrowIfCancelled();
+                    InstallXfs(controller);
+
+                    controller.ThrowIfCancelled();
+                    InstallNVMe(controller);
+
+                    controller.ThrowIfCancelled();
                     InstallNFS(controller);
 
                     controller.ThrowIfCancelled();
                     PrepareForOpenEbs(controller);
+                });
+        }
+
+        /// <summary>
+        /// Upgrades the Linux kernel.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        public void UpgradeLinuxKernel(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("base/upgrade-kernel",
+                () =>
+                {
+                    Status = "upgrade linux kernel";
+
+                    if (UpgradeLinuxDistribution(aptGetTool: KubeConst.SafeAptGetToolPath, upgradeKernel: true))
+                    {
+                        Reboot(wait: true);
+                    }
                 });
         }
 
