@@ -461,10 +461,17 @@ namespace Neon.Kube.Setup
                             notReady = " (not-ready)";
                         }
 
-                        var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
-                        .EnsureSuccess();
+                        var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" });
+                        var logPath  = Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log");
 
-                        File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
+                        if (response.Success)
+                        {
+                            File.WriteAllText(logPath, $"LOGS UNAVAILABLE: {response.ErrorText}");
+                        }
+                        else
+                        {
+                            File.WriteAllText(logPath, response.OutputText);
+                        }
                     }
                 }
             }
