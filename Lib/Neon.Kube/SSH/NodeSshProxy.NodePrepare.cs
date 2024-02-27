@@ -262,7 +262,7 @@ modprobe -v xfs
                     const string confPath = "/etc/modules-load.d//nvme.conf";
 
                     var config =
-@"# NEONKUBE: Enable NVMe for Mayastor.
+@"# NEONKUBE: Enable NVMe over TCP for Mayastor.
 
 nvmet
 nvmet-tcp
@@ -1425,7 +1425,7 @@ rm -rf linux-amd64
                             await Task.Delay(100);
                         }
 
-                        controller.LogProgress(this, verb: "load", message: $"container image: {image.SourceImage}");
+                        controller.LogProgress(this, verb: "load", message: $"image: {image.SourceImage}");
 
                         loadImageTasks.Add(LoadImageAsync(image));
                     }
