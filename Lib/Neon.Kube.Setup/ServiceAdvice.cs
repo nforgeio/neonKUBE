@@ -37,10 +37,10 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Used by <see cref="KubeClusterAdvice"/> to record configuration advice for a specific
+    /// Used by <see cref="ClusterAdvice"/> to record configuration advice for a specific
     /// Kurbernetes service being deployed.
     /// </summary>
     /// <remarks>
@@ -51,7 +51,7 @@ namespace Neon.Kube
     /// deployed via affinity/tainting.
     /// </para>
     /// </remarks>
-    public class KubeServiceAdvice : ObjectDictionary
+    public class ServiceAdvice : ObjectDictionary
     {
         //---------------------------------------------------------------------
         // Static members
@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// Constructor.
         /// </summary>
         /// <param name="serviceIdentity">Identifies the service.</param>
-        public KubeServiceAdvice(string serviceIdentity)
+        public ServiceAdvice(string serviceIdentity)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceIdentity));
 
@@ -180,7 +180,7 @@ namespace Neon.Kube
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"[{nameof(KubeServiceAdvice)}] is read-only.");
+                throw new InvalidOperationException($"[{nameof(ServiceAdvice)}] is read-only.");
             }
 
             if (value.HasValue)
@@ -206,7 +206,7 @@ namespace Neon.Kube
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"[{nameof(KubeServiceAdvice)}] is read-only.");
+                throw new InvalidOperationException($"[{nameof(ServiceAdvice)}] is read-only.");
             }
 
             if (!string.IsNullOrEmpty(value))

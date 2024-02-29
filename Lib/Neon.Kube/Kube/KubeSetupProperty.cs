@@ -67,29 +67,30 @@ namespace Neon.Kube
         public const string MaintainerMode = "maintainer-setup";
 
         /// <summary>
-        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
+        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>.
         /// </summary>
         public const string HostingEnvironment = "hosting-environment";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/> property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/>.
         /// </summary>
         public const string ClusterProxy = "cluster-proxy";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="IHostingManager"/> property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="IHostingManager"/>.
         /// </summary>
         public const string HostingManager = "hosting-manager";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kubernetes"/> client property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kubernetes"/>.
         /// </summary>
         public const string K8sClient = "k8sclient";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="KubeClusterAdvice"/> client property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <b>cluster advice</b> with
+        /// information used to configure cluster components.
         /// </summary>
-        public const string ClusterAdvice = "setup-advice";
+        public const string ClusterAdvice = "cluster-advice";
 
         /// <summary>
         /// Property name for accessing the NEONCLOUD headend service client.

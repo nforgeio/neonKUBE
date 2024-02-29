@@ -192,7 +192,11 @@ namespace Neon.Kube.Setup
 
             // Configure the setup steps.
 
-            controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
+            controller.AddGlobalStep("resource requirements",
+                (controller) =>
+                {
+                    controller.Add(KubeSetupProperty.ClusterAdvice, new ClusterAdvice(clusterDefinition));
+                });
 
             cluster.HostingManager.AddSetupSteps(controller);
 
