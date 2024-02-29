@@ -62,6 +62,8 @@ required.
 
 6. Review the Helm chart template and other files for changes we need to apply.
 
+   **Limits/Requests:** Add any required limits/requests to the values override string.
+
 7. Deploy clusters with various configuration options (Jiva, cStor,...), breaking
    into the debugger after the OpenEBS Helm chart has been installed.
 

@@ -43,73 +43,22 @@ namespace Neon.Kube.Setup
     /// Used by <see cref="ClusterAdvice"/> to record configuration advice for a specific
     /// Kurbernetes service being deployed.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This class along with an early setup step is intended to be used to help centralize the
-    /// logic that decides things like what resources to reserve for services, how many service
-    /// pods to deploy as well as whether to control which nodes nodes a service's pods may be
-    /// deployed via affinity/tainting.
-    /// </para>
-    /// </remarks>
-    public class ServiceAdvice : ObjectDictionary
+    public class ServiceAdvice
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// <see cref="double"/>: Identifies the property specifying the maximum
-        /// CPU to assign to each service pod.
-        /// </summary>
-        public const string PodCpuLimitProperty = "pod.cpu.limit";
-
-        /// <summary>
-        /// <see cref="double"/>: Identifies the property specifying the CPU to 
-        /// reserve for each service pod.
-        /// </summary>
-        public const string PodCpuRequestProperty = "pod.cpu.request";
-        
-        /// <summary>
-        /// <see cref="decimal"/>: Identifies the property specifying the maxumum
-        /// bytes RAM that can be consumed by each service pod.
-        /// </summary>
-        public const string PodMemoryLimitProperty = "pod.memory.limit";
-
-        /// <summary>
-        /// <see cref="decimal"/>: Identifies the property specifying the bytes of
-        /// RAM to be reserved for each service pod.
-        /// </summary>
-        public const string PodMemoryRequestProperty = "pod.memory.request";
-
-        /// <summary>
-        /// <see cref="int"/>: Identifies the property specifying how many pods
-        /// should be deployed for the service.
-        /// </summary>
-        public const string ReplicaCountProperty = "replica.count";
-
-        /// <summary>
-        /// <see cref="int"/>: Identifies the property specifying whether metrics
-        /// are enabled for the service.
-        /// </summary>
-        public const string MetricsEnabledProperty = "metrics.enabled";
-
-        /// <summary>
-        /// <see cref="int"/>: Identifies the property specifying how often metrics
-        /// should be scraped for the service.
-        /// </summary>
-        public const string MetricsIntervalProperty = "metrics.interval";
-
-        //---------------------------------------------------------------------
-        // Instance members
+        private ClusterAdvice   clusterAdvice;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceIdentity">Identifies the service.</param>
-        public ServiceAdvice(string serviceIdentity)
+        /// <param name="clusterAdvice">Specifies the parent <see cref="ClusterAdvice"/>.</param>
+        /// <param name="serviceName">Identifies the service.</param>
+        public ServiceAdvice(ClusterAdvice clusterAdvice, string serviceName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceIdentity));
+            Covenant.Requires<ArgumentNullException>(clusterAdvice != null, nameof(clusterAdvice));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName), nameof(serviceName));
 
-            this.ServiceName = serviceIdentity;
+            this.clusterAdvice = clusterAdvice;
+            this.ServiceName   = serviceName;
         }
 
         /// <summary>
@@ -133,157 +82,104 @@ namespace Neon.Kube.Setup
         public bool IsReadOnly { get; internal set; }
 
         /// <summary>
-        /// Returns the property value if present or <c>null</c>.
+        /// Ensures that <see cref="IsReadOnly"/> isn't <c>true.</c>
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
-        /// <param name="name">The property name.</param>
-        /// <returns>The property value or <c>null</c>.</returns>
-        public Nullable<T> GetProperty<T>(string name)
-            where T : struct
-        {
-            if (TryGetValue<T>(name, out var value))
-            {
-                return value as Nullable<T>;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Returns the property value if present or <c>null</c>.
-        /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <returns>The property value or <c>null</c>.</returns>
-        public string GetProperty(string name)
-        {
-            if (TryGetValue(name, out var value))
-            {
-                return value as string;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Sets the property value or removes it when the value passed is <c>null</c>.
-        /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
-        /// <param name="name">The property name.</param>
-        /// <param name="value">The property value or <c>null</c>.</param>
-        /// <exception cref="InvalidOperationException">Thrown when the instance is in read-only mode.</exception>
-        private void SetProperty<T>(string name, Nullable<T> value)
-            where T : struct
+        /// <exception cref="InvalidOperationException">Thrown then <see cref="IsReadOnly"/> is <c>true</c>.</exception>
+        private void EnsureNotReadOnly()
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"[{nameof(ServiceAdvice)}] is read-only.");
-            }
-
-            if (value.HasValue)
-            {
-                base[name] = value;
-            }
-            else
-            {
-                if (base.ContainsKey(name))
-                {
-                    base.Remove(name);
-                }
+                throw new InvalidOperationException("Cluster advice is read-only.");
             }
         }
 
-        /// <summary>
-        /// Sets the property value or removes it when the value passed is <c>null</c>.
-        /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <param name="value">The property value or <c>null</c>.</param>
-        /// <exception cref="InvalidOperationException">Thrown when the instance is in read-only mode.</exception>
-        private void SetProperty(string name, string value)
-        {
-            if (IsReadOnly)
-            {
-                throw new InvalidOperationException($"[{nameof(ServiceAdvice)}] is read-only.");
-            }
-
-            if (!string.IsNullOrEmpty(value))
-            {
-                base[name] = value;
-            }
-            else
-            {
-                if (base.ContainsKey(name))
-                {
-                    base.Remove(name);
-                }
-            }
-        }
+        private double? podCpuLimit;
 
         /// <summary>
         /// Specifies the CPU limit for each service pod or <c>null</c> when this property is not set.
         /// </summary>
         public double? PodCpuLimit
         {
-            get => GetProperty<double>(PodCpuLimitProperty);
-            set => SetProperty<double>(PodCpuLimitProperty, value);
+            get { return podCpuLimit; }
+            set { EnsureNotReadOnly(); podCpuLimit = value; }
         }
+
+        private double? podCpuRequest;
 
         /// <summary>
         /// Specifies the CPU request for each service pod or <c>null</c> when this property is not set.
         /// </summary>
         public double? PodCpuRequest
         {
-            get => GetProperty<double>(PodCpuRequestProperty);
-            set => SetProperty<double>(PodCpuRequestProperty, value);
+            get { return podCpuRequest; }
+            set { EnsureNotReadOnly(); podCpuRequest = value; }
         }
 
+        private decimal? podMemoryLimit;
 
         /// <summary>
         /// Specifies the memory limit for each service pod or <c>null</c> when this property is not set.
         /// </summary>
         public decimal? PodMemoryLimit
         {
-            get => GetProperty<decimal>(PodMemoryLimitProperty);
-            set => SetProperty<decimal>(PodMemoryLimitProperty, value);
+            get { return podMemoryLimit; }
+            set { EnsureNotReadOnly(); podMemoryLimit = value; }
         }
+
+        private decimal? podMemoryRequest;
 
         /// <summary>
         /// Specifies the memory request for each service pod or <c>null</c> when this property is not set.
         /// </summary>
         public decimal? PodMemoryRequest
         {
-            get => GetProperty<decimal>(PodMemoryRequestProperty);
-            set => SetProperty<decimal>(PodMemoryRequestProperty, value);
+            get { return podMemoryRequest;  }
+            set { EnsureNotReadOnly(); podMemoryRequest = value; }
         }
 
+        private int? replicaCount;
+
         /// <summary>
-        /// Specifies the number of pods to be seployed for the service or <c>null</c> when this property is not set.
+        /// Specifies the number of pods to be seployed for the service or <b>1</b> when this property is not set.
         /// </summary>
-        public int? ReplicaCount
+        public int ReplicaCount
         {
-            get => GetProperty<int>(ReplicaCountProperty);
-            set => SetProperty<int>(ReplicaCountProperty, value);
+            get { return replicaCount ?? 1; }
+            set { EnsureNotReadOnly(); replicaCount = value; }
         }
 
+        private bool? metricsEnabled;
+
         /// <summary>
+        /// <para>
         /// Specifies whether metrics should be collected for the service.
+        /// </para>
+        /// <note>
+        /// <see cref="ClusterAdvice.MetricsEnabled"/> will be returned when this
+        /// property isn't set explicitly.
+        /// </note>
         /// </summary>
-        public bool? MetricsEnabled
+        public bool MetricsEnabled
         {
-            get => GetProperty<bool>(MetricsEnabledProperty);
-            set => SetProperty<bool>(MetricsEnabledProperty, value);
+            get { return metricsEnabled ?? clusterAdvice.MetricsEnabled; }
+            set { EnsureNotReadOnly(); metricsEnabled = value; }
         }
 
+        private string metricsInterval;
+
         /// <summary>
+        /// <para>
         /// Specifies the metrics scrape interval or <c>null</c> when this property is not set.
+        /// </para>
+        /// <note>
+        /// <see cref="ClusterAdvice.MetricsEnabled"/> will be returned when this
+        /// property isn't set explicitly.
+        /// </note>
         /// </summary>
         public string MetricsInterval
         {
-            get => GetProperty(MetricsIntervalProperty);
-            set => SetProperty(MetricsIntervalProperty, value);
+            get { return metricsInterval ?? clusterAdvice.MetricsInterval; }
+            set { EnsureNotReadOnly(); metricsInterval = value; }
         }
     }
 }

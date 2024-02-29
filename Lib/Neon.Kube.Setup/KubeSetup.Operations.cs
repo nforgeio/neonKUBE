@@ -532,7 +532,7 @@ spec:
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var controlPlaneEndpoint = $"kubernetes-control-plane:6442";
             var sbCertSANs           = new StringBuilder();
-            var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var clusterAdvice        = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
             // Append the names to be included as the certificate SANs.  Note that
             // we're using a dictionary here to avoid duplicating names.
@@ -1091,8 +1091,8 @@ exit 1
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s               = GetK8sClient(controller);
             var clusterDefinition = cluster.SetupState.ClusterDefinition;
-            var clusterAdvice     = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var coreDnsAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+            var clusterAdvice     = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.CoreDns);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/coredns",
@@ -1247,7 +1247,7 @@ exit 1
 
             // Enable CoreDNS metrics when enabled.
 
-            if (coreDnsAdvice.MetricsEnabled ?? false)
+            if (coreDnsAdvice.MetricsEnabled)
             {
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
@@ -1266,7 +1266,7 @@ exit 1
                                 {
                                 new Endpoint()
                                 {
-                                    Interval      = coreDnsAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval,
+                                    Interval      = coreDnsAdvice.MetricsInterval,
                                     Path          = "/metrics",
                                     ScrapeTimeout = "10s",
                                     TargetPort    = 9153
@@ -1545,9 +1545,9 @@ exit 1
             var hostingManager   = cluster.HostingManager;
             var firstControlNode = cluster.ControlNodes.First();
             var k8s              = GetK8sClient(controller);
-            var clusterAdvice    = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var ciliumAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cilium);
-            var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
+            var clusterAdvice    = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var ciliumAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.Cilium);
+            var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(ClusterAdvice.CoreDns);
             var mtu              = hostingManager.NodeMtu;
 
             controller.ThrowIfCancelled();
@@ -1607,10 +1607,10 @@ systemctl restart cri-o
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
-            var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var ingressAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioIngressGateway);
+            var proxyAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioProxy);
+            var pilotAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioPilot);
 
             // Install Istio.
 
@@ -1904,8 +1904,8 @@ istioctl install --verify -y -f manifest.yaml
 
             var cluster       = controlNode.Cluster;
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MetricsServer);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.MetricsServer);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
@@ -1916,8 +1916,8 @@ istioctl install --verify -y -f manifest.yaml
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -1962,10 +1962,10 @@ istioctl install --verify -y -f manifest.yaml
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                = GetK8sClient(controller);
             var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
-            var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var clusterAdvice      = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.CertManager);
+            var ingressAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioIngressGateway);
+            var proxyAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioProxy);
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             controller.ThrowIfCancelled();
@@ -1977,8 +1977,8 @@ istioctl install --verify -y -f manifest.yaml
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add($"prometheus.servicemonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"prometheus.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"prometheus.servicemonitor.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"prometheus.servicemonitor.interval", serviceAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -2022,7 +2022,7 @@ istioctl install --verify -y -f manifest.yaml
                     var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s           = GetK8sClient(controller);
                     var acmeOptions   = cluster.SetupState.ClusterDefinition.Network.AcmeOptions;
-                    var acmeAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonAcme);
+                    var acmeAdvice    = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonAcme);
                     var values        = new Dictionary<string, object>();
                     var nodeSelectors = new Dictionary<string, string>
                     {
@@ -2443,8 +2443,8 @@ istioctl install --verify -y -f manifest.yaml
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.KubernetesDashboard);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/kube-dashboard",
@@ -2459,7 +2459,7 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add("settings.clusterName", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
-                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
@@ -2562,8 +2562,8 @@ istioctl install --verify -y -f manifest.yaml
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Kiali);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Kiali);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/kiali",
@@ -2590,8 +2590,8 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
                     values.Add($"neonkube.clusterDomain.grafana", ClusterHost.Grafana);
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
-                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -2650,15 +2650,15 @@ istioctl install --verify -y -f manifest.yaml
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NodeProblemDetector);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NodeProblemDetector);
 
             var values = new Dictionary<string, object>();
 
             values.Add("cluster.name", cluster.Name);
             values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
-            values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-            values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+            values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
+            values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
             controller.ThrowIfCancelled();
@@ -2690,18 +2690,16 @@ istioctl install --verify -y -f manifest.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             
-            var k8s                    = GetK8sClient(controller);
-            var cluster                = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice          = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var apiServerAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsApiServer);
-            var cStorAdvice            = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstor);
-            var provisionerAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsProvisioner);
-            var jivaAdvice             = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsJiva);
-            var localPvAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsLocalPvProvisioner);
-            var snapshotOperatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsSnapshotOperator);
-            var ndmOperatorAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdmOperator);
-            var ndmAdvice              = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdm);
-            var webhookAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsWebhook);
+            var k8s                      = GetK8sClient(controller);
+            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
+            var clusterAdvice            = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var cStorAdvice              = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstor);
+            var jivaAdvice               = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJiva);
+            var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
+            var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
+            var provisionerLocalPvAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsProvisionerLocalPv);
+            var webhookAdvice            = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsWebhook);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
@@ -2715,26 +2713,6 @@ istioctl install --verify -y -f manifest.yaml
                         {
                             controller.LogProgress(controlNode, verb: "configure", message: "openebs-base");
 
-                            //var values = new Dictionary<string, object>();
-
-                            //values.Add("apiserver.image.registry", KubeConst.LocalClusterRegistry);
-                            //values.Add("apiserver.replicas", apiServerAdvice.ReplicaCount);
-
-                            //values.Add("helper.image.registry", KubeConst.LocalClusterRegistry);
-
-                            //values.Add("jiva.image.registry", KubeConst.LocalClusterRegistry);
-
-                            //values.Add("localprovisioner.image.registry", KubeConst.LocalClusterRegistry);
-                            //values.Add("localprovisioner.image.repository", "openebs-provisioner-localpv");
-                            //values.Add("localprovisioner.replicas", localPvAdvice.ReplicaCount);
-
-                            //values.Add("policies.monitoring.image.registry", KubeConst.LocalClusterRegistry);
-
-                            //values.Add("snapshotOperator.controller.image.registry", KubeConst.LocalClusterRegistry);
-                            //values.Add("snapshotOperator.provisioner.image.registry", KubeConst.LocalClusterRegistry);
-
-                            //values.Add("ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
-                            //values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
                             //values.Add("ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
                             //values.Add("ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
 
@@ -2755,6 +2733,8 @@ istioctl install --verify -y -f manifest.yaml
 
                             //values.Add("webhook.image.registry", KubeConst.LocalClusterRegistry);
                             //values.Add("webhook.replicas", webhookAdvice.ReplicaCount);
+
+                            const string excludedDevicePaths = "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda";
 
                             var values =
 $@"
@@ -3019,7 +2999,7 @@ ndm:
     excludeVendors: ""CLOUDBYT,OpenEBS""
     enablePathFilter: true
     includePaths: """"
-    excludePaths: ""/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd""
+    excludePaths: ""{excludedDevicePaths}""
   probes:
     enableSeachest: false
   nodeSelector: {{}}
@@ -3079,7 +3059,7 @@ ndmExporter:
     # The TCP port number used for exposing ndm-node-exporter metrics.
     # If not set, service will not be created to expose metrics endpoint to serviceMonitor
     # and listen-port flag will not be set and container port will be empty.
-    metricsPort: 9101
+    metricsPort: {clusterAdvice.GetMetricsPort(9101)}
   clusterExporter:
     name: ndm-cluster-exporter
     podLabels:
@@ -3087,7 +3067,7 @@ ndmExporter:
     # The TCP port number used for exposing ndm-cluster-exporter metrics.
     # If not set, service will not be created to expose metrics endpoint to serviceMonitor
     # and listen-port flag will not be set and container port will be empty.
-    metricsPort: 9100
+    metricsPort: {clusterAdvice.GetMetricsPort(9100)}
 
 webhook:
   enabled: true
@@ -3402,7 +3382,7 @@ jiva:
   # non csi configuration
   image: ""openebs/jiva""
   imageTag: ""2.12.2""
-  replicas: 3
+  replicas: {jivaAdvice.ReplicaCount}
   defaultStoragePath: ""/var/openebs""
 
   # jiva csi driver configuration
@@ -3424,7 +3404,7 @@ jiva:
   # | - localpv-provisioner(enable)
   # | - openebs-ndm(enable)
 
-  enabled: false
+  enabled: {NeonHelper.ToBoolString(clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Jiva)}
   openebsLocalpv:
     enabled: false
   localpv-provisioner:
@@ -3595,7 +3575,7 @@ openebs-ndm:
 #      excludeVendors: ""CLOUDBYT,OpenEBS""
 #      enablePathFilter: true
 #      includePaths: """"
-#      excludePaths: ""loop,fd0,sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd""
+#      excludePaths: ""{excludedDevicePaths}""
 #    probes:
 #      enableSeachest: false
 #      enableUdevProbe: true
@@ -3760,56 +3740,19 @@ cleanup:
     imagePullSecrets: []
       #  - name: image-pull-secret
 ";
-
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 valuesFiles:  new string[] { values });
                         });
 
-                    controller.ThrowIfCancelled();
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-jiva",
-                        async () =>
-                        {
-                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-jiva");
-
-                            var values       = new Dictionary<string, object>();
-                            var jivaReplicas = Math.Min(3, (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.SystemOpenEbsStorage).Count()));
-
-                            if (jivaReplicas < 1) 
-                            {
-                                jivaReplicas = 1;
-                            };
-
-                            values.Add("defaultPolicy.replicas", jivaReplicas);
-
-                            await controlNode.InstallHelmChartAsync(controller, "openebs-jiva-operator",
-                                @namespace:   KubeNamespace.NeonStorage,
-                                prioritySpec: PriorityClass.NeonStorage.Name,
-                                values:       values);
-                            });
-
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
                     await CreateStorageClass(controller, controlNode, "default", isDefault: true);
                     await WaitForOpenEbsReady(controller, controlNode);
 
-                    switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
+                    if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
                     {
-                        case OpenEbsEngine.cStor:
-
-                            await DeployOpenEbsWithcStor(controller, controlNode);
-                            break;
-
-                        case OpenEbsEngine.HostPath:
-                        case OpenEbsEngine.Jiva:
-                            
-                            break;
-
-                        default:
-                        case OpenEbsEngine.Default:
-                        case OpenEbsEngine.Mayastor:
-
-                            throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
+                        throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
                     }
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
@@ -3856,10 +3799,10 @@ cleanup:
             await SyncContext.Clear;
 
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var clusterAdvice      = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var k8s                = GetK8sClient(controller);
-            var cstorPoolAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPool);
-            var cstorPoolAuxAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPoolAux);
+            var cstorPoolAdvice    = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorPool);
+            var cstorPoolAuxAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorPoolAux);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/openebs-cstor",
@@ -4287,18 +4230,10 @@ $@"- name: StorageType
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.ThrowIfCancelled();
+            await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
 
             switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
             {
-                case OpenEbsEngine.Default:
-
-                    throw new InvalidOperationException($"[{nameof(OpenEbsEngine.Default)}] is not valid here.  This must be set to one of the other storage engines in [{nameof(OpenEbsOptions)}.Validate()].");
-
-                case OpenEbsEngine.HostPath:
-
-                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
-                    break;
-
                 case OpenEbsEngine.cStor:
 
                     await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
@@ -4329,11 +4264,11 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster         = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice   = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var agentAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.GrafanaAgent);
-            var agentNodeAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.GrafanaAgentNode);
-            var blackboxAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.BlackboxExporter);
-            var istioAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var clusterAdvice   = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var agentAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.GrafanaAgent);
+            var agentNodeAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.GrafanaAgentNode);
+            var blackboxAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.BlackboxExporter);
+            var istioAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioProxy);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus",
@@ -4357,8 +4292,8 @@ $@"- name: StorageType
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.crio.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
-                    values.Add($"metrics.istio.enabled", istioAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.istio.enabled", istioAdvice.MetricsEnabled);
+                    values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval);
                     values.Add($"metrics.kubelet.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.enabled", clusterAdvice.MetricsEnabled);
@@ -4474,8 +4409,8 @@ $@"- name: StorageType
             controller.ThrowIfCancelled();
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Memcached);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Memcached);
 
             var values = new Dictionary<string, object>();
 
@@ -4486,8 +4421,8 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "install", message: "memcached");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
-                    values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
@@ -4542,17 +4477,17 @@ $@"- name: StorageType
                 {
                     var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s                 = GetK8sClient(controller);
-                    var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var mimirAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Mimir);
-                    var alertmanagerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirAlertmanager);
-                    var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirCompactor);
-                    var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirDistributor);
-                    var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirIngester);
-                    var overridesAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirOverridesExporter);
-                    var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirQuerier);
-                    var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirQueryFrontend);
-                    var rulerAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirRuler);
-                    var storeGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirStoreGateway);
+                    var clusterAdvice       = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var mimirAdvice         = clusterAdvice.GetServiceAdvice(ClusterAdvice.Mimir);
+                    var alertmanagerAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirAlertmanager);
+                    var compactorAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirCompactor);
+                    var distributorAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirDistributor);
+                    var ingesterAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirIngester);
+                    var overridesAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirOverridesExporter);
+                    var querierAdvice       = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirQuerier);
+                    var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirQueryFrontend);
+                    var rulerAdvice         = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirRuler);
+                    var storeGatewayAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.MimirStoreGateway);
                     var values              = new Dictionary<string, object>();
 
                     var nodeSelectors = new Dictionary<string, string>
@@ -4608,8 +4543,8 @@ $@"- name: StorageType
                     values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
                     values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add($"minio.enabled", true);
@@ -4709,16 +4644,16 @@ $@"- name: StorageType
 
             var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                 = GetK8sClient(controller);
-            var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var lokiAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Loki);
-            var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiCompactor);
-            var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiDistributor);
-            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiIngester);
-            var indexGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiIndexGateway);
-            var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiQuerier);
-            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiQueryFrontend);
-            var rulerAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiRuler);
-            var tableManagerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiTableManager);
+            var clusterAdvice       = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var lokiAdvice          = clusterAdvice.GetServiceAdvice(ClusterAdvice.Loki);
+            var compactorAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiCompactor);
+            var distributorAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiDistributor);
+            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiIngester);
+            var indexGatewayAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiIndexGateway);
+            var querierAdvice       = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiQuerier);
+            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiQueryFrontend);
+            var rulerAdvice         = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiRuler);
+            var tableManagerAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.LokiTableManager);
 
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-loki");
 
@@ -4772,8 +4707,8 @@ $@"- name: StorageType
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
 
@@ -4867,13 +4802,13 @@ $@"- name: StorageType
             
             var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                 = GetK8sClient(controller);
-            var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var tempoAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Tempo);
-            var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoCompactor);
-            var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoDistributor);
-            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoIngester);
-            var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoQuerier);
-            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoQueryFrontend);
+            var clusterAdvice       = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var tempoAdvice         = clusterAdvice.GetServiceAdvice(ClusterAdvice.Tempo);
+            var compactorAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.TempoCompactor);
+            var distributorAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.TempoDistributor);
+            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.TempoIngester);
+            var querierAdvice       = clusterAdvice.GetServiceAdvice(ClusterAdvice.TempoQuerier);
+            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.TempoQueryFrontend);
 
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-tempo");
 
@@ -4917,8 +4852,8 @@ $@"- name: StorageType
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
 
@@ -4987,8 +4922,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.KubeStateMetrics);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
@@ -5002,8 +4937,8 @@ $@"- name: StorageType
                         { NodeLabel.LabelSystemMetricServices, "true" }
                     };
 
-                    values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     int i = 0;
@@ -5055,8 +4990,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Reloader);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Reloader);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/reloader",
@@ -5070,8 +5005,8 @@ $@"- name: StorageType
                         { NodeLabel.LabelRole, NodeRole.ControlPlane }
                     };
 
-                    values.Add($"reloader.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"reloader.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"reloader.serviceMonitor.interval", serviceAdvice.MetricsInterval);
+                    values.Add($"reloader.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     int i = 0;
@@ -5123,8 +5058,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Grafana);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Grafana);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana",
@@ -5145,8 +5080,8 @@ $@"- name: StorageType
                     values.Add($"cluster.hostingEnvironment", cluster.Hosting.Environment);
                     values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("replicas", serviceAdvice.ReplicaCount);
@@ -5327,9 +5262,9 @@ $@"- name: StorageType
 
             var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s            = GetK8sClient(controller);
-            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Minio);
-            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MinioOperator);
+            var clusterAdvice  = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.Minio);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.MinioOperator);
 
             await controlNode.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
@@ -5353,8 +5288,8 @@ $@"- name: StorageType
                             values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
                             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                            values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                            values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                            values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
+                            values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                             values.Add("image.registry", KubeConst.LocalClusterRegistry);
                             values.Add("mcImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.registry", KubeConst.LocalClusterRegistry);
@@ -5548,8 +5483,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Redis);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Redis);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/redis",
@@ -5565,9 +5500,9 @@ $@"- name: StorageType
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
-                    values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"exporter.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"exporter.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     if (serviceAdvice.ReplicaCount < 2)
@@ -5625,8 +5560,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Harbor);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Harbor);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("configure/registry-minio-secret",
@@ -5727,8 +5662,8 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
-                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"metrics.interval", serviceAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     values.Add($"components.chartMuseum.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.ChartMuseum);
@@ -5813,7 +5748,7 @@ $@"- name: StorageType
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-trivy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     }
 
-                    if ((bool)(serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled))
+                    if ((serviceAdvice.MetricsEnabled))
                     {
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     }
@@ -5952,8 +5887,8 @@ $@"- name: StorageType
 
             var k8s           = GetK8sClient(controller);
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonClusterOperator);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator",
@@ -5983,8 +5918,8 @@ $@"- name: StorageType
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -6067,8 +6002,8 @@ $@"- name: StorageType
 
             var k8s           = GetK8sClient(controller);
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonNodeAgent);
             
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
@@ -6152,8 +6087,8 @@ $@"- name: StorageType
 
             var k8s           = GetK8sClient(controller);
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonNodeAgent);
             
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent",
@@ -6171,8 +6106,8 @@ $@"- name: StorageType
                     values.Add($"cluster.version", cluster.SetupState.ClusterDefinition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Hosting.Environment);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
@@ -6266,16 +6201,16 @@ $@"- name: StorageType
 
             var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s            = GetK8sClient(controller);
-            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbOperator);
-            var poolerAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbPooler);
-            var metricsAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbMetrics);
-            var databaseAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
+            var clusterAdvice  = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbOperator);
+            var poolerAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbPooler);
+            var metricsAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbMetrics);
+            var databaseAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDb);
 
             var values = new Dictionary<string, object>();
 
-            values.Add($"metrics.enabled", operatorAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-            values.Add($"metrics.interval", operatorAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+            values.Add($"metrics.enabled", operatorAdvice.MetricsEnabled);
+            values.Add($"metrics.interval", operatorAdvice.MetricsInterval);
 
             if (cluster.SetupState.ClusterDefinition.IsDesktop)
             {
@@ -6371,7 +6306,7 @@ $@"- name: StorageType
                 {
                     var nodes = cluster.SetupState.ClusterDefinition.SortedControlNodes.ToList();
 
-                    if (nodes.Count > operatorAdvice.ReplicaCount.Value)
+                    if (nodes.Count > operatorAdvice.ReplicaCount)
                     {
                         operatorAdvice.ReplicaCount = nodes.Count;
                     }
@@ -6506,8 +6441,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Dex);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Dex);
             var serviceUser   = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
             var values        = new Dictionary<string, object>();
 
@@ -6603,8 +6538,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSsoSessionProxy);
             var values        = new Dictionary<string, object>();
 
             values.Add("image.registry", KubeConst.LocalClusterRegistry);
@@ -6613,7 +6548,7 @@ $@"- name: StorageType
             values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
-            values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+            values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
             values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
             values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
@@ -6654,8 +6589,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Glauth);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Glauth);
             var values        = new Dictionary<string, object>();
             var dbSecret      = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
             var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
@@ -6807,8 +6742,8 @@ $@"- name: StorageType
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Oauth2Proxy);
+            var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Oauth2Proxy);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy",
@@ -6823,8 +6758,8 @@ $@"- name: StorageType
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add("client.id", KubeConst.NeonSsoClientId);
-                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled);
+                    values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval);
 
                     await controlNode.InstallHelmChartAsync(controller, "oauth2-proxy",
                         releaseName:     "neon-sso",

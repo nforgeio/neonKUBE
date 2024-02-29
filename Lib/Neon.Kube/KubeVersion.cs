@@ -684,6 +684,12 @@ namespace Neon.Kube
         public const string OpenEbsNodeDiskOperator = "1.9.0";
 
         /// <summary>
+        /// Specifies the version of <b>openebs-provisioner-localpv</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsProvisionerLocalPV = "3.5.0";
+
+        /// <summary>
         /// Specifies the version of <b>openebs-provisioner-nfs</b> to be installed.
         /// </summary>
         [KubeValue]

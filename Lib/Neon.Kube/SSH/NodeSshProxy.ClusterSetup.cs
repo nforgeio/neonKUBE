@@ -1626,7 +1626,7 @@ systemctl enable kubelet
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
                     {
-                        sbScript.AppendLine($"   --set {priorityClassVariable}=\"{priorityClassName}\" \\");
+                        sbScript.AppendLine($"    --set {priorityClassVariable}=\"{priorityClassName}\" \\");
                     }
 
                     if (values != null)
