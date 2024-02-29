@@ -26,31 +26,6 @@ namespace Neon.Kube.ClusterDef
     public enum OpenEbsEngine
     {
         /// <summary>
-        /// <para>
-        /// Selects a reasonable default storage engine for the cluster.  Currently, this will
-        /// select <see cref="HostPath"/> for single-node clusters or <see cref="Jiva"/> for
-        /// multi-node clusters.
-        /// </para>
-        /// <note>
-        /// These defaults were selected to reduce the storage and RAM required for smaller
-        /// clusters, or clusters that don't really require OpenEBS for user workloads.  Larger
-        /// clusters that depend on OpenEBS for user workloads should consider configuring
-        /// <see cref="cStor"/> instead.
-        /// </note>
-        /// </summary>
-        [EnumMember(Value = "default")]
-        Default = 0,
-
-        /// <summary>
-        /// A temporary storage engine that will be replaced by <see cref="Jiva"/> once we've
-        /// implemented support for that.  This option works only for single node clusters and
-        /// will be removed in the near future.  We don't recommend that you reference this 
-        /// explicitly in your cluster definitions; use <see cref="Default"/> instead.
-        /// </summary>
-        [EnumMember(Value = "hostpath")]
-        HostPath,
-
-        /// <summary>
         /// The currently recommended OpenEBS storage engine.  This is very feature rich but
         /// requires one or more raw block devices and quite a bit of RAM.  See: 
         /// <a href="https://docs.openebs.io/v090/docs/next/cstor.html">cStor Overview</a>

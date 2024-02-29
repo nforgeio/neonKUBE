@@ -48,13 +48,13 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
-        /// to <see cref="OpenEbsEngine.Default"/>.
+        /// to <see cref="OpenEbsEngine.Jiva"/>.  This is the default engine.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
         [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
-        [DefaultValue(OpenEbsEngine.Default)]
-        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
+        [DefaultValue(OpenEbsEngine.Jiva)]
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Jiva;
 
         /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
@@ -103,40 +103,9 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
-            switch (Engine)
+            if (Engine == OpenEbsEngine.Mayastor)
             {
-                case OpenEbsEngine.Default:
-
-                    if (clusterDefinition.Nodes.Count() == 1)
-                    {
-                        Engine = OpenEbsEngine.HostPath;
-                    }
-                    else if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) > 0)
-                    {
-                        Engine = OpenEbsEngine.Jiva;
-                    }
-                    break;
-
-                case OpenEbsEngine.HostPath:
-
-                    if (clusterDefinition.Nodes.Count() > 1)
-                    {
-                        new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is supported only for single-node clusters.");
-                    }
-                    break;
-
-                case OpenEbsEngine.cStor:
-
-                    break; // NOP
-
-                case OpenEbsEngine.Jiva:
-
-                    break; // NOP
-
-                default:
-                case OpenEbsEngine.Mayastor:
-
-                    throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented.");
+                throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented.");
             }
         }
     }
