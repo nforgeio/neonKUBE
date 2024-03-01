@@ -543,21 +543,6 @@ namespace Neon.Kube.Setup
         public int KubeApiServerWatchCacheSize { get; set; } = 5;
 
         /// <summary>
-        /// Used to obtain the metrics port exposed for a service when cluster
-        /// metrics are enabled.  This is useful for setting Helm chart <b>metricsPort</b>
-        /// values where setting zero disables metrics.
-        /// </summary>
-        /// <param name="port">
-        /// Specifies the metrics port exposed for the service or zero when
-        /// metrics are to be disabled for the service.d
-        /// </param>
-        /// <returns>Zero when cluster metrics are disabled or <paramref name="port"/> otherwise.</returns>
-        public int GetMetricsPort(int port)
-        {
-            return MetricsEnabled ? port : 0;
-        }
-
-        /// <summary>
         /// <para>
         /// Cluster advice is designed to be configured once during cluster setup and then be
         /// considered to be <b>read-only</b> thereafter.  This property should be set to 

@@ -3059,7 +3059,7 @@ ndmExporter:
     # The TCP port number used for exposing ndm-node-exporter metrics.
     # If not set, service will not be created to expose metrics endpoint to serviceMonitor
     # and listen-port flag will not be set and container port will be empty.
-    metricsPort: {clusterAdvice.GetMetricsPort(9101)}
+    metricsPort: {ndmAdvice.GetMetricsPort(9101)}
   clusterExporter:
     name: ndm-cluster-exporter
     podLabels:
@@ -3067,7 +3067,7 @@ ndmExporter:
     # The TCP port number used for exposing ndm-cluster-exporter metrics.
     # If not set, service will not be created to expose metrics endpoint to serviceMonitor
     # and listen-port flag will not be set and container port will be empty.
-    metricsPort: {clusterAdvice.GetMetricsPort(9100)}
+    metricsPort: {ndmAdvice.GetMetricsPort(9100)}
 
 webhook:
   enabled: true
