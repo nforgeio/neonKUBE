@@ -492,24 +492,41 @@ namespace Neon.Kube.Setup
         /// </summary>
         public const string RedisHA = "redis-ha";
 
+        /// <summary>
+        /// <para>
+        /// Computes the cluster deployment advice for the cluster specified by the
+        /// cluster definition passed.
+        /// </para>
+        /// <note>
+        /// This method may modify the cluster definition in some ways to reflect
+        /// advice computed for the cluster.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">Spoecifies the target cluster definition.</param>
+        /// <returns></returns>
+        public static ClusterAdvice Compute(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            return new ClusterAdvice(clusterDefinition);
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
         private Dictionary<string, ServiceAdvice>   services   = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
-        private bool                                    isReadOnly = false;
-        private ClusterDefinition                       clusterDefinition;
+        private bool                                isReadOnly = false;
+        private ClusterDefinition                   clusterDefinition;
 
         /// <summary>
-        /// Constructor.
+        /// Private constructor.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        public ClusterAdvice(ClusterDefinition clusterDefinition)
+        private ClusterAdvice(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
             this.clusterDefinition = clusterDefinition;
 
-            ComputeAdvice();
+            Compute();
         }
 
         /// <summary>
@@ -606,7 +623,7 @@ namespace Neon.Kube.Setup
         /// Determines resource and other recommendations for the cluster globally as well
         /// as for cluster components based on the cluster definition passed to the constructor.
         /// </summary>
-        private void ComputeAdvice()
+        private void Compute()
         {
             // Initialize global cluster advice.
 

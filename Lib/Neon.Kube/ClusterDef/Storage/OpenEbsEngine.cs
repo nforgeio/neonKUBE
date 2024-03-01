@@ -26,6 +26,26 @@ namespace Neon.Kube.ClusterDef
     public enum OpenEbsEngine
     {
         /// <summary>
+        /// <para>
+        /// Lets NEONKUBE select the storage engine based on the cluster size.  <see cref="HostPath"/>
+        /// will choosen for single node clusters and <see cref="Jiva"/> will be selected otherwise.
+        /// </para>
+        /// <para>
+        /// You can override this behavior be selecting one of the other engines.
+        /// </para>
+        /// </summary>
+        [EnumMember(Value = "default")]
+        Default = 0,
+
+        /// <summary>
+        /// Provisions persistent volumes on the host node's disk.  This will result in the
+        /// best possible I/O performance but at the cost of requiring that containers mounting
+        /// the volume be scheduled on the same node as well as losing volume replication.
+        /// </summary>
+        [EnumMember(Value = "hostpath")]
+        HostPath,
+
+        /// <summary>
         /// The currently recommended OpenEBS storage engine.  This is very feature rich but
         /// requires one or more raw block devices and quite a bit of RAM.  See: 
         /// <a href="https://docs.openebs.io/v090/docs/next/cstor.html">cStor Overview</a>
@@ -36,7 +56,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// This was the original OpenEBS storage engine and hosts the data in a Linux
-        /// sparse file rather than requiring raw block devices.  This may be suitable
+        /// sparse file rather than requiring raw block devices.  This is suitable
         /// for smaller clusters running workloads with lower I/O requirements.  See:
         /// <a href="https://docs.openebs.io/v090/docs/next/jiva.html">Jiva Overview</a>
         /// </para>

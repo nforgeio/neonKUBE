@@ -3740,6 +3740,7 @@ cleanup:
     imagePullSecrets: []
       #  - name: image-pull-secret
 ";
+
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
@@ -4227,27 +4228,41 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var storageOptions    = clusterDefinition.Storage;
 
             controller.ThrowIfCancelled();
-            await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
 
-            switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
+            switch (storageOptions.OpenEbs.Engine)
             {
                 case OpenEbsEngine.cStor:
 
+                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
                     await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
+                    break;
+
+                case OpenEbsEngine.Default:
+
+                    Covenant.Assert(false, $"[{nameof(OpenEbsEngine.Default)}] is not valid here.  This must be set to one of the other storage engines in [{nameof(OpenEbsOptions)}.Validate()].");
+                    break;
+
+                case OpenEbsEngine.HostPath:
+
+                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
                 case OpenEbsEngine.Jiva:
 
+                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
                     await CreateJivaStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
                 case OpenEbsEngine.Mayastor:
                 default:
 
-                    throw new NotImplementedException($"Support for the [{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
+                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
+                    throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not supported yet.");
             };
         }
 

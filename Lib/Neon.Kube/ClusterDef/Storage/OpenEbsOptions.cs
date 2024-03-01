@@ -48,13 +48,14 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
-        /// to <see cref="OpenEbsEngine.Jiva"/>.  This is the default engine.
+        /// to <see cref="OpenEbsEngine.Default"/> which selects the <see cref="OpenEbsEngine.HostPath"/>
+        /// engine for single node clusters or <see cref="OpenEbsEngine.Jiva"/> otherwise.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
         [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
         [DefaultValue(OpenEbsEngine.Jiva)]
-        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Jiva;
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
@@ -76,36 +77,59 @@ namespace Neon.Kube.ClusterDef
 
             var openEbsOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
 
-            NfsSize = NfsSize ?? minNfsSize;
+            NfsSize ??= minNfsSize;
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            // Clusters require that at least one node has [OpenEbsStorage=true].  We'll set
-            // this automatically when the user hasn't already done this.  All workers will have
-            // this set to true when there are workers, otherwise we'll set this to true for all
-            // control-plane nodes.
-
-            if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+            if (Engine == OpenEbsEngine.Mayastor)
             {
-                if (clusterDefinition.Workers.Count() > 0)
+                throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented yet.");
+            }
+
+            // Choose an actual engine when [Default] is specified.
+
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Default)
+            {
+                if (clusterDefinition.Nodes.Count() == 1)
                 {
-                    foreach (var worker in clusterDefinition.Workers)
-                    {
-                        worker.OpenEbsStorage = true;
-                    }
+                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.HostPath;
                 }
                 else
                 {
-                    foreach (var controlNode in clusterDefinition.ControlNodes)
-                    {
-                        controlNode.OpenEbsStorage = true;
-                    }
+                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Jiva;
                 }
             }
 
-            if (Engine == OpenEbsEngine.Mayastor)
+            // $todo(jefflill): This logic should probably be relocated to cluster advice.
+
+            // Clusters require that at least one node has [OpenEbsStorage=true] for cStor or Mayastor.
+            // engines.  We'll set this automatically when the user hasn't already done this.  All workers
+            // will have this set to true when there are workers, otherwise we'll set this to true for all
+            // control-plane nodes.
+
+            switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
-                throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented.");
+                case OpenEbsEngine.cStor:
+                case OpenEbsEngine.Mayastor:
+
+                    if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+                    {
+                        if (clusterDefinition.Workers.Count() > 0)
+                        {
+                            foreach (var worker in clusterDefinition.Workers)
+                            {
+                                worker.OpenEbsStorage = true;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var controlNode in clusterDefinition.ControlNodes)
+                            {
+                                controlNode.OpenEbsStorage = true;
+                            }
+                        }
+                    }
+                    break;
             }
         }
     }
