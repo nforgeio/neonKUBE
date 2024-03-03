@@ -1,0 +1,18 @@
+apiVersion: v2
+name: mayastor
+version: 2.5.0
+description: Mayastor Helm chart for Kubernetes
+type: application
+dependencies:
+- name: etcd
+  version: 8.6.0
+- name: jaeger-operator
+  version: 2.25.0
+  condition: base.jaeger.enabled
+- name: nats
+  version: 0.19.14
+  condition: eventing.enabled
+- name: localpv-provisioner
+  version: 3.5.0
+  condition: localpv-provisioner.enabled
+appVersion: 2.5.0

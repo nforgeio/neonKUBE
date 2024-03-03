@@ -51,11 +51,13 @@ Remove-HelmRepositories $tempFolder
 # its [loki-stack] subchart which doesn't make a lot of sense (something
 # about a missing [Makefile] or something).
 #
-# [mayastor] is still alpha; hopefully this will be addressed by the maintainers
-# when this goes beta.  We're not deploying [mayastor] now so I'm just going to
-# remove that dependency from the root chart.
+# It looks like [loki-stack] might have been deprecated so we're going to remove
+# this subchart from the [mayastor] chart since we don't want to use it anyway
+# since we have our own Loki deployment.
+#
+#       https://github.com/alexellis/arkade/issues/620
 
-Remove-HelmDependency $tempFolder mayastor
+Remove-HelmDependency $tempFolder\charts\mayastor loki-stack
 
 # Clear the OpenEBS source Helm folder and then copy in the unpacked
 # Helm chart files, plus the upgrade instructions and script and then
