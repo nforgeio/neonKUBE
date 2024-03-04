@@ -308,9 +308,9 @@ namespace Neon.Kube.ClusterDef
         // Define the neon-system related labels.
 
         /// <summary>
-        /// Reserved label that an OpenEBS cStor block device should be deployed on the node.
+        /// Reserved label that an OpenEBS cStor/Mayastor block device should be deployed on the node.
         /// </summary>
-        public const string LabelOpenEbsStorage = ClusterDefinition.ReservedNodePrefix + "system.openebs-storage";
+        public const string LabelOpenEbsStorage = ClusterDefinition.ReservedNodePrefix + "storage.openebs-storage";
 
         /// <summary>
         /// <b>node.neonkube.io/system.openebs-storage</b> [<c>bool</c>]: Indicates that a NEONKUBE OpenEBS 
@@ -506,7 +506,9 @@ namespace Neon.Kube.ClusterDef
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskSize,           ByteUnits.Parse(StorageOSDiskSize)));
+                list.Add(new KeyValuePair<string, object>(LabelOpenEbsStorage, NeonHelper.ToBoolString(SystemOpenEbsStorage)));
+
+                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskSize, ByteUnits.Parse(StorageOSDiskSize)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskLocal,          NeonHelper.ToBoolString(StorageOSDiskLocal)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskHDD,            NeonHelper.ToBoolString(StorageOSDiskHDD)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskRedundant,      NeonHelper.ToBoolString(StorageOSDiskRedundant)));
@@ -539,6 +541,11 @@ namespace Neon.Kube.ClusterDef
             get
             {
                 var labels = (List<KeyValuePair<string, object>>)Standard;
+
+                foreach (var label in Standard)
+                {
+                    labels.Add(new KeyValuePair<string, object>(label.Key, label.Value));
+                }
 
                 foreach (var label in Custom)
                 {

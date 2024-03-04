@@ -23,6 +23,8 @@ spec:
         {{ toYaml .Values.admissionServer.podLabels | nindent 8 }}
         {{- end }}
     spec:
+      # NEONKUBE: customization
+      priorityClassName: {{ .Values.admissionServer.priorityClassName }}
       serviceAccountName: {{ .Values.serviceAccount.cstorOperator.name }}
       containers:
         - name: {{ template "cstor.fullname" . }}-admission-webhook

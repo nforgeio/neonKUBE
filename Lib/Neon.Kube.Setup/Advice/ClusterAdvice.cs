@@ -363,9 +363,19 @@ namespace Neon.Kube.Setup
         public const string Oauth2Proxy = "oauth2-proxy";
 
         /// <summary>
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
+        /// </summary>
+        public const string OpenEbsAdmissionServer = "openebs-sdmission-server";
+
+        /// <summary>
         /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor</b> service.
         /// </summary>
         public const string OpenEbsCstor = "openebs-cstor";
+
+        /// <summary>
+        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor</b> service.
+        /// </summary>
+        public const string OpenEbsCstorAdmissionServer = "openebs-cstor-admission-server";
 
         /// <summary>
         /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSI Controller</b> service.
@@ -406,11 +416,6 @@ namespace Neon.Kube.Setup
         /// Identifies the NEONKUBE cluster's <b>OpenEBS Node Disk Manager</b> service.
         /// </summary>
         public const string OpenEbsNdm = "openebs-ndm";
-
-        /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
-        /// </summary>
-        public const string OpenEbsWebhook = "openebs-webhook";
 
         /// <summary>
         /// Identifies the NEONKUBE cluster's <b>OpenEBS Cstor Pool</b> containers.
@@ -620,6 +625,51 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
+        /// Determines whether we should consider the cluster to be small.
+        /// </summary>
+        /// <returns><c>true</c> for small clusters.</returns>
+        private bool IsSmallCluster =>
+            clusterDefinition.IsDesktop ||
+            clusterDefinition.ControlNodes.Count() == 1 ||
+            clusterDefinition.Nodes.Count() <= 10;
+
+        /// <summary>
+        /// Converts a name/value pair into single line YAML object.
+        /// </summary>
+        /// <param name="key">Specifies the object property name.</param>
+        /// <param name="value">Specifies the object property value.</param>
+        /// <returns>The single-line YAML.</returns>
+        private string ToObjectYaml(string key, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
+
+            return $"{{ {key}: \"{value}\" }}";
+        }
+
+        /// <summary>
+        /// Converts a collection of key/value pairs into single line YAML object.
+        /// </summary>
+        /// <param name="items"></param>
+        /// <returns>The single-line YAML.</returns>
+        private string ToObjectYaml(IEnumerable<KeyValuePair<string, string>> items)
+        {
+            if (items == null || items.Count() > 1)
+            {
+                return "{}";
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var item in items)
+            {
+                sb.AppendWithSeparator($"{item.Key}: {item.Value}", ", ");
+            }
+
+            return $"{{ {sb} }}";
+        }
+
+        /// <summary>
         /// Determines resource and other recommendations for the cluster globally as well
         /// as for cluster components based on the cluster definition passed to the constructor.
         /// </summary>
@@ -635,92 +685,93 @@ namespace Neon.Kube.Setup
 
             // Initialize service advice.
 
-            AddServiceAdvice(ClusterAdvice.AlertManager, CalculateAlertManagerAdvice());
-            AddServiceAdvice(ClusterAdvice.BlackboxExporter, CalculateBlackboxExporterAdvice());
-            AddServiceAdvice(ClusterAdvice.Cilium, CalculateCiliumAdvice());
-            AddServiceAdvice(ClusterAdvice.CertManager, CalculateCertManagerAdvice());
-            AddServiceAdvice(ClusterAdvice.CoreDns, CalculateCoreDnsAdvice());
-            AddServiceAdvice(ClusterAdvice.Dex, CalculateDexAdvice());
-            AddServiceAdvice(ClusterAdvice.EtcdCluster, CalculateEtcdClusterAdvice());
-            AddServiceAdvice(ClusterAdvice.Glauth, CalculateGlauthAdvice());
-            AddServiceAdvice(ClusterAdvice.Grafana, CalculateGrafanaAdvice());
-            AddServiceAdvice(ClusterAdvice.GrafanaAgent, CalculateGrafanaAgentAdvice());
-            AddServiceAdvice(ClusterAdvice.GrafanaAgentNode, CalculateGrafanaAgentNodeAdvice());
-            AddServiceAdvice(ClusterAdvice.GrafanaAgentOperator, CalculateGrafanaAgentOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.Harbor, CalculateHarborAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborChartmuseum, CalculateHarborChartmuseumAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborClair, CalculateHarborClairAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborCore, CalculateHarborCoreAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborJobservice, CalculateHarborJobserviceAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborNotaryServer, CalculateHarborNotaryServerAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborNotarySigner, CalculateHarborNotarySignerAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborPortal, CalculateHarborPortalAdvice());
-            AddServiceAdvice(ClusterAdvice.Redis, CalculateRedisAdvice());
-            AddServiceAdvice(ClusterAdvice.HarborRegistry, CalculateHarborRegistryAdvice());
-            AddServiceAdvice(ClusterAdvice.IstioIngressGateway, CalculateIstioIngressGatewayAdvice());
-            AddServiceAdvice(ClusterAdvice.IstioProxy, CalculateIstioProxyAdvice());
-            AddServiceAdvice(ClusterAdvice.IstioPilot, CalculateIstioPilotAdvice());
-            AddServiceAdvice(ClusterAdvice.Kiali, CalculateKialiAdvice());
-            AddServiceAdvice(ClusterAdvice.KubernetesDashboard, CalculateKubernetesDashboardAdvice());
-            AddServiceAdvice(ClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice());
-            AddServiceAdvice(ClusterAdvice.Loki, CalculateLokiAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiCompactor, CalculateLokiCompactorAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiDistributor, CalculateLokiDistributorAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiIndexGateway, CalculateLokiIndexGatewayAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiIngester, CalculateLokiIngesterAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiQuerier, CalculateLokiQuerierAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiQueryFrontend, CalculateLokiQueryFrontendAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiRuler, CalculateLokiRulerAdvice());
-            AddServiceAdvice(ClusterAdvice.LokiTableManager, CalculateLokiTableManagerAdvice());
-            AddServiceAdvice(ClusterAdvice.Memcached, CalculateMemcachedAdvice());
-            AddServiceAdvice(ClusterAdvice.MetricsServer, CalculateMetricsServerAdvice());
-            AddServiceAdvice(ClusterAdvice.Mimir, CalculateMimirAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirAlertmanager, CalculateMimirAlertmanagerAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirCompactor, CalculateMimirCompactorAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirDistributor, CalculateMimirDistributorAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirIngester, CalculateMimirIngesterAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirOverridesExporter, CalculateMimirOverridesExporterAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirQuerier, CalculateMimirQuerierAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirQueryFrontend, CalculateMimirQueryFrontendAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirRuler, CalculateMimirRulerAdvice());
-            AddServiceAdvice(ClusterAdvice.MimirStoreGateway, CalculateMimirStoreGatewayAdvice());
-            AddServiceAdvice(ClusterAdvice.Minio, CalculateMinioAdvice());
-            AddServiceAdvice(ClusterAdvice.MinioOperator, CalculateMinioOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonAcme, CalculateNeonAcmeAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonNodeAgent, CalculateNeonNodeAgentAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonSystemDb, CalculateNeonSystemDbAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonSystemDbOperator, CalculateNeonSystemDbOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonSystemDbMetrics, CalculateNeonSystemDbMetricsAdvice());
-            AddServiceAdvice(ClusterAdvice.NeonSystemDbPooler, CalculateNeonSystemDbPoolerAdvice());
-            AddServiceAdvice(ClusterAdvice.NodeProblemDetector, CalculateNodeProblemDetectorAdvice());
-            AddServiceAdvice(ClusterAdvice.Oauth2Proxy, CalculateOauth2ProxyAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstor, CalculateOpenEbsCstorAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorCsiController, CalculateOpenEbsCstorCsiControllerAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorCsiNode, CalculateOpenEbsCstorCsiNodeAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorCspcOperator, CalculateOpenEbsCstorCspcOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorCvcOperator, CalculateOpenEbsCstorCvcOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorPool, CalculateOpenEbsCstorPoolAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsCstorPoolAux, CalculateOpenEbsCstorPoolAuxAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsJiva, CalculateOpenEbsJivaAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsProvisionerLocalPv, CalculateOpenEbsProvisionerLocalPvAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsNdm, CalculateOpenEbsNdmAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsNdmOperator, CalculateOpenEbsNdmOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.OpenEbsWebhook, CalculateOpenEbsWebhookAdvice());
-            AddServiceAdvice(ClusterAdvice.Prometheus, CalculatePrometheusAdvice());
-            AddServiceAdvice(ClusterAdvice.PrometheusOperator, CalculatePrometheusOperatorAdvice());
-            AddServiceAdvice(ClusterAdvice.Reloader, CalculateReloaderAdvice());
-            AddServiceAdvice(ClusterAdvice.Tempo, CalculateTempoAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoAlertmanager, CalculateTempoAlertmanagerAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoCompactor, CalculateTempoCompactorAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoDistributor, CalculateTempoDistributorAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoIngester, CalculateTempoIngesterAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoOverridesExporter, CalculateTempoOverridesExporterAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoQuerier, CalculateTempoQuerierAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoQueryFrontend, CalculateTempoQueryFrontendAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoRuler, CalculateTempoRulerAdvice());
-            AddServiceAdvice(ClusterAdvice.TempoStoreGateway, CalculateTempoStoreGatewayAdvice());
+            CalculateAlertManagerAdvice();
+            CalculateBlackboxExporterAdvice();
+            CalculateCiliumAdvice();
+            CalculateCertManagerAdvice();
+            CalculateCoreDnsAdvice();
+            CalculateDexAdvice();
+            CalculateEtcdClusterAdvice();
+            CalculateGlauthAdvice();
+            CalculateGrafanaAdvice();
+            CalculateGrafanaAgentAdvice();
+            CalculateGrafanaAgentNodeAdvice();
+            CalculateGrafanaAgentOperatorAdvice();
+            CalculateHarborAdvice();
+            CalculateHarborChartmuseumAdvice();
+            CalculateHarborClairAdvice();
+            CalculateHarborCoreAdvice();
+            CalculateHarborJobserviceAdvice();
+            CalculateHarborNotaryServerAdvice();
+            CalculateHarborNotarySignerAdvice();
+            CalculateHarborPortalAdvice();
+            CalculateRedisAdvice();
+            CalculateHarborRegistryAdvice();
+            CalculateIstioIngressGatewayAdvice();
+            CalculateIstioProxyAdvice();
+            CalculateIstioPilotAdvice();
+            CalculateKialiAdvice();
+            CalculateKubernetesDashboardAdvice();
+            CalculateKubeStateMetricsAdvice();
+            CalculateLokiAdvice();
+            CalculateLokiCompactorAdvice();
+            CalculateLokiDistributorAdvice();
+            CalculateLokiIndexGatewayAdvice();
+            CalculateLokiIngesterAdvice();
+            CalculateLokiQuerierAdvice();
+            CalculateLokiQueryFrontendAdvice();
+            CalculateLokiRulerAdvice();
+            CalculateLokiTableManagerAdvice();
+            CalculateMemcachedAdvice();
+            CalculateMetricsServerAdvice();
+            CalculateMimirAdvice();
+            CalculateMimirAlertmanagerAdvice();
+            CalculateMimirCompactorAdvice();
+            CalculateMimirDistributorAdvice();
+            CalculateMimirIngesterAdvice();
+            CalculateMimirOverridesExporterAdvice();
+            CalculateMimirQuerierAdvice();
+            CalculateMimirQueryFrontendAdvice();
+            CalculateMimirRulerAdvice();
+            CalculateMimirStoreGatewayAdvice();
+            CalculateMinioAdvice();
+            CalculateMinioOperatorAdvice();
+            CalculateNeonAcmeAdvice();
+            CalculateNeonClusterOperatorAdvice();
+            CalculateNeonNodeAgentAdvice();
+            CalculateNeonSsoSessionProxyAdvice();
+            CalculateNeonSystemDbAdvice();
+            CalculateNeonSystemDbOperatorAdvice();
+            CalculateNeonSystemDbMetricsAdvice();
+            CalculateNeonSystemDbPoolerAdvice();
+            CalculateNodeProblemDetectorAdvice();
+            CalculateOauth2ProxyAdvice();
+            CalculateOpenEbsCstorAdvice();
+            CalculateOpenEbsCstorAdmissionServerAdvice();
+            CalculateOpenEbsCstorCsiControllerAdvice();
+            CalculateOpenEbsCstorCsiNodeAdvice();
+            CalculateOpenEbsCstorCspcOperatorAdvice();
+            CalculateOpenEbsCstorCvcOperatorAdvice();
+            CalculateOpenEbsCstorPoolAdvice();
+            CalculateOpenEbsCstorPoolAuxAdvice();
+            CalculateOpenEbsJivaAdvice();
+            CalculateOpenEbsProvisionerLocalPvAdvice();
+            CalculateOpenEbsNdmAdvice();
+            CalculateOpenEbsAdmissionServerAdvice();
+            CalculateOpenEbsNdmOperatorAdvice();
+            CalculatePrometheusAdvice();
+            CalculatePrometheusOperatorAdvice();
+            CalculateReloaderAdvice();
+            CalculateTempoAdvice();
+            CalculateTempoAlertmanagerAdvice();
+            CalculateTempoCompactorAdvice();
+            CalculateTempoDistributorAdvice();
+            CalculateTempoIngesterAdvice();
+            CalculateTempoOverridesExporterAdvice();
+            CalculateTempoQuerierAdvice();
+            CalculateTempoQueryFrontendAdvice();
+            CalculateTempoRulerAdvice();
+            CalculateTempoStoreGatewayAdvice();
 
             // Since advice related classes cannot handle updates performed on multiple threads 
             // and cluster setup is multi-threaded, we're going to mark the advice as read-only
@@ -729,59 +780,55 @@ namespace Neon.Kube.Setup
             IsReadOnly = true;
         }
 
-        private ServiceAdvice CalculateAlertManagerAdvice()
+        private void CalculateAlertManagerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.AlertManager);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateBlackboxExporterAdvice()
+        private void CalculateBlackboxExporterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.BlackboxExporter);
 
-            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
             advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateCiliumAdvice()
+        private void CalculateCiliumAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Cilium);
 
             advice.MetricsEnabled = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateCertManagerAdvice()
+        private void CalculateCertManagerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.CertManager);
 
-            advice.ReplicaCount = 1;
+            advice.Replicas = 1;
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
+                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("64Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsEnabled   = false;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonSystemDbAdvice()
+        private void CalculateNeonSystemDbAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDb);
 
-            advice.ReplicaCount = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = clusterDefinition.ControlNodes.Count();
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -789,18 +836,16 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonSystemDbOperatorAdvice()
+        private void CalculateNeonSystemDbOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbOperator);
 
-            advice.ReplicaCount = 1;
+            advice.Replicas = 1;
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -808,18 +853,16 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonSystemDbMetricsAdvice()
+        private void CalculateNeonSystemDbMetricsAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbMetrics);
 
-            advice.ReplicaCount = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = clusterDefinition.ControlNodes.Count();
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -827,18 +870,16 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonSystemDbPoolerAdvice()
+        private void CalculateNeonSystemDbPoolerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbPooler);
 
-            advice.ReplicaCount = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = clusterDefinition.ControlNodes.Count();
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -846,106 +887,97 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateCoreDnsAdvice()
+        private void CalculateCoreDnsAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.CoreDns);
 
-            advice.PodMemoryRequest = ByteUnits.Parse("30Mi");
             advice.PodMemoryLimit   = ByteUnits.Parse("170Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("30Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateEtcdClusterAdvice()
+        private void CalculateEtcdClusterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.EtcdCluster);
 
-            advice.ReplicaCount     = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.MetricsEnabled   = false;
+            advice.Replicas         = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
             advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
-            advice.MetricsEnabled   = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateGrafanaAdvice()
+        private void CalculateGrafanaAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Grafana);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            advice.MetricsEnabled = false;
+
+            if (IsSmallCluster)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("350Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsEnabled   = false;
             }
             else
             {
-                advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
-
+                advice.Replicas         = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
-                advice.MetricsEnabled   = false;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateGrafanaAgentAdvice()
+        private void CalculateGrafanaAgentAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgent);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            advice.MetricsEnabled = false;
+
+            if (IsSmallCluster)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsEnabled   = false;
             }
             else
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
-                advice.MetricsEnabled   = false;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateGrafanaAgentNodeAdvice()
+        private void CalculateGrafanaAgentNodeAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgentNode);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            advice.MetricsEnabled = false;
+
+            if (IsSmallCluster)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsEnabled   = false;
             }
             else
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
-                advice.MetricsEnabled   = false;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateGrafanaAgentOperatorAdvice()
+        private void CalculateGrafanaAgentOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgentOperator);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -953,92 +985,90 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("100Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborAdvice()
+        private void CalculateHarborAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Harbor);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsInterval = "5m";
             }
 
-            advice.MetricsEnabled = false;
+            advice.MetricsEnabled = true;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborChartmuseumAdvice()
+        private void CalculateHarborChartmuseumAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborChartmuseum);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborClairAdvice()
+        private void CalculateHarborClairAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborClair);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborCoreAdvice()
+        private void CalculateHarborCoreAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborCore);
             
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborJobserviceAdvice()
+        private void CalculateHarborJobserviceAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborJobservice);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborNotaryServerAdvice()
+        private void CalculateHarborNotaryServerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborNotaryServer);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborNotarySignerAdvice()
+        private void CalculateHarborNotarySignerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborNotarySigner);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborPortalAdvice()
+        private void CalculateHarborPortalAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborPortal);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateRedisAdvice()
+        private void CalculateRedisAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Redis);
 
-            advice.ReplicaCount   = Math.Min(3, clusterDefinition.ControlNodes.Count());
             advice.MetricsEnabled = true;
+            advice.Replicas       = Math.Min(3, clusterDefinition.ControlNodes.Count());
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateHarborRegistryAdvice()
+        private void CalculateHarborRegistryAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.HarborRegistry);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateIstioIngressGatewayAdvice()
+        private void CalculateIstioIngressGatewayAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.IstioIngressGateway);
 
@@ -1047,10 +1077,10 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("160Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateIstioProxyAdvice()
+        private void CalculateIstioProxyAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.IstioProxy);
 
@@ -1059,10 +1089,10 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateIstioPilotAdvice()
+        private void CalculateIstioPilotAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.IstioPilot);
 
@@ -1071,335 +1101,296 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateDexAdvice()
+        private void CalculateDexAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Dex);
 
-            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.MetricsEnabled   = true;
+            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
-            {
-                advice.MetricsEnabled = false;
-            }
-
-            advice.MetricsEnabled = true;
-
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateGlauthAdvice()
+        private void CalculateGlauthAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Glauth);
 
+            advice.MetricsEnabled   = true;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
-            {
-                advice.MetricsEnabled = false;
-            }
-
-            advice.MetricsEnabled = true;
-
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateKialiAdvice()
+        private void CalculateKialiAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Kiali);
 
-            advice.MetricsEnabled = false;
+            advice.MetricsEnabled = true;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateKubernetesDashboardAdvice()
+        private void CalculateKubernetesDashboardAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.KubernetesDashboard);
 
-            advice.ReplicaCount     = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
+            advice.MetricsEnabled   = true;
+            advice.Replicas         = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
 
-            advice.MetricsEnabled = false;
-
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateKubeStateMetricsAdvice()
+        private void CalculateKubeStateMetricsAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.KubeStateMetrics);
 
-            advice.ReplicaCount   = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
             advice.MetricsEnabled = true;
+            advice.Replicas       = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsInterval = "5m";
-                advice.ReplicaCount    = 1;
+                advice.Replicas        = 1;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMemcachedAdvice()
+        private void CalculateMemcachedAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Memcached);
 
-            advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             advice.MetricsEnabled   = true;
             advice.MetricsInterval  = "60s";
+            advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMetricsServerAdvice()
+        private void CalculateMetricsServerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MetricsServer);
 
             advice.MetricsEnabled = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirAdvice()
+        private void CalculateMimirAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Mimir);
 
             advice.MetricsEnabled = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirAlertmanagerAdvice()
+        private void CalculateMimirAlertmanagerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirAlertmanager);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
+            advice.Replicas         = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirCompactorAdvice()
+        private void CalculateMimirCompactorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirCompactor);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
+            advice.Replicas         = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirDistributorAdvice()
+        private void CalculateMimirDistributorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirDistributor);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            advice.MetricsEnabled = false;
+
+            if (IsSmallCluster)
             {
-                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
+                advice.Replicas         = 1;
             }
             else
             {
-                advice.MetricsEnabled   = false;
-                advice.ReplicaCount     = 3;
+                advice.Replicas         = 3;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirIngesterAdvice()
+        private void CalculateMimirIngesterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirIngester);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            advice.MetricsEnabled = false;
+
+            if (IsSmallCluster)
             {
-                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.ReplicaCount     = 1;
+                advice.Replicas         = 1;
             }
             else
             {
-                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirOverridesExporterAdvice()
+        private void CalculateMimirOverridesExporterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirOverridesExporter);
 
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirQuerierAdvice()
+        private void CalculateMimirQuerierAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirQuerier);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.MetricsEnabled = false;
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
-                advice.MetricsEnabled  = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
             }
             else
             {
-                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
-            return advice;
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirQueryFrontendAdvice()
+        private void CalculateMimirQueryFrontendAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirQueryFrontend);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirRulerAdvice()
+        private void CalculateMimirRulerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirRuler);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMimirStoreGatewayAdvice()
+        private void CalculateMimirStoreGatewayAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MimirStoreGateway);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
-        private ServiceAdvice CalculateLokiAdvice()
+        private void CalculateLokiAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Loki);
 
             advice.MetricsEnabled = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
-        private ServiceAdvice CalculateLokiCompactorAdvice()
+        private void CalculateLokiCompactorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiCompactor);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
+            advice.Replicas        = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiDistributorAdvice()
+        private void CalculateLokiDistributorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiDistributor);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiIndexGatewayAdvice()
+        private void CalculateLokiIndexGatewayAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiIndexGateway);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiIngesterAdvice()
+        private void CalculateLokiIngesterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiIngester);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
-
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled   = true;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
             }
             else
             {
@@ -1408,23 +1399,20 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
             }
 
-            return advice;
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiQuerierAdvice()
+        private void CalculateLokiQuerierAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiQuerier);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
-
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
             }
             else
             {
@@ -1433,119 +1421,106 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
-            return advice;
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiQueryFrontendAdvice()
+        private void CalculateLokiQueryFrontendAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiQueryFrontend);
 
-            advice.ReplicaCount     = 1;
+            advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
-            advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiRulerAdvice()
+        private void CalculateLokiRulerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiRuler);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateLokiTableManagerAdvice()
+        private void CalculateLokiTableManagerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.LokiTableManager);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMinioAdvice()
+        private void CalculateMinioAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Minio);
 
             if (clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count() >= 3)
             {
-                if (clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count() >= 4)
-                {
-                    advice.ReplicaCount = clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count();
-                }
-                else
-                {
-                    advice.ReplicaCount = 1;
-                }
-
                 advice.PodMemoryLimit   = ByteUnits.Parse("4Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("4Gi");
                 advice.MetricsInterval  = "1m";
+
+                if (clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count() >= 4)
+                {
+                    advice.Replicas = clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count();
+                }
+                else
+                {
+                    advice.Replicas = 1;
+                }
             }
             else
             {
-                advice.ReplicaCount = 1;
+                advice.Replicas = 1;
             }
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
-                advice.MetricsEnabled   = false;
-                advice.ReplicaCount     = 1;
             }
 
             advice.MetricsEnabled = true;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateMinioOperatorAdvice()
+        private void CalculateMinioOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.MinioOperator);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("40Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonClusterOperatorAdvice()
+        private void CalculateNeonClusterOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonClusterOperator);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
-            {
-                advice.MetricsEnabled = true;
-            }
-
+            advice.MetricsEnabled   = true;
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("115Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonAcmeAdvice()
+        private void CalculateNeonAcmeAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonAcme);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -1553,16 +1528,14 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNeonNodeAgentAdvice()
+        private void CalculateNeonNodeAgentAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonNodeAgent);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -1570,16 +1543,14 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("350Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
         
-        private ServiceAdvice CalculateNeonSsoSessionProxyAdvice()
+        private void CalculateNeonSsoSessionProxyAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NeonSsoSessionProxy);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
@@ -1587,256 +1558,283 @@ namespace Neon.Kube.Setup
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("60Mi");
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateNodeProblemDetectorAdvice()
+        private void CalculateNodeProblemDetectorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.NodeProblemDetector);
 
             advice.MetricsInterval = "1m";
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOauth2ProxyAdvice()
+        private void CalculateOauth2ProxyAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Oauth2Proxy);
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled = false;
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorAdvice()
+        private void CalculateOpenEbsCstorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstor);
 
             advice.MetricsEnabled = true;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorCsiControllerAdvice()
+        private void CalculateOpenEbsCstorAdmissionServerAdvice()
+        {
+            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorAdmissionServer);
+
+            // We're going to schedule the CSI controller on the storage
+            // nodes for cStor.
+
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                advice.NodeSelector = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
+            }
+
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
+        }
+
+        private void CalculateOpenEbsCstorCsiControllerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCsiController);
 
-            return advice;
+            // We're going to schedule the CSI controller on the storage
+            // nodes for cStor.
+
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                advice.NodeSelector = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
+            }
+
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorCsiNodeAdvice()
+        private void CalculateOpenEbsCstorCsiNodeAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCsiNode);
 
-            return advice;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorCspcOperatorAdvice()
+        private void CalculateOpenEbsCstorCspcOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCspcOperator);
 
-            return advice;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorCvcOperatorAdvice()
+        private void CalculateOpenEbsCstorCvcOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCvcOperator);
 
-            return advice;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorPoolAdvice()
+        private void CalculateOpenEbsCstorPoolAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorPool);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
+                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsEnabled   = false;
-                advice.ReplicaCount     = 1;
             }
             else
             {
+                advice.MetricsEnabled   = true;
                 advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
-                advice.MetricsEnabled   = true;
             }
 
-            return advice;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsCstorPoolAuxAdvice()
+        private void CalculateOpenEbsCstorPoolAuxAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorPoolAux);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
                 advice.MetricsEnabled   = false;
-                advice.ReplicaCount     = 1;
             }
             else
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("500Mi");
-                advice.MetricsEnabled   = false;
             }
 
-            return advice;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsJivaAdvice()
+        private void CalculateOpenEbsJivaAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJiva);
 
-            advice.MetricsEnabled = true;
-            advice.ReplicaCount   = Math.Max(1, Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemOpenEbsStorage).Count())));
+            advice.MetricsEnabled    = true;
+            advice.Replicas          = Math.Max(1, Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemOpenEbsStorage).Count())));
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsProvisionerLocalPvAdvice()
+        private void CalculateOpenEbsProvisionerLocalPvAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsProvisionerLocalPv);
 
-            advice.ReplicaCount = Math.Max(1, clusterDefinition.Workers.Count() / 3);
+            advice.Replicas          = Math.Max(1, clusterDefinition.Workers.Count() / 3);
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsNdmAdvice()
+        private void CalculateOpenEbsNdmAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsNdm);
 
-            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
+            advice.PodMemoryLimit    = ByteUnits.Parse("128Mi");
+            advice.PodMemoryRequest  = ByteUnits.Parse("16Mi");
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsNdmOperatorAdvice()
+        private void CalculateOpenEbsNdmOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsNdmOperator);
 
-            advice.ReplicaCount = 1;
+            advice.Replicas          = 1;
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateOpenEbsWebhookAdvice()
+        private void CalculateOpenEbsAdmissionServerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsWebhook);
+            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsAdmissionServer);
 
-            advice.ReplicaCount = Math.Max(1, clusterDefinition.Workers.Count() / 3);
+            advice.Replicas          = Math.Max(1, clusterDefinition.Workers.Count() / 3);
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculatePrometheusAdvice()
+        private void CalculatePrometheusAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Prometheus);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculatePrometheusOperatorAdvice()
+        private void CalculatePrometheusOperatorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.PrometheusOperator);
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateReloaderAdvice()
+        private void CalculateReloaderAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Reloader);
 
             advice.MetricsEnabled   = false;
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+            advice.Replicas         = 1;
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoAdvice()
+        private void CalculateTempoAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.Tempo);
 
             advice.MetricsEnabled = false;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoAlertmanagerAdvice()
+        private void CalculateTempoAlertmanagerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoAlertmanager);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoCompactorAdvice()
+        private void CalculateTempoCompactorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoCompactor);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoDistributorAdvice()
+        private void CalculateTempoDistributorAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoDistributor);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoIngesterAdvice()
+        private void CalculateTempoIngesterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoIngester);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
             }
             else
             {
@@ -1845,35 +1843,31 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoOverridesExporterAdvice()
+        private void CalculateTempoOverridesExporterAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoOverridesExporter);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoQuerierAdvice()
+        private void CalculateTempoQuerierAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoQuerier);
 
-            advice.ReplicaCount = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
 
-            if (clusterDefinition.IsDesktop ||
-                clusterDefinition.ControlNodes.Count() == 1 ||
-                clusterDefinition.Nodes.Count() <= 10)
+            if (IsSmallCluster)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.ReplicaCount     = 1;
             }
             else
             {
@@ -1882,43 +1876,40 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoQueryFrontendAdvice()
+        private void CalculateTempoQueryFrontendAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoQueryFrontend);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoRulerAdvice()
+        private void CalculateTempoRulerAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoRuler);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private ServiceAdvice CalculateTempoStoreGatewayAdvice()
+        private void CalculateTempoStoreGatewayAdvice()
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.TempoStoreGateway);
 
-            advice.ReplicaCount     = 1;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.ReplicaCount     = 1;
+            advice.Replicas         = 1;
 
-            return advice;
+            AddServiceAdvice(advice.ServiceName, advice);
         }
     }
 }

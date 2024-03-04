@@ -453,7 +453,7 @@ namespace Neon.Kube.Hosting.HyperV
                             node.Status = "openebs: stop VM";
                             hyperv.StopVm(vmName);
 
-                            node.Status = "openebs: add cStor disk";
+                            node.Status = "openebs: create data disk";
                             hyperv.AddVmDrive(vmName,
                                 new VirtualDrive()
                                 {

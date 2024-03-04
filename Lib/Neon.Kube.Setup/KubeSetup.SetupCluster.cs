@@ -92,7 +92,7 @@ namespace Neon.Kube.Setup
             var logFolder = KubeHelper.LogFolder;
 
             // Ensure that the cluster's setup state file exists and that it
-            // indicates that tyhe cluster was prepared.
+            // indicates that the cluster was prepared.
 
             var contextName    = KubeContextName.Parse($"root@{clusterDefinition.Name}");
             var setupStatePath = KubeSetupState.GetPath((string)contextName);
@@ -189,14 +189,9 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
+            controller.Add(KubeSetupProperty.ClusterAdvice, ClusterAdvice.Compute(clusterDefinition));
 
             // Configure the setup steps.
-
-            controller.AddGlobalStep("resource requirements",
-                (controller) =>
-                {
-                    controller.Add(KubeSetupProperty.ClusterAdvice, ClusterAdvice.Compute(clusterDefinition));
-                });
 
             cluster.HostingManager.AddSetupSteps(controller);
 

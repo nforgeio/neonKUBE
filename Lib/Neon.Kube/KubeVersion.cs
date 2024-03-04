@@ -663,6 +663,12 @@ namespace Neon.Kube
         /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
         /// </summary>
         [KubeValue]
+        public const string OpenEbsCvcOperator = "3.6.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
+        /// </summary>
+        [KubeValue]
         public const string OpenEbsNfsServerAlpine = "0.9.0";
 
         /// <summary>
@@ -672,7 +678,7 @@ namespace Neon.Kube
         public const string OpenEbsNodeDiskExporter = "1.9.0";
 
         /// <summary>
-        /// Specifies the version of <b>openebs-node-disk-manager</b> to be installed.
+        /// Specifies the version of <b>openebs-node-disk-manager</b> o be installed.
         /// </summary>
         [KubeValue]
         public const string OpenEbsNodeDiskManager = "1.9.0";
@@ -694,6 +700,12 @@ namespace Neon.Kube
         /// </summary>
         [KubeValue]
         public const string OpenEbsProvisionerNfs = "0.9.0";
+
+        /// <summary>
+        /// Specifies the version of <b>openebs-cstor-admission-server</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsCstorWebHook = "3.6.0";
 
         /// <summary>
         /// Specifies the version of <b>prom-blackbox-exporter</b> to be installed.

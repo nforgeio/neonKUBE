@@ -536,7 +536,7 @@ namespace Neon.Kube.Hosting.XenServer
                                 node.Status = "openebs: stop VM";
                                 xenClient.Machine.Shutdown(vm);
 
-                                node.Status = "openebs: add cStor disk";
+                                node.Status = "openebs: create data disk";
                                 xenClient.Machine.AddDisk(vm, disk);
 
                                 node.Status = "openebs: restart VM";

@@ -137,14 +137,14 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); podMemoryRequest = value; }
         }
 
-        private int? replicaCount;
+        private int  replicaCount = 1;
 
         /// <summary>
         /// Specifies the number of pods to be seployed for the service or <b>1</b> when this property is not set.
         /// </summary>
-        public int ReplicaCount
+        public int Replicas
         {
-            get { return replicaCount ?? 1; }
+            get { return replicaCount; }
             set { EnsureNotReadOnly(); replicaCount = value; }
         }
 
@@ -195,6 +195,30 @@ namespace Neon.Kube.Setup
         public string GetMetricsPort(int port)
         {
             return MetricsEnabled ? port.ToString() : string.Empty;
+        }
+
+        private string nodeSelector = "{}";
+
+        /// <summary>
+        /// Returns the single-line node selector object for the service or <b>"{}"</b>
+        /// when this is unconstrained.
+        /// </summary>
+        public string NodeSelector
+        {
+            get { return nodeSelector; }
+            set { EnsureNotReadOnly(); nodeSelector = value; }
+        }
+
+        private string priorityClassName = PriorityClass.NeonMin.Name;
+
+        /// <summary>
+        /// Returns the priority class name for the service.  This defaults to
+        /// <see cref="PriorityClass.NeonMin"/>.
+        /// </summary>
+        public string PriorityClassName
+        {
+            get { return priorityClassName; }
+            set { EnsureNotReadOnly(); priorityClassName = value; }
         }
     }
 }

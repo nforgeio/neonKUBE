@@ -269,7 +269,7 @@ spec:
                             {
                                 if (label.Value != null)
                                 {
-                                    patch.Metadata.Labels.Add(label.Key, label.Value.ToString());
+                                    patch.Metadata.Labels[label.Key] = label.Value.ToString();
                                 }
                             }
 
@@ -2454,7 +2454,7 @@ istioctl install --verify -y -f manifest.yaml
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("replicas", serviceAdvice.ReplicaCount);
+                    values.Add("replicas", serviceAdvice.Replicas);
                     values.Add("cluster.name", cluster.Name);
                     values.Add("settings.clusterName", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
@@ -2690,16 +2690,22 @@ istioctl install --verify -y -f manifest.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             
-            var k8s                      = GetK8sClient(controller);
-            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
-            var clusterAdvice            = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var cStorAdvice              = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstor);
-            var jivaAdvice               = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJiva);
-            var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
-            var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
-            var provisionerLocalPvAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsProvisionerLocalPv);
-            var webhookAdvice            = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsWebhook);
+            var k8s                        = GetK8sClient(controller);
+            var cluster                    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition          = cluster.SetupState.ClusterDefinition;
+            var clusterAdvice              = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var cStorAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstor);
+            var cStorAdmissionServerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorAdmissionServer);
+            var jivaAdvice                 = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJiva);
+            var ndmAdvice                  = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
+            var ndmOperatorAdvice          = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
+            var provisionerLocalPvAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsProvisionerLocalPv);
+            var webhookAdvice              = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsAdmissionServer);
+
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
+            {
+                throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
+            }
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
@@ -3382,7 +3388,7 @@ jiva:
   # non csi configuration
   image: ""openebs/jiva""
   imageTag: ""2.12.2""
-  replicas: {jivaAdvice.ReplicaCount}
+  replicas: {jivaAdvice.Replicas}
   defaultStoragePath: ""/var/openebs""
 
   # jiva csi driver configuration
@@ -3474,7 +3480,7 @@ cstor:
   # | - cstor(enable)
   # | | - openebs-ndm(disable)
   # | - openebs-ndm(enable)
-  enabled: false
+  enabled: {NeonHelper.ToBoolString(clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)}
   openebsNDM:
     enabled: false
 
@@ -3482,70 +3488,73 @@ cstor:
   # This is a small part of the full configuration. Full configuration available
   # here - https://openebs.github.io/cstor-operators
 
-#  imagePullSecrets: []
-#
-#  rbac:
-#    create: true
-#    pspEnabled: false
-#
-#  cspcOperator:
-#    poolManager:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/cstor-pool-manager
-#        tag: 3.6.0
-#    cstorPool:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/cstor-pool
-#        tag: 3.6.0
-#    cstorPoolExporter:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/m-exporter
-#        tag: 3.6.0
-#    image:
-#      registry: quay.io/
-#      repository: openebs/cspc-operator
-#      pullPolicy: IfNotPresent
-#      tag: 3.6.0
-#
-#  cvcOperator:
-#    target:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/cstor-istgt
-#        tag: 3.6.0
-#    volumeMgmt:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/cstor-volume-manager
-#        tag: 3.6.0
-#    volumeExporter:
-#      image:
-#        registry: quay.io/
-#        repository: openebs/m-exporter
-#        tag: 3.6.0
-#    image:
-#      registry: quay.io/
-#      repository: openebs/cvc-operator
-#      pullPolicy: IfNotPresent
-#      tag: 3.6.0
-#
-#  cstorCSIPlugin:
-#    image:
-#      registry: quay.io/
-#      repository: openebs/cstor-csi-driver
-#      pullPolicy: IfNotPresent
-#      tag: 3.6.0
-#
-#  admissionServer:
-#    componentName: cstor-admission-webhook
-#    image:
-#      registry: quay.io/
-#      repository: openebs/cstor-webhook
-#      pullPolicy: IfNotPresent
-#      tag: 3.6.0
+  imagePullSecrets: []
+
+  rbac:
+    create: true
+    pspEnabled: false
+
+  cspcOperator:
+    poolManager:
+      image:
+        registry: quay.io/
+        repository: openebs/cstor-pool-manager
+#        tag: {KubeVersion.OpenEbs}
+    cstorPool:
+      image:
+        registry: quay.io/
+        repository: openebs/cstor-pool
+#        tag: {KubeVersion.OpenEbs}
+    cstorPoolExporter:
+      image:
+        registry: quay.io/
+        repository: openebs/m-exporter
+#        tag: {KubeVersion.OpenEbs}
+    image:
+      registry: quay.io/
+      repository: openebs/cspc-operator
+      pullPolicy: IfNotPresent
+#      tag: {KubeVersion.OpenEbs}
+
+  cvcOperator:
+    target:
+      image:
+        registry: quay.io/
+        repository: openebs/cstor-istgt
+        tag: {KubeVersion.OpenEbs}
+    volumeMgmt:
+      image:
+        registry: quay.io/
+        repository: openebs/cstor-volume-manager
+#        tag: {KubeVersion.OpenEbs}
+    volumeExporter:
+      image:
+        registry: quay.io/
+        repository: openebs/m-exporter
+#        tag: {KubeVersion.OpenEbs}
+    image:
+      registry: quay.io/
+      repository: openebs/cvc-operator
+      pullPolicy: IfNotPresent
+      tag: {KubeVersion.OpenEbsCvcOperator}
+
+  cstorCSIPlugin:
+    image:
+      registry: quay.io/
+      repository: openebs/cstor-csi-driver
+      pullPolicy: IfNotPresent
+#      tag: {KubeVersion.OpenEbs}
+
+  admissionServer:
+    componentName: cstor-admission-webhook
+    image:
+      registry: quay.io/
+      repository: openebs/cstor-webhook
+      pullPolicy: IfNotPresent
+#      tag: {KubeVersion.OpenEbs}
+    nodeSelector: {cStorAdmissionServerAdvice.NodeSelector}
+    priorityClassName: {cStorAdmissionServerAdvice.PriorityClassName}
+    replicas: {cStorAdmissionServerAdvice.Replicas}
 
 # ndm configuration goes here
 # https://openebs.github.io/node-disk-manager
@@ -3744,17 +3753,12 @@ cleanup:
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
-                                valuesFiles:  new string[] { values });
-                        });
+                                valuesFile:   values);
+                    });
 
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
                     await CreateStorageClass(controller, controlNode, "default", isDefault: true);
                     await WaitForOpenEbsReady(controller, controlNode);
-
-                    if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
-                    {
-                        throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
-                    }
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
                         async () =>
@@ -4356,7 +4360,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
                     var i      = 0;
 
-                    values.Add($"replicas", blackboxAdvice.ReplicaCount);
+                    values.Add($"replicas", blackboxAdvice.Replicas);
                     values.Add($"serviceMesh.enabled", false);
                     values.Add($"resources.requests.memory", ToSiString(blackboxAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(blackboxAdvice.PodMemoryLimit));
@@ -4435,7 +4439,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "install", message: "memcached");
 
-                    values.Add($"replicas", serviceAdvice.ReplicaCount);
+                    values.Add($"replicas", serviceAdvice.Replicas);
                     values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
@@ -4513,47 +4517,47 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
-                    values.Add($"alertmanager.replicas", alertmanagerAdvice.ReplicaCount);
+                    values.Add($"alertmanager.replicas", alertmanagerAdvice.Replicas);
                     values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
                     values.Add($"alertmanager.resources.limits.memory", ToSiString(alertmanagerAdvice.PodMemoryLimit));
                     values.Add($"alertmanager.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.replicas", compactorAdvice.Replicas);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.replicas", distributorAdvice.Replicas);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.replicas", ingesterAdvice.Replicas);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"overrides_exporter.replicas", overridesAdvice.ReplicaCount);
+                    values.Add($"overrides_exporter.replicas", overridesAdvice.Replicas);
                     values.Add($"overrides_exporter.resources.requests.memory", ToSiString(overridesAdvice.PodMemoryRequest));
                     values.Add($"overrides_exporter.resources.limits.memory", ToSiString(overridesAdvice.PodMemoryLimit));
                     values.Add($"overrides_exporter.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.replicas", querierAdvice.Replicas);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"query_frontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"query_frontend.replicas", queryFrontendAdvice.Replicas);
                     values.Add($"query_frontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"query_frontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"query_frontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
+                    values.Add($"ruler.replicas", rulerAdvice.Replicas);
                     values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"store_gateway.replicas", storeGatewayAdvice.ReplicaCount);
+                    values.Add($"store_gateway.replicas", storeGatewayAdvice.Replicas);
                     values.Add($"store_gateway.resources.requests.memory", ToSiString(storeGatewayAdvice.PodMemoryRequest));
                     values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
                     values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
@@ -4687,37 +4691,37 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
-                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.replicas", compactorAdvice.Replicas);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.replicas", distributorAdvice.Replicas);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"indexGateway.replicas", indexGatewayAdvice.ReplicaCount);
+                    values.Add($"indexGateway.replicas", indexGatewayAdvice.Replicas);
                     values.Add($"indexGateway.resources.requests.memory", ToSiString(indexGatewayAdvice.PodMemoryRequest));
                     values.Add($"indexGateway.resources.limits.memory", ToSiString(indexGatewayAdvice.PodMemoryLimit));
                     values.Add($"indexGateway.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.replicas", ingesterAdvice.Replicas);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.replicas", querierAdvice.Replicas);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.Replicas);
                     values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
+                    values.Add($"ruler.replicas", rulerAdvice.Replicas);
                     values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
@@ -4842,27 +4846,27 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
-                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.replicas", compactorAdvice.Replicas);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.replicas", distributorAdvice.Replicas);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.replicas", ingesterAdvice.Replicas);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.replicas", querierAdvice.Replicas);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.Replicas);
                     values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
@@ -5099,7 +5103,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add("replicas", serviceAdvice.ReplicaCount);
+                    values.Add("replicas", serviceAdvice.Replicas);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",
@@ -5308,7 +5312,7 @@ $@"- name: StorageType
                             values.Add("image.registry", KubeConst.LocalClusterRegistry);
                             values.Add("mcImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.registry", KubeConst.LocalClusterRegistry);
-                            values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
+                            values.Add($"tenants[0].pools[0].servers", serviceAdvice.Replicas);
                             values.Add($"tenants[0].pools[0].volumesPerServer", cluster.SetupState.ClusterDefinition.Storage.Minio.VolumesPerNode);
 
                             var volumesize = ByteUnits.Humanize(
@@ -5319,7 +5323,7 @@ $@"- name: StorageType
 
                             values.Add($"tenants[0].pools[0].size", volumesize);
 
-                            if (serviceAdvice.ReplicaCount > 1)
+                            if (serviceAdvice.Replicas > 1)
                             {
                                 values.Add($"mode", "distributed");
                             }
@@ -5514,13 +5518,13 @@ $@"- name: StorageType
                     };
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add($"replicas", serviceAdvice.ReplicaCount);
+                    values.Add($"replicas", serviceAdvice.Replicas);
                     values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled);
                     values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled);
                     values.Add($"exporter.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-                    if (serviceAdvice.ReplicaCount < 2)
+                    if (serviceAdvice.Replicas < 2)
                     {
                         values.Add($"hardAntiAffinity", false);
                         values.Add($"sentinel.quorum", 1);
@@ -6321,9 +6325,9 @@ $@"- name: StorageType
                 {
                     var nodes = cluster.SetupState.ClusterDefinition.SortedControlNodes.ToList();
 
-                    if (nodes.Count > operatorAdvice.ReplicaCount)
+                    if (nodes.Count > operatorAdvice.Replicas)
                     {
-                        operatorAdvice.ReplicaCount = nodes.Count;
+                        operatorAdvice.Replicas = nodes.Count;
                     }
 
                     var labels = new Dictionary<string, string>()
@@ -6332,7 +6336,7 @@ $@"- name: StorageType
                         { "cluster-name", KubeService.NeonSystemDb }
                     };
 
-                    for (int i=0; i < operatorAdvice.ReplicaCount; i++)
+                    for (int i=0; i < operatorAdvice.Replicas; i++)
                     {
                         var pvc = new V1PersistentVolumeClaim()
                         {
@@ -6371,7 +6375,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "neon-system-db");
 
-                    values.Add($"replicas", operatorAdvice.ReplicaCount);
+                    values.Add($"replicas", operatorAdvice.Replicas);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add($"neonSystemDb.enableConnectionPooler", true);

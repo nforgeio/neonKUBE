@@ -1496,10 +1496,10 @@ systemctl enable kubelet
         /// name is specified.
         /// </note>
         /// </param>
-        /// <param name="valuesFiles">
-        /// Optionally specifies Helm chart values as YAML as an enumeration of values file strings.
-        /// These strings will be persisted as individual YAML files on the node and are applied when
-        /// installing the chart in the order passed.
+        /// <param name="valuesFile">
+        /// Optionally specifies Helm chart values as a YAML string.  These strings will be
+        /// persisted as an individual YAML file on the node and are applied when installing
+        /// the chart.
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
@@ -1522,7 +1522,7 @@ systemctl enable kubelet
         /// Values from the <b>values.yaml</b> file within the chart.
         /// </item>
         /// <item>
-        /// YAML formmatted values from the <paramref name="valuesFiles"/> parameter (if present).
+        /// YAML formmatted values from the <paramref name="valuesFile"/> parameter (if present).
         /// </item>
         /// <item>
         /// Values from the <paramref name="values"/> (if present).
@@ -1536,7 +1536,7 @@ systemctl enable kubelet
             string                              releaseName     = null,
             string                              @namespace      = "default",
             string                              prioritySpec    = null,
-            IEnumerable<string>                 valuesFiles     = null,
+            string                              valuesFile      = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null,
             TimeSpan                            timeout         = default)
@@ -1613,14 +1613,11 @@ systemctl enable kubelet
                     sbScript.AppendLine($"    --namespace {@namespace} \\");
                     sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
 
-                    if (valuesFiles != null)
+                    if (valuesFile != null)
                     {
-                        var index = 0;
-
-                        foreach (var values in valuesFiles)
+                        foreach (var values in valuesFile)
                         {
-                            sbScript.AppendLine($"    -f _values-{index}.yaml \\");
-                            index++;
+                            sbScript.AppendLine($"    -f _values.yaml \\");
                         }
                     }
 
@@ -1665,15 +1662,9 @@ systemctl enable kubelet
 
                     var bundle = CommandBundle.FromScript(sbScript);
 
-                    if (valuesFiles != null)
+                    if (valuesFile != null)
                     {
-                        var index = 0;
-
-                        foreach (var values in valuesFiles)
-                        {
-                            bundle.AddFile($"_values-{index}.yaml", values, linuxCompatible: true);
-                            index++;
-                        }
+                        bundle.AddFile($"_values.yaml", valuesFile, linuxCompatible: true);
                     }
 
                     SudoCommand(bundle)
