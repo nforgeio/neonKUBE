@@ -1504,6 +1504,10 @@ systemctl enable kubelet
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
+        /// <param name="dryRun">
+        /// Optionally specifies that Helm will simulate installation of the chart, writing the generated manifests to
+        /// <c>/home/sysadmin/helm-dryrun.yaml</c> on the target node.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
@@ -1527,19 +1531,28 @@ systemctl enable kubelet
         /// <item>
         /// Values from the <paramref name="values"/> (if present).
         /// </item>
+        /// <item>
+        /// <para>
+        /// Any structured values (if present).
+        /// </para>
+        /// <note>
+        /// These are always applied last.
+        /// </note>
+        /// </item>
         /// </list>
         /// </note>
         /// </remarks>
         public async Task InstallHelmChartAsync(
-            ISetupController                    controller,
-            string                              chartName,
-            string                              releaseName     = null,
-            string                              @namespace      = "default",
-            string                              prioritySpec    = null,
-            string                              valuesFile      = null,
-            Dictionary<string, object>          values          = null,
-            string                              progressMessage = null,
-            TimeSpan                            timeout         = default)
+            ISetupController                        controller,
+            string                                  chartName,
+            string                                  releaseName      = null,
+            string                                  @namespace       = "default",
+            string                                  prioritySpec     = null,
+            string                                  valuesFile       = null,
+            Dictionary<string, object>              values           = null,
+            string                                  progressMessage  = null,
+            TimeSpan                                timeout          = default,
+            bool                                    dryRun           = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1606,7 +1619,8 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
-                    var sbScript = new StringBuilder();
+                    var sbScript         = new StringBuilder();
+                    var structuredValues = new List<string>();
 
                     sbScript.AppendLine($"helm install {releaseName} \\");
                     sbScript.AppendLine($"    --debug \\");
@@ -1615,10 +1629,7 @@ systemctl enable kubelet
 
                     if (valuesFile != null)
                     {
-                        foreach (var values in valuesFile)
-                        {
-                            sbScript.AppendLine($"    -f _values.yaml \\");
-                        }
+                        sbScript.AppendLine($"    -f override-values.yaml \\");
                     }
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
@@ -1640,14 +1651,19 @@ systemctl enable kubelet
 
                             switch (value.Value)
                             {
-                                case string s:
+                                case string stringValue:
 
                                     sbScript.AppendLine($"    --set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\" \\");
                                     break;
 
-                                case Boolean b:
+                                case Boolean boolValue:
 
                                     sbScript.AppendLine($"    --set {value.Key}=\"{value.Value.ToString().ToLower()}\" \\");
+                                    break;
+
+                                case StructuredHelmValue structuredValue:
+
+                                    structuredValues.Add($"{value.Key}: {structuredValue.Value}");
                                     break;
 
                                 default:
@@ -1658,13 +1674,37 @@ systemctl enable kubelet
                         }
                     }
 
-                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}");
+                    if (structuredValues.Count > 0)
+                    {
+                        sbScript.AppendLine("    -f structured-values.yaml \\");
+                    }
+
+                    var dryRunRedirect = string.Empty;
+
+                    if (dryRun)
+                    {
+                        dryRunRedirect = " > /home/sysadmin/helm-dryrun.yaml";
+                    }
+
+                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
 
                     var bundle = CommandBundle.FromScript(sbScript);
 
                     if (valuesFile != null)
                     {
-                        bundle.AddFile($"_values.yaml", valuesFile, linuxCompatible: true);
+                        bundle.AddFile($"override-values.yaml", valuesFile, linuxCompatible: true);
+                    }
+
+                    if (structuredValues.Count > 0)
+                    {
+                        var sbStructuredValues = new StringBuilder();
+
+                        foreach (var value in structuredValues)
+                        {
+                            sbStructuredValues.AppendLine(value);
+                        }
+
+                        bundle.AddFile($"structured-values.yaml", sbStructuredValues.ToString(), linuxCompatible: true);
                     }
 
                     SudoCommand(bundle)
