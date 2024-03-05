@@ -22,6 +22,8 @@ spec:
         {{ toYaml .Values.jivaOperator.podLabels | nindent 8 }}
         {{- end }}
     spec:
+      # NEONKUBE CUSTOM VALUE
+      priorityClassName: {{ .Values.jiva.jivaOperator.priorityClassName }}
       serviceAccountName: {{ .Values.serviceAccount.jivaOperator.name }}
       containers:
         - name: {{ template "jiva.fullname" . }}-operator

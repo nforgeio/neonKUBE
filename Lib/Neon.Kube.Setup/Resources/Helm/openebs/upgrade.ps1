@@ -47,7 +47,7 @@ Remove-HelmRepositories $tempFolder
 
 # $hack(jefflill):
 #
-# We're having trouble with the [mayastor] dependency: Helm complains about
+# We're having trouble with the [mayastor] dependency: Helm complains abouta
 # its [loki-stack] subchart which doesn't make a lot of sense (something
 # about a missing [Makefile] or something).
 #
@@ -58,6 +58,16 @@ Remove-HelmRepositories $tempFolder
 #       https://github.com/alexellis/arkade/issues/620
 
 Remove-HelmDependency $tempFolder\charts\mayastor loki-stack
+
+# We need to remove the [priority-class.yaml] templates because they
+# create priority classes prefixed by "openebs-" when we pass our
+# NEONKUBE standard priority class names.
+
+rm $tempFolder\charts\cstor\templates\priority-class.yaml
+rm $tempFolder\charts\jiva\templates\priority-class.yaml
+rm $tempFolder\charts\lvm-localpv\templates\priority-class.yaml
+rm $tempFolder\charts\mayastor\templates\mayastor\priority-class\priority-class.yaml
+rm $tempFolder\charts\zfs-localpv\templates\priority-class.yaml
 
 # Clear the OpenEBS source Helm folder and then copy in the unpacked
 # Helm chart files, plus the upgrade instructions and script and then
