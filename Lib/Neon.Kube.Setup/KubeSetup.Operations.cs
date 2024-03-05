@@ -60,36 +60,6 @@ namespace Neon.Kube.Setup
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Converts a <c>decimal</c> into a nice byte units string.
-        /// </summary>
-        /// <param name="value">The input value (or <c>null</c>).</param>
-        /// <returns>The formatted output (or <c>null</c>).</returns>
-        public static string ToSiString(decimal? value)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-
-            return new ResourceQuantity(value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-        }
-
-        /// <summary>
-        /// Converts a <c>double</c> value into a nice byte units string.
-        /// </summary>
-        /// <param name="value">The input value (or <c>null</c>).</param>
-        /// <returns>The formatted output (or <c>null</c>).</returns>
-        public static string ToSiString(double? value)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-
-            return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-        }
-
-        /// <summary>
         /// Configures a local HAProxy container that makes Kubernetes API server,
         /// etcd and istio ingress highly available.
         /// </summary>
@@ -1139,8 +1109,8 @@ exit 1
 
                             // Configure the memory request/limit.
 
-                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
-                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Limits["memory"]   = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(KubeHelper.ToSiString(coreDnsAdvice.PodMemoryRequest));
+                            coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Limits["memory"]   = new ResourceQuantity(KubeHelper.ToSiString(coreDnsAdvice.PodMemoryLimit));
 
                             // Deploy a replica on every control-plane node.
 
@@ -1737,11 +1707,11 @@ spec:
             effect: NoExecute
         resources:
           requests:
-            cpu: ""{ToSiString(pilotAdvice.PodCpuRequest)}""
-            memory: ""{ToSiString(pilotAdvice.PodMemoryRequest)}""
+            cpu: ""{KubeHelper.ToSiString(pilotAdvice.PodCpuRequest)}""
+            memory: ""{KubeHelper.ToSiString(pilotAdvice.PodMemoryRequest)}""
           limits:
-            cpu: ""{ToSiString(pilotAdvice.PodCpuLimit)}""
-            memory: ""{ToSiString(pilotAdvice.PodMemoryLimit)}""
+            cpu: ""{KubeHelper.ToSiString(pilotAdvice.PodCpuLimit)}""
+            memory: ""{KubeHelper.ToSiString(pilotAdvice.PodMemoryLimit)}""
         hpaSpec:
           maxReplicas: 1
     ingressGateways:
@@ -1774,11 +1744,11 @@ spec:
 {sbNodePorts.ToStringWithoutLastNewLine()}
         resources:
           requests:
-            cpu: ""{ToSiString(ingressAdvice.PodCpuRequest)}""
-            memory: ""{ToSiString(ingressAdvice.PodMemoryRequest)}""
+            cpu: ""{KubeHelper.ToSiString(ingressAdvice.PodCpuRequest)}""
+            memory: ""{KubeHelper.ToSiString(ingressAdvice.PodMemoryRequest)}""
           limits:
-            cpu: ""{ToSiString(ingressAdvice.PodCpuLimit)}""
-            memory: ""{ToSiString(ingressAdvice.PodMemoryLimit)}""
+            cpu: ""{KubeHelper.ToSiString(ingressAdvice.PodCpuLimit)}""
+            memory: ""{KubeHelper.ToSiString(ingressAdvice.PodMemoryLimit)}""
     cni:
       k8s:
         priorityClassName: {PriorityClass.NeonNetwork.Name}
@@ -2120,8 +2090,8 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add("certficateDuration", cluster.SetupState.ClusterDefinition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.SetupState.ClusterDefinition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.SetupState.ClusterDefinition.IsDesktop);
-                    values.Add($"resources.requests.memory", ToSiString(acmeAdvice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(acmeAdvice.PodMemoryLimit));
+                    values.Add($"resources.requests.memory", KubeHelper.ToSiString(acmeAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", KubeHelper.ToSiString(acmeAdvice.PodMemoryLimit));
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
 
                     int i = 0;
@@ -2460,8 +2430,8 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
-                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add($"resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     await controlNode.InstallHelmChartAsync(controller, "kubernetes-dashboard",
@@ -2746,8 +2716,8 @@ istioctl install --verify -y -f manifest.yaml
                                     throw new NotImplementedException();
                             }
 
-                            //values.Add("ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
-                            //values.Add("ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
+                            //values.Add("ndm.resources.limits.memory", KubeHelper.ToSiString(ndmAdvice.PodMemoryLimit));
+                            //values.Add("ndm.resources.requests.memory", KubeHelper.ToSiString(ndmAdvice.PodMemoryRequest));
 
                             //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
                             //values.Add("ndmOperator.replicas", ndmOperatorAdvice.ReplicaCount);
@@ -3047,13 +3017,13 @@ istioctl install --verify -y -f manifest.yaml
                             Pools     = new List<V1CStorPoolSpec>(),
                             Resources = new V1ResourceRequirements()
                             {
-                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
-                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryRequest)) } },
+                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAdvice.PodMemoryRequest)) } },
                             },
                             AuxResources = new V1ResourceRequirements()
                             {
-                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryLimit)) } },
-                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryRequest)) } },
+                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAuxAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAuxAdvice.PodMemoryRequest)) } },
                             }
                         }
                     };
@@ -3504,11 +3474,11 @@ $@"- name: StorageType
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tempo);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-                    values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
-                    values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
+                    values.Add($"resources.agent.requests.memory", KubeHelper.ToSiString(agentAdvice.PodMemoryRequest));
+                    values.Add($"resources.agent.limits.memory", KubeHelper.ToSiString(agentAdvice.PodMemoryLimit));
 
-                    values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest));
-                    values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit));
+                    values.Add($"resources.agentNode.requests.memory", KubeHelper.ToSiString(agentNodeAdvice.PodMemoryRequest));
+                    values.Add($"resources.agentNode.limits.memory", KubeHelper.ToSiString(agentNodeAdvice.PodMemoryLimit));
 
                     int i = 0;
 
@@ -3546,8 +3516,8 @@ $@"- name: StorageType
 
                     values.Add($"replicas", blackboxAdvice.Replicas);
                     values.Add($"serviceMesh.enabled", false);
-                    values.Add($"resources.requests.memory", ToSiString(blackboxAdvice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(blackboxAdvice.PodMemoryLimit));
+                    values.Add($"resources.requests.memory", KubeHelper.ToSiString(blackboxAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", KubeHelper.ToSiString(blackboxAdvice.PodMemoryLimit));
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabel.LabelSystemMetricServices, "true"))
                     {
@@ -3627,8 +3597,8 @@ $@"- name: StorageType
                     values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add($"resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
                     values.Add($"server.memory", Decimal.ToInt32(serviceAdvice.PodMemoryLimit.Value / 1200000));
 
                     int i = 0;
@@ -3702,48 +3672,48 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"alertmanager.replicas", alertmanagerAdvice.Replicas);
-                    values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
-                    values.Add($"alertmanager.resources.limits.memory", ToSiString(alertmanagerAdvice.PodMemoryLimit));
+                    values.Add($"alertmanager.resources.requests.memory", KubeHelper.ToSiString(alertmanagerAdvice.PodMemoryRequest));
+                    values.Add($"alertmanager.resources.limits.memory", KubeHelper.ToSiString(alertmanagerAdvice.PodMemoryLimit));
                     values.Add($"alertmanager.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"compactor.replicas", compactorAdvice.Replicas);
-                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
-                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.resources.requests.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"distributor.replicas", distributorAdvice.Replicas);
-                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
-                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.resources.requests.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"ingester.replicas", ingesterAdvice.Replicas);
-                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
-                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.resources.requests.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"overrides_exporter.replicas", overridesAdvice.Replicas);
-                    values.Add($"overrides_exporter.resources.requests.memory", ToSiString(overridesAdvice.PodMemoryRequest));
-                    values.Add($"overrides_exporter.resources.limits.memory", ToSiString(overridesAdvice.PodMemoryLimit));
+                    values.Add($"overrides_exporter.resources.requests.memory", KubeHelper.ToSiString(overridesAdvice.PodMemoryRequest));
+                    values.Add($"overrides_exporter.resources.limits.memory", KubeHelper.ToSiString(overridesAdvice.PodMemoryLimit));
                     values.Add($"overrides_exporter.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"querier.replicas", querierAdvice.Replicas);
-                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
-                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.resources.requests.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"query_frontend.replicas", queryFrontendAdvice.Replicas);
-                    values.Add($"query_frontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
-                    values.Add($"query_frontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"query_frontend.resources.requests.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"query_frontend.resources.limits.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"query_frontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"ruler.replicas", rulerAdvice.Replicas);
-                    values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
-                    values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
+                    values.Add($"ruler.resources.requests.memory", KubeHelper.ToSiString(rulerAdvice.PodMemoryRequest));
+                    values.Add($"ruler.resources.limits.memory", KubeHelper.ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"store_gateway.replicas", storeGatewayAdvice.Replicas);
-                    values.Add($"store_gateway.resources.requests.memory", ToSiString(storeGatewayAdvice.PodMemoryRequest));
-                    values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
+                    values.Add($"store_gateway.resources.requests.memory", KubeHelper.ToSiString(storeGatewayAdvice.PodMemoryRequest));
+                    values.Add($"store_gateway.resources.limits.memory", KubeHelper.ToSiString(storeGatewayAdvice.PodMemoryLimit));
                     values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled);
@@ -3876,38 +3846,38 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.Replicas);
-                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
-                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.resources.requests.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"distributor.replicas", distributorAdvice.Replicas);
-                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
-                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.resources.requests.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"indexGateway.replicas", indexGatewayAdvice.Replicas);
-                    values.Add($"indexGateway.resources.requests.memory", ToSiString(indexGatewayAdvice.PodMemoryRequest));
-                    values.Add($"indexGateway.resources.limits.memory", ToSiString(indexGatewayAdvice.PodMemoryLimit));
+                    values.Add($"indexGateway.resources.requests.memory", KubeHelper.ToSiString(indexGatewayAdvice.PodMemoryRequest));
+                    values.Add($"indexGateway.resources.limits.memory", KubeHelper.ToSiString(indexGatewayAdvice.PodMemoryLimit));
                     values.Add($"indexGateway.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"ingester.replicas", ingesterAdvice.Replicas);
-                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
-                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.resources.requests.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"querier.replicas", querierAdvice.Replicas);
-                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
-                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.resources.requests.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"queryFrontend.replicas", queryFrontendAdvice.Replicas);
-                    values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
-                    values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"queryFrontend.resources.requests.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"queryFrontend.resources.limits.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"ruler.replicas", rulerAdvice.Replicas);
-                    values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
-                    values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
+                    values.Add($"ruler.resources.requests.memory", KubeHelper.ToSiString(rulerAdvice.PodMemoryRequest));
+                    values.Add($"ruler.resources.limits.memory", KubeHelper.ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled);
@@ -4031,28 +4001,28 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.Replicas);
-                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
-                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.resources.requests.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", KubeHelper.ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"distributor.replicas", distributorAdvice.Replicas);
-                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
-                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.resources.requests.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", KubeHelper.ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"ingester.replicas", ingesterAdvice.Replicas);
-                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
-                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.resources.requests.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", KubeHelper.ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"querier.replicas", querierAdvice.Replicas);
-                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
-                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.resources.requests.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", KubeHelper.ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"queryFrontend.replicas", queryFrontendAdvice.Replicas);
-                    values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
-                    values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"queryFrontend.resources.requests.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"queryFrontend.resources.limits.memory", KubeHelper.ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled);
@@ -4339,8 +4309,8 @@ $@"- name: StorageType
 
                     if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
                     {
-                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                        values.Add($"resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                        values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
                     }
 
                     controller.ThrowIfCancelled();
@@ -4512,11 +4482,11 @@ $@"- name: StorageType
                                 values.Add($"mode", "distributed");
                             }
 
-                            values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                            values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                            values.Add($"tenants[0].pools[0].resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                            values.Add($"tenants[0].pools[0].resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
 
-                            values.Add($"operator.resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
-                            values.Add($"operator.resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
+                            values.Add($"operator.resources.requests.memory", KubeHelper.ToSiString(operatorAdvice.PodMemoryRequest));
+                            values.Add($"operator.resources.limits.memory", KubeHelper.ToSiString(operatorAdvice.PodMemoryLimit));
 
                             var accessKey = NeonHelper.GetCryptoRandomPassword(16);
                             var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
@@ -5118,8 +5088,8 @@ $@"- name: StorageType
                     values.Add("image.tag", KubeVersion.NeonKubeContainerImageTag);
                     values.Add("image.pullPolicy", "IfNotPresent");
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("resources.requests.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval);
@@ -5311,8 +5281,8 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval);
-                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("resources.requests.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
                     values.Add("service.ports[0].name", "https-web");
                     values.Add("service.ports[0].protocol", "TCP");
@@ -5425,26 +5395,26 @@ $@"- name: StorageType
 
             if (operatorAdvice.PodMemoryRequest.HasValue && operatorAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
-                values.Add($"resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
+                values.Add($"resources.requests.memory", KubeHelper.ToSiString(operatorAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", KubeHelper.ToSiString(operatorAdvice.PodMemoryLimit));
             }
 
             if (databaseAdvice.PodMemoryRequest.HasValue && databaseAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"neonSystemDb.resources.requests.memory", ToSiString(databaseAdvice.PodMemoryRequest));
-                values.Add($"neonSystemDb.resources.limits.memory", ToSiString(databaseAdvice.PodMemoryLimit));
+                values.Add($"neonSystemDb.resources.requests.memory", KubeHelper.ToSiString(databaseAdvice.PodMemoryRequest));
+                values.Add($"neonSystemDb.resources.limits.memory", KubeHelper.ToSiString(databaseAdvice.PodMemoryLimit));
             }
 
             if (poolerAdvice.PodMemoryRequest.HasValue && poolerAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"configConnectionPooler.connection_pooler_default_memory_request", ToSiString(poolerAdvice.PodMemoryRequest));
-                values.Add($"configConnectionPooler.connection_pooler_default_memory_limit", ToSiString(poolerAdvice.PodMemoryLimit));
+                values.Add($"configConnectionPooler.connection_pooler_default_memory_request", KubeHelper.ToSiString(poolerAdvice.PodMemoryRequest));
+                values.Add($"configConnectionPooler.connection_pooler_default_memory_limit", KubeHelper.ToSiString(poolerAdvice.PodMemoryLimit));
             }
 
             if (metricsAdvice.PodMemoryRequest.HasValue && metricsAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"metrics.resources.requests.memory", ToSiString(metricsAdvice.PodMemoryRequest));
-                values.Add($"metrics.resources.limits.memory", ToSiString(metricsAdvice.PodMemoryLimit));
+                values.Add($"metrics.resources.requests.memory", KubeHelper.ToSiString(metricsAdvice.PodMemoryRequest));
+                values.Add($"metrics.resources.limits.memory", KubeHelper.ToSiString(metricsAdvice.PodMemoryLimit));
             }
 
             controller.ThrowIfCancelled();
@@ -5677,8 +5647,8 @@ $@"- name: StorageType
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                values.Add($"resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
             controller.ThrowIfCancelled();
@@ -5753,8 +5723,8 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
-            values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-            values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+            values.Add("resources.requests.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest)}");
+            values.Add("resources.limits.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit)}");
             values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
 
             controller.ThrowIfCancelled();
@@ -5811,8 +5781,8 @@ $@"- name: StorageType
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                values.Add($"resources.requests.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
             controller.ThrowIfCancelled();
