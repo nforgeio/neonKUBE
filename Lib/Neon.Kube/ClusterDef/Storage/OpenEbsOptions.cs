@@ -54,7 +54,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
         [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
-        [DefaultValue(OpenEbsEngine.Jiva)]
+        [DefaultValue(OpenEbsEngine.Default)]
         public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
