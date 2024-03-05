@@ -22,6 +22,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
+
+using Newtonsoft.Json;
+
 namespace Neon.Kube.SSH
 {
     /// <summary>
@@ -42,15 +46,44 @@ namespace Neon.Kube.SSH
         private static readonly char[] CRLFChars = new char[] { '\r', '\n' };
 
         /// <summary>
-        /// Implicitly casts a string into a <see cref="StructuredHelmValue"/>.
+        /// Implicitly casts a JSON string into a <see cref="StructuredHelmValue"/>.
         /// </summary>
-        /// <param name="value">
-        /// Specifies a YAML map like <c>{...}</c> or an array like <c>[...]</c>.
+        /// <param name="jsonValue">
+        /// Specifies a JSON map like <c>{...}</c> or an array like <c>[...]</c>.
         /// The string may not include line endings.
         /// </param>
-        public static implicit operator StructuredHelmValue(string value)
+        /// <returns>The <see cref="StructuredHelmValue"/>.</returns>
+        public static implicit operator StructuredHelmValue(string jsonValue)
         {
-            return new StructuredHelmValue(value);
+            return new StructuredHelmValue(jsonValue);
+        }
+
+        /// <summary>
+        /// Converts a JSON string into a <see cref="StructuredHelmValue"/>.
+        /// </summary>
+        /// <param name="jsonValue">
+        /// Specifies a JSON map like <c>{...}</c> or an array like <c>[...]</c>.
+        /// The string may not include line endings.
+        /// </param>
+        /// <returns>The <see cref="StructuredHelmValue"/>.</returns>
+        public static StructuredHelmValue FromJson(string jsonValue)
+        {
+            return jsonValue;
+        }
+
+        /// <summary>
+        /// Converts a YAML string into a <see cref="StructuredHelmValue"/>.
+        /// </summary>
+        /// <param name="yamlValue">Specifies the YAML string.</param>
+        /// <returns>The <see cref="StructuredHelmValue"/>.</returns>
+        public static StructuredHelmValue FromYaml(string yamlValue)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlValue), nameof(yamlValue));
+
+            var parsedValue = NeonHelper.YamlDeserialize<dynamic>(yamlValue);
+            var jsonValue   = NeonHelper.JsonSerialize(parsedValue, Formatting.None);
+
+            return jsonValue;
         }
 
         //---------------------------------------------------------------------
@@ -59,16 +92,16 @@ namespace Neon.Kube.SSH
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="value">
-        /// Specifies a YAML map like <c>{...}</c> or an array like <c>[...]</c>.
+        /// <param name="jsonValue">
+        /// Specifies a JSON map like <c>{...}</c> or an array like <c>[...]</c>.
         /// The string may not include line endings.
         /// </param>
-        public StructuredHelmValue(string value)
+        private StructuredHelmValue(string jsonValue)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonValue), nameof(jsonValue));
 
-            var firstCh = value.First();
-            var lastCh  = value.Last();
+            var firstCh = jsonValue.First();
+            var lastCh  = jsonValue.Last();
             var error   = (string)null;
 
             if (firstCh == '{')
@@ -92,15 +125,15 @@ namespace Neon.Kube.SSH
 
             if (error != null)
             {
-                throw new ArgumentException(error, paramName: nameof(value));
+                throw new ArgumentException(error, paramName: nameof(jsonValue));
             }
 
-            if (value.IndexOfAny(CRLFChars) >= 0)
+            if (jsonValue.IndexOfAny(CRLFChars) >= 0)
             {
-                throw new ArgumentException("Value cannot include line endings.l", paramName: nameof(value));
+                throw new ArgumentException("Value cannot include line endings.l", paramName: nameof(jsonValue));
             }
 
-            Value = value;
+            Value = jsonValue;
         }
 
         /// <summary>

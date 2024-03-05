@@ -1119,7 +1119,7 @@ exit 1
                             await k8s.AppsV1.ReplaceNamespacedDeploymentAsync(coreDnsDeployment, "coredns", KubeNamespace.KubeSystem);
                         });
 
-                    // Deploy a dnsutils container and then verify DNS is actually working.
+                    // Deploy a [dnsutils] container and then verify DNS is actually working.
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/coredns-utils",
@@ -2815,7 +2815,8 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("ndmOperator.nodeSelector", ndmOperatorAdvice.NodeSelector);
             values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                               // NEONKUBE CUSTOM VALUE
             values.Add("ndmOperator.replicas", ndmOperatorAdvice.Replicas);
-            values.Add("ndmOperator.tolerations", ndmAdvice.Tolerations);
+            values.Add("ndmOperator.resources", ndmOperatorAdvice.Resources);
+            values.Add("ndmOperator.tolerations", ndmOperatorAdvice.Tolerations);
 
             //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("ndmOperator.image.repository", "openebs-node-disk-operator");
@@ -2827,6 +2828,7 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("localpv-provisioner.nodeSelector", localPvProvisionerAdvice.NodeSelector);
             values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);   // NEONKUBE CUSTOM VALUE
             values.Add("localpv-provisioner.replicas", localPvProvisionerAdvice.Replicas);
+            values.Add("localpv-provisioner.resources", localPvProvisionerAdvice.Resources);
             values.Add("localpv-provisioner.tolerations", localPvProvisionerAdvice.Tolerations);
 
             //values.Add("localpv-provisioner.image.registry", KubeConst.LocalClusterRegistry);
@@ -2887,6 +2889,7 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.jivaOperator.priorityClassName", jivaOperatorAdvice.PriorityClassName);        // NEONKUBE CUSTOM VALUE
             values.Add("jiva.jivaOperator.nodeSelector", jivaOperatorAdvice.NodeSelector);
             values.Add("jiva.jivaOperator.resources", jivaOperatorAdvice.Resources);
+            values.Add("jiva.jivaOperator.replicas", jivaOperatorAdvice.Replicas);
             values.Add("jiva.jivaOperator.tolerations", jivaOperatorAdvice.Tolerations);
 
             //values.Add("jiva.jivaOperator.image.registry", KubeConst.LocalClusterRegistry);
@@ -2911,6 +2914,7 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.enabled", true);
             values.Add("jiva.csiController.priorityClassName", jivaCsiControllerAdvice.PriorityClassName);  // NEONKUBE CUSTOM VALUE
             values.Add("jiva.csiController.nodeSelector", jivaCsiControllerAdvice.NodeSelector);
+            values.Add("jiva.csiController.replicas", jivaCsiControllerAdvice.Replicas);
             values.Add("jiva.csiController.resources", jivaCsiControllerAdvice.Resources);
             values.Add("jiva.csiController.tolerations", jivaCsiControllerAdvice.Tolerations);
 

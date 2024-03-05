@@ -38,6 +38,8 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
+using Newtonsoft.Json;
+
 namespace Neon.Kube.Setup
 {
     /// <summary>
@@ -145,7 +147,53 @@ namespace Neon.Kube.Setup
         {
             get
             {
-                return new StructuredHelmValue("{}");   // $todo(jefflill): implement this
+                var hasLimits   = PodCpuLimit != null || PodMemoryLimit != null;
+                var hasRequests = PodCpuRequest != null || PodMemoryRequest != null;
+
+                if (!hasRequests && !hasLimits)
+                {
+                    return "{}";
+                }
+
+                var sb = new StringBuilder();
+
+                sb.AppendLine("resources:");
+
+                if (hasLimits)
+                {
+                    sb.AppendLine($"  limits:");
+
+                    if (podCpuLimit != null)
+                    {
+                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(podCpuLimit)}");
+                    }
+
+                    if (podMemoryLimit != null)
+                    {
+                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(podMemoryLimit)}");
+                    }
+                }
+
+                if (hasRequests)
+                {
+                    sb.AppendLine($"  requests:");
+
+                    if (podCpuRequest != null)
+                    {
+                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(podCpuLimit)}");
+                    }
+
+                    if (podMemoryRequest != null)
+                    {
+                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(podMemoryLimit)}");
+                    }
+                }
+
+                var yaml  = sb.ToString();
+                var value = NeonHelper.YamlDeserialize<dynamic>(yaml);
+                var json  = NeonHelper.JsonSerialize(value, Formatting.None);
+
+                return json;
             }
         }
 
@@ -209,7 +257,7 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); metricsInterval = value; }
         }
 
-        private StructuredHelmValue nodeSelector = new StructuredHelmValue("{}");
+        private StructuredHelmValue nodeSelector ="{}";
 
         /// <summary>
         /// Specifies the <b>nodeSelector</b> object for the service.
@@ -232,10 +280,10 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); priorityClassName = value; }
         }
 
-        private StructuredHelmValue tolerations = new StructuredHelmValue("[]");
+        private StructuredHelmValue tolerations = "[]";
 
         /// <summary>
-        /// Specifies the the <b>tolerations</b> map for the service.
+        /// Specifies the the <b>tolerations</b> array for the service.
         /// </summary>
         public StructuredHelmValue Tolerations
         {
