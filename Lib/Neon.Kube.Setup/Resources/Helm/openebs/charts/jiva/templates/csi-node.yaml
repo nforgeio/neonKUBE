@@ -19,7 +19,8 @@ spec:
         {{ toYaml .Values.csiNode.podLabels | nindent 8 }}
         {{- end }}
     spec:
-      priorityClassName: {{ template "jiva.csiNode.priorityClassName" . }}
+      # NEONKUBE CUSTOM VALUE
+      priorityClassName: {{ .Values.csiNode.priorityClassName }}
       serviceAccountName: {{ .Values.serviceAccount.csiNode.name }}
       hostNetwork: true
       containers:

@@ -41,3 +41,16 @@ required.
    c. Run `neon cluster check --priority-class`, looking for any OpenEBS
       pods without a **PriorityClass** specification.  You'll need to
       modify override **values** string until this is clean.
+
+---
+
+## Configuration: Custom NEONKUBE chart values
+
+| Parameter                                   | Description                                                                  | Default                                                                  |
+| ------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `csiController.priorityClassName`           | Specifies the openebs-jiva-csi-controller PriorityClassName                  | * must be set explicitly                                                 |
+| `csiNode.priorityClassName`                 | Specifies the openebs-jiva-csi-node PriorityClassName                        | * must be set explicitly                                                 |
+| `jivaOperator.priorityClassName`            | Specifies the openebs-jiva-operator PriorityClassName                        | * must be set explicitly                                                 |
+| `localpv.priorityClassName`                 | Specifies the openebs-localpv-provisioner PriorityClassName                  | * must be set explicitly                                                 |
+| `ndm.priorityClassName`                     | Specifies the openebs-ndm PriorityClassName                                  | * must be set explicitly                                                 |
+| `ndmOperator.priorityClassName`             | Specifies the openebs-ndm-operator PriorityClassName                         | * must be set explicitly                                                 |

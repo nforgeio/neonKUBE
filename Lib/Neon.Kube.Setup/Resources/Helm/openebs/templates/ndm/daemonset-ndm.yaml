@@ -32,6 +32,8 @@ spec:
         name: openebs-ndm
         openebs.io/version: {{ .Values.release.version }}
     spec:
+      # NEONKUBE CUSTOM VALUE
+      priorityClassName: {{ .Values.ndm.priorityClassName }}
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

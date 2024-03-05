@@ -666,6 +666,12 @@ namespace Neon.Kube
         public const string OpenEbsCvcOperator = "3.6.0";
 
         /// <summary>
+        /// Specifies the version of <b>openebs-jiva</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsJiva = "3.6.0";
+
+        /// <summary>
         /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
         /// </summary>
         [KubeValue]

@@ -21,7 +21,8 @@ spec:
         {{ toYaml .Values.csiController.podLabels | nindent 8 }}
         {{- end }}
     spec:
-      priorityClassName: {{ template "jiva.csiController.priorityClassName" . }}
+      # NEONKUBE CUSTOM VALUE
+      priorityClassName: {{ .Values.csiController.priorityClassName }}
       serviceAccountName: {{ .Values.serviceAccount.csiController.name }}
       containers:
         - name: {{ .Values.csiController.resizer.name }}

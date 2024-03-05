@@ -33,6 +33,8 @@ spec:
         openebs.io/component-name: openebs-localpv-provisioner
         openebs.io/version: {{ .Values.release.version }}
     spec:
+      # NEONKUBE CUSTOM VALUE
+      priorityClassName: {{ .Values.ndmOperator.priorityClassName }}
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
