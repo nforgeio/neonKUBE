@@ -33,6 +33,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.SSH;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
@@ -137,15 +138,26 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); podMemoryRequest = value; }
         }
 
-        private int  replicaCount = 1;
+        /// <summary>
+        /// Returns the pod resource requests and limits as a map.
+        /// </summary>
+        public StructuredHelmValue Resources
+        {
+            get
+            {
+                return new StructuredHelmValue("{}");   // $todo(jefflill): implement this
+            }
+        }
+
+        private int replicas = 1;
 
         /// <summary>
         /// Specifies the number of pods to be seployed for the service or <b>1</b> when this property is not set.
         /// </summary>
         public int Replicas
         {
-            get { return replicaCount; }
-            set { EnsureNotReadOnly(); replicaCount = value; }
+            get { return replicas; }
+            set { EnsureNotReadOnly(); replicas = value; }
         }
 
         private bool? metricsEnabled;
@@ -165,6 +177,21 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); metricsEnabled = value; }
         }
 
+        /// <summary>
+        /// Used to obtain the metrics port exposed for a service when cluster
+        /// metrics are enabled.  This is useful for setting Helm chart <b>metricsPort</b>
+        /// values where an empty string disables metrics(e.g. for OpenEBS).
+        /// </summary>
+        /// <param name="port">
+        /// Specifies the metrics port exposed for the service or zero when
+        /// metrics are to be disabled for the service.
+        /// </param>
+        /// <returns>An empty string when cluster metrics are disabled or <paramref name="port"/> (as a string) otherwise.</returns>
+        public string GetMetricsPort(int port)
+        {
+            return MetricsEnabled ? port.ToString() : string.Empty;
+        }
+
         private string metricsInterval;
 
         /// <summary>
@@ -182,28 +209,12 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); metricsInterval = value; }
         }
 
-        /// <summary>
-        /// Used to obtain the metrics port exposed for a service when cluster
-        /// metrics are enabled.  This is useful for setting Helm chart <b>metricsPort</b>
-        /// values where an empty string disables metrics(e.g. for OpenEBS).
-        /// </summary>
-        /// <param name="port">
-        /// Specifies the metrics port exposed for the service or zero when
-        /// metrics are to be disabled for the service.
-        /// </param>
-        /// <returns>An empty string when cluster metrics are disabled or <paramref name="port"/> (as a string) otherwise.</returns>
-        public string GetMetricsPort(int port)
-        {
-            return MetricsEnabled ? port.ToString() : string.Empty;
-        }
-
-        private string nodeSelector = "{}";
+        private StructuredHelmValue nodeSelector = new StructuredHelmValue("{}");
 
         /// <summary>
-        /// Returns the single-line node selector object for the service or <b>"{}"</b>
-        /// when this is unconstrained.
+        /// Specifies the <b>nodeSelector</b> object for the service.
         /// </summary>
-        public string NodeSelector
+        public StructuredHelmValue NodeSelector
         {
             get { return nodeSelector; }
             set { EnsureNotReadOnly(); nodeSelector = value; }
@@ -219,6 +230,17 @@ namespace Neon.Kube.Setup
         {
             get { return priorityClassName; }
             set { EnsureNotReadOnly(); priorityClassName = value; }
+        }
+
+        private StructuredHelmValue tolerations = new StructuredHelmValue("[]");
+
+        /// <summary>
+        /// Specifies the the <b>tolerations</b> map for the service.
+        /// </summary>
+        public StructuredHelmValue Tolerations
+        {
+            get { return tolerations; }
+            set { EnsureNotReadOnly(); tolerations = value; }
         }
     }
 }

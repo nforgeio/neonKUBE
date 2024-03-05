@@ -48,162 +48,162 @@ namespace Neon.Kube.Setup
     public class ClusterAdvice
     {
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>AlertManager</b> service.
+        /// Identifies the NEONKUBE cluster <b>AlertManager</b> service.
         /// </summary>
         public const string AlertManager = "alertmanager";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>BlackboxExporter</b> service.
+        /// Identifies the NEONKUBE cluster <b>BlackboxExporter</b> service.
         /// </summary>
         public const string BlackboxExporter = "blackbox-exporter";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Calico</b> service.
+        /// Identifies the NEONKUBE cluster <b>Calico</b> service.
         /// </summary>
         public const string Cilium = "cilium";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>CertManager</b> service manager nodes.
+        /// Identifies the NEONKUBE cluster <b>CertManager</b> service manager nodes.
         /// </summary>
         public const string CertManager = "cert-manager";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's system database.
+        /// Identifies the NEONKUBE cluster system database.
         /// </summary>
         public const string NeonSystemDb = "neon-system-db";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's system database operator.
+        /// Identifies the NEONKUBE cluster system database operator.
         /// </summary>
         public const string NeonSystemDbOperator = "neon-system-db-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's system database pooler.
+        /// Identifies the NEONKUBE cluster system database pooler.
         /// </summary>
         public const string NeonSystemDbPooler = "neon-system-db-pooler";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's system database metrics sidecar.
+        /// Identifies the NEONKUBE cluster system database metrics sidecar.
         /// </summary>
         public const string NeonSystemDbMetrics = "neon-system-db-metrics";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>CoreDNS</b> service.
+        /// Identifies the NEONKUBE cluster <b>CoreDNS</b> service.
         /// </summary>
         public const string CoreDns = "coredns";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Dex</b> service.
+        /// Identifies the NEONKUBE cluster <b>Dex</b> service.
         /// </summary>
         public const string Dex = "dex";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>etcd nodes</b> service.
+        /// Identifies the NEONKUBE cluster <b>etcd nodes</b> service.
         /// </summary>
         public const string EtcdCluster = "etcd-cluster";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Etcd Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>Etcd Operator</b> service.
         /// </summary>
         public const string EtcdOperator = "etcd-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>FluentBit</b> service.
+        /// Identifies the NEONKUBE cluster <b>FluentBit</b> service.
         /// </summary>
         public const string FluentBit = "fluentbit";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Glauth</b> service.
+        /// Identifies the NEONKUBE cluster <b>Glauth</b> service.
         /// </summary>
         public const string Glauth = "glauth";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Grafana</b> service.
+        /// Identifies the NEONKUBE cluster <b>Grafana</b> service.
         /// </summary>
         public const string Grafana = "grafana";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> service.
+        /// Identifies the NEONKUBE cluster <b>Grafana Agent</b> service.
         /// </summary>
         public const string GrafanaAgent = "grafana-agent";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> daemonset service.
+        /// Identifies the NEONKUBE cluster <b>Grafana Agent</b> daemonset service.
         /// </summary>
         public const string GrafanaAgentNode = "grafana-agent-node";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Grafana Agent</b> service.
+        /// Identifies the NEONKUBE cluster <b>Grafana Agent</b> service.
         /// </summary>
         public const string GrafanaAgentOperator = "grafana-agent-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor</b> service.
         /// </summary>
         public const string Harbor = "harbor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Chartmuseum</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Chartmuseum</b> service.
         /// </summary>
         public const string HarborChartmuseum = "harbor-chartmuseum";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Clair</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Clair</b> service.
         /// </summary>
         public const string HarborClair = "harbor-clair";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Core</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Core</b> service.
         /// </summary>
         public const string HarborCore = "harbor-core";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Jobservice</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Jobservice</b> service.
         /// </summary>
         public const string HarborJobservice = "harbor-jobservice";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Notary Server</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Notary Server</b> service.
         /// </summary>
         public const string HarborNotaryServer = "harbor-notary-server";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Notary Signer</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Notary Signer</b> service.
         /// </summary>
         public const string HarborNotarySigner = "harbor-notary-signer";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Portal</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Portal</b> service.
         /// </summary>
         public const string HarborPortal = "harbor-portal";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Harbor Registry</b> service.
+        /// Identifies the NEONKUBE cluster <b>Harbor Registry</b> service.
         /// </summary>
         public const string HarborRegistry = "harbor-registry";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Redis</b> service.
+        /// Identifies the NEONKUBE cluster <b>Redis</b> service.
         /// </summary>
         public const string Redis = "redis";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Istio Proxy</b> service.
+        /// Identifies the NEONKUBE cluster <b>Istio Proxy</b> service.
         /// </summary>
         public const string IstioProxy = "istio-proxy";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Istio Ingress Gateway</b> service.
+        /// Identifies the NEONKUBE cluster <b>Istio Ingress Gateway</b> service.
         /// </summary>
         public const string IstioIngressGateway = "istio-ingressgateway";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Istio Pilot</b> service.
+        /// Identifies the NEONKUBE cluster <b>Istio Pilot</b> service.
         /// </summary>
         public const string IstioPilot = "istio-pilot";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Kubernetes Dashboard</b> service.
+        /// Identifies the NEONKUBE cluster <b>Kubernetes Dashboard</b> service.
         /// </summary>
         public const string KubernetesDashboard = "kubernetes-dashboard";
 
@@ -213,287 +213,287 @@ namespace Neon.Kube.Setup
         public const string KubeStateMetrics = "kube-state-metrics";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Kiali</b> service.
+        /// Identifies the NEONKUBE cluster <b>Kiali</b> service.
         /// </summary>
         public const string Kiali = "kiali";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki</b> service.
         /// </summary>
         public const string Loki = "loki";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Compactor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Compactor</b> service.
         /// </summary>
         public const string LokiCompactor = "loki-compactor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Distributor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Distributor</b> service.
         /// </summary>
         public const string LokiDistributor = "loki-distributor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Index Gateway</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Index Gateway</b> service.
         /// </summary>
         public const string LokiIndexGateway = "loki-index-gateway";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Ingester</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Ingester</b> service.
         /// </summary>
         public const string LokiIngester = "loki-ingester";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Querier</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Querier</b> service.
         /// </summary>
         public const string LokiQuerier = "loki-querier";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Query Frontend</b> service.
         /// </summary>
         public const string LokiQueryFrontend = "loki-query-frontend";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Ruler</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Ruler</b> service.
         /// </summary>
         public const string LokiRuler = "loki-ruler";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Loki Table Manager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Loki Table Manager</b> service.
         /// </summary>
         public const string LokiTableManager = "loki-table-manager";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Memcached</b> service.
+        /// Identifies the NEONKUBE cluster <b>Memcached</b> service.
         /// </summary>
         public const string Memcached = "memcached";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Metrics-Server</b> service.
+        /// Identifies the NEONKUBE cluster <b>Metrics-Server</b> service.
         /// </summary>
         public const string MetricsServer = "metrics-server";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir</b> service.
         /// </summary>
         public const string Mimir = "mimir";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Alertmanager</b> service.
         /// </summary>
         public const string MimirAlertmanager = "mimir-alertmanager";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Compactor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Compactor</b> service.
         /// </summary>
         public const string MimirCompactor = "mimir-compactor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Distributor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Distributor</b> service.
         /// </summary>
         public const string MimirDistributor = "mimir-distributor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Ingester</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Ingester</b> service.
         /// </summary>
         public const string MimirIngester = "mimir-ingester";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir OverridesExporter</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir OverridesExporter</b> service.
         /// </summary>
         public const string MimirOverridesExporter = "mimir-overrides-exporter";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Querier</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Querier</b> service.
         /// </summary>
         public const string MimirQuerier = "mimir-querier";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Query Frontend</b> service.
         /// </summary>
         public const string MimirQueryFrontend = "mimir-query-frontend";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Alertmanager</b> service.
         /// </summary>
         public const string MimirRuler = "mimir-ruler";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Mimir Alertmanager</b> service.
         /// </summary>
         public const string MimirStoreGateway = "mimir-store-gateway";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Minio</b> service.
+        /// Identifies the NEONKUBE cluster <b>Minio</b> service.
         /// </summary>
         public const string Minio = "minio";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Minio Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>Minio Operator</b> service.
         /// </summary>
         public const string MinioOperator = "minio-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>neon-acme</b> service.
+        /// Identifies the NEONKUBE cluster <b>neon-acme</b> service.
         /// </summary>
         public const string NeonAcme = "neon-acme";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>neon-cluster-operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>neon-cluster-operator</b> service.
         /// </summary>
         public const string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>neon-node-agent</b> service.
+        /// Identifies the NEONKUBE cluster <b>neon-node-agent</b> service.
         /// </summary>
         public const string NeonNodeAgent = "neon-node-agent";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>neon-sso-session-proxy</b> service.
+        /// Identifies the NEONKUBE cluster <b>neon-sso-session-proxy</b> service.
         /// </summary>
         public const string NeonSsoSessionProxy = "neon-sso-session-proxy";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Node Problem Detector</b> service.
+        /// Identifies the NEONKUBE cluster <b>Node Problem Detector</b> service.
         /// </summary>
         public const string NodeProblemDetector = "node-problem-detector";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>oauth2-proxy</b> service.
+        /// Identifies the NEONKUBE cluster <b>oauth2-proxy</b> service.
         /// </summary>
         public const string Oauth2Proxy = "oauth2-proxy";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Snapshot Webhook</b> service.
-        /// </summary>
-        public const string OpenEbsAdmissionServer = "openebs-sdmission-server";
-
-        /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS cStor</b> service.
         /// </summary>
         public const string OpenEbsCstor = "openebs-cstor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Admission Server</b> service.
         /// </summary>
-        public const string OpenEbsCstorAdmissionServer = "openebs-cstor-admission-server";
+        public const string OpenEbsCstorAdmissionServer = "openebs-sdmission-server";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSI Controller</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS cStor CSI Controller</b> service.
         /// </summary>
         public const string OpenEbsCstorCsiController = "openebs-cstor-csi-controller";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSI Node</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS cStor CSI Node</b> service.
         /// </summary>
         public const string OpenEbsCstorCsiNode = "openebs-cstor-csi-node";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CSPC Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS cStor CSPC Operator</b> service.
         /// </summary>
         public const string OpenEbsCstorCspcOperator = "openebs-cstor-cspc-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS cStor CVC Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS cStor CVC Operator</b> service.
         /// </summary>
         public const string OpenEbsCstorCvcOperator = "openebs-cstor-cvc-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Jiva</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Jiva CSI Controller</b> service.
         /// </summary>
-        public const string OpenEbsJiva = "openebs-jiva";
+        public const string OpenEbsJivaCsiController = "openebs-jiva-csi-controller";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Local PV Provisioner</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Jiva CSI Operator</b> service.
         /// </summary>
-        public const string OpenEbsProvisionerLocalPv = "openebs-localpv-provisioner";
+        public const string OpenEbsJivaOperator = "openebs-jiva-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Node Disk Manager Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Local PV Provisioner</b> service.
         /// </summary>
-        public const string OpenEbsNdmOperator = "openebs-ndm-operator";
+        public const string OpenEbsLocalPvProvisioner = "openebs-localpv-provisioner";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Node Disk Manager</b> service.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Node Disk Manager</b> service.
         /// </summary>
         public const string OpenEbsNdm = "openebs-ndm";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Cstor Pool</b> containers.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Node Disk Manager Operator</b> service.
+        /// </summary>
+        public const string OpenEbsNdmOperator = "openebs-ndm-operator";
+
+        /// <summary>
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Cstor Pool</b> containers.
         /// </summary>
         public const string OpenEbsCstorPool = "openebs-cstor-pool";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>OpenEBS Cstor Pool</b> sidecar containers.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS Cstor Pool</b> sidecar containers.
         /// </summary>
         public const string OpenEbsCstorPoolAux = "openebs-cstor-pool-aux";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Prometheus</b> service.
+        /// Identifies the NEONKUBE cluster <b>Prometheus</b> service.
         /// </summary>
         public const string Prometheus = "prometheus";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Prometheus Operator</b> service.
+        /// Identifies the NEONKUBE cluster <b>Prometheus Operator</b> service.
         /// </summary>
         public const string PrometheusOperator = "prometheus-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Reloader</b> service.
+        /// Identifies the NEONKUBE cluster <b>Reloader</b> service.
         /// </summary>
         public const string Reloader = "reloader";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo</b> service.
         /// </summary>
         public const string Tempo = "tempo";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Alertmanager</b> service.
         /// </summary>
         public const string TempoAlertmanager = "tempo-alertmanager";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Compactor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Compactor</b> service.
         /// </summary>
         public const string TempoCompactor = "tempo-compactor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Distributor</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Distributor</b> service.
         /// </summary>
         public const string TempoDistributor = "tempo-distributor";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Ingester</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Ingester</b> service.
         /// </summary>
         public const string TempoIngester = "tempo-ingester";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo OverridesExporter</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo OverridesExporter</b> service.
         /// </summary>
         public const string TempoOverridesExporter = "tempo-overrides-exporter";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Querier</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Querier</b> service.
         /// </summary>
         public const string TempoQuerier = "tempo-querier";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Query Frontend</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Query Frontend</b> service.
         /// </summary>
         public const string TempoQueryFrontend = "tempo-query-frontend";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Alertmanager</b> service.
         /// </summary>
         public const string TempoRuler = "tempo-ruler";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// Identifies the NEONKUBE cluster <b>Tempo Alertmanager</b> service.
         /// </summary>
         public const string TempoStoreGateway = "tempo-store-gateway";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster's <b>Redis HA</b> service.
+        /// Identifies the NEONKUBE cluster <b>Redis HA</b> service.
         /// </summary>
         public const string RedisHA = "redis-ha";
 
@@ -522,6 +522,12 @@ namespace Neon.Kube.Setup
         private Dictionary<string, ServiceAdvice>   services   = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                isReadOnly = false;
         private ClusterDefinition                   clusterDefinition;
+        private int                                 controlNodeCount;
+        private int                                 workerNodeCount;
+        private int                                 storageNodeCount;
+        private string                              controlNodeSelector;
+        private string                              workerNodeSelector;
+        private string                              storageNodeSelector;
 
         /// <summary>
         /// Private constructor.
@@ -529,7 +535,21 @@ namespace Neon.Kube.Setup
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private ClusterAdvice(ClusterDefinition clusterDefinition)
         {
-            this.clusterDefinition = clusterDefinition;
+            this.clusterDefinition   = clusterDefinition;
+            this.controlNodeCount    = clusterDefinition.ControlNodes.Count();
+            this.workerNodeCount     = clusterDefinition.Workers.Count();
+            this.storageNodeCount    = clusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
+            this.controlNodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.ControlPlane); ;
+            this.workerNodeSelector  = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
+
+            if (workerNodeCount == 0)
+            {
+                this.storageNodeSelector = "{}";
+            }
+            else
+            {
+                this.storageNodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
+            }
 
             Compute();
         }
@@ -652,7 +672,7 @@ namespace Neon.Kube.Setup
         /// </summary>
         /// <param name="items"></param>
         /// <returns>The single-line YAML.</returns>
-        private string ToObjectYaml(IEnumerable<KeyValuePair<string, string>> items)
+        private string ToObjectYaml(params KeyValuePair<string, string>[] items)
         {
             if (items == null || items.Count() > 1)
             {
@@ -754,10 +774,10 @@ namespace Neon.Kube.Setup
             CalculateOpenEbsCstorCvcOperatorAdvice();
             CalculateOpenEbsCstorPoolAdvice();
             CalculateOpenEbsCstorPoolAuxAdvice();
-            CalculateOpenEbsJivaAdvice();
-            CalculateOpenEbsProvisionerLocalPvAdvice();
+            CalculateOpenEbsJivaCsiControllerAdvice();
+            CalculateOpenEbsJivaOperatorAdvice();
+            CalculateOpenEbsLocalPvProvisionerAdvice();
             CalculateOpenEbsNdmAdvice();
-            CalculateOpenEbsAdmissionServerAdvice();
             CalculateOpenEbsNdmOperatorAdvice();
             CalculatePrometheusAdvice();
             CalculatePrometheusOperatorAdvice();
@@ -1595,15 +1615,9 @@ namespace Neon.Kube.Setup
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorAdmissionServer);
 
-            // We're going to schedule the CSI controller on the storage
-            // nodes for cStor.
-
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
-            {
-                advice.NodeSelector = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
-            }
-
+            advice.NodeSelector      = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+            advice.Replicas          = storageNodeCount;
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
@@ -1699,20 +1713,51 @@ namespace Neon.Kube.Setup
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void CalculateOpenEbsJivaAdvice()
+        private void CalculateOpenEbsJivaCsiControllerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJiva);
+            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJivaCsiController);
 
-            advice.MetricsEnabled    = true;
-            advice.Replicas          = Math.Max(1, Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemOpenEbsStorage).Count())));
+            advice.MetricsEnabled = true;
+
+            if (clusterDefinition.Workers.Count() == 0)
+            {
+                advice.Replicas = 1;
+            }
+            else
+            {
+                advice.NodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
+                advice.Replicas = Math.Max(1, Math.Min(3, storageNodeCount));
+            }
+
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void CalculateOpenEbsProvisionerLocalPvAdvice()
+        private void CalculateOpenEbsJivaOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsProvisionerLocalPv);
+            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJivaOperator);
+
+            advice.MetricsEnabled = true;
+
+            if (workerNodeCount == 0)
+            {
+                advice.Replicas = 1;
+            }
+            else
+            {
+                advice.NodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
+                advice.Replicas     = Math.Max(1, Math.Min(3, storageNodeCount));
+            }
+
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            AddServiceAdvice(advice.ServiceName, advice);
+        }
+
+        private void CalculateOpenEbsLocalPvProvisionerAdvice()
+        {
+            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsLocalPvProvisioner);
 
             advice.Replicas          = Math.Max(1, clusterDefinition.Workers.Count() / 3);
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
@@ -1735,18 +1780,38 @@ namespace Neon.Kube.Setup
         {
             var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsNdmOperator);
 
-            advice.Replicas          = 1;
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
-            AddServiceAdvice(advice.ServiceName, advice);
-        }
+            // We're going to schedule the node operator on the storage
+            // nodes for cStor or Mayastor engines with up to three replicas.
+            // For HostPath or Jiva, we'll schedule up to three replicas on
+            // worker nodes when there are workers, otherwise we won't specify
+            // a node selector, so this will be deployed anywhere, including
+            // the control-plane.
 
-        private void CalculateOpenEbsAdmissionServerAdvice()
-        {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsAdmissionServer);
+            switch (clusterDefinition.Storage.OpenEbs.Engine)
+            {
+                case OpenEbsEngine.Jiva:
+                case OpenEbsEngine.HostPath:
 
-            advice.Replicas          = Math.Max(1, clusterDefinition.Workers.Count() / 3);
-            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+                    if (workerNodeCount > 0)
+                    {
+                        advice.NodeSelector = workerNodeSelector;
+                        advice.Replicas     = Math.Max(3, workerNodeCount);
+                    }
+                    break;
+
+                case OpenEbsEngine.cStor:
+                case OpenEbsEngine.Mayastor:
+
+                    advice.NodeSelector = storageNodeSelector;
+                    advice.Replicas     = Math.Max(3, storageNodeCount);
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
