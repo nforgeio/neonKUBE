@@ -1633,16 +1633,21 @@ systemctl enable kubelet
                     var sbScript         = new StringBuilder();
                     var structuredValues = new List<string>();
                     var command          = mode == HelmMode.Template ? "template" : "install";
-                    var options          = mode == HelmMode.Install ? null : "--dry-run=client";
+                    var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run=client";
+                    var debugOption      = mode != HelmMode.Install ? null : "--debug";
 
                     sbScript.AppendLine($"helm {command} {releaseName} \\");
 
-                    if (options != null)
+                    if (dryRunOption != null)
                     {
-                        sbScript.AppendLine($"    {options} \\");
+                        sbScript.AppendLine($"    {dryRunOption} \\");
                     }
 
-                    sbScript.AppendLine($"    --debug \\");
+                    if (debugOption != null)
+                    {
+                        sbScript.AppendLine($"    {debugOption} \\");
+                    }
+
                     sbScript.AppendLine($"    --namespace {@namespace} \\");
                     sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
 
@@ -1729,30 +1734,33 @@ systemctl enable kubelet
                     SudoCommand(bundle)
                         .EnsureSuccess();
 
-                    try
+                    if (mode == HelmMode.Install)
                     {
-                        NeonHelper.WaitFor(
-                            () =>
-                            {
-                                var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
+                        try
+                        {
+                            NeonHelper.WaitFor(
+                                () =>
+                                {
+                                    var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
                                     .EnsureSuccess();
 
-                                return response.OutputText.Contains("STATUS: deployed");
-                            },
-                            timeout:           TimeSpan.FromSeconds(300),
-                            pollInterval:      TimeSpan.FromSeconds(1),
-                            cancellationToken: controller.CancellationToken);
-                    }
-                    catch (TimeoutException e)
-                    {
-                        controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
-                        controller.LogProgressError(e.Message);
+                                    return response.OutputText.Contains("STATUS: deployed");
+                                },
+                                timeout: TimeSpan.FromSeconds(300),
+                                pollInterval: TimeSpan.FromSeconds(1),
+                                cancellationToken: controller.CancellationToken);
+                        }
+                        catch (TimeoutException e)
+                        {
+                            controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
+                            controller.LogProgressError(e.Message);
 
-                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
+                            var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
                             .EnsureSuccess();
 
-                        controller.LogProgressError(status.AllText);
-                        throw;
+                            controller.LogProgressError(status.AllText);
+                            throw;
+                        }
                     }
                 });
         }
