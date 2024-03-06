@@ -97,7 +97,7 @@ namespace NeonClusterOperator
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            if (DebugMode)
+            if (Service.DebugMode)
             {
                 app.UseDeveloperExceptionPage();
             }
