@@ -156,12 +156,13 @@ namespace NeonClusterOperator
                 // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
                 // only on the first reconcile callback.
 
-                if (!startedWorkerNodeVcpuSchedule)
-                {
-                    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWorkerNodeVcpuSchedule.Schedule);
+                // todo(jefflill): figure out why this is broken and causes the controller to barf when reconcilling
+                //if (!startedWorkerNodeVcpuSchedule)
+                //{
+                //    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWowe canrkerNodeVcpuSchedule.Schedule);
 
-                    startedWorkerNodeVcpuSchedule = true;
-                }
+                //    startedWorkerNodeVcpuSchedule = true;
+                //}
 
                 if (resource.Spec.NodeCaCertificateUpdate.Enabled)
                 {

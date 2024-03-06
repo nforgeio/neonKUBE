@@ -27,4 +27,4 @@ webhooks:
     - pods
     scope: '*'
   sideEffects: None
-  timeoutSeconds: 5
+  timeoutSeconds: 10

@@ -217,7 +217,7 @@ namespace NeonNodeAgent
                    settings.Port                    = KubePort.NeonNodeAgent;
                    settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
-                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.PodNamespace            = KubeNamespace.NeonSystem;
                })
                .AddSingleton(typeof(Service), this)
                .AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
@@ -280,7 +280,7 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
         {
-            if (Program.Service.DebugMode)
+            if (DebugMode)
             {
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
 

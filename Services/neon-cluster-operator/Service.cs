@@ -211,7 +211,7 @@ namespace NeonClusterOperator
                {
                    settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
-                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.PodNamespace            = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
@@ -235,7 +235,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
         {
-            if (Program.Service.DebugMode)
+            if (DebugMode)
             {
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
 

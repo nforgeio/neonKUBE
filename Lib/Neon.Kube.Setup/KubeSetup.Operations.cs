@@ -4965,18 +4965,6 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
-                    // $todo(jefflill):
-                    //
-                    // We need to figure out a way to redact the password from the setup
-                    // logs.  This is currently logged in the clear when we upoload the
-                    // script.
-                    //
-                    // One idea is to have a way to add redactable secrets to the the node
-                    // proxy and then have the proxy search and replace any secrets with
-                    // "REDACTED" before logging the script.
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1822
-
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
@@ -4991,7 +4979,7 @@ $@"- name: StorageType
                         retry.Invoke(
                             () =>
                             {
-                                controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
+                                controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.Redact)
                                     .EnsureSuccess();
                             },
                             cancellationToken: controller.CancellationToken);
