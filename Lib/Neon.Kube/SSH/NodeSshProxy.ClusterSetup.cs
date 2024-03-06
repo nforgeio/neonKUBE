@@ -1630,12 +1630,16 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
+                    const string debugManifestPath = "/home/sysadmin/helm-manifest.yaml";
+
                     var sbScript         = new StringBuilder();
                     var structuredValues = new List<string>();
                     var command          = mode == HelmMode.Template ? "template" : "install";
                     var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run=client";
                     var debugOption      = mode != HelmMode.Install ? null : "--debug";
 
+                    sbScript.AppendLine($"rm {debugManifestPath}");
+                    sbScript.AppendLine();
                     sbScript.AppendLine($"helm {command} {releaseName} \\");
 
                     if (dryRunOption != null)
@@ -1707,7 +1711,7 @@ systemctl enable kubelet
 
                     if (mode == HelmMode.DryRun || mode == HelmMode.Template)
                     {
-                        dryRunRedirect = " > /home/sysadmin/helm-manifest.yaml";
+                        dryRunRedirect = $" > {debugManifestPath}";
                     }
 
                     sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
@@ -1746,8 +1750,8 @@ systemctl enable kubelet
 
                                     return response.OutputText.Contains("STATUS: deployed");
                                 },
-                                timeout: TimeSpan.FromSeconds(300),
-                                pollInterval: TimeSpan.FromSeconds(1),
+                                timeout:           TimeSpan.FromSeconds(300),
+                                pollInterval:      TimeSpan.FromSeconds(1),
                                 cancellationToken: controller.CancellationToken);
                         }
                         catch (TimeoutException e)
@@ -1756,7 +1760,7 @@ systemctl enable kubelet
                             controller.LogProgressError(e.Message);
 
                             var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
-                            .EnsureSuccess();
+                                .EnsureSuccess();
 
                             controller.LogProgressError(status.AllText);
                             throw;
