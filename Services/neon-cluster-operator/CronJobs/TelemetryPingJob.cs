@@ -120,7 +120,7 @@ namespace NeonClusterOperator
                         await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
                     var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
                     if (clusterOperator.Status == null)
