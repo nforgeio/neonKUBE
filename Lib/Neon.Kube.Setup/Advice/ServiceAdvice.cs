@@ -225,29 +225,14 @@ namespace Neon.Kube.Setup
             set { EnsureNotReadOnly(); metricsEnabled = value; }
         }
 
-        /// <summary>
-        /// Used to obtain the metrics port exposed for a service when cluster
-        /// metrics are enabled.  This is useful for setting Helm chart <b>metricsPort</b>
-        /// values where an empty string disables metrics(e.g. for OpenEBS).
-        /// </summary>
-        /// <param name="port">
-        /// Specifies the metrics port exposed for the service or zero when
-        /// metrics are to be disabled for the service.
-        /// </param>
-        /// <returns>An empty string when cluster metrics are disabled or <paramref name="port"/> (as a string) otherwise.</returns>
-        public string GetMetricsPort(int port)
-        {
-            return MetricsEnabled ? port.ToString() : string.Empty;
-        }
-
-        private string metricsInterval;
+        private string metricsInterval = null;
 
         /// <summary>
         /// <para>
         /// Specifies the metrics scrape interval or <c>null</c> when this property is not set.
         /// </para>
         /// <note>
-        /// <see cref="ClusterAdvice.MetricsEnabled"/> will be returned when this
+        /// <see cref="ClusterAdvice.MetricsInterval"/> will be returned when this
         /// property isn't set explicitly.
         /// </note>
         /// </summary>
