@@ -24,7 +24,10 @@ required.
 
    We're going to avoid modifying chart template or other files to make upgrades
    easier.  If we **REALLY** need to make changes to these files, please add a 
-   comment like **"NEONKUBE: CUSTOM VALUE"** calling out the change.
+   comment like **# NEONKUBE CUSTOM VALUE** comment calling out these changes.
+
+   We also need to add custom templates for some services.  We're going to
+   add the **# NEONKUBE CUSTOM TEMPLATE** comment at the top of these files.
 
 4. Review the Helm chart template and other files for changes we need to apply.
 

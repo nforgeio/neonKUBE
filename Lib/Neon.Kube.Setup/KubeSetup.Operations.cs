@@ -2716,31 +2716,10 @@ istioctl install --verify -y -f manifest.yaml
                                     throw new NotImplementedException();
                             }
 
-                            //values.Add("ndm.resources.limits.memory", KubeHelper.ToSiString(ndmAdvice.PodMemoryLimit));
-                            //values.Add("ndm.resources.requests.memory", KubeHelper.ToSiString(ndmAdvice.PodMemoryRequest));
-
-                            //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
-                            //values.Add("ndmOperator.replicas", ndmOperatorAdvice.ReplicaCount);
-
-                            //values.Add("openebsMonitoringAddon.cStor.serviceMonitor.enabled", cStorAdvice.MetricsEnabled);
-                            //values.Add("openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
-                            //values.Add("openebsMonitoringAddon.jiva.serviceMonitor.enabled", jivaAdvice.MetricsEnabled);
-                            //values.Add("openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
-                            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
-
-                            //values.Add("provisioner.replicas", provisionerAdvice.ReplicaCount);
-
-                            //values.Add("serviceMonitor.interval", clusterAdvice.MetricsInterval);
-
-                            //values.Add("snapshotOperator.replicas", snapshotOperatorAdvice.ReplicaCount);
-
-                            //values.Add("webhook.image.registry", KubeConst.LocalClusterRegistry);
-                            //values.Add("webhook.replicas", webhookAdvice.ReplicaCount);
-
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 values:       values,
-                                dryRun:       false);
+                                mode:         HelmMode.DryRun);
                         });
 
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
@@ -2804,6 +2783,8 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                               // NEONKUBE CUSTOM VALUE
             values.Add("ndm.resources", ndmAdvice.Resources);
             values.Add("ndm.tolerations", ndmAdvice.Tolerations);
+            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.interval", ndmAdvice.MetricsInterval);
 
             //values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("ndm.image.repository", "openebs-node-disk-manager");
@@ -2817,6 +2798,8 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("ndmOperator.replicas", ndmOperatorAdvice.Replicas);
             values.Add("ndmOperator.resources", ndmOperatorAdvice.Resources);
             values.Add("ndmOperator.tolerations", ndmOperatorAdvice.Tolerations);
+            //values.Add("openebsMonitoringAddon.ndmOperator.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.ndmOperator.serviceMonitor.interval", ndmOperatorAdvice.MetricsInterval);
 
             //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("ndmOperator.image.repository", "openebs-node-disk-operator");
@@ -2830,6 +2813,8 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("localpv-provisioner.replicas", localPvProvisionerAdvice.Replicas);
             values.Add("localpv-provisioner.resources", localPvProvisionerAdvice.Resources);
             values.Add("localpv-provisioner.tolerations", localPvProvisionerAdvice.Tolerations);
+            //values.Add("openebsMonitoringAddon.localpv-provisioner.serviceMonitor.enabled", localPvProvisionerAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.localpv-provisioner.serviceMonitor.interval", localPvProvisionerAdvice.MetricsInterval);
 
             //values.Add("localpv-provisioner.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("localpv-provisioner.image.repository", "openebs-provisioner-localpv");
@@ -2891,6 +2876,8 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.jivaOperator.resources", jivaOperatorAdvice.Resources);
             values.Add("jiva.jivaOperator.replicas", jivaOperatorAdvice.Replicas);
             values.Add("jiva.jivaOperator.tolerations", jivaOperatorAdvice.Tolerations);
+            //values.Add("openebsMonitoringAddon.jivaOperator.serviceMonitor.enabled", jivaOperatorAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.jivaOperator.serviceMonitor.interval", jivaOperatorAdvice.MetricsInterval);
 
             //values.Add("jiva.jivaOperator.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("jiva.jivaOperator.image.repository", "openebs-jiva-operator");
@@ -2917,22 +2904,24 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.csiController.replicas", jivaCsiControllerAdvice.Replicas);
             values.Add("jiva.csiController.resources", jivaCsiControllerAdvice.Resources);
             values.Add("jiva.csiController.tolerations", jivaCsiControllerAdvice.Tolerations);
+            //values.Add("openebsMonitoringAddon.csiController.serviceMonitor.enabled", jivaCsiControllerAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.csiController.serviceMonitor.interval", jivaCsiControllerAdvice.MetricsInterval);
 
             //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-attacher");
             //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiAttacher);
 
-            //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-livenessprobe");
-            //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiLivenessProbe);
+            //values.Add("jiva.csiController.livenessprobe.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.csiController.livenessprobe.image.repository", "k8scsi-livenessprobe");
+            //values.Add("jiva.csiController.livenessprobe.image.tag", KubeVersion.K8sCsiLivenessProbe);
 
-            //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-provisioner");
-            //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiProvisioner);
+            //values.Add("jiva.csiController.csi-provisioner.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.csiController.csi-provisioner.image.repository", "k8scsi-csi-provisioner");
+            //values.Add("jiva.csiController.csi-provisioner.image.tag", KubeVersion.K8sCsiProvisioner);
 
-            //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-resizer");
-            //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiResizer);
+            //values.Add("jiva.csiController.csi-resizer.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.csiController.csi-resizer.image.repository", "k8scsi-csi-resizer");
+            //values.Add("jiva.csiController.csi-resizer.image.tag", KubeVersion.K8sCsiResizer);
 
             //---------------------------------------------
             // openebs-jiva-csi-node
@@ -2941,10 +2930,20 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.csiNode.nodeSelector", jivaCsiNodeAdvice.NodeSelector);
             values.Add("jiva.csiNode.resources", jivaCsiNodeAdvice.Resources);
             values.Add("jiva.csiNode.tolerations", jivaCsiNodeAdvice.Tolerations);
-            
-            //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-resizer");
-            //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiResizer);
+            //values.Add("openebsMonitoringAddon.csiNode.serviceMonitor.enabled", jivaCsiNodeAdvice.MetricsEnabled);
+            //values.Add("openebsMonitoringAddon.csiNode.serviceMonitor.interval", jivaCsiNodeAdvice.MetricsInterval);
+
+            //values.Add("jiva.csiNode.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.csiNode.driverRegistrar.image.repository", "k8scsi-csi-node-driver-registrar");
+            //values.Add("jiva.csiNode.driverRegistrar.image.tag", KubeVersion.OpenEbsDriverRegistrar);
+
+            //values.Add("jiva.jivaCSIPlugin.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.jivaCSIPlugin.image.repository", "k8scsi-csi-resizer");
+            //values.Add("jiva.jivaCSIPlugin.image.tag", KubeVersion.K8sCsiResizer);
+
+            //values.Add("jiva.csiNode.livenessprobe.image.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("jiva.csiNode.livenessprobe.image.repository", "k8scsi-livenessprobe");
+            //values.Add("jiva.csiNode.livenessprobe.image.tag", KubeVersion.K8sCsiLivenessProbe);
 
             // $todo(jefflill): MORE IMAGES?
         }

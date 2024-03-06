@@ -135,6 +135,7 @@
         <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
         <None Remove="Resources\Helm\oauth2-proxy\templates\_alphaConfig-render.tpl" />
         <None Remove="Resources\Helm\oauth2-proxy\templates\_config-render.tpl" />
+        <None Remove="Resources\Helm\openebs\templates\servicemonitor.yaml" />
         <None Remove="Resources\Helm\openebs\upgrade.ps1" />
         <None Remove="Resources\Helm\postgres-operator\templates\certificate.yaml" />
         <None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
