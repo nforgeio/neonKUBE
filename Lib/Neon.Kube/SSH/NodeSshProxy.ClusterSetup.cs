@@ -1504,9 +1504,17 @@ systemctl enable kubelet
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
-        /// <param name="dryRun">
-        /// Optionally specifies that Helm will simulate installation of the chart, writing the generated manifests to
-        /// <c>/home/sysadmin/helm-dryrun.yaml</c> on the target node.
+        /// <param name="mode">
+        /// <para>
+        /// Specifies whether the Helm chart will be installed (<see cref="HelmMode.Install"/>), simulates a dry-run
+        /// (<see cref="HelmMode.DryRun"/>), or generates a manifest without validating anything against the Kubernetes
+        /// cluster (<see cref="HelmMode.Template"/>). optionally specifies that Helm will simulate installation of the
+        /// chart.
+        /// </para>
+        /// <para>
+        /// The <see cref="HelmMode.DryRun"/> and (<see cref="HelmMode.Template"/>) modes will write the generated manifests
+        /// to <c>/home/sysadmin/helm-manifest.yaml</c> on the target node for your examination.
+        /// </para>
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
@@ -1541,18 +1549,21 @@ systemctl enable kubelet
         /// </item>
         /// </list>
         /// </note>
+        /// <note>
+        /// This operation is idempotent.
+        /// </note>
         /// </remarks>
         public async Task InstallHelmChartAsync(
-            ISetupController                        controller,
-            string                                  chartName,
-            string                                  releaseName      = null,
-            string                                  @namespace       = "default",
-            string                                  prioritySpec     = null,
-            string                                  valuesFile       = null,
-            Dictionary<string, object>              values           = null,
-            string                                  progressMessage  = null,
-            TimeSpan                                timeout          = default,
-            bool                                    dryRun           = false)
+            ISetupController            controller,
+            string                      chartName,
+            string                      releaseName      = null,
+            string                      @namespace       = "default",
+            string                      prioritySpec     = null,
+            string                      valuesFile       = null,
+            Dictionary<string, object>  values           = null,
+            string                      progressMessage  = null,
+            TimeSpan                    timeout          = default,
+            HelmMode                    mode             = HelmMode.Install)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1621,8 +1632,16 @@ systemctl enable kubelet
 
                     var sbScript         = new StringBuilder();
                     var structuredValues = new List<string>();
+                    var command          = mode == HelmMode.Template ? "template" : "install";
+                    var options          = mode == HelmMode.Install ? null : "--dry-run=client";
 
-                    sbScript.AppendLine($"helm install {releaseName} \\");
+                    sbScript.AppendLine($"helm {command} {releaseName} \\");
+
+                    if (options != null)
+                    {
+                        sbScript.AppendLine($"    {options} \\");
+                    }
+
                     sbScript.AppendLine($"    --debug \\");
                     sbScript.AppendLine($"    --namespace {@namespace} \\");
                     sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
@@ -1681,9 +1700,9 @@ systemctl enable kubelet
 
                     var dryRunRedirect = string.Empty;
 
-                    if (dryRun)
+                    if (mode == HelmMode.DryRun || mode == HelmMode.Template)
                     {
-                        dryRunRedirect = " > /home/sysadmin/helm-dryrun.yaml";
+                        dryRunRedirect = " > /home/sysadmin/helm-manifest.yaml";
                     }
 
                     sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
