@@ -105,7 +105,6 @@ namespace NeonClusterOperator
         private readonly HeadendClient                  headendClient;
         private readonly HarborClient                   harborClient;
         private readonly ClusterInfo                    clusterInfo;
-        private bool                                    startedWorkerNodeVcpuSchedule = false;
 
         /// <summary>
         /// Constructor.
