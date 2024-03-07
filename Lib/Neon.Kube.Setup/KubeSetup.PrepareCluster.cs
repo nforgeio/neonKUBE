@@ -554,6 +554,13 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
             }
 
+            // We need to renew the cert for neon desktop.
+
+            if (options.DesktopReadyToGo)
+            {
+                controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode); ;
+            }
+
             // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
             // We're going to waita maximum of 10 minutes before giving up.
 

@@ -435,6 +435,10 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
+                    await ConfigureClusterCertificatesAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
                     await ConfigureApiserverIngressAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -2246,9 +2250,49 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
                 });
+        }
+
+        /// <summary>
+        /// Renews the cluster certificates for a neeon desktop cluster. 
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="controlNode"></param>
+        /// <returns></returns>
+        public static async Task ConfigureDesktopClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await ConfigureCertificatesInternalAsync(controller, controlNode, "desktop");
+        }
+
+        /// <summary>
+        /// Configures the cluster certificates.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="controlNode"></param>
+        /// <returns></returns>
+        public static async Task ConfigureClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await ConfigureCertificatesInternalAsync(controller, controlNode);
+        }
+
+        private static async Task ConfigureCertificatesInternalAsync(
+            ISetupController             controller,
+            NodeSshProxy<NodeDefinition> controlNode,
+            string                       idempotencySuffix = null)
+        {
+            controller.LogProgress(controlNode, verb: "setup", message: "cluster-certificate");
+
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s                = GetK8sClient(controller);
+            var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var idempotencyKey     = "setup/cluster-certificates";
+
+            if (!idempotencySuffix.IsNullOrEmpty())
+            {
+                idempotencyKey += $"-{idempotencySuffix}";
+            }
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
+            await controlNode.InvokeIdempotentAsync(idempotencyKey,
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
@@ -2292,6 +2336,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                 });
         }
+
 
         /// <summary>
         /// Configures external apiserver access.
