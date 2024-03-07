@@ -2666,6 +2666,10 @@ istioctl install --verify -y -f manifest.yaml
             // v1.29.  Hopefully, we'll be able to adapt this technique and re-enable this.
             //
             //      ~\neonKUBE\Lib\Neon.Kube.Setup\Resources\Helm\openebs\archive-servicemonitors
+            //
+            // This project may also be of some help:
+            //
+            //      https://github.com/openebs/monitoring
 
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
