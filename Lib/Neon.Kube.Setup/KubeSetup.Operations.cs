@@ -2656,17 +2656,28 @@ istioctl install --verify -y -f manifest.yaml
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOpenEbsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            // $todo(jefflill):
+            // 
+            // We don't currently honor the service advice [MetricsEnabled] properties
+            // for any OpenEBS components.  This may be a bit noisy for smaller clusters,
+            // but it would be nice to see disk I/O stats for PVs.
+            //
+            // I've archived the relevant Helm files we used before the port to Kubernetes
+            // v1.29.  Hopefully, we'll be able to adapt this technique and re-enable this.
+            //
+            //      ~\neonKUBE\Lib\Neon.Kube.Setup\Resources\Helm\openebs\archive-servicemonitors
+
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var k8s                        = GetK8sClient(controller);
-            var cluster                    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition          = cluster.SetupState.ClusterDefinition;
-            var clusterAdvice              = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var ndmAdvice                  = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
-            var ndmOperatorAdvice          = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
-            var provisionerLocalPvAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
+            var k8s                      = GetK8sClient(controller);
+            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
+            var clusterAdvice            = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
+            var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
+            var provisionerLocalPvAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
 
             if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
@@ -2707,10 +2718,6 @@ istioctl install --verify -y -f manifest.yaml
                                     break;
 
                                 case OpenEbsEngine.Mayastor:
-
-                                    throw new NotImplementedException();
-                                    break;
-
                                 default:
 
                                     throw new NotImplementedException();
@@ -2719,11 +2726,11 @@ istioctl install --verify -y -f manifest.yaml
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 values:       values,
-                                mode:         HelmMode.DryRun);
+                                mode:         HelmMode.Template);
                         });
 
+                    await CreateStorageClasses(controller, controlNode, "default", isDefault: true);
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
-                    await CreateStorageClass(controller, controlNode, "default", isDefault: true);
                     await WaitForOpenEbsReady(controller, controlNode);
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
@@ -2733,7 +2740,7 @@ istioctl install --verify -y -f manifest.yaml
 
                             var values = new Dictionary<string, object>();
 
-                            await CreateStorageClass(controller, controlNode, "neon-internal-nfs");
+                            await CreateStorageClasses(controller, controlNode, "neon-internal-nfs");
 
                             values.Add("nfsStorageClass.backendStorageClass", "neon-internal-nfs");
 
@@ -2774,6 +2781,11 @@ istioctl install --verify -y -f manifest.yaml
             var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
             var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
             var localPvProvisionerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
+
+            //---------------------------------------------
+            // Google Analytics: OpenEBS sends usage data to Google.  We're going to disable this.
+
+            values.Add("analytics.enabled", false);
 
             //---------------------------------------------
             // openebs-ndm
@@ -2846,11 +2858,11 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // $todo(jefflill)
 
+            values.Add("admissionServer.nodeSelector", cStorAdmissionServerAdvice.NodeSelector);
+
             //values.Add("admissionServer.image.registry", "");
             //values.Add("admissionServer.image.repository", "");
             //values.Add("admissionServer.image.tag", "");
-
-            values.Add("admissionServer.nodeSelector", cStorAdmissionServerAdvice.NodeSelector);
         }
 
         /// <summary>
@@ -3376,7 +3388,7 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateStorageClass(
+        public static async Task CreateStorageClasses(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
@@ -4773,7 +4785,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor databases");
 
-                    await CreateStorageClass(controller, controlNode, "neon-internal-registry");
+                    await CreateStorageClasses(controller, controlNode, "neon-internal-registry");
 
                     // Create the Harbor databases.
 
