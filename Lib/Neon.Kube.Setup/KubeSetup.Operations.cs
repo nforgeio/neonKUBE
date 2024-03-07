@@ -2670,6 +2670,7 @@ istioctl install --verify -y -f manifest.yaml
             // This project may also be of some help:
             //
             //      https://github.com/openebs/monitoring
+            //      https://github.com/openebs/monitoring/blob/161b5af7f7525c223b9165a13db2d6b667d08aad/docs/guide.md?plain=1
 
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
