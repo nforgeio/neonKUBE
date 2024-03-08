@@ -1979,7 +1979,7 @@ istioctl install --verify -y -f manifest.yaml
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.IstioSystem, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.IstioSystem, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:   "setup/cert-manager-ready",
+                        timeoutMessage:   "Timeout waiting for: cert-manager",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -2601,7 +2601,7 @@ istioctl install --verify -y -f manifest.yaml
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
-                        timeoutMessage: "setup/kiali-ready",
+                        timeoutMessage:    "Timeout waiting for: kiali",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -2649,6 +2649,45 @@ istioctl install --verify -y -f manifest.yaml
         }
 
         /// <summary>
+        /// Creates a Kubernetes namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="name">The new WatchNamespace name.</param>
+        /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateNamespaceAsync(
+            ISetupController                controller,
+            NodeSshProxy<NodeDefinition>    controlNode,
+            string                          name,
+            bool                            istioInjectionEnabled = true)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var k8s = GetK8sClient(controller);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync($"setup/namespace-{name}",
+                async () =>
+                {
+                    await k8s.CoreV1.CreateNamespaceAsync(
+                        new V1Namespace()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name   = name,
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
+                                }
+                            }
+                        });
+                });
+        }
+
+        /// <summary>
         /// Installs OpenEBS.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2679,10 +2718,12 @@ istioctl install --verify -y -f manifest.yaml
             var k8s                      = GetK8sClient(controller);
             var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterDefinition        = cluster.SetupState.ClusterDefinition;
+            var openEbsEngine            = clusterDefinition.Storage.OpenEbs.Engine;
             var clusterAdvice            = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
             var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
             var provisionerLocalPvAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
+            var ndmEnabled               = false;
 
             if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
@@ -2705,7 +2746,9 @@ istioctl install --verify -y -f manifest.yaml
 
                             AddOpenEbsCommonHelmValues(controller, values);
 
-                            switch (clusterDefinition.Storage.OpenEbs.Engine)
+                            ndmEnabled = (bool)values["ndm.enabled"];
+
+                            switch (openEbsEngine)
                             {
                                 case OpenEbsEngine.cStor:
 
@@ -2719,7 +2762,8 @@ istioctl install --verify -y -f manifest.yaml
 
                                 case OpenEbsEngine.HostPath:
 
-                                    throw new NotImplementedException();
+                                    // This is a NOP because [localpv-provisioner] is always
+                                    // installed as a common component.
                                     break;
 
                                 case OpenEbsEngine.Mayastor:
@@ -2729,14 +2773,78 @@ istioctl install --verify -y -f manifest.yaml
                             }
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
-                                @namespace:   KubeNamespace.NeonStorage,
-                                values:       values,
-                                mode:         HelmMode.Template);
+                                @namespace: KubeNamespace.NeonStorage,
+                                values:     values);
                         });
 
-                    await CreateStorageClasses(controller, controlNode, "default", isDefault: true);
-                    await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
-                    await WaitForOpenEbsReady(controller, controlNode);
+                    // Create the storage classes.
+
+                    await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath", isDefault: openEbsEngine == OpenEbsEngine.HostPath);
+                    await CreateEngineStorageClass(controller, controlNode, "default", isDefault: true);
+                    await CreateEngineStorageClass(controller, controlNode, "neon-internal-nfs");
+
+                    // Wait for common components to be installed.
+
+                    await controlNode.InvokeIdempotentAsync("setup/openebs-common-ready",
+                        async () =>
+                        {
+                            controller.LogProgress(controlNode, verb: "wait for", message: "openebs-localpv-provisioner");
+
+                            var waitTasks =
+                                new List<Task>()
+                                {
+                                    k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                };
+
+                            if (ndmEnabled)
+                            {
+                                waitTasks.Add(k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                            }
+
+                            await NeonHelper.WaitAllAsync(
+                                tasks:             waitTasks,
+                                timeoutMessage:    "Timeout waiting for: openebs-localpv-provisioner",
+                                cancellationToken: controller.CancellationToken);
+                        });
+
+                    // Wait for the engine specific components to be deployed.
+
+                    await controlNode.InvokeIdempotentAsync("setup/openebs-engine-ready",
+                        async () =>
+                        {
+                            switch (openEbsEngine)
+                            {
+                                case OpenEbsEngine.cStor:
+
+                                    throw new NotImplementedException();
+                                    break;
+
+                                case OpenEbsEngine.Jiva:
+
+                                    controller.LogProgress(controlNode, verb: "wait for", message: "openebs-jiva");
+                                    await NeonHelper.WaitAllAsync(
+                                        new List<Task>()
+                                        {
+                                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-jiva-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                        },
+                                        timeoutMessage:    "Timeout waiting for: openebs-localpv-provisioner",
+                                        cancellationToken: controller.CancellationToken);
+                                    break;
+
+                                case OpenEbsEngine.HostPath:
+
+                                    break;  // NOP because we already checked for common component readiness above.
+
+                                case OpenEbsEngine.Mayastor:
+                                default:
+
+                                    throw new NotImplementedException();
+                            }
+                        });
+
+                    // Install NFS support.
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
                         async () =>
@@ -2745,27 +2853,25 @@ istioctl install --verify -y -f manifest.yaml
 
                             var values = new Dictionary<string, object>();
 
-                            await CreateStorageClasses(controller, controlNode, "neon-internal-nfs");
-
                             values.Add("nfsStorageClass.backendStorageClass", "neon-internal-nfs");
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs-nfs-provisioner",
-                                @namespace: KubeNamespace.NeonStorage,
+                                @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
-                                values: values);
+                                values:       values);
                         });
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs-ready",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "wait for", message: "openebs");
+                            controller.LogProgress(controlNode, verb: "wait for", message: "openebs-nfs");
 
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
                                 {
-                                        k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                    k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                 },
-                                timeoutMessage: "setup/openebs-ready",
+                                timeoutMessage:    "Timeout waiting for: openebs-nfs",
                                 cancellationToken: controller.CancellationToken);
                         });
                 });
@@ -2777,31 +2883,47 @@ istioctl install --verify -y -f manifest.yaml
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="values">The target Helm values dictionary.</param>
-        public static void AddOpenEbsCommonHelmValues(ISetupController controller, Dictionary<string, object> values)
+        private static void AddOpenEbsCommonHelmValues(ISetupController controller, Dictionary<string, object> values)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(values != null, nameof(values));
 
+            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
+            var openEbsEngine            = clusterDefinition.Storage.OpenEbs.Engine;
             var clusterAdvice            = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
             var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
             var localPvProvisionerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
 
             //---------------------------------------------
-            // Google Analytics: OpenEBS sends usage data to Google.  We're going to disable this.
+            // Google Analytics: OpenEBS can send usage data to Google.  We're disabling this.
 
             values.Add("analytics.enabled", false);
 
             //---------------------------------------------
+            // Disable StorageClass creation because we create our own.
+
+            values.Add("localprovisioner.deviceClass.enabled", false);
+            values.Add("localprovisioner.hostpathClass.enabled", false);
+            values.Add("nfsStorageClass.enabled", false);
+            values.Add("jiva.storageClass.enabled", false);
+
+            //---------------------------------------------
             // openebs-ndm
 
+            // Disable NDM for Jiva since we currently only support Jiva PVs deployed
+            // on local [HostPath] volumes.  We could add this capability in the
+            // future, but this probably won't be a priority since cStor or Mayastor
+            // would probably be more appropriate for customer (non-NEONDESKTOP)
+            // multi-node clusters.
+
+            values.Add("ndm.enabled", openEbsEngine != OpenEbsEngine.Jiva);
             values.Add("ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
             values.Add("ndm.nodeSelector", ndmAdvice.NodeSelector);
-            values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                               // NEONKUBE CUSTOM VALUE
+            values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                   // NEONKUBE CUSTOM VALUE
             values.Add("ndm.resources", ndmAdvice.Resources);
             values.Add("ndm.tolerations", ndmAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.ndm.serviceMonitor.interval", ndmAdvice.MetricsInterval);
 
             //values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("ndm.image.repository", "openebs-node-disk-manager");
@@ -2810,13 +2932,12 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-ndm-operator
 
+            values.Add("ndmOperator.enabled", openEbsEngine != OpenEbsEngine.Jiva);
             values.Add("ndmOperator.nodeSelector", ndmOperatorAdvice.NodeSelector);
-            values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                               // NEONKUBE CUSTOM VALUE
+            values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                   // NEONKUBE CUSTOM VALUE
             values.Add("ndmOperator.replicas", ndmOperatorAdvice.Replicas);
             values.Add("ndmOperator.resources", ndmOperatorAdvice.Resources);
             values.Add("ndmOperator.tolerations", ndmOperatorAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.ndmOperator.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.ndmOperator.serviceMonitor.interval", ndmOperatorAdvice.MetricsInterval);
 
             //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("ndmOperator.image.repository", "openebs-node-disk-operator");
@@ -2826,12 +2947,10 @@ istioctl install --verify -y -f manifest.yaml
             // openebs-localpv-provisioner
 
             values.Add("localpv-provisioner.nodeSelector", localPvProvisionerAdvice.NodeSelector);
-            values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);   // NEONKUBE CUSTOM VALUE
+            values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);    // NEONKUBE CUSTOM VALUE
             values.Add("localpv-provisioner.replicas", localPvProvisionerAdvice.Replicas);
             values.Add("localpv-provisioner.resources", localPvProvisionerAdvice.Resources);
             values.Add("localpv-provisioner.tolerations", localPvProvisionerAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.localpv-provisioner.serviceMonitor.enabled", localPvProvisionerAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.localpv-provisioner.serviceMonitor.interval", localPvProvisionerAdvice.MetricsInterval);
 
             //values.Add("localpv-provisioner.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("localpv-provisioner.image.repository", "openebs-provisioner-localpv");
@@ -2885,6 +3004,8 @@ istioctl install --verify -y -f manifest.yaml
             var jivaCsiControllerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJivaCsiController);
             var jivaCsiNodeAdvice       = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorCsiNode);
 
+            values.Add("jiva.enabled", true);
+
             //---------------------------------------------
             // openebs-jiva-operator
 
@@ -2893,8 +3014,6 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.jivaOperator.resources", jivaOperatorAdvice.Resources);
             values.Add("jiva.jivaOperator.replicas", jivaOperatorAdvice.Replicas);
             values.Add("jiva.jivaOperator.tolerations", jivaOperatorAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.jivaOperator.serviceMonitor.enabled", jivaOperatorAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.jivaOperator.serviceMonitor.interval", jivaOperatorAdvice.MetricsInterval);
 
             //values.Add("jiva.jivaOperator.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("jiva.jivaOperator.image.repository", "openebs-jiva-operator");
@@ -2915,14 +3034,11 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-jiva-csi-controller
 
-            values.Add("jiva.enabled", true);
             values.Add("jiva.csiController.priorityClassName", jivaCsiControllerAdvice.PriorityClassName);  // NEONKUBE CUSTOM VALUE
             values.Add("jiva.csiController.nodeSelector", jivaCsiControllerAdvice.NodeSelector);
             values.Add("jiva.csiController.replicas", jivaCsiControllerAdvice.Replicas);
             values.Add("jiva.csiController.resources", jivaCsiControllerAdvice.Resources);
             values.Add("jiva.csiController.tolerations", jivaCsiControllerAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.csiController.serviceMonitor.enabled", jivaCsiControllerAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.csiController.serviceMonitor.interval", jivaCsiControllerAdvice.MetricsInterval);
 
             //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-attacher");
@@ -2947,8 +3063,6 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("jiva.csiNode.nodeSelector", jivaCsiNodeAdvice.NodeSelector);
             values.Add("jiva.csiNode.resources", jivaCsiNodeAdvice.Resources);
             values.Add("jiva.csiNode.tolerations", jivaCsiNodeAdvice.Tolerations);
-            //values.Add("openebsMonitoringAddon.csiNode.serviceMonitor.enabled", jivaCsiNodeAdvice.MetricsEnabled);
-            //values.Add("openebsMonitoringAddon.csiNode.serviceMonitor.interval", jivaCsiNodeAdvice.MetricsInterval);
 
             //values.Add("jiva.csiNode.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("jiva.csiNode.driverRegistrar.image.repository", "k8scsi-csi-node-driver-registrar");
@@ -3111,7 +3225,7 @@ istioctl install --verify -y -f manifest.yaml
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cvc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cspc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
-                        timeoutMessage:    "setup/openebs-cstor-ready",
+                        timeoutMessage:    "Timeout waiting for: openebs cstor",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -3126,80 +3240,6 @@ istioctl install --verify -y -f manifest.yaml
             await CreateCstorStorageClass(controller, controlNode, "openebs-cstor", replicaCount: replicas);
         }
 #endif
-
-        /// <summary>
-        /// Waits for OpenEBS to become ready.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task WaitForOpenEbsReady(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-
-            var k8s = GetK8sClient(controller);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/openebs-ready",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "openebs");
-
-                    await NeonHelper.WaitAllAsync(
-                        new List<Task>()
-                        {
-                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm-node-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-cluster-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-csi-controller", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                        },
-                        timeoutMessage:    "setup/openebs-ready",
-                        cancellationToken: controller.CancellationToken);
-                });
-        }
-
-        /// <summary>
-        /// Creates a Kubernetes namespace.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new WatchNamespace name.</param>
-        /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateNamespaceAsync(
-            ISetupController                controller,
-            NodeSshProxy<NodeDefinition>    controlNode,
-            string                          name,
-            bool                            istioInjectionEnabled = true)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-
-            var k8s = GetK8sClient(controller);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync($"setup/namespace-{name}",
-                async () =>
-                {
-                    await k8s.CoreV1.CreateNamespaceAsync(
-                        new V1Namespace()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name   = name,
-                                Labels = new Dictionary<string, string>()
-                                {
-                                    { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
-                                }
-                            }
-                        });
-                });
-        }
 
         /// <summary>
         /// Creates a Kubernetes Storage Class.
@@ -3393,7 +3433,7 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateStorageClasses(
+        public static async Task CreateEngineStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
@@ -3416,7 +3456,6 @@ $@"- name: StorageType
             {
                 case OpenEbsEngine.cStor:
 
-                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
                     await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
@@ -3427,12 +3466,10 @@ $@"- name: StorageType
 
                 case OpenEbsEngine.HostPath:
 
-                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
-                    break;
+                    break;  // NOP: This is always installed by: InstallOpenEbsAsync()
 
                 case OpenEbsEngine.Jiva:
 
-                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
                     await CreateJivaStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
@@ -3582,7 +3619,7 @@ $@"- name: StorageType
                             k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonMonitor, "grafana-agent-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "grafana-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:    "setup/monitoring-grafana-agent-ready",
+                        timeoutMessage:    "Timeout waiting for: grafana agent",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -4590,7 +4627,7 @@ $@"- name: StorageType
                                     k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "minio-console", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                     k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "minio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                 },
-                                timeoutMessage:    "setup/minio-ready",
+                                timeoutMessage:    "Timeout waiting for: minio",
                                 cancellationToken: controller.CancellationToken);
                         });
 
@@ -4658,7 +4695,7 @@ $@"- name: StorageType
             controller.LogProgress(controlNode, verb: "wait", message: "for cluster monitoring");
 
             await NeonHelper.WaitAllAsync(tasks,
-                timeoutMessage:    "install-monitoring",
+                timeoutMessage:    "Timeout waiting for: cluster monitoring",
                 cancellationToken: controller.CancellationToken);
         }
 
@@ -4790,7 +4827,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor databases");
 
-                    await CreateStorageClasses(controller, controlNode, "neon-internal-registry");
+                    await CreateEngineStorageClass(controller, controlNode, "neon-internal-registry");
 
                     // Create the Harbor databases.
 
@@ -4947,7 +4984,7 @@ $@"- name: StorageType
                     }
 
                     await NeonHelper.WaitAllAsync(tasks,
-                        timeoutMessage:    "setup/harbor-ready",
+                        timeoutMessage:    "Timeout waiting for: harbor",
                         cancellationToken: controller.CancellationToken);
                 });
 

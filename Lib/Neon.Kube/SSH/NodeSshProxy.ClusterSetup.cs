@@ -1465,7 +1465,7 @@ systemctl enable kubelet
         }
 
         /// <summary>
-        /// Installs a prepositioned Helm chart from a control-plane node.
+        /// Installs a prepositioned Helm chart on a target control-plane node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="chartName">
@@ -1499,7 +1499,7 @@ systemctl enable kubelet
         /// <param name="valuesFile">
         /// Optionally specifies Helm chart values as a YAML string.  These strings will be
         /// persisted as an individual YAML file on the node and are applied when installing
-        /// the chart.
+        /// the chart before applying any <paramref name="values"/>.
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
@@ -1630,7 +1630,7 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
-                    const string debugManifestPath = "/home/sysadmin/helm-manifest.yaml";
+                    const string debugManifestPath = "/home/sysadmin/debug-manifest.yaml";
 
                     var sbScript         = new StringBuilder();
                     var structuredValues = new List<string>();
@@ -1638,7 +1638,7 @@ systemctl enable kubelet
                     var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run=client";
                     var debugOption      = mode != HelmMode.Install ? null : "--debug";
 
-                    sbScript.AppendLine($"rm {debugManifestPath}");
+                    sbScript.AppendLine($"rm -f {debugManifestPath}");
                     sbScript.AppendLine();
                     sbScript.AppendLine($"helm {command} {releaseName} \\");
 

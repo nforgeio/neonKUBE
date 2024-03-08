@@ -280,7 +280,7 @@ modprobe -v nvmet-tcp
         }
 
         /// <summary>
-        /// Installs NFS.
+        /// Installs NFS components.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         public void InstallNFS(ISetupController controller)
@@ -290,7 +290,7 @@ modprobe -v nvmet-tcp
             InvokeIdempotent("base/nfs",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "nfs");
+                    controller.LogProgress(this, verb: "configure", message: "nfs components");
 
                     //-----------------------------------------------------------------
                     // We need to install nfs-common tools for NFS to work.

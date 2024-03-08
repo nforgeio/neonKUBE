@@ -1784,10 +1784,6 @@ namespace Neon.Kube.Setup
 
             // We're going to schedule the node operator on the storage
             // nodes for cStor or Mayastor engines with up to three replicas.
-            // For HostPath or Jiva, we'll schedule up to three replicas on
-            // worker nodes when there are workers, otherwise we won't specify
-            // a node selector, so this will be deployed anywhere, including
-            // the control-plane.
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
@@ -1796,7 +1792,7 @@ namespace Neon.Kube.Setup
 
                     if (workerNodeCount > 0)
                     {
-                        advice.NodeSelector = workerNodeSelector;
+                        advice.NodeSelector = storageNodeSelector;
                         advice.Replicas     = Math.Max(3, workerNodeCount);
                     }
                     break;
