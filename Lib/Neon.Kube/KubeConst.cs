@@ -461,5 +461,13 @@ namespace Neon.Kube
         /// Neon SSO Public client ID.
         /// </summary>
         public const string NeonSsoPublicClientId = "neon-sso-public";
+
+        /// <summary>
+        /// Returns the fully qualified path to our <b>safe-apt-get</b> script
+        /// that wraps the <b>apt-get</b> tool to handle situations where the
+        /// package manager is already busy performing another operation, such
+        /// as checking for daily updates.
+        /// </summary>
+        public const string SafeAptGetToolPath = $"{KubeNodeFolder.Bin}/safe-apt-get";
     }
 }

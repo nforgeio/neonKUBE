@@ -1253,14 +1253,16 @@ rm -rf linux-amd64
         /// <summary>
         /// Installs the Kubernetes components: <b>kubeadm</b>, <b>kubectl</b>, and <b>kubelet</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallKubernetes(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            InvokeIdempotent("setup/kubernetes",
+            InvokeIdempotent("base/kubernetes",
                 () =>
                 {
+                    controller.LogProgress(this, "install", "kubernetes");
+
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
                     // We ran into a problem downloading the Google [apt-key.gpg] file which
@@ -1281,29 +1283,11 @@ rm -rf linux-amd64
                         {
                             // Perform the install.
 
+                            var kubernetesFullVersion    = SemanticVersion.Parse(KubeVersions.Kubernetes);
+                            var kubernetesVersionNoPatch = new Version(kubernetesFullVersion.Major, kubernetesFullVersion.Minor);
+
                             var mainScript =
 $@"
-# $todo(jefflill):
-#
-# [kubeadm] installation is having some trouble with a couple package depedencies,
-# which causes the install command to return a non-zero exit code.  This appears
-# to be a problem with two package dependencies trying to update the same file.
-#
-# We're going to use an option to force the file overwrite and then ignore any
-# errors for now and hope for the best.  This isn't as bad as it sounds because 
-# for NEONKUBE we're only calling this method while creating node images, so we'll
-# should be well aware of any problems while completing the node image configuration
-# and then deploying test clusters.
-#
-#       https://github.com/nforgeio/neonKUBE/issues/1571
-#       https://github.com/containers/podman/issues/14367
-#
-# I'm going to hack this for now by using this option:
-#
-#   -o Dpkg::Options::=""--force-overwrite""
-#
-# and ignoring errors from the command.
-
 set -euo pipefail
 
 set +e
@@ -1321,14 +1305,23 @@ fi
 set -e
 
 # Configure the APT signing key and configure the Kubernetes APT repository.
+#
+#       https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/#add-the-kubernetes-repository
 
-curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+VERSION={kubernetesVersionNoPatch}
+
+mkdir -p /etc/apt/keyrings
+rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+rm -f /etc/apt/sources.list.d/kubernetes.list
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$VERSION/deb/ /"" | tee /etc/apt/sources.list.d/kubernetes.list
 
 # Install: kubelet, kubeadm, and kubectl.
 
-{KubeNodeFolder.Bin}/safe-apt-get update
-{KubeNodeFolder.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeAdminPackage} kubeadm={KubeVersions.KubeAdminPackage} kubectl={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
+{KubeConst.SafeAptGetToolPath} update
+{KubeConst.SafeAptGetToolPath} install -yq kubelet kubeadm kubectl --allow-change-held-packages
+{KubeConst.SafeAptGetToolPath} autoremove -y
 
 # Prevent the package manager from upgrading these components.
 
@@ -1336,8 +1329,12 @@ set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
 
+# We need to restart CRI-O here.  I'm not entirely sure why.
+
+systemctl restart cri-o
+
 # Pull the core Kubernetes container images (kube-scheduler, kube-proxy,...) to ensure they'll 
-# be present on all node images.  Note that we needs to use a config file to ensure that container
+# be present on all node images.  Note that we need to use a config file to ensure that container
 # images are pulled from [registry.k8s.io] rather than [k8s.gcr.io] which used to be the default
 # but was depreciated in 2022 and stopped receiving updates in 2023.
 
@@ -1359,14 +1356,12 @@ mkdir -p /etc/cni/net.d
 
 echo KUBELET_EXTRA_ARGS=--container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
 
-# Stop and disable [kubelet] for now.  We'll enable this later during cluster setup.
+# Stop and disable [kubelet] for now.  We'll re-enable this later during cluster setup.
 
 systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                            controller.LogProgress(this, verb: "setup", message: "kubernetes");
-
                             SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
                         });
                 });
