@@ -2800,11 +2800,12 @@ istioctl install --verify -y -f manifest.yaml
                             {
                                 waitTasks.Add(k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                                 waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                             }
 
                             await NeonHelper.WaitAllAsync(
                                 tasks:             waitTasks,
-                                timeoutMessage:    "Timeout waiting for: openebs-localpv-provisioner",
+                                timeoutMessage:    "Timeout waiting for: openebs localpv, ndm, and nfs",
                                 cancellationToken: controller.CancellationToken);
                         });
 
@@ -2895,6 +2896,7 @@ istioctl install --verify -y -f manifest.yaml
             var ndmAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
             var ndmOperatorAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
             var localPvProvisionerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
+            var nfsProvisionerAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNfsProvisioner);
 
             //---------------------------------------------
             // Google Analytics: OpenEBS can send usage data to Google.  We're disabling this.
@@ -2955,6 +2957,15 @@ istioctl install --verify -y -f manifest.yaml
             //values.Add("localpv-provisioner.image.registry", KubeConst.LocalClusterRegistry);
             //values.Add("localpv-provisioner.image.repository", "openebs-provisioner-localpv");
             //values.Add("localpv-provisioner.image.tag", KubeVersion.OpenEbsProvisionerLocalPV);
+
+            //---------------------------------------------
+            // openebs-nfs-provisioner
+
+            values.Add("nfs-provisioner.enabled", true);
+
+            //values.Add("nfs-provisioner.nfsServerAlpineImage.registry", KubeConst.LocalClusterRegistry);
+            //values.Add("nfs-provisioner.nfsServerAlpineImage.repository", "openebs-nfs-server-alpine");
+            //values.Add("nfs-provisioner.nfsServerAlpineImage.tag", KubeVersion.OpenEbsNfsServerAlpine);
         }
 
         /// <summary>

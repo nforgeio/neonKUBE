@@ -444,7 +444,8 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <b>node.neonkube.io/monitor.metric-services</b> [<c>bool</c>]: Indicates NEONKUBE
-        /// Mimir metrics services may be scheduled on the labeled node.  This defaults to <c>false</c>.
+        /// Mimir metrics and other services may be scheduled on the labeled node.  This defaults
+        /// to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemMetricServices", Required = Required.Default)]
         [YamlMember(Alias = "systemMetricServices", ApplyNamingConventions = false)]

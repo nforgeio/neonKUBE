@@ -98,16 +98,6 @@ namespace Neon.Kube.Setup
         public const string Dex = "dex";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster <b>etcd nodes</b> service.
-        /// </summary>
-        public const string EtcdCluster = "etcd-cluster";
-
-        /// <summary>
-        /// Identifies the NEONKUBE cluster <b>Etcd Operator</b> service.
-        /// </summary>
-        public const string EtcdOperator = "etcd-operator";
-
-        /// <summary>
         /// Identifies the NEONKUBE cluster <b>FluentBit</b> service.
         /// </summary>
         public const string FluentBit = "fluentbit";
@@ -418,14 +408,9 @@ namespace Neon.Kube.Setup
         public const string OpenEbsNdmOperator = "openebs-ndm-operator";
 
         /// <summary>
-        /// Identifies the NEONKUBE cluster <b>OpenEBS Cstor Pool</b> containers.
+        /// Identifies the NEONKUBE cluster <b>OpenEBS NFS Provisioner</b> service.
         /// </summary>
-        public const string OpenEbsCstorPool = "openebs-cstor-pool";
-
-        /// <summary>
-        /// Identifies the NEONKUBE cluster <b>OpenEBS Cstor Pool</b> sidecar containers.
-        /// </summary>
-        public const string OpenEbsCstorPoolAux = "openebs-cstor-pool-aux";
+        public const string OpenEbsNfsProvisioner = "openebs-nfs-provisioner";
 
         /// <summary>
         /// Identifies the NEONKUBE cluster <b>Prometheus</b> service.
@@ -522,23 +507,27 @@ namespace Neon.Kube.Setup
         private Dictionary<string, ServiceAdvice>   services   = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                isReadOnly = false;
         private ClusterDefinition                   clusterDefinition;
+        private int                                 nodeCount;
         private int                                 controlNodeCount;
         private int                                 workerNodeCount;
         private int                                 storageNodeCount;
+        private int                                 metricsNodeCount;
         private string                              controlNodeSelector;
         private string                              workerNodeSelector;
         private string                              storageNodeSelector;
 
         /// <summary>
-        /// Private constructor.
+        /// public constructor.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private ClusterAdvice(ClusterDefinition clusterDefinition)
         {
             this.clusterDefinition   = clusterDefinition;
+            this.nodeCount           = clusterDefinition.Nodes.Count();
             this.controlNodeCount    = clusterDefinition.ControlNodes.Count();
             this.workerNodeCount     = clusterDefinition.Workers.Count();
             this.storageNodeCount    = clusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
+            this.metricsNodeCount    = clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count();
             this.controlNodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.ControlPlane); ;
             this.workerNodeSelector  = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
 
@@ -650,8 +639,8 @@ namespace Neon.Kube.Setup
         /// <returns><c>true</c> for small clusters.</returns>
         private bool IsSmallCluster =>
             clusterDefinition.IsDesktop ||
-            clusterDefinition.ControlNodes.Count() == 1 ||
-            clusterDefinition.Nodes.Count() <= 10;
+            controlNodeCount == 1 ||
+            nodeCount <= 10;
 
         /// <summary>
         /// Converts a name/value pair into single line YAML object.
@@ -698,7 +687,7 @@ namespace Neon.Kube.Setup
             // Initialize global cluster advice.
 
             MetricsEnabled  = true;
-            MetricsInterval = clusterDefinition.Nodes.Count() > 6 ? "60s" : "5m";
+            MetricsInterval = nodeCount > 6 ? "60s" : "5m";
             MetricsQuota    = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             LogsQuota       = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             TracesQuota     = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
@@ -711,7 +700,6 @@ namespace Neon.Kube.Setup
             CalculateCertManagerAdvice();
             CalculateCoreDnsAdvice();
             CalculateDexAdvice();
-            CalculateEtcdClusterAdvice();
             CalculateGlauthAdvice();
             CalculateGrafanaAdvice();
             CalculateGrafanaAgentAdvice();
@@ -772,13 +760,12 @@ namespace Neon.Kube.Setup
             CalculateOpenEbsCstorCsiNodeAdvice();
             CalculateOpenEbsCstorCspcOperatorAdvice();
             CalculateOpenEbsCstorCvcOperatorAdvice();
-            CalculateOpenEbsCstorPoolAdvice();
-            CalculateOpenEbsCstorPoolAuxAdvice();
             CalculateOpenEbsJivaCsiControllerAdvice();
             CalculateOpenEbsJivaOperatorAdvice();
             CalculateOpenEbsLocalPvProvisionerAdvice();
             CalculateOpenEbsNdmAdvice();
             CalculateOpenEbsNdmOperatorAdvice();
+            CalculateOpenEbsNfsProvisionerAdvice();
             CalculatePrometheusAdvice();
             CalculatePrometheusOperatorAdvice();
             CalculateReloaderAdvice();
@@ -802,14 +789,14 @@ namespace Neon.Kube.Setup
 
         private void CalculateAlertManagerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.AlertManager);
+            var advice = new ServiceAdvice(this, AlertManager);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateBlackboxExporterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.BlackboxExporter);
+            var advice = new ServiceAdvice(this, BlackboxExporter);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
@@ -819,7 +806,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateCiliumAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Cilium);
+            var advice = new ServiceAdvice(this, Cilium);
 
             advice.MetricsEnabled = false;
 
@@ -828,7 +815,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateCertManagerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.CertManager);
+            var advice = new ServiceAdvice(this, CertManager);
 
             advice.Replicas = 1;
 
@@ -844,9 +831,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonSystemDbAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDb);
+            var advice = new ServiceAdvice(this, NeonSystemDb);
 
-            advice.Replicas = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = controlNodeCount;
 
             if (IsSmallCluster)
             {
@@ -861,7 +848,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonSystemDbOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbOperator);
+            var advice = new ServiceAdvice(this, NeonSystemDbOperator);
 
             advice.Replicas = 1;
 
@@ -878,9 +865,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonSystemDbMetricsAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbMetrics);
+            var advice = new ServiceAdvice(this, NeonSystemDbMetrics);
 
-            advice.Replicas = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = controlNodeCount;
 
             if (IsSmallCluster)
             {
@@ -895,9 +882,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonSystemDbPoolerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonSystemDbPooler);
+            var advice = new ServiceAdvice(this, NeonSystemDbPooler);
 
-            advice.Replicas = clusterDefinition.ControlNodes.Count();
+            advice.Replicas = controlNodeCount;
 
             if (IsSmallCluster)
             {
@@ -912,7 +899,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateCoreDnsAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.CoreDns);
+            var advice = new ServiceAdvice(this, CoreDns);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("170Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("30Mi");
@@ -920,21 +907,9 @@ namespace Neon.Kube.Setup
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void CalculateEtcdClusterAdvice()
-        {
-            var advice = new ServiceAdvice(this, ClusterAdvice.EtcdCluster);
-
-            advice.MetricsEnabled   = false;
-            advice.Replicas         = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
-            advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
-
-            AddServiceAdvice(advice.ServiceName, advice);
-        }
-
         private void CalculateGrafanaAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Grafana);
+            var advice = new ServiceAdvice(this, Grafana);
 
             advice.MetricsEnabled = false;
 
@@ -945,7 +920,7 @@ namespace Neon.Kube.Setup
             }
             else
             {
-                advice.Replicas         = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+                advice.Replicas         = Math.Min(3, metricsNodeCount);
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
             }
@@ -955,7 +930,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateGrafanaAgentAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgent);
+            var advice = new ServiceAdvice(this, GrafanaAgent);
 
             advice.MetricsEnabled = false;
 
@@ -975,7 +950,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateGrafanaAgentNodeAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgentNode);
+            var advice = new ServiceAdvice(this, GrafanaAgentNode);
 
             advice.MetricsEnabled = false;
 
@@ -995,7 +970,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateGrafanaAgentOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.GrafanaAgentOperator);
+            var advice = new ServiceAdvice(this, GrafanaAgentOperator);
 
             if (IsSmallCluster)
             {
@@ -1010,7 +985,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateHarborAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Harbor);
+            var advice = new ServiceAdvice(this, Harbor);
 
             if (IsSmallCluster)
             {
@@ -1024,73 +999,73 @@ namespace Neon.Kube.Setup
 
         private void CalculateHarborChartmuseumAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborChartmuseum);
+            var advice = new ServiceAdvice(this, HarborChartmuseum);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborClairAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborClair);
+            var advice = new ServiceAdvice(this, HarborClair);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborCoreAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborCore);
+            var advice = new ServiceAdvice(this, HarborCore);
             
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborJobserviceAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborJobservice);
+            var advice = new ServiceAdvice(this, HarborJobservice);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborNotaryServerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborNotaryServer);
+            var advice = new ServiceAdvice(this, HarborNotaryServer);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborNotarySignerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborNotarySigner);
+            var advice = new ServiceAdvice(this, HarborNotarySigner);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborPortalAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborPortal);
+            var advice = new ServiceAdvice(this, HarborPortal);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateRedisAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Redis);
+            var advice = new ServiceAdvice(this, Redis);
 
             advice.MetricsEnabled = true;
-            advice.Replicas       = Math.Min(3, clusterDefinition.ControlNodes.Count());
+            advice.Replicas       = Math.Min(3, controlNodeCount);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateHarborRegistryAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.HarborRegistry);
+            var advice = new ServiceAdvice(this, HarborRegistry);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateIstioIngressGatewayAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.IstioIngressGateway);
+            var advice = new ServiceAdvice(this, IstioIngressGateway);
 
             advice.PodCpuLimit      = 2;
             advice.PodCpuRequest    = 0.010;
@@ -1102,7 +1077,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateIstioProxyAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.IstioProxy);
+            var advice = new ServiceAdvice(this, IstioProxy);
 
             advice.PodCpuLimit      = 2;
             advice.PodCpuRequest    = 0.010;
@@ -1114,7 +1089,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateIstioPilotAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.IstioPilot);
+            var advice = new ServiceAdvice(this, IstioPilot);
 
             advice.PodCpuLimit      = 0.5;
             advice.PodCpuRequest    = 0.010;
@@ -1126,7 +1101,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateDexAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Dex);
+            var advice = new ServiceAdvice(this, Dex);
 
             advice.MetricsEnabled   = true;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1137,7 +1112,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateGlauthAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Glauth);
+            var advice = new ServiceAdvice(this, Glauth);
 
             advice.MetricsEnabled   = true;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1148,7 +1123,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateKialiAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Kiali);
+            var advice = new ServiceAdvice(this, Kiali);
 
             advice.MetricsEnabled = true;
 
@@ -1157,10 +1132,10 @@ namespace Neon.Kube.Setup
 
         private void CalculateKubernetesDashboardAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.KubernetesDashboard);
+            var advice = new ServiceAdvice(this, KubernetesDashboard);
 
             advice.MetricsEnabled   = true;
-            advice.Replicas         = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
+            advice.Replicas         = Math.Min(3, nodeCount);
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
 
@@ -1174,10 +1149,10 @@ namespace Neon.Kube.Setup
 
         private void CalculateKubeStateMetricsAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.KubeStateMetrics);
+            var advice = new ServiceAdvice(this, KubeStateMetrics);
 
             advice.MetricsEnabled = true;
-            advice.Replicas       = Math.Max(1, clusterDefinition.Nodes.Count() / 10);
+            advice.Replicas       = Math.Min(3, nodeCount);
 
             if (IsSmallCluster)
             {
@@ -1190,7 +1165,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMemcachedAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Memcached);
+            var advice = new ServiceAdvice(this, Memcached);
 
             advice.MetricsEnabled   = true;
             advice.MetricsInterval  = "60s";
@@ -1202,7 +1177,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMetricsServerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MetricsServer);
+            var advice = new ServiceAdvice(this, MetricsServer);
 
             advice.MetricsEnabled = false;
 
@@ -1211,7 +1186,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Mimir);
+            var advice = new ServiceAdvice(this, Mimir);
 
             advice.MetricsEnabled = false;
 
@@ -1220,7 +1195,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirAlertmanagerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirAlertmanager);
+            var advice = new ServiceAdvice(this, MimirAlertmanager);
 
             advice.MetricsEnabled   = false;
             advice.Replicas         = 1;
@@ -1232,7 +1207,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirCompactorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirCompactor);
+            var advice = new ServiceAdvice(this, MimirCompactor);
 
             advice.MetricsEnabled   = false;
             advice.Replicas         = 1;
@@ -1244,9 +1219,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirDistributorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirDistributor);
+            var advice = new ServiceAdvice(this, MimirDistributor);
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             advice.MetricsEnabled = false;
 
@@ -1268,9 +1243,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirIngesterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirIngester);
+            var advice = new ServiceAdvice(this, MimirIngester);
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             advice.MetricsEnabled = false;
 
@@ -1291,7 +1266,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirOverridesExporterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirOverridesExporter);
+            var advice = new ServiceAdvice(this, MimirOverridesExporter);
 
             advice.Replicas         = 1;
             advice.MetricsEnabled   = false;
@@ -1303,7 +1278,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirQuerierAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirQuerier);
+            var advice = new ServiceAdvice(this, MimirQuerier);
 
             advice.MetricsEnabled = false;
 
@@ -1318,14 +1293,14 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateMimirQueryFrontendAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirQueryFrontend);
+            var advice = new ServiceAdvice(this, MimirQueryFrontend);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
@@ -1337,7 +1312,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirRulerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirRuler);
+            var advice = new ServiceAdvice(this, MimirRuler);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1349,7 +1324,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMimirStoreGatewayAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MimirStoreGateway);
+            var advice = new ServiceAdvice(this, MimirStoreGateway);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1360,7 +1335,7 @@ namespace Neon.Kube.Setup
         }
         private void CalculateLokiAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Loki);
+            var advice = new ServiceAdvice(this, Loki);
 
             advice.MetricsEnabled = false;
 
@@ -1368,7 +1343,7 @@ namespace Neon.Kube.Setup
         }
         private void CalculateLokiCompactorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiCompactor);
+            var advice = new ServiceAdvice(this, LokiCompactor);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1380,7 +1355,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateLokiDistributorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiDistributor);
+            var advice = new ServiceAdvice(this, LokiDistributor);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -1392,7 +1367,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateLokiIndexGatewayAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiIndexGateway);
+            var advice = new ServiceAdvice(this, LokiIndexGateway);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1404,7 +1379,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateLokiIngesterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiIngester);
+            var advice = new ServiceAdvice(this, LokiIngester);
 
             if (IsSmallCluster)
             {
@@ -1419,14 +1394,14 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
             }
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateLokiQuerierAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiQuerier);
+            var advice = new ServiceAdvice(this, LokiQuerier);
 
             if (IsSmallCluster)
             {
@@ -1441,14 +1416,14 @@ namespace Neon.Kube.Setup
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateLokiQueryFrontendAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiQueryFrontend);
+            var advice = new ServiceAdvice(this, LokiQueryFrontend);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1460,7 +1435,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateLokiRulerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiRuler);
+            var advice = new ServiceAdvice(this, LokiRuler);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
@@ -1471,7 +1446,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateLokiTableManagerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.LokiTableManager);
+            var advice = new ServiceAdvice(this, LokiTableManager);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
@@ -1482,7 +1457,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMinioAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Minio);
+            var advice = new ServiceAdvice(this, Minio);
 
             if (clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count() >= 3)
             {
@@ -1517,7 +1492,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateMinioOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.MinioOperator);
+            var advice = new ServiceAdvice(this, MinioOperator);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("40Mi");
@@ -1527,7 +1502,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonClusterOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonClusterOperator);
+            var advice = new ServiceAdvice(this, NeonClusterOperator);
 
             advice.MetricsEnabled   = true;
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -1538,7 +1513,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonAcmeAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonAcme);
+            var advice = new ServiceAdvice(this, NeonAcme);
 
             if (IsSmallCluster)
             {
@@ -1553,7 +1528,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateNeonNodeAgentAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonNodeAgent);
+            var advice = new ServiceAdvice(this, NeonNodeAgent);
 
             if (IsSmallCluster)
             {
@@ -1568,7 +1543,7 @@ namespace Neon.Kube.Setup
         
         private void CalculateNeonSsoSessionProxyAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NeonSsoSessionProxy);
+            var advice = new ServiceAdvice(this, NeonSsoSessionProxy);
 
             if (IsSmallCluster)
             {
@@ -1583,7 +1558,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateNodeProblemDetectorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.NodeProblemDetector);
+            var advice = new ServiceAdvice(this, NodeProblemDetector);
 
             advice.MetricsInterval = "1m";
 
@@ -1592,7 +1567,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOauth2ProxyAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Oauth2Proxy);
+            var advice = new ServiceAdvice(this, Oauth2Proxy);
 
             if (IsSmallCluster)
             {
@@ -1604,7 +1579,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstor);
+            var advice = new ServiceAdvice(this, OpenEbsCstor);
 
             advice.MetricsEnabled = true;
 
@@ -1613,7 +1588,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorAdmissionServerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorAdmissionServer);
+            var advice = new ServiceAdvice(this, OpenEbsCstorAdmissionServer);
 
             advice.NodeSelector      = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
@@ -1624,7 +1599,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorCsiControllerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCsiController);
+            var advice = new ServiceAdvice(this, OpenEbsCstorCsiController);
 
             // We're going to schedule the CSI controller on the storage
             // nodes for cStor.
@@ -1641,7 +1616,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorCsiNodeAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCsiNode);
+            var advice = new ServiceAdvice(this, OpenEbsCstorCsiNode);
 
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
@@ -1650,7 +1625,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorCspcOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCspcOperator);
+            var advice = new ServiceAdvice(this, OpenEbsCstorCspcOperator);
 
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
@@ -1659,54 +1634,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsCstorCvcOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorCvcOperator);
-
-            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
-
-            AddServiceAdvice(advice.ServiceName, advice);
-        }
-
-        private void CalculateOpenEbsCstorPoolAdvice()
-        {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorPool);
-
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
-
-            if (IsSmallCluster)
-            {
-                advice.MetricsEnabled   = false;
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-            }
-            else
-            {
-                advice.MetricsEnabled   = true;
-                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
-            }
-
-            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
-
-            AddServiceAdvice(advice.ServiceName, advice);
-        }
-
-        private void CalculateOpenEbsCstorPoolAuxAdvice()
-        {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsCstorPoolAux);
-
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(n => n.Labels.SystemMetricServices).Count()));
-
-            if (IsSmallCluster)
-            {
-                advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsEnabled   = false;
-            }
-            else
-            {
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("500Mi");
-            }
+            var advice = new ServiceAdvice(this, OpenEbsCstorCvcOperator);
 
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
@@ -1715,18 +1643,18 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsJivaCsiControllerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJivaCsiController);
+            var advice = new ServiceAdvice(this, OpenEbsJivaCsiController);
 
             advice.MetricsEnabled = true;
 
-            if (clusterDefinition.Workers.Count() == 0)
+            if (workerNodeCount == 0)
             {
                 advice.Replicas = 1;
             }
             else
             {
                 advice.NodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
-                advice.Replicas = Math.Max(1, Math.Min(3, storageNodeCount));
+                advice.Replicas     = Math.Max(1, Math.Min(3, storageNodeCount));
             }
 
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
@@ -1736,7 +1664,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsJivaOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsJivaOperator);
+            var advice = new ServiceAdvice(this, OpenEbsJivaOperator);
 
             advice.MetricsEnabled = true;
 
@@ -1757,9 +1685,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsLocalPvProvisionerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsLocalPvProvisioner);
+            var advice = new ServiceAdvice(this, OpenEbsLocalPvProvisioner);
 
-            advice.Replicas          = Math.Max(1, clusterDefinition.Workers.Count() / 3);
+            advice.Replicas          = Math.Min(1, Math.Max(3, workerNodeCount));
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
             AddServiceAdvice(advice.ServiceName, advice);
@@ -1767,7 +1695,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsNdmAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsNdm);
+            var advice = new ServiceAdvice(this, OpenEbsNdm);
 
             advice.PodMemoryLimit    = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest  = ByteUnits.Parse("16Mi");
@@ -1778,7 +1706,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateOpenEbsNdmOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.OpenEbsNdmOperator);
+            var advice = new ServiceAdvice(this, OpenEbsNdmOperator);
 
             advice.PriorityClassName = PriorityClass.NeonStorage.Name;
 
@@ -1793,7 +1721,7 @@ namespace Neon.Kube.Setup
                     if (workerNodeCount > 0)
                     {
                         advice.NodeSelector = storageNodeSelector;
-                        advice.Replicas     = Math.Max(3, workerNodeCount);
+                        advice.Replicas     = Math.Min(3, workerNodeCount);
                     }
                     break;
 
@@ -1801,7 +1729,7 @@ namespace Neon.Kube.Setup
                 case OpenEbsEngine.Mayastor:
 
                     advice.NodeSelector = storageNodeSelector;
-                    advice.Replicas     = Math.Max(3, storageNodeCount);
+                    advice.Replicas     = Math.Min(3, storageNodeCount);
                     break;
 
                 default:
@@ -1812,23 +1740,36 @@ namespace Neon.Kube.Setup
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
+        private void CalculateOpenEbsNfsProvisionerAdvice()
+        {
+            var advice = new ServiceAdvice(this, OpenEbsNfsProvisioner);
+
+            advice.PriorityClassName = PriorityClass.NeonStorage.Name;
+
+            // $note(jefflill):
+            //
+            // The Helm template for this currently hardcodes: replicas = 1
+
+            AddServiceAdvice(advice.ServiceName, advice);
+        }
+
         private void CalculatePrometheusAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Prometheus);
+            var advice = new ServiceAdvice(this, Prometheus);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculatePrometheusOperatorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.PrometheusOperator);
+            var advice = new ServiceAdvice(this, PrometheusOperator);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
         private void CalculateReloaderAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Reloader);
+            var advice = new ServiceAdvice(this, Reloader);
 
             advice.MetricsEnabled   = false;
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
@@ -1845,7 +1786,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.Tempo);
+            var advice = new ServiceAdvice(this, Tempo);
 
             advice.MetricsEnabled = false;
 
@@ -1854,7 +1795,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoAlertmanagerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoAlertmanager);
+            var advice = new ServiceAdvice(this, TempoAlertmanager);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
@@ -1865,7 +1806,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoCompactorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoCompactor);
+            var advice = new ServiceAdvice(this, TempoCompactor);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
@@ -1876,7 +1817,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoDistributorAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoDistributor);
+            var advice = new ServiceAdvice(this, TempoDistributor);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
@@ -1887,9 +1828,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoIngesterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoIngester);
+            var advice = new ServiceAdvice(this, TempoIngester);
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             if (IsSmallCluster)
             {
@@ -1909,7 +1850,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoOverridesExporterAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoOverridesExporter);
+            var advice = new ServiceAdvice(this, TempoOverridesExporter);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
@@ -1920,9 +1861,9 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoQuerierAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoQuerier);
+            var advice = new ServiceAdvice(this, TempoQuerier);
 
-            advice.Replicas = Math.Min(3, (clusterDefinition.Nodes.Where(node => node.Labels.SystemMetricServices).Count()));
+            advice.Replicas = Math.Min(3, metricsNodeCount);
 
             if (IsSmallCluster)
             {
@@ -1942,7 +1883,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoQueryFrontendAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoQueryFrontend);
+            var advice = new ServiceAdvice(this, TempoQueryFrontend);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("24Mi");
@@ -1953,7 +1894,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoRulerAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoRuler);
+            var advice = new ServiceAdvice(this, TempoRuler);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
@@ -1964,7 +1905,7 @@ namespace Neon.Kube.Setup
 
         private void CalculateTempoStoreGatewayAdvice()
         {
-            var advice = new ServiceAdvice(this, ClusterAdvice.TempoStoreGateway);
+            var advice = new ServiceAdvice(this, TempoStoreGateway);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");

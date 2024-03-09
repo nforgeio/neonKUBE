@@ -702,12 +702,6 @@ namespace Neon.Kube
         public const string OpenEbsProvisionerLocalPV = "3.5.0";
 
         /// <summary>
-        /// Specifies the version of <b>openebs-provisioner-nfs</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsProvisionerNfs = "0.9.0";
-
-        /// <summary>
         /// Specifies the version of <b>openebs-cstor-admission-server</b> to be installed.
         /// </summary>
         [KubeValue]
