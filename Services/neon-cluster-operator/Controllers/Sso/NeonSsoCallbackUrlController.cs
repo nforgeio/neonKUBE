@@ -133,7 +133,7 @@ namespace NeonClusterOperator
                 if (resource.Spec.SsoClient != resource.Status?.LastAppliedSsoClient
                     && resource.Status?.LastAppliedSsoClient != null)
                 {
-                    var oldSsoClient = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonSsoClient>(resource.Status.LastAppliedSsoClient);
+                    var oldSsoClient = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonSsoClient>(resource.Status.LastAppliedSsoClient);
 
                     if (oldSsoClient.Spec.RedirectUris.Contains(resource.Status.LastAppliedUrl))
                     {
@@ -143,7 +143,7 @@ namespace NeonClusterOperator
                     await k8s.CustomObjects.ReplaceClusterCustomObjectAsync(oldSsoClient, oldSsoClient.Name());
                 }
 
-                var ssoClient = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonSsoClient>(resource.Spec.SsoClient);
+                var ssoClient = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonSsoClient>(resource.Spec.SsoClient);
 
                 if (ssoClient.Spec.RedirectUris.Contains(resource.Status.LastAppliedUrl))
                 {

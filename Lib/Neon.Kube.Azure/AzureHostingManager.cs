@@ -17,22 +17,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Azure;
@@ -41,27 +31,20 @@ using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
+using Azure.ResourceManager.MarketplaceOrdering;
+using Azure.ResourceManager.MarketplaceOrdering.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
-using Azure.ResourceManager.Storage;
 
 using k8s;
 using k8s.Models;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Neon.Collections;
 using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Config;
 using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
@@ -69,9 +52,8 @@ using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Time;
 
-using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
+using PublicIPAddressSku = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
 
@@ -1156,6 +1138,11 @@ namespace Neon.Kube.Hosting.Azure
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
+
+            // todo(marcusbooyah): Add UI to neon-desktop to show these terms
+            // for now we have docs on how to accept these using the azure cli.
+            //controller.AddGlobalStep("accept plan terms", state => AcceptPlanTermsAsync());
+
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
             controller.AddGlobalStep("resource group", state => GetClusterResourceGroup());
 
@@ -1926,6 +1913,26 @@ namespace Neon.Kube.Hosting.Azure
                     Id = (await galleryImageVersionCollection.GetAsync(nodeImageVersionName)).Value.Id
                 };
             }
+        }
+
+        /// <summary>
+        /// Accepts the terms for the node image plan.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task AcceptPlanTermsAsync()
+        {
+            var marketplaceAgreementTermResourceId = MarketplaceAgreementTermResource.CreateResourceIdentifier(
+                subscriptionId: azureOptions.SubscriptionId,
+                offerType: AgreementOfferType.Virtualmachine,
+                publisherId: MarketplacePublisher,
+                offerId: MarketplaceOffer,
+                planId: nodeImagePlan.Name);
+
+            var terms = (await azure.GetMarketplaceAgreementTermResource(marketplaceAgreementTermResourceId).GetAsync()).Value;
+
+            terms.Data.IsAccepted = true;
+
+            await terms.UpdateAsync(WaitUntil.Completed, terms.Data);
         }
 
         /// <summary>

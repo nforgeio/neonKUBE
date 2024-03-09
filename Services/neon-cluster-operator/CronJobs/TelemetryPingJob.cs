@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:        TelemetryPingJob.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,10 +92,11 @@ namespace NeonClusterOperator
                         node.CpuArchitecture         = k8sNode.Status.NodeInfo.Architecture;
                         node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
                         node.KubeletVersion          = k8sNode.Status.NodeInfo.KubeletVersion;
+                        node.KubeProxyVersion        = k8sNode.Status.NodeInfo.KubeProxyVersion;
                         node.OperatingSystem         = k8sNode.Status.NodeInfo.OperatingSystem;
                         node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
                         node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;
-                        node.Role                    = k8sNode.Metadata.GetLabel(NodeLabel.LabelRole);
+                        node.Role                    = k8sNode.Metadata.GetLabel(NodeLabels.LabelRole);
 
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {
@@ -119,20 +120,20 @@ namespace NeonClusterOperator
                         await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 
-                    var jobResource  = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterJobConfig>(V1NeonClusterJobConfig.SingularName);
-                    var patch        = OperatorHelper.CreatePatch<V1NeonClusterJobConfig>();
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
-                    if (jobResource.Status == null)
+                    if (clusterOperator.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterJobConfig.NeonClusterJobsStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJobConfig.JobStatus());
+                    patch.Replace(path => path.Status.TelemetryPing, new V1NeonClusterJobs.JobStatus());
                     patch.Replace(path => path.Status.TelemetryPing.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
-                        name:  jobResource.Name());
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

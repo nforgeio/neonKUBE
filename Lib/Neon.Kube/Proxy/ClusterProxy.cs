@@ -907,7 +907,7 @@ namespace Neon.Kube.Proxy
 
             try
             {
-                var response = await ((Kubernetes)K8s).HttpClient.GetAsync($"{baseUri}readyz");
+                var response = await ((k8s.Kubernetes)K8s).HttpClient.GetAsync($"{baseUri}readyz");
 
                 return response.StatusCode == HttpStatusCode.OK;
             }

@@ -113,7 +113,7 @@ namespace NeonClusterOperator
         {
             var minioClient = new MinioClient();
 
-            var tenant = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(
+            var tenant = await k8s.CustomObjects.GetNamespacedCustomObjectAsync<V1MinioTenant>(
                 name:               resource.Spec.Tenant,
                 namespaceParameter: resource.Namespace());
 

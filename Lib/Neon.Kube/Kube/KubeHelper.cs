@@ -2791,7 +2791,7 @@ TCPKeepAlive yes
                 };
             }
             
-            using (var k8s = new Kubernetes(config, new KubernetesRetryHandler()))
+            using (var k8s = new k8s.Kubernetes(config, new KubernetesRetryHandler()))
             {
                 // Cluster status is persisted to the [neon-status/cluster-health] configmap
                 // during cluster setup and is maintained there after by [neon-cluster-operator].
@@ -3167,7 +3167,7 @@ TCPKeepAlive yes
                 k8sConfig.SslCaCerts = store.Certificates;
             }
 
-            return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+            return new k8s.Kubernetes(k8sConfig, new KubernetesRetryHandler());
         }
 
         /// <summary>
@@ -3194,7 +3194,7 @@ TCPKeepAlive yes
                     k8sConfig.SslCaCerts = store.Certificates;
                 }
 
-                return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+                return new k8s.Kubernetes(k8sConfig, new KubernetesRetryHandler());
             }
         }
 
