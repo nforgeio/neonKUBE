@@ -2961,6 +2961,8 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-nfs-provisioner
 
+            // $note(jefflill): replicas is not currently being honored.
+
             values.Add("nfs-provisioner.enabled", true);
 
             //values.Add("nfs-provisioner.nfsServerAlpineImage.registry", KubeConst.LocalClusterRegistry);
@@ -2978,22 +2980,17 @@ istioctl install --verify -y -f manifest.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(values != null, nameof(values));
 
-            var k8s                        = GetK8sClient(controller);
             var cluster                    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition          = cluster.SetupState.ClusterDefinition;
             var clusterAdvice              = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var ndmAdvice                  = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdm);
-            var ndmOperatorAdvice          = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsNdmOperator);
-            var provisionerLocalPvAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsLocalPvProvisioner);
             var cStorAdvice                = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstor);
             var cStorAdmissionServerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorAdmissionServer);
+            var cstorCsiControllerAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorCsiController);
+            var cstorCsiCspOperatorAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorCvcOperator);
+            var cstorCsiNodeAdvice         = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorCsiNode);
 
             values.Add("cstor.enabled", true);
 
-            //---------------------------------------------
-            // $todo(jefflill)
-
-            values.Add("admissionServer.nodeSelector", cStorAdmissionServerAdvice.NodeSelector);
+            //values.Add("admissionServer.nodeSelector", cStorAdmissionServerAdvice.NodeSelector);
 
             //values.Add("admissionServer.image.registry", "");
             //values.Add("admissionServer.image.repository", "");
