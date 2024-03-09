@@ -1165,9 +1165,9 @@ ff02::2         ip6-allrouters
             InvokeIdempotent("setup/package-caching",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "apt package proxy");
+                    controller.LogProgress(this, verb: "install", message: "apt package proxy");
 
-                    // Configure the [apt-cacher-ng] pckage proxy service on control-plane nodes.
+                    // Configure the [apt-cacher-ng] package proxy service on control-plane nodes.
 
                     if (NodeDefinition.Role == NodeRole.ControlPlane)
                     {
@@ -1175,8 +1175,8 @@ ff02::2         ip6-allrouters
 $@"
 set -eou pipefail   # Enable full failure detection
 
-{KubeNodeFolder.Bin}/safe-apt-get update
-{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
+{KubeConst.SafeAptGetToolPath} update
+{KubeConst.SafeAptGetToolPath} install -yq apt-cacher-ng
 
 # Configure the cache to pass-thru SSL requests
 # and then restart.
