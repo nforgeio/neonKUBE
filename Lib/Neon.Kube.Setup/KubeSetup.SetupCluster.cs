@@ -388,61 +388,69 @@ namespace Neon.Kube.Setup
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
-            var logFolder                 = KubeHelper.LogFolder;
-            var logDetailsFolder          = KubeHelper.LogDetailsFolder;
-
-            Directory.CreateDirectory(logDetailsFolder);
-
-            //-----------------------------------------------------------------
-            // Capture information about all pods.
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "pods.yaml", "get", "pods", "-A", "-o=yaml");
-
-            // Capture high-level (text) information and then detailed (YAML) information
-            // about all of the cluster deployments, statefulsets, daemonsets, services,
-            // and cluster events.
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.txt", "get", "deployments", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.yaml", "get", "deployments", "-A", "-o=yaml");
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.txt", "get", "statefulsets", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.yaml", "get", "statefulsets", "-A", "-o=yaml");
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.txt", "get", "daemonsets", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.yaml", "get", "daemonsets", "-A", "-o=yaml");
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "services.txt", "get", "services", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "services.yaml", "get", "services", "-A", "-o=yaml");
-
-            CaptureKubectl(clusterProxy, logDetailsFolder, "events.txt", "get", "events", "-A");
-            CaptureKubectl(clusterProxy, logDetailsFolder, "events.yaml", "get", "events", "-A", "-o=yaml");
-
-            // Capture logs from all pods, adding "(not-ready)" to the log file name for
-            // pods with containers that aren't ready yet.
-
-            using (var k8s = KubeHelper.CreateKubernetesClient())
+            try
             {
-                var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");
+                var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
+                var logFolder                 = KubeHelper.LogFolder;
+                var logDetailsFolder          = KubeHelper.LogDetailsFolder;
 
-                Directory.CreateDirectory(podLogsFolder);
+                Directory.CreateDirectory(logDetailsFolder);
 
-                foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
+                //-----------------------------------------------------------------
+                // Capture information about all pods.
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "pods.yaml", "get", "pods", "-A", "-o=yaml");
+
+                // Capture high-level (text) information and then detailed (YAML) information
+                // about all of the cluster deployments, statefulsets, daemonsets, services,
+                // and cluster events.
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.txt", "get", "deployments", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.yaml", "get", "deployments", "-A", "-o=yaml");
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.txt", "get", "statefulsets", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.yaml", "get", "statefulsets", "-A", "-o=yaml");
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.txt", "get", "daemonsets", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.yaml", "get", "daemonsets", "-A", "-o=yaml");
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "services.txt", "get", "services", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "services.yaml", "get", "services", "-A", "-o=yaml");
+
+                CaptureKubectl(clusterProxy, logDetailsFolder, "events.txt", "get", "events", "-A");
+                CaptureKubectl(clusterProxy, logDetailsFolder, "events.yaml", "get", "events", "-A", "-o=yaml");
+
+                // Capture logs from all pods, adding "(not-ready)" to the log file name for
+                // pods with containers that aren't ready yet.
+
+                using (var k8s = KubeHelper.CreateKubernetesClient())
                 {
-                    var notReady = string.Empty;
+                    var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");
 
-                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                    Directory.CreateDirectory(podLogsFolder);
+
+                    foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
                     {
-                        notReady = " (not-ready)";
-                    }
+                        var notReady = string.Empty;
 
-                    var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
+                        if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                        {
+                            notReady = " (not-ready)";
+                        }
+
+                        var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
                         .EnsureSuccess();
 
-                    File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
+                        File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
+                    }
                 }
+            }
+            catch
+            {
+                // The [KubeHelper.CreateKubernetesClient()] call may fail when there's
+                // no currernt Kubernetes config file.  We're just going to ignore this.
             }
         }
     }
