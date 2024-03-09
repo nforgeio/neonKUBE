@@ -100,11 +100,11 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                    k8s;
-        private readonly ILogger<NeonJobController>     logger;
-        private readonly HeadendClient                  headendClient;
-        private readonly HarborClient                   harborClient;
-        private readonly ClusterInfo                    clusterInfo;
+        private readonly IKubernetes                        k8s;
+        private readonly ILogger<NeonClusterJobController>  logger;
+        private readonly HeadendClient                      headendClient;
+        private readonly HarborClient                       harborClient;
+        private readonly ClusterInfo                        clusterInfo;
 
         /// <summary>
         /// Constructor.
@@ -153,7 +153,7 @@ namespace NeonClusterOperator
                 }
 
                 // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than gpicking up its
-                // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
+                // schedule from the [V1NeonClusterJobConfig] resource, so we're going to schedule the job
                 // only on the first reconcile callback.
 
                 // todo(jefflill):

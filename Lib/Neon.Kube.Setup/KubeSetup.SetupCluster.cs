@@ -445,8 +445,6 @@ namespace Neon.Kube.Setup
                 // Capture logs from all pods, adding "(not-ready)" to the log file name for
                 // pods with containers that aren't ready yet.
 
-            try
-            {
                 using (var k8s = KubeHelper.CreateKubernetesClient())
                 {
                     var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");

@@ -112,10 +112,10 @@ namespace NeonClusterOperator
                         startTime = startTime.AddHours(1);
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobConfig>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobConfig>();
 
-                    if (jobs.Status == null)
+                    if (clusterOperator.Status == null)
                     {
                         patch.Replace(path => path.Status, new V1NeonClusterJobConfig.NeonClusterJobsStatus());
                     }
@@ -125,7 +125,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
-                        name:  jobs.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {
