@@ -2260,6 +2260,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// <returns></returns>
         public static async Task ConfigureDesktopClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            ConnectCluster(controller);
             await ConfigureCertificatesInternalAsync(controller, controlNode, "desktop");
         }
 
@@ -2329,11 +2330,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(body: secret, name: secret.Name(), namespaceParameter: secret.Namespace());
 
                     secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
 
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(body: secret, name: secret.Name(), namespaceParameter: secret.Namespace());
                 });
         }
 
