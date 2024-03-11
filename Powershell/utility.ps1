@@ -811,7 +811,7 @@ function Pop-Cwd
 }
 
 #------------------------------------------------------------------------------
-# Returns a named string constant value from: $NF_ROOT\Lib\Neon.Kube\KubeVersion.cs
+# Returns a named string constant value from: $NK_ROOT\Lib\Neon.Kube\KubeVersion.cs
 
 function Get-KubeVersion
 {
