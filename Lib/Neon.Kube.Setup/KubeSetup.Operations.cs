@@ -2330,11 +2330,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(body: secret, name: secret.Name(), namespaceParameter: secret.Namespace());
+                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
 
                     secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
 
-                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(body: secret, name: secret.Name(), namespaceParameter: secret.Namespace());
+                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
                 });
         }
 
