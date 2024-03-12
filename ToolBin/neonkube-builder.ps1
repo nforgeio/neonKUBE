@@ -160,6 +160,19 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
+        # We need to remove the [neon-cluster-operator] CRDs from time-to-time
+        # to prevent obsolete CRDs from accumulating.  This can happen when a
+        # CRD is removed from [Neon.Kube.Resources].  The [operator-sdk] analyzer
+        # regenerates these file, but doesn't know anything about removing old
+        # ones.
+        #
+        # Also, generated CRD files aren't tracked by git, so we can't delete
+        # them that way.
+
+        Remove-Item "$nkRoot\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds\*.yaml"
+
+        # Clean the bin/obj folders.
+
         Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
         Write-Info ""

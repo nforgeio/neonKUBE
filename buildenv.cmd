@@ -96,3 +96,4 @@ echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
 echo ============================================================================================
+pause
