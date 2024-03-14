@@ -17,30 +17,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
+
 using Grpc.Net.Client;
 
-using k8s;
-using k8s.Models;
-
 using Neon.Common;
-using Neon.IO;
-using Neon.Kube;
+using Neon.HyperV;
 using Neon.Kube.GrpcProto;
 using Neon.Kube.GrpcProto.Desktop;
 using Neon.Net;
-using Neon.Retry;
-using Neon.SSH;
 using Neon.Tasks;
 
 using ProtoBuf.Grpc.Client;
@@ -58,6 +45,7 @@ namespace Neon.Kube.Setup
         private bool                    isAdmin;
         private GrpcChannel             desktopServiceChannel;
         private IGrpcDesktopService     desktopService;
+        private HyperVClient            hyperV;
 
         /// <summary>
         /// Constructor.
@@ -92,6 +80,10 @@ namespace Neon.Kube.Setup
                 }
 
                 desktopService = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+            }
+            else
+            {
+                hyperV = new HyperVClient();
             }
         }
 
@@ -168,6 +160,28 @@ namespace Neon.Kube.Setup
                 var reply   = await desktopService.GetWindowsOptionalFeaturesAsync(request);
 
                 return reply.Capabilities;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the named VM exists.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public async Task<bool> VmExistsAsync(string name)
+        {
+            await SyncContext.Clear;
+
+            if (isAdmin)
+            {
+                return hyperV.ListVms().Any(vm => vm.Name == name);
+            }
+            else
+            {
+                return desktopService.VmExistsAsync(new GrpcVmExistsRequest()
+                {
+                    MachineName = KubeConst.NeonDesktopClusterName
+                }).GetAwaiter().GetResult().Exists;
             }
         }
     }

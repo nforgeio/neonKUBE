@@ -756,7 +756,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                 var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
 
-                if (prefix != null)
+                if (!prefix.IsNullOrEmpty())
                 {
                     if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -776,10 +776,14 @@ namespace Neon.Kube.Hosting.HyperV
                 {
                     return vmName;
                 }
+                else if (clusterDefinition.IsDesktop)
+                {
+                    return null;
+                }
 
                 var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
 
-                if (prefix != null)
+                if (!prefix.IsNullOrEmpty())
                 {
                     if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
                     {
