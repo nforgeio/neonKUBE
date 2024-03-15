@@ -1011,7 +1011,6 @@ namespace Neon.Kube.Hosting.Aws
         public AwsHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when NEONKUBE was built from a non-release branch.");
 
             cluster.HostingManager = this;
 
