@@ -193,6 +193,9 @@
         </Otherwise>
     </Choose>
 
+    <!-- DISABLING: This seems to interact badly with the OperatorSDK Analyzer -->
+
+    <!--
     <Target Name="CleanCrds" BeforeTargets="Clean">
         <ItemGroup>
             <FilesToClean Include="Resources\Helm\neon-cluster-operator\crds\*.*" />
@@ -200,5 +203,6 @@
 
         <Delete Files="@(FilesToClean)"/>
     </Target>
+    -->
 
 </Project>
