@@ -43,6 +43,7 @@ if ($codedoc)
     Write-Error " "
     Write-Error "ERROR: Code documentation builds are temporarily disabled until we"
     Write-Error "       port to DocFX.  SHFB doesn't work for multi-targeted projects."
+    Write-Error "       We also need to call the [neon-doc/neondoc-publish.cmd] script."
     Write-Error " "
     Write-Error "       https://github.com/nforgeio/neonkube/issues/1206"
     Write-Error " "
@@ -95,12 +96,12 @@ $env:PATH   += ";$nkBuild"
 $neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
-    #------------------------------------------------------------------------------
-	# Specify whether we're building with package or project references.
+#------------------------------------------------------------------------------
+# Specify whether we're building with package or project references.
 
-    # $todo(jefflill): We're hardcoding project references for now.
+# $todo(jefflill): We're hardcoding project references for now.
 
-    $env:NEON_BUILD_USE_NUGETS = "false"
+$env:NEON_BUILD_USE_NUGETS = "false"
 
 #------------------------------------------------------------------------------
 # Perform the operation.
@@ -173,7 +174,7 @@ try
 
         # Clean the bin/obj folders.
 
-        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
+        Invoke-Program neoncloud-clean
 
         Write-Info ""
         Write-Info "*******************************************************************************"
