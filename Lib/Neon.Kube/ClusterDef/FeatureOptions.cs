@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Specifies which optional cluster features should be deployed.
+    /// Specifies optional cluster features that should be included in the cluster.
     /// </summary>
     public class FeatureOptions
     {
@@ -98,7 +98,7 @@ namespace Neon.Kube.ClusterDef
         // Implementation
 
         /// <summary>
-        /// Indicates whether <b>Grafana</b> is installed.
+        /// Specifies whether <b>Grafana</b> is installed.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Grafana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "grafana", ApplyNamingConventions = false)]
@@ -106,7 +106,7 @@ namespace Neon.Kube.ClusterDef
         public bool Grafana { get; set; } = true;
 
         /// <summary>
-        /// Specifies optional Harbor related components to be installed in the cluster.
+        /// Specifies whether Harbor and related related components to be installed in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Harbor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "harbor", ApplyNamingConventions = false)]
@@ -114,7 +114,7 @@ namespace Neon.Kube.ClusterDef
         public HarborOptions Harbor { get; set; } = new HarborOptions();
 
         /// <summary>
-        /// Indicates whether <b>Loki</b> is installed.
+        /// Specifies whether <b>Loki</b> is installed.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Loki", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "loki", ApplyNamingConventions = false)]
@@ -156,7 +156,7 @@ namespace Neon.Kube.ClusterDef
         public bool Kiali { get; set; } = false;
 
         /// <summary>
-        /// Indicates whether <b>Mimir</b> is installed.
+        /// Indicates whether <b>Mimir</b> is installed.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Mimir", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "mimir", ApplyNamingConventions = false)]
@@ -164,7 +164,7 @@ namespace Neon.Kube.ClusterDef
         public bool Mimir { get; set; } = true;
 
         /// <summary>
-        /// Indicates whether <b>Minio</b> is installed.
+        /// Indicates whether <b>Minio</b> is installed.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Minio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "minio", ApplyNamingConventions = false)]

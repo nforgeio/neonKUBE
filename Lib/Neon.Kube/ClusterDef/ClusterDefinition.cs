@@ -364,7 +364,8 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Indicates whether the definition describes a NEONDESKTOP clusters.
+        /// Indicates that the definition describes a NEONDESKTOP cluster.  This is set to <c>true</c>
+        /// by NEONDESKTOP when it deploys a desktop cluster and isn't typically set by cluster operators.
         /// </summary>
         [JsonProperty(PropertyName = "IsDesktop", Required = Required.Always)]
         [YamlMember(Alias = "isDesktop", ApplyNamingConventions = false)]
@@ -383,10 +384,10 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// The cluster name.
+        /// Specifies the cluster name.
         /// </para>
         /// <note>
-        /// The name may include only letters, numbers, periods, dashes, and underscores and
+        /// Names may include only letters, numbers, periods, dashes, and underscores and
         /// may be up to 24 characters long.  Some hosting environments enforce length limits
         /// on resource names that we derive from the cluster name, so please limit your
         /// cluster name to 24 characters.
@@ -431,21 +432,21 @@ namespace Neon.Kube.ClusterDef
         /// as well as help organize your cost reporting.
         /// </para>
         /// <note>
-        /// Currently, this is only supported for clusters deployed to AWS, Azure or Google Cloud.
+        /// Currently, this is only supported for clusters deployed to AWS and Azure.
         /// </note>
         /// </summary>
         public List<ResourceTag> ResourceTags { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies options used by <b>ClusterFixture</b> and possibly
-        /// custom tools for customizing cluster and node names to avoid conflicts.
+        /// Optionally used by <b>ClusterFixture</b> and possibly custom tools for customizing
+        /// cluster and node names to avoid conflicts.
         /// </summary>
         [JsonProperty(PropertyName = "Deployment", Required = Required.Always)]
         [YamlMember(Alias = "deployment", ApplyNamingConventions = false)]
         public DeploymentOptions Deployment { get; set; } = new DeploymentOptions();
 
         /// <summary>
-        /// Specifies the cluster storage related options.
+        /// Specifies cluster storage related options.
         /// </summary>
         [JsonProperty(PropertyName = "Storage", Required = Required.Always)]
         [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
@@ -459,7 +460,7 @@ namespace Neon.Kube.ClusterDef
         public SecurityOptions Security { get; set; } = new SecurityOptions();
 
         /// <summary>
-        /// Returns the Kubernetes cluster options.,
+        /// Specifies Kubernetes cluster options.
         /// </summary>
         [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "kubernetes", ApplyNamingConventions = false)]
@@ -467,8 +468,7 @@ namespace Neon.Kube.ClusterDef
         public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
 
         /// <summary>
-        /// Returns the options to be used for configuring the cluster integrated
-        /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
+        /// Specifies options for the cluster integrated monitoring stack.
         /// </summary>
         [JsonProperty(PropertyName = "Monitor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "monitor", ApplyNamingConventions = false)]
@@ -476,8 +476,7 @@ namespace Neon.Kube.ClusterDef
         public MonitorOptions Monitor { get; set; } = new MonitorOptions();
 
         /// <summary>
-        /// Specifies hosting related settings (e.g. the cloud provider).  This defaults to
-        /// <c>null</c> which indicates that the cluster will be hosted on private servers.
+        /// Specifies hosting related settings for the cloud or on-premise provider.  This is required.
         /// </summary>
         [JsonProperty(PropertyName = "Hosting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "hosting", ApplyNamingConventions = false)]
@@ -539,7 +538,7 @@ namespace Neon.Kube.ClusterDef
         public double? Longitude { get; set; } = null;
 
         /// <summary>
-        /// Indicates how the cluster is being used.
+        /// Describes how the cluster is being used.
         /// </summary>
         [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "purpose", ApplyNamingConventions = false)]
@@ -566,15 +565,11 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Optionally specifies one or more APT proxy/cache servers the cluster will use to install
         /// and update Linux packages.  These are endpoints like <b>HOSTNAME:PORT</b> or <b>ADDRESS.PORT</b>
-        /// of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generall set to <b>3142</b>
+        /// of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generally set to <b>3142</b>
         /// Multiple proxies may be specified by separating them with spaces.  This defaults to
         /// referencing the <b>apt-cacher-ng</b> instances running on the control-plane nodes.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// A package cache will greatly reduce the Internet network traffic required to deploy a
-        /// cluster, especially for large clusters.
-        /// </para>
         /// <note>
         /// The cluster nodes are configured to failover to different proxies or to hit the 
         /// default Linux distribution package mirror directly if any or all of the caches
@@ -582,7 +577,7 @@ namespace Neon.Kube.ClusterDef
         /// </note>
         /// <note>
         /// The package caches will be tried in the order they are listed.  This essentially
-        /// makes the first cache primary, with the others as backups.
+        /// makes the first cache primary, with the others acting sas backups.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PackageProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -599,7 +594,7 @@ namespace Neon.Kube.ClusterDef
         public NetworkOptions Network { get; set; } = new NetworkOptions();
 
         /// <summary>
-        /// Customizes the cluster's container configuration.
+        /// Customizes the cluster's container registry configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Container", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "container", ApplyNamingConventions = false)]
@@ -607,7 +602,7 @@ namespace Neon.Kube.ClusterDef
         public ContainerOptions Container { get; set; } = null;
 
         /// <summary>
-        /// Specifies host node options.
+        /// Specifies host node options, including Linux package manager settings.
         /// </summary>
         [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "nodeOptions", ApplyNamingConventions = false)]
