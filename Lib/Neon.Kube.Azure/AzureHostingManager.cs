@@ -1500,9 +1500,9 @@ namespace Neon.Kube.Hosting.Azure
 
             var environment = ArmEnvironment.AzurePublicCloud;
 
-            if (azureOptions.Environment != null)
+            if (azureOptions.Cloud != null)
             {
-                switch (azureOptions.Environment.Name)
+                switch (azureOptions.Cloud.Name)
                 {
                     case AzureCloudEnvironments.GlobalCloud:
 
@@ -1526,12 +1526,12 @@ namespace Neon.Kube.Hosting.Azure
 
                     case AzureCloudEnvironments.Custom:
 
-                        environment = new ArmEnvironment(new Uri(azureOptions.Environment.Endpoint), azureOptions.Environment.Audience);
+                        environment = new ArmEnvironment(new Uri(azureOptions.Cloud.Endpoint), azureOptions.Cloud.Audience);
                         break;
 
                     default:
 
-                        throw new NotImplementedException($"Azure environment [{azureOptions.Environment.Name}] is not currently supported.");
+                        throw new NotImplementedException($"Azure environment [{azureOptions.Cloud.Name}] is not currently supported.");
                 }
             }
 

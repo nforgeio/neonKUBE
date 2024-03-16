@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -47,6 +48,7 @@ namespace Neon.Kube.ClusterDef
         /// If <see cref="AzureHostingOptions.DefaultStorageType"/>=<see cref="Default"/>
         /// then <see cref="AwsVolumeType.Gp2"/> will be provisioned.
         /// </summary>
+        [EnumMember(Value = "default")]
         Default = 0,
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace Neon.Kube.ClusterDef
         /// the expected throughput performance 99% of the time and has enough I/O credits* to support a full-volume scan at the burst 
         /// rate. To maximize the performance of st1, we recommend using EBS-optimized EC2 instances.
         /// </remarks>
+        [EnumMember(Value = "st1")]
         St1,
 
         /// <summary>
@@ -73,6 +76,7 @@ namespace Neon.Kube.ClusterDef
         /// performance 99% of the time and has enough I/O credits* to support a full-volume scan at the burst rate. To maximize the
         /// performance of sc1, we recommend using EBS-optimized EC2 instances. 
         /// </remarks>
+        [EnumMember(Value = "sc1")]
         Sc1,
 
         /// <summary>
@@ -88,6 +92,7 @@ namespace Neon.Kube.ClusterDef
         /// number of IOPS than gp2 can provide, such as a workload where low latency is critical or you need better performance
         /// consistency, we recommend using io1. To maximize the performance of gp2, we recommend using EBS-optimized EC2 instances.
         /// </remarks>
+        [EnumMember(Value = "gp2")]
         Gp2,
 
         /// <summary>
@@ -113,6 +118,7 @@ namespace Neon.Kube.ClusterDef
         /// on the AWS Nitro System.
         /// </para>
         /// </remarks>
+        [EnumMember(Value = "io1")]
         Io1,
 
         /// <summary>
@@ -138,6 +144,7 @@ namespace Neon.Kube.ClusterDef
         /// on the AWS Nitro System.
         /// </para>
         /// </remarks>
+        [EnumMember(Value = "io2")]
         Io2
     }
 }
