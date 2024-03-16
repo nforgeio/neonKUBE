@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
@@ -24,6 +25,33 @@ using k8s.Models;
 using Neon.Operator.Attributes;
 
 using Newtonsoft.Json;
+
+// $todo(marcusbooyah):
+//
+// The generated CRD fails to install in the [neon-cluster-operator] Helm chart
+// because it's missing the special [api-approved.kubernetes.io] annotation.
+// Here's the Helm error:
+//
+//      CustomResourceDefinition.apiextensions.k8s.io "dnsendpoints.externaldns.k8s.io" is invalid: metadata.annotations[api-approved.kubernetes.io]: Required value: protected groups must have approval annotation "api-approved.kubernetes.io"
+//
+// Perhaps the analyzer could identify resources like this by looking for
+// [KubeGroup] values ending in ".k8s.io" and add this annotation or not
+// generate the CRD at all (if that makes sense).
+//
+// I'm not entirely sure that just adding the annotation will work.  This post
+// describes how doing this can result in unexpected (aka BAD) behavior:
+//
+//      https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/
+//
+// The [api-approved.kubernetes.io] annotation doesn't really appear to be
+// documented (https://github.com/kubernetes/website/issues/30764).  It's
+// supposed to be set the the URL for the Kubernetes GitHub pull request
+// that approved the CRD.
+//
+// It doesn't look like we're referencing this anywhere, so I'm going to
+// comment this out for now.
+
+#if TODO
 
 namespace Neon.Kube.Resources.ExternalDns
 {
@@ -105,3 +133,5 @@ namespace Neon.Kube.Resources.ExternalDns
         }
     }
 }
+
+#endif
