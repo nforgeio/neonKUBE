@@ -76,10 +76,10 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// This will be [Mayadata's premier storage engine](https://docs.openebs.io/docs/next/mayastor.html) using 
         /// the [NVMe-oF](https://nvmexpress.org/developers/nvme-of-specification/) protocol for accessing data rather
-        /// than the old iSCSI protocol which is quite slow.  Mayastor is still in Beta.
+        /// than the old iSCSI protocol which is quite slow.
         /// </para>
         /// <note>
-        /// Mayastor is not currently supported for NEONKUBE clusters.
+        /// Mayastor is not currently supported for NEONKUBE clusters, but will be supported in the near future.
         /// </note>
         /// </summary>
         [EnumMember(Value = "mayastor")]
