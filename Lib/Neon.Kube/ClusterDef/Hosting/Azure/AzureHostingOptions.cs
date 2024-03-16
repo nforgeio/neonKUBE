@@ -194,14 +194,14 @@ namespace Neon.Kube.ClusterDef
         public string DomainLabel { get; set; }
 
         /// <summary>
-        /// Specifies the target Azure environment.  This defaults to the 
+        /// Specifies the target Azure cloud environment.  This defaults to the 
         /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
         /// for other possibilities.
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "cloud", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cloud", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public AzureCloudEnvironment Environment { get; set; } = null;
+        public AzureCloudEnvironment Cloud { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -361,8 +361,8 @@ namespace Neon.Kube.ClusterDef
         /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
         /// nodes via <see cref="AzureNodeOptions.OpenEbsStorageType"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbstorageType", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DefaultOpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEbstorageType", ApplyNamingConventions = false)]
         [DefaultValue(defaultOpenEbsStorageType)]
         public AzureStorageType DefaultOpenEbsStorageType { get; set; } = defaultOpenEbsStorageType;
 
@@ -471,9 +471,9 @@ namespace Neon.Kube.ClusterDef
 
             // Verify [Environment].
 
-            if (Environment != null)
+            if (Cloud != null)
             {
-                Environment.Validate(clusterDefinition);
+                Cloud.Validate(clusterDefinition);
             }
 
             // Verify [DefaultVmSize]
