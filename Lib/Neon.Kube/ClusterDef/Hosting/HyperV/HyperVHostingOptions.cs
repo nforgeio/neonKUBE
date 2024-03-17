@@ -77,38 +77,38 @@ namespace Neon.Kube.ClusterDef
         /// <remarks>
         /// <para>
         /// Note that NEONKUBE creates only a single internal Hyper-V switch for the <see cref="HostingEnvironment.HyperV"/>
-        /// hosting environment for the <see cref="NeonKubeInternalSubnet"/> (<b>100.64.0.0/24</b>).  The first and last two addresses 
-        /// of the subnet are reserved:
+        /// hosting environment for the <see cref="NeonKubeInternalSubnet"/> (<b>100.64.0.0/24</b>).  Some addresses in
+        /// this subnet are reserved:
         /// </para>
         /// <list type="table">
         /// <item>
         ///     <term><b>100.64.0.0</b></term>
         ///     <description>
-        ///     Reserved.
+        ///     Reserved
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>100.64.0.1</b></term>
         ///     <description>
-        ///     The subnet's default gateway providing external access.
+        ///     Gateway for external network access
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>100.64.0.2 ... 253</b></term>
         ///     <description>
-        ///     Available for user cluster nodes.
+        ///     Available for user cluster nodes
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>100.64.0.254</b></term>
         ///     <description>
-        ///     Reserved for the NEONDESKTOP single node cluster.
+        ///     Reserved for the NEONDESKTOP single node cluster
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>100.64.0.255</b></term>
         ///     <description>
-        ///     Reserved as the subnet UDP broadcast address.
+        ///     Reserved for the subnet UDP broadcast address
         ///     </description>
         /// </item>
         /// </list>
