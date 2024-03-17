@@ -46,7 +46,7 @@ namespace Neon.Kube.ClusterDef
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultMemory      = "8 GiB";
+        internal const string DefaultMemory      = "16 GiB";
         internal const string DefaultOsDisk      = "128 GiB";
         internal const string DefaultOpenEbsDisk = "128 GiB";
 
@@ -61,7 +61,9 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Optionally identifies the target Hyper-V or XenServer hypervisor machines.
+        /// Specifies one or more target XenServer hypervisor servers for XenServer cluster deployments.
+        /// Cluster nodes will reference these hosts by name indicating that the node should be deployed
+        /// on the target hyoervisor.  This is required for XenServer deployments.
         /// </summary>
         [JsonProperty(PropertyName = "Hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "hosts", ApplyNamingConventions = false)]
@@ -70,11 +72,11 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// The default username to use for connecting the hypervisor host machines specified by <see cref="Hosts"/>.
+        /// Optionally specifies the default username to use for connecting to hypervisor host machines specified by <see cref="Hosts"/>.
         /// This may be overridden for specific hypervisor machines.  This defaults to <c>null</c>.
         /// </para>
         /// <note>
-        /// This defaults to <b>root</b> for XenServer based environments.
+        /// This defaults to <b>root</b> for XenServer based environments, <c>null</c> otherwise.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -83,7 +85,7 @@ namespace Neon.Kube.ClusterDef
         public string HostUsername { get; set; }
 
         /// <summary>
-        /// The default password to use for connecting the hypervisor host machines specified by <see cref="Hosts"/>.
+        /// Optionally specifies the default password to use for connecting to hypervisor host machines specified by <see cref="Hosts"/>.
         /// This may be overridden for specific hypervisor machines within <see cref="Hosts"/> items.  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "HostPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -92,12 +94,7 @@ namespace Neon.Kube.ClusterDef
         public string HostPassword { get; set; }
 
         /// <summary>
-        /// <para>
-        /// The default number of processors to assign to each cluster virtual machine.  
-        /// </para>
-        /// <note>
-        /// NEONKUBE requires that each control-plane and worker node have at least 4 CPUs.
-        /// </note>
+        /// Specifies default number of VCPUs to assign to each cluster node virtual machine.  This defaults to <b>4</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VCpus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vcpus", ApplyNamingConventions = false)]
@@ -142,13 +139,13 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Path to the location where virtual machine hard disk will be created.
+        /// Specifies the path to the location where virtual machine hard disk will be created.
         /// This defaults to the local Hyper-V folder for Windows.
         /// </para>
         /// <note>
         /// <para>
         /// This is currently recognized only when deploying on a local Hyper-V hypervisor.
-        /// Eventually, you'll be able to specify a XenServer storage repository.
+        /// Eventually, you'll be able to specify a XenServer storage repository as well.
         /// </para>
         /// <para>
         /// <a href="https://github.com/nforgeio/neonKUBE/issues/996">Issue #996</a>
@@ -163,14 +160,9 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperV"/>,
-        /// and <see cref="HostingEnvironment.XenServer"/> environments.  This is used to avoid
+        /// <see cref="HostingEnvironment.XenServer"/> environment.  This is used to avoid
         /// VM naming conflicts between different clusters.
         /// </para>
-        /// <note>
-        /// This property is ignored for cloud hosting environments because cluster VMs will be
-        /// isolated in their own resource groups and private networks.
-        /// </note>
         /// <para>
         /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
         /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
@@ -179,6 +171,10 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <note>
         /// Virtual machine name prefixes will always be converted to lowercase.
+        /// </note>
+        /// <note>
+        /// This property is ignored for cloud hosting environments because cluster VMs will be
+        /// isolated in their own resource groups and private networks.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NamePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

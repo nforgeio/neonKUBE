@@ -47,7 +47,7 @@ namespace Neon.Kube.ClusterDef
     public class HypervisorHost
     {
         /// <summary>
-        /// The XenServer name.  This is used to by <see cref="NodeDefinition"/> instances
+        /// Specifies the hypervisor host name.  This is used to by <see cref="NodeDefinition"/> instances
         /// to specify where a cluster node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -56,7 +56,7 @@ namespace Neon.Kube.ClusterDef
         public string Name { get; set; }
 
         /// <summary>
-        /// The IP address or FQDN of the hypervisor machine.
+        /// Specifies the IP address or FQDN of the hypervisor machine.
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "address", ApplyNamingConventions = false)]
@@ -64,7 +64,7 @@ namespace Neon.Kube.ClusterDef
         public string Address { get; set; }
 
         /// <summary>
-        /// The custom username to use when connecting to the hypervisor machine.  This
+        /// Specifies the custom username to use when connecting to the hypervisor machine.  This
         /// overrides <see cref="HypervisorHostingOptions.HostUsername"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -73,7 +73,7 @@ namespace Neon.Kube.ClusterDef
         public string Username { get; set; }
 
         /// <summary>
-        /// The custom password to use when connecting to the hypervisor machine.  This
+        /// Specifies the custom password to use when connecting to the hypervisor machine.  This
         /// overrides <see cref="HypervisorHostingOptions.HostPassword"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
