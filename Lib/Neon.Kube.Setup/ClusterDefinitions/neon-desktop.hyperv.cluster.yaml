@@ -7,6 +7,8 @@ timeSources:
 - pool.ntp.org
 kubernetes:
   allowPodsOnControlPlane: true
+  evictionHard:
+    memory-available: "400 MiB"
 hosting:
   environment: hyperv
   hyperv:
@@ -15,7 +17,7 @@ hosting:
   hypervisor:
     namePrefix: ""
     vcpus: 4
-    memory: 16 GiB
+    memory: 8 GiB
     osDisk: 48 GiB
 network:
   premiseSubnet: 100.64.0.0/24

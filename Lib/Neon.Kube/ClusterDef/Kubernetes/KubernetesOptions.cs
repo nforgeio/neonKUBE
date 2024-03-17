@@ -212,8 +212,13 @@ namespace Neon.Kube.ClusterDef
         public int ShutdownGracePeriodCriticalPodsSeconds { get; set; } = 120;
 
         /// <summary>
-        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for non-kubernetes components. 
+        /// <para>
+        /// Specifies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for non-Kubernetes components. 
         /// Currently only cpu and memory are supported. See http://kubernetes.io/docs/user-guide/compute-resources for more detail. Default: nil
+        /// </para>
+        /// <para>
+        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "SystemReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "systemReserved", ApplyNamingConventions = false)]
@@ -221,9 +226,14 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> SystemReserved { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for kubernetes system components.
-        /// Currently cpu, memory and local storage for root file system are supported. 
-        /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details. Default: nil
+        /// <para>
+        /// Specfies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for
+        /// Kubernetes system components.  Currently cpu, memory and local storage for root file system are supported. 
+        /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details.
+        /// </para>
+        /// <para>
+        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "KubeReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "kubeReserved", ApplyNamingConventions = false)]
@@ -231,9 +241,13 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> KubeReserved { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// A is a map of signal names to quantities that defines hard eviction thresholds. For example: {"memory.available": "300Mi"}. 
+        /// <para>
+        /// Specifies a map of signal names to quantities that defines hard eviction thresholds. For example: "memory.available": "300Mi". 
         /// To explicitly disable, pass a 0% or 100% threshold on an arbitrary resource. 
-        /// Default: memory.available: "100Mi" nodefs.available: "10%" nodefs.inodesFree: "5%" imagefs.available: "15%"
+        /// </para>
+        /// <para>
+        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "EvictionHard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "evictionHard", ApplyNamingConventions = false)]
@@ -332,40 +346,14 @@ namespace Neon.Kube.ClusterDef
                 FeatureGates["EphemeralContainers"] = true;
             }
 
-            if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
-            {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
-            }
-
             if (!AllowPodsOnControlPlane.HasValue)
             {
                 AllowPodsOnControlPlane = clusterDefinition.Workers.Count() == 0;
             }
 
-            var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Hypervisor.GetMemory(clusterDefinition);
-
-            EvictionHard = EvictionHard ?? new Dictionary<string, string>();
-
-            if (!EvictionHard.ContainsKey("memory.available"))
-            {
-                EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
-
+            EvictionHard   = EvictionHard ?? new Dictionary<string, string>();
             SystemReserved = SystemReserved ?? new Dictionary<string, string>();
-
-            if (!SystemReserved.ContainsKey("memory"))
-            {
-                var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
-
-                SystemReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
-
-            KubeReserved = KubeReserved ?? new Dictionary<string, string>();
-
-            if (!KubeReserved.ContainsKey("memory"))
-            {
-                KubeReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
+            KubeReserved   = KubeReserved ?? new Dictionary<string, string>();
 
             if (ShutdownGracePeriodSeconds < 30)
             {
