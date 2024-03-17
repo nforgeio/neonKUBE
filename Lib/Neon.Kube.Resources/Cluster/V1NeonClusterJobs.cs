@@ -151,7 +151,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <para>
             /// In addition to the standard Quartz defined special characters, we also
             /// support the <b>R</b> character which picks a random value within the
-            /// allow range for a field.  For example:
+            /// allowed range for a field.  For example:
             /// </para>
             /// <para>
             /// 0 0 R R * *
