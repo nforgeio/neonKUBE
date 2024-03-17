@@ -73,12 +73,8 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
         /// </para>
-        /// <note>
-        /// Your NEONKUBE cluster may be somewhat older than the current Kubernetes version,
-        /// so some of the features listed may not apply to your cluster.
-        /// </note>
         /// <para>
-        /// NEONKUBE clusters enables specific features by default when you you haven't
+        /// NEONKUBE clusters enable specific features by default when you you haven't
         /// explicitly disabled them via this property.  Note that some features are 
         /// required and cannot be disabled.
         /// </para>
@@ -86,12 +82,8 @@ namespace Neon.Kube.ClusterDef
         /// <item>
         ///     <term><b>EphemeralContainers</b></term>
         ///     <description>
-        ///     <para>
         ///     Enables the ability to add ephemeral containers to running pods.
-        ///     </para>
-        ///     <para>
-        ///     This is very handy for debugging pods.
-        ///     </para>
+        ///     This comes in handy for debugging running pods.
         ///     </description>
         /// </item>
         /// </list>
@@ -113,10 +105,7 @@ namespace Neon.Kube.ClusterDef
         public bool? AllowPodsOnControlPlane { get; set; } = null;
 
         /// <summary>
-        /// Specifies the maximum number of Pods that can run on a node. The value must be a non-negative integer. If DynamicKubeletConfig 
-        /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
-        /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
-        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. This defailts to: <b>250</b>
+        /// Specifies the maximum number of Pods that can be scheduled on a node. This defaults to: <b>250</b>
         /// </summary>
         [JsonProperty(PropertyName = "MaxPodsPerNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "maxPodsPerNode", ApplyNamingConventions = false)]
@@ -124,10 +113,9 @@ namespace Neon.Kube.ClusterDef
         public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
-        /// Specifies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
-        /// while gracefully terminating pods on the node.  This is expressed in seconds and must be
-        /// greater than zero.  This defaults to <b>360 seconds (65 minutes)</b> and cannot be less
-        /// than <b>30 seconds</b>.
+        /// Specifies seconds Kubelet will delay node shutdown while gracefully terminating pods
+        /// on the node.  This is expressed in seconds and must be at least <b>30 seconds</b>.  This
+        /// defaults to:<b>360 seconds</b>
         /// </summary>
         /// <remarks>
         /// <para>
@@ -169,9 +157,9 @@ namespace Neon.Kube.ClusterDef
         public int ShutdownGracePeriodSeconds { get; set; } = 360;
 
         /// <summary>
-        /// Specifies the amount of time that Kubelet running on the cluster nodes will delay node 
-        /// shutdown for critical nodes.  This defaults to <b>120 seconds (2 minutes)</b> and must
-        /// be less than <see cref="ShutdownGracePeriodSeconds"/> and not less than <b>30 seconds</b>.
+        /// Specifies the seconds that Kubelet will delay node shutdown for critical pods.  This
+        /// defaults to <b>120 seconds</b> and must be less than <see cref="ShutdownGracePeriodSeconds"/>
+        /// and not less than <b>30 seconds</b>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -214,11 +202,12 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for non-Kubernetes components. 
-        /// Currently only cpu and memory are supported. See http://kubernetes.io/docs/user-guide/compute-resources for more detail. Default: nil
+        /// Used to reserve system resources for Linux System related services.
+        /// See <a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources</a>
+        /// for more information.
         /// </para>
         /// <para>
-        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "SystemReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -228,12 +217,12 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for
-        /// Kubernetes system components.  Currently cpu, memory and local storage for root file system are supported. 
-        /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details.
+        /// Used to reserve system resources for Kubernetes related services.
+        /// See <a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources</a>
+        /// for more information.
         /// </para>
         /// <para>
-        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "KubeReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -243,11 +232,12 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies a map of signal names to quantities that defines hard eviction thresholds. For example: "memory.available": "300Mi". 
-        /// To explicitly disable, pass a 0% or 100% threshold on an arbitrary resource. 
+        /// Used to specify hard eviction thresholds that Kubelet will use to evict pods with our
+        /// a grace period.  See <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/#hard-eviction-thresholds">Hard eviction thresholds</a>
+        /// for more information.
         /// </para>
         /// <para>
-        /// This defaults to an **empty map** to use the Kubernetes defaults.
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "EvictionHard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
