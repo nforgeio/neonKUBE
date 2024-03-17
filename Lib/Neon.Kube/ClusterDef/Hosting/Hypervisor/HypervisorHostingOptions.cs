@@ -145,10 +145,6 @@ namespace Neon.Kube.ClusterDef
         /// <note>
         /// <para>
         /// This is currently recognized only when deploying on a local Hyper-V hypervisor.
-        /// Eventually, you'll be able to specify a XenServer storage repository as well.
-        /// </para>
-        /// <para>
-        /// <a href="https://github.com/nforgeio/neonKUBE/issues/996">Issue #996</a>
         /// </para>
         /// </note>
         /// </summary>

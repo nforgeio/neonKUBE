@@ -42,7 +42,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Identifies the XenServer storage repository to be used to store the XenServer
+        /// Specifies the XenServer storage repository to be used to store the XenServer
         /// node template as well as the cluster virtual machine images.  This defaults to
         /// <b>Local storage</b>.
         /// </summary>
@@ -72,7 +72,7 @@ namespace Neon.Kube.ClusterDef
         /// <note>
         /// For snapshots to work, the storage repository must support them and the virtual
         /// machine template must reside in the same repository where the virtual machines
-        /// are being created.  The current <c>neon-cli</c> implementation persists the
+        /// are being created.  The current <b>neon-cli</b> implementation persists the
         /// cluster VM templates to the local storage repository, so support for non-local
         /// storage repositories is not support out-of-the-box at this time.
         /// </note>
