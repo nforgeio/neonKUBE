@@ -99,12 +99,12 @@ namespace Neon.Kube.ClusterDef
         ///     <item>Year (optional) (1970..2099)</item>
         /// </list>
         /// <para>
-        /// An example of a complete CRON expression is <code>0 0 15 ? * MON</code> which triggers
+        /// An example of a complete CRON expression is <b>"0 0 15 ? * MON"</b> which triggers
         /// <b>every Monday at 3pm</b>.
         /// </para>
         /// <para>
         /// For the full documentation which describes special characters, see: 
-        /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
+        /// <a href="https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions">Quartz CRON Expressions</a>
         /// </para>
         /// <note>
         /// <para>
@@ -113,7 +113,7 @@ namespace Neon.Kube.ClusterDef
         /// allow range for a field.  For example:
         /// </para>
         /// <para>
-        /// 0 0 R R * *
+        /// <b>"0 0 R R * *"</b>
         /// </para>
         /// <para>
         /// schedules the job for a random hour and minute during the day.  This is useful
