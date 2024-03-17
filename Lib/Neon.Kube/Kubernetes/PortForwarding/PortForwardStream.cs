@@ -61,10 +61,10 @@ namespace Neon.Kube.PortForward
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="localConnection">Specfies the local side of the connection.</param>
+        /// <param name="localConnection">Specifies the local side of the connection.</param>
         /// <param name="remoteConnectionFactory">Specifies the factory that returns the websocket for the remote side of the connection.</param>
-        /// <param name="remotePort">Specfies the remote port.</param>
-        /// <param name="loggerFactory">Optionally specfies a logger factory.</param>
+        /// <param name="remotePort">Specifies the remote port.</param>
+        /// <param name="loggerFactory">Optionally specifies a logger factory.</param>
         public PortForwardStream(
             TcpClient               localConnection,
             RemoteConnectionFactory remoteConnectionFactory,

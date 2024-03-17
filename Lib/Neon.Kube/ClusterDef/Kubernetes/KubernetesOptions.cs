@@ -103,7 +103,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Enable pods to be scheduled on cluster control-plane nodes.  This defaults to <c>null</c>
         /// which will allow pods to be scheduled on control-plane nodes if the cluster consists only of
-        /// control-plane nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
+        /// control-plane nodes (e.g. for a single node cluster).  This defaults to <c>false</c> for
         /// clusters with worker nodes.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPodsOnControlPlane", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -112,10 +112,10 @@ namespace Neon.Kube.ClusterDef
         public bool? AllowPodsOnControlPlane { get; set; } = null;
 
         /// <summary>
-        /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
+        /// Specifies the maximum number of Pods that can run on a node. The value must be a non-negative integer. If DynamicKubeletConfig 
         /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
         /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
-        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. Default: 250
+        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. This defailts to: <b>250</b>
         /// </summary>
         [JsonProperty(PropertyName = "MaxPodsPerNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "maxPodsPerNode", ApplyNamingConventions = false)]
@@ -123,7 +123,7 @@ namespace Neon.Kube.ClusterDef
         public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
-        /// Specfies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
+        /// Specifies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
         /// while gracefully terminating pods on the node.  This is expressed in seconds and must be
         /// greater than zero.  This defaults to <b>360 seconds (65 minutes)</b> and cannot be less
         /// than <b>30 seconds</b>.
@@ -227,7 +227,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specfies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for
+        /// Specifies a map of ResourceName=ResourceQuantity (e.g. cpu=200m, memory=150G) pairs that describe resources reserved for
         /// Kubernetes system components.  Currently cpu, memory and local storage for root file system are supported. 
         /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details.
         /// </para>
