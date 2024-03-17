@@ -101,15 +101,6 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
 
         /// <summary>
-        /// The version of Helm to be installed.  This defaults to <b>default</b> which
-        /// will install a reasonable version for the Kubernetes release being inbstalled.
-        /// </summary>
-        [JsonProperty(PropertyName = "HelmVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "helmVersion", ApplyNamingConventions = false)]
-        [DefaultValue("default")]
-        public string HelmVersion { get; set; } = "default";
-
-        /// <summary>
         /// Enable pods to be scheduled on cluster control-plane nodes.  This defaults to <c>null</c>
         /// which will allow pods to be scheduled on control-plane nodes if the cluster consists only of
         /// control-plane nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
