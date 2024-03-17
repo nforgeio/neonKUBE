@@ -88,7 +88,7 @@ namespace Neon.Kube.Xunit
     /// isLocked: false         # $lt;-- test clusters need to be unlocked
     /// timeSources:
     /// - pool.ntp.org
-    /// kubernetes:
+    /// kubelet:
     ///   allowPodsOnControlPlane: true
     /// hosting:
     ///   environment: hyperv

@@ -5,7 +5,7 @@ isDesktop: true
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
   evictionHard:
     memory-available: "400 MiB"

@@ -60,7 +60,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: aws
@@ -90,7 +90,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: aws
@@ -126,7 +126,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: aws
