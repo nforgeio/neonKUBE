@@ -172,7 +172,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Optionally specifies the ID of an existing public IPv4 address to be assigned
-        /// to the NAT Gateway to send outboung network traffic.
+        /// to the NAT Gateway for sending outboung network traffic.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> This resource must be located in the same region as the cluster.
@@ -249,7 +249,7 @@ namespace Neon.Kube.ClusterDef
         /// </item>
         /// </list>
         /// <para>
-        /// Larger clusters may need to select a prefix with additional IP addresses to avoid
+        /// Larger clusters making lots of external network requests may need to select a prefix with additional IP addresses to avoid
         /// <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#outboundrules">SNAT Exhaustion</a>.
         /// </para>
         /// </summary>
@@ -259,8 +259,8 @@ namespace Neon.Kube.ClusterDef
         public int EgressPublicIpPrefixLength { get; set; } = 0;
 
         /// <summary>
-        /// Optionally specifies the maximum time in minutes that the cluster's NAT gateway will
-        /// retain an idle outbound TCP connection.  This may be set to between [4..120] minutes
+        /// Optionally specifies the maximum time **in minutes** that the cluster's NAT gateway will
+        /// retain an idle outbound TCP connection.  This may be set to between <b>4..120</b> minutes
         /// inclusive.  This defaults to <b>120 minutes</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MaxNatGatewayTcpIdle", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -269,7 +269,12 @@ namespace Neon.Kube.ClusterDef
         public int MaxNatGatewayTcpIdle { get; set; } = maxAzureNatGatewayTcpIdleTimeoutMinutes;
 
         /// <summary>
-        /// Specifies the subnet for the Azure VNET.  This defaults to <b>10.100.0.0/24</b>
+        /// <para>
+        /// Optionally specifies the subnet for the Azure VNET.  This defaults to <b>10.100.0.0/24</b>.
+        /// </para>
+        /// <note>
+        /// <see cref="VnetSubnet"/> must be the same or a superset of <see cref="NodeSubnet"/>.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VnetSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vnetSubnet", ApplyNamingConventions = false)]
@@ -277,8 +282,12 @@ namespace Neon.Kube.ClusterDef
         public string VnetSubnet { get; set; } = defaultVnetSubnet;
 
         /// <summary>
-        /// specifies the subnet within <see cref="VnetSubnet"/> where the cluster nodes will be provisioned.
-        /// This defaults to <b>10.100.0.0/24</b>.
+        /// <para>
+        /// Specifies the subnet where the cluster nodes will be provisioned.  This defaults to <b>10.100.0.0/24</b>.
+        /// </para>
+        /// <note>
+        /// <see cref="NodeSubnet"/> must be the same or a subset of the <see cref="VnetSubnet"/>.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "nodeSubnet", ApplyNamingConventions = false)]
