@@ -45,31 +45,31 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Here are the log verbosity levels:
+        /// Here are the supported verbosity values and what they do:
         /// </para>
         /// <list type="table">
         /// <item>
         ///     <term><b>1</b></term>
         ///     <description>
-        ///     Minimal details
+        ///     Log minimal details
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>2</b></term>
         ///     <description>
-        ///     <b>default</b>: Useful steady state service status and significant changes to the system
+        ///     <b>default</b>: Log useful steady state service status and significant changes to the system
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>3</b></term>
         ///     <description>
-        ///     Extended information about changes.
+        ///     Log extended information about changes
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>4</b></term>
         ///     <description>
-        ///     Debug level verbosity.
+        ///     Log debug information
         ///     </description>
         /// </item>
         /// <item>
@@ -81,25 +81,25 @@ namespace Neon.Kube.ClusterDef
         /// <item>
         ///     <term><b>6</b></term>
         ///     <description>
-        ///     Display requested resources.
+        ///     Log requested resources
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>7</b></term>
         ///     <description>
-        ///     Display HTTP request headers.
+        ///     Log HTTP request headers
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>8</b></term>
         ///     <description>
-        ///     Display HTTP request contents.
+        ///     Log HTTP request contents
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>8</b></term>
+        ///     <term><b>9</b></term>
         ///     <description>
-        ///     Display HTTP request responses.
+        ///     Log HTTP request responses
         ///     </description>
         /// </item>
         /// </list>

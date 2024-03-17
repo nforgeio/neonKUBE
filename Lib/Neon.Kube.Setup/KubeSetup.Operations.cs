@@ -642,32 +642,32 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
-maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
-shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
-shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
+maxPods: {cluster.SetupState.ClusterDefinition.Kubelet.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodCriticalPodsSeconds}s
 rotateCertificates: true
 {kubeletFailSwapOnLine}
 ");
 
             clusterConfig.AppendLine($"systemReserved:");
 
-            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
+            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved[systemReservedkey]}");
             }
                
             clusterConfig.AppendLine($"kubeReserved:");
 
-            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
+            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved[kubeReservedKey]}");
             }
 
             clusterConfig.AppendLine($"evictionHard:");
 
-            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
+            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard[evictionHardKey]}");
             }
 
             // Append the KubeProxyConfiguration
@@ -1090,7 +1090,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Configures the Kubernetes feature gates specified by the <see cref="KubernetesOptions.FeatureGates"/> dictionary.
+        /// Configures the Kubernetes feature gates specified by the <see cref="KubeletOptions.FeatureGates"/> dictionary.
         /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
         /// on the control-plane nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
         /// </summary>
@@ -1208,7 +1208,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var command      = (List<object>)container["command"];
                         var sbFeatures   = new StringBuilder();
 
-                        foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates)
+                        foreach (var featureGate in clusterDefinition.Kubelet.FeatureGates)
                         {
                             sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
                         }
@@ -1254,7 +1254,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         // Configure the log level.
 
-                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServer.Verbosity}");
+                        command.Add($"--v={clusterDefinition.Kubelet.ApiServer.Verbosity}");
 
                         // Set GOGC so that GC happens more frequently, reducing memory usage.
 
@@ -1780,7 +1780,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
-                    if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                    if (cluster.SetupState.ClusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = new V1NodeList();
                         var retry = new LinearRetryPolicy(

@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        KubernetesOptions.cs
+// FILE:        KubeletOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -43,9 +43,10 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Describes the Kubernetes options for a NEONKUBE.
+    /// Describes the options for the Kubernetes Kubelet service deployed
+    /// on all cluster nodes.
     /// </summary>
-    public class KubernetesOptions
+    public class KubeletOptions
     {
         private const string minVersion              = "1.13.0";
         private const string defaultVersion          = "default";
@@ -54,7 +55,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubernetesOptions()
+        public KubeletOptions()
         {
         }
 
@@ -255,69 +256,8 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> EvictionHard { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// Specifies the Kubernetes API Server log verbosity.  This defaults to <b>2</b>.
+        /// Specifies Kubernetes API Server options.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Here are the log verbosity levels:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>1</b></term>
-        ///     <description>
-        ///     Minimal details
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>2</b></term>
-        ///     <description>
-        ///     <b>default</b>: Useful steady state service status and significant changes to the system
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>3</b></term>
-        ///     <description>
-        ///     Extended information about changes.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>4</b></term>
-        ///     <description>
-        ///     Debug level verbosity.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>5</b></term>
-        ///     <description>
-        ///     Undefined
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>6</b></term>
-        ///     <description>
-        ///     Display requested resources.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>7</b></term>
-        ///     <description>
-        ///     Display HTTP request headers.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>8</b></term>
-        ///     <description>
-        ///     Display HTTP request contents.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>8</b></term>
-        ///     <description>
-        ///     Display HTTP request responses.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
         [JsonProperty(PropertyName = "ApiServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "apiServer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
@@ -333,7 +273,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
+            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubelet)}";
 
             ApiServer ??= new ApiServerOptions();
 

@@ -76,7 +76,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Minio))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
