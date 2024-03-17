@@ -59,25 +59,6 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// The version of Kubernetes to be installed.  This defaults to <b>default</b> which
-        /// will install the latest tested version of Kubernetes.  The minimum supported
-        /// version is <b>1.13.0</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "version", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVersion)]
-        public string Version { get; set; } = defaultVersion;
-
-        /// <summary>
-        /// The version of Kubernetes dashboard to be installed.  This defaults to <b>default</b> which
-        /// will install the latest tested version of Kubernetes.
-        /// </summary>
-        [JsonProperty(PropertyName = "DashboardVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "dashboardVersion", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVersion)]
-        public string DashboardVersion { get; set; } = defaultDashboardVersion;
-
-        /// <summary>
         /// Enables or disables specific Kubernetes features.  This can be used to enable
         /// alpha quality or other features that are disabled by default for the Kubernetes
         /// version being deployed or to disable features.
@@ -349,31 +330,7 @@ namespace Neon.Kube.ClusterDef
 
             var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
 
-            Version = Version ?? defaultVersion;
-            Version = Version.ToLowerInvariant();
-
             ApiServer ??= new ApiServerOptions();
-
-            if (Version != defaultVersion)
-            {
-                if (!System.Version.TryParse(Version, out var kubernetesVersion))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
-                }
-
-                if (kubernetesVersion < System.Version.Parse(minVersion))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
-                }
-            }
-
-            if (DashboardVersion != defaultDashboardVersion)
-            {
-                if (!System.Version.TryParse(DashboardVersion, out var vDashboard))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
-                }
-            }
 
             // Add default NEONKUBE feature gates when the user has not already configured them.
 
