@@ -80,14 +80,14 @@ namespace Neon.Kube.ClusterDef
         public bool Enabled { get; set; } = false;
 
         /// <summary>
-        /// The update schedule. This is enxtended Quartz cron expression.  This defaults
+        /// Specifies the job schedule. This is extended Quartz CRON expression.  This defaults
         /// to <b>"R R 0 ? * *"</b> which fires every day at a random minute and second
         /// between 12:00am and 1:00am.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Cron expressions consist of seven sub-expressions that describe the details of the schedule.
-        /// The sub expressions are:
+        /// CRON expressions consist of seven sub-expressions that describe the details of the schedule.
+        /// The sub expressions (in order) are:
         /// </para>
         /// <list type="bullet">
         ///     <item>Seconds (0..59)</item>
@@ -99,9 +99,10 @@ namespace Neon.Kube.ClusterDef
         ///     <item>Year (optional) (1970..2099)</item>
         /// </list>
         /// <para>
-        /// An example of a complete cron expression is <code>0 0 15 ? * MON</code> which means
-        /// every Monday at 3pm.
-        /// </para>        /// <para>
+        /// An example of a complete CRON expression is <code>0 0 15 ? * MON</code> which triggers
+        /// <b>every Monday at 3pm</b>.
+        /// </para>
+        /// <para>
         /// For the full documentation which describes special characters, see: 
         /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
         /// </para>
