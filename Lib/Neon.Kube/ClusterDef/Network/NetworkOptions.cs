@@ -92,11 +92,8 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperV"/> and
-        /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments and
-        /// ignored for other environments which specify network subnets in their related hosting
-        /// options.
+        /// Specifies the subnet for LAN for on-premise deployments.  This is
+        /// required for on-premise and is ignored for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "premiseSubnet", ApplyNamingConventions = false)]
@@ -104,15 +101,9 @@ namespace Neon.Kube.ClusterDef
         public string PremiseSubnet { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Specifies the pod subnet to be used for the cluster.  This subnet will be
-        /// split so that each node will be allocated its own subnet.  This defaults
-        /// to <b>10.254.0.0/16</b>.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> This subnet must not conflict with any other subnets
-        /// provisioned within the premise network.
-        /// </note>
+        /// Optionally specifies the subnet used for cluster pods.  This subnet will be
+        /// split so that each node will be allocated its own subnet for the pods running
+        /// there.  This defaults to <b>10.254.0.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PodSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "podSubnet", ApplyNamingConventions = false)]
@@ -130,11 +121,12 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// The IP addresses of the DNS nameservers to be used by the cluster.
+        /// Optionally specifies the IP addresses of the DNS nameservers to be used by the cluster.
         /// </para>
         /// <para>
         /// For cloud environments, this defaults the name servers provided by the cloud.  For on-premise
-        /// environments, this defaults to the Google Public DNS servers: <b>["8.8.8.8", "8.8.4.4" ]</b>.
+        /// environments, this defaults to the <a href="https://developers.google.com/speed/public-dns">Google Public DNS</a>
+        /// servers: <b>["8.8.8.8", "8.8.4.4" ]</b>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
@@ -143,10 +135,14 @@ namespace Neon.Kube.ClusterDef
         public List<string> Nameservers { get; set; } = null;
 
         /// <summary>
-        /// Specifies the default network gateway address to be configured for hosts.  This defaults to the 
+        /// <para>
+        /// Specifies the default network gateway address to be configured for cluster nodes.  This defaults to the 
         /// first usable address in the <see cref="PremiseSubnet"/>.  For example, for the <b>10.0.0.0/24</b> 
-        /// subnet, this will be set to <b>10.0.0.1</b>.  This is ignored for cloud hosting 
-        /// environments.
+        /// subnet, this will be default to <b>10.0.0.1</b>.
+        /// </para>
+        /// <note>
+        /// This applies only to on-premise deployments and ignored for cloud hosting.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "gateway", ApplyNamingConventions = false)]
@@ -154,25 +150,29 @@ namespace Neon.Kube.ClusterDef
         public string Gateway { get; set; } = null;
 
         /// <summary>
-        /// Optionally enable Istio mutual TLS support for cross pod communication.
+        /// Optionally enables Istio mutual TLS support for cross pod communication.
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "MutualPodTLS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "mutualPodTLS", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "MutualPodTls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mutualPodTls", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool MutualPodTLS { get; set; } = false;
+        public bool MutualPodTls { get; set; } = false;
 
         /// <summary>
         /// <para>
-        /// Optionally sets the ingress routing rules external traffic received by nodes
+        /// Optionally sets the ingress routing rules for external traffic received by nodes
         /// with <see cref="NodeDefinition.Ingress"/> enabled into one or more Istio ingress
         /// gateway services which are then responsible for routing to the target Kubernetes 
         /// services.
         /// </para>
         /// <para>
-        /// This defaults to allowing inbound <b>HTTP/HTTPS</b> traffic and cluster setup
-        /// also adds a TCP rule for the Kubernetes API server on port <b>6442</b>.
+        /// This defaults to allowing all inbound traffic.
         /// </para>
+        /// <note>
+        /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+        /// this scenario and we currently don't support automatic router configuration for
+        /// on-premise environments.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "IngressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ingressRules", ApplyNamingConventions = false)]
@@ -205,7 +205,9 @@ namespace Neon.Kube.ClusterDef
         /// These rules currently apply to all network ports.
         /// </note>
         /// <note>
-        /// This is not currently supported on AWS.
+        /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
+        /// this scenario and we currently don't support automatic router configuration for
+        /// on-premise environments.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "EgressAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -237,7 +239,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies the start of a range of ingress load balancer ports reserved by
+        /// Optionally specifies the start of a range of ingress load balancer ports reserved by
         /// NEONKUBE.  These are reserved for temporarily exposing SSH from individual 
         /// cluster nodes to the Internet during cluster setup as well as afterwards so 
         /// that a cluster node can be accessed remotely by a cluster operator as well
@@ -261,7 +263,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies the end of a range of ingress load balancer ports reserved by
+        /// Optionally specifies the end of a range of ingress load balancer ports reserved by
         /// NEONKUBE.  These are reserved for temporarily exposing SSH from individual 
         /// cluster nodes to the Internet during cluster setup as well as afterwards so 
         /// that a cluster node can be accessed remotely by a cluster operator as well
@@ -309,11 +311,11 @@ namespace Neon.Kube.ClusterDef
         /// Optionally overrides the default MTU (maximum transmission unit) configured for
         /// cluster node network interfaces.  The default MTU for the hosting environment
         /// will be used when <see cref="NodeMtu"/><c>=0</c>, otherwise this can be configured
-        /// as a value between <b>512-9000</b>.
+        /// as a value between <b>512-9000</b>.  This defaults to <b>0</b>.
         /// </para>
         /// <note>
-        /// <b>WARNING:</b> This is an <b>advanced feature</b>.  Only people who really know
-        /// networking and their network environment should modify this.
+        /// <b>WARNING:</b> This is an <b>advanced setting</b>.  Only people who really know
+        /// what they're doing should change this.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodeMtu", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -322,9 +324,14 @@ namespace Neon.Kube.ClusterDef
         public int NodeMtu { get; set; } = 0;
 
         /// <summary>
+        /// <para>
         /// Optionally specifies the public IP addresses for the cluster.  This is useful
         /// for documenting the public IP address for a router that directs traffic
         /// into the cluster.
+        /// </para>
+        /// <note>
+        /// This property is informational only and does not affect cluster deployments.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
