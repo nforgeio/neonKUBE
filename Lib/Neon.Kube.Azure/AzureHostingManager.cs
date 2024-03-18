@@ -2800,7 +2800,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                     NodePort              = NetworkPorts.KubernetesApiServer,
                     Target                = IngressRuleTarget.ControlPlane,
                     AddressRules          = networkOptions.ManagementAddressRules,
-                    IdleTcpReset          = true,
+                    TcpIdleReset          = true,
                     TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
                 }
             };
@@ -2891,7 +2891,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                             Protocol                  = ToTransportProtocol(ingressRule.Protocol),
                             FrontendPort              = ingressRule.ExternalPort,
                             BackendPort               = ingressRule.NodePort,
-                            EnableTcpReset            = ingressRule.IdleTcpReset,
+                            EnableTcpReset            = ingressRule.TcpIdleReset,
                             IdleTimeoutInMinutes      = tcpIdleTimeout,
                             EnableFloatingIP          = false
                         });

@@ -161,18 +161,14 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Optionally sets the ingress routing rules for external traffic received by nodes
-        /// with <see cref="NodeDefinition.Ingress"/> enabled into one or more Istio ingress
+        /// with <see cref="NodeDefinition.Ingress"/> enabled, targeting one or more Istio ingress
         /// gateway services which are then responsible for routing to the target Kubernetes 
         /// services.
         /// </para>
         /// <para>
-        /// This defaults to allowing all inbound traffic.
+        /// This defaults to allowing inbound <b>HTTP/HTTPS</b> traffic and cluster setup
+        /// also adds a TCP rule for the Kubernetes API server on port <b>6442</b>.
         /// </para>
-        /// <note>
-        /// This is currently supported only for clusters hosted on Azure.  AWS doesn't support
-        /// this scenario and we currently don't support automatic router configuration for
-        /// on-premise environments.
-        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "IngressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ingressRules", ApplyNamingConventions = false)]

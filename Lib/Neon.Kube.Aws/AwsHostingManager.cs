@@ -3824,7 +3824,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         NodePort              = NetworkPorts.KubernetesApiServer,
                         Target                = IngressRuleTarget.ControlPlane,
                         AddressRules          = networkOptions.ManagementAddressRules,
-                        IdleTcpReset          = true,
+                        TcpIdleReset          = true,
                         TcpIdleTimeoutMinutes = 5
                     }
                 };
