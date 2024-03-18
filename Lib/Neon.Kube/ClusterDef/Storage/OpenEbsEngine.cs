@@ -27,8 +27,8 @@ namespace Neon.Kube.ClusterDef
     {
         /// <summary>
         /// <para>
-        /// Selects a reasonable default storage engine for the cluster.  Currently, this will
-        /// select <see cref="HostPath"/> for single-node clusters or <see cref="Jiva"/> for
+        /// Selects a reasonable default storage engine for the cluster.  Currently, this 
+        /// selects <see cref="HostPath"/> for single-node clusters or <see cref="Jiva"/> for
         /// multi-node clusters.
         /// </para>
         /// <note>

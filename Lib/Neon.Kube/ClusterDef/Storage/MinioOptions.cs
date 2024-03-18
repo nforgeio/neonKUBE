@@ -56,7 +56,8 @@ namespace Neon.Kube.ClusterDef
         public int VolumesPerNode { get; set; } = 4;
 
         /// <summary>
-        /// The size of each volume to be mounted to each server.
+        /// The size of each volume to be mounted to each server.  This defaults to
+        /// <b>2 GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VolumeSize", Required = Required.Default)]
         [YamlMember(Alias = "volumeSize", ApplyNamingConventions = false)]

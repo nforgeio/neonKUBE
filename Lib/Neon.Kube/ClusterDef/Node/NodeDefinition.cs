@@ -103,9 +103,14 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// The node's IP address or <c>null</c> if one has not been assigned yet.
-        /// Note that an node's IP address cannot be changed once the node has
-        /// been added to the cluster.
+        /// <para>s
+        /// Specifies the IP address to be assinged to the node or <c>null</c> if addresses are
+        /// to be automatically assigned durining cluster setup.
+        /// </para>
+        /// <para>
+        /// This is required for on-premise clusters deployed to Hype-V or XenServer/XCP-ng
+        /// but is optional for cloud deployments.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Default)]
         [YamlMember(Alias = "address", ApplyNamingConventions = false)]
@@ -144,7 +149,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Returns the node's <see cref="NodeRole"/>.  This defaults to <see cref="NodeRole.Worker"/>.
+        /// Optionally spoecifies the node <see cref="NodeRole"/>.  This defaults to <see cref="NodeRole.Worker"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "role", ApplyNamingConventions = false)]
@@ -153,13 +158,13 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Indicates whether this node should be configured to accept external network traffic
+        /// Optionally specifies that this node should be configured to receive network traffic
         /// on node ports and route that into the cluster.  This defaults to <c>false</c>.
         /// </para>
         /// <note>
         /// If all nodes have <see cref="Ingress"/> set to <c>false</c> and the cluster defines
         /// one or more <see cref="NetworkOptions.IngressRules"/> then NEONKUBE will choose a
-        /// reasonable set of nodes to accept inbound traffic.
+        /// reasonable set of nodes to handle inbound traffic.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Ingress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -169,21 +174,15 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Indicates that this node will provide a cStor block device for the cStorPool
-        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
-        /// This defaults to <c>false</c>
+        /// Optionally specifies that this node will provisioned with a cStor or Mayastor block device on this
+        /// node for persistant container storage.  This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// If all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> then most NEONKUBE 
-        /// hosting managers will automatically choose the nodes that will host the cStor
-        /// block devices by configuring up to three nodes to do this, favoring worker nodes
-        /// over control-plane nodes when possible.
-        /// </note>
-        /// <note>
-        /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
-        /// from the others.  It requires that at least one node have <see cref="OpenEbsStorage"/><c>=true</c>
-        /// and that node must have an empty unpartitioned block device available to be provisoned
-        /// as an cStor.
+        /// When all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> and <see cref="OpenEbsOptions.Engine"/>
+        /// is set to <see cref="OpenEbsEngine.cStor"/> or <see cref="OpenEbsEngine.Mayastor"/>, NEONKUBE 
+        /// will automatically choose the nodes that will host the cStor/Mayastor block devices by configuring up
+        /// to three nodes with <b>openEbsStorage: true</b>, favoring <b>worker</b> nodes over <b>control-plane</b>
+        /// nodes when possible.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbsStorage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -192,7 +191,7 @@ namespace Neon.Kube.ClusterDef
         public bool OpenEbsStorage { get; set; } = false;
 
         /// <summary>
-        /// Specifies the labels to be assigned to the cluster node.  These can describe
+        /// Optionally specifies the labels to be assigned to the cluster node.  These can describe
         /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
@@ -202,7 +201,7 @@ namespace Neon.Kube.ClusterDef
         public NodeLabels Labels { get; set; }
 
         /// <summary>
-        /// Specifies the taints to be assigned to the cluster node.  
+        /// Optionally specifies any taints to be assigned to the cluster node.  
         /// </summary>
         [JsonProperty(PropertyName = "Taints")]
         [YamlMember(Alias = "taints", ApplyNamingConventions = false)]
@@ -210,7 +209,7 @@ namespace Neon.Kube.ClusterDef
         public List<V1Taint> Taints { get; set; }
 
         /// <summary>
-        /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
+        /// Optionally specifies Hypervisor hosting related options for on-premise environments like Hyper-V and XenServer.
         /// </summary>
         [JsonProperty(PropertyName = "Hypervisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "hypervisor", ApplyNamingConventions = false)]
@@ -218,7 +217,7 @@ namespace Neon.Kube.ClusterDef
         public HypervisorNodeOptions Hypervisor { get; set; }
 
         /// <summary>
-        /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
+        /// Optionally specifies Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Azure", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "azure", ApplyNamingConventions = false)]
@@ -226,7 +225,7 @@ namespace Neon.Kube.ClusterDef
         public AzureNodeOptions Azure { get; set; }
 
         /// <summary>
-        /// AWS provisioning options for this node, or <c>null</c> to use reasonable defaults.
+        /// Optionally specifies AWS provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Aws", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "aws", ApplyNamingConventions = false)]

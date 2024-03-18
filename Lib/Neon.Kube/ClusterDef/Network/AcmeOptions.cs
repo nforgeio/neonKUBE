@@ -60,7 +60,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
+        /// Optionally specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
         /// This defaults to <b>2160h0m0s</b> (90 days).  See <see cref="GoDuration.Parse(string)"/> for details 
         /// about the timespan format.
         /// </summary>
@@ -70,7 +70,7 @@ namespace Neon.Kube.ClusterDef
         public string CertificateDuration { get; set; } = defaultCertificateDuration;
 
         /// <summary>
-        /// Specifies the time to wait before attempting to renew internal cluster TLS certificates.
+        /// Optionally specifies the time to wait before attempting to renew internal cluster TLS certificates.
         /// This must be less than <see cref="CertificateDuration"/> and defaults to <b>720h0m0s</b> (24 days).
         /// See <see cref="GoDuration.Parse(string)"/> for details about the timespan format.
         /// </summary>

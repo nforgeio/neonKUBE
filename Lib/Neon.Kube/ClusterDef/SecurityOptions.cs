@@ -46,7 +46,7 @@ namespace Neon.Kube.ClusterDef
         private const int defaultPasswordLength = 20;
 
         /// <summary>
-        /// cluster hosts are configured with a random root account password.
+        /// cluster nodes are configured with a cryptographically random root account password.
         /// This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
