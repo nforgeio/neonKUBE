@@ -274,8 +274,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
-        [DefaultValue(KubeVersion.NeonKube)]
-        public string ClusterVersion { get; set; } = KubeVersion.NeonKube;
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
         /// Specifies any public IP addresses for the cluster.

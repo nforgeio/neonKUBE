@@ -80,7 +80,7 @@ namespace NeonAcme
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersion.NeonKube)
+             : base(name, version: KubeVersions.NeonKube)
         {
         }
 

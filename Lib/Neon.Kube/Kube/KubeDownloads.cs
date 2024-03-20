@@ -44,17 +44,17 @@ namespace Neon.Kube
         /// <summary>
         /// The Helm binary URL for Linux.
         /// </summary>
-        public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersion.Helm}-linux-amd64.tar.gz";
+        public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-amd64.tar.gz";
 
         /// <summary>
         /// The Helm binary URL for OS/X.
         /// </summary>
-        public static readonly string HelmOsxUri = $"https://get.helm.sh/helm-v{KubeVersion.Helm}-darwin-amd64.tar.gz";
+        public static readonly string HelmOsxUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-darwin-amd64.tar.gz";
 
         /// <summary>
         /// The Helm binary URL for Windows.
         /// </summary>
-        public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersion.Helm}-windows-amd64.zip";
+        public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
         /// The GitHub organization hosting NEONKUBE releases container images.
@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// NEONKUBE cluster version.
         /// </summary>
-        public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersion.NeonKubeWithBranchPart}.json";
+        public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKubeWithBranchPart}.json";
 
         /// <summary>
         /// Returns the URI of the download for NEONUBE base images.
@@ -147,7 +147,7 @@ namespace Neon.Kube
 
             using (var headendClient = HeadendClient.Create())
             {
-                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersion.NeonKube, architecture, stageBranch);
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
             }
         }
 
@@ -173,7 +173,7 @@ namespace Neon.Kube
 
             using (var headendClient = HeadendClient.Create())
             {
-                return await headendClient.ClusterSetup.GetDesktopImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersion.NeonKube, architecture, stageBranch);
+                return await headendClient.ClusterSetup.GetDesktopImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
             }
         }
     }

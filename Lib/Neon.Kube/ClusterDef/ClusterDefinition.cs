@@ -881,7 +881,7 @@ namespace Neon.Kube.ClusterDef
             Features           = Features ?? new FeatureOptions();
             Jobs               = Jobs ?? new JobOptions();
 
-            ClusterVersion = KubeVersion.NeonKube;
+            ClusterVersion = KubeVersions.NeonKube;
 
             if (IsDesktop && Nodes.Count() > 1)
             {

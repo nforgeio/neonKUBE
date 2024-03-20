@@ -64,8 +64,8 @@ namespace Neon.Kube
         /// is not known.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(KubeVersion.NeonKube)]
-        public string Version { get; set; } = KubeVersion.NeonKube;
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string Version { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
         /// The cluster health state.

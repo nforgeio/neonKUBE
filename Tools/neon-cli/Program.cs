@@ -73,7 +73,7 @@ namespace NeonCli
 #if PREMIUM
             Neon.Cloud.Build.NeonDesktopVersion;
 #else
-            Neon.Kube.KubeVersion.Kubernetes;
+            Neon.Kube.KubeVersions.Kubernetes;
 #endif
 
         /// <summary>
@@ -745,7 +745,7 @@ NOTE: Command line arguments and options may include references to
         /// </para>
         /// <para>
         /// If the tool folder and/or ther equested tool binary doesn't exist or the tool version doesn't
-        /// match what's specified in <see cref="KubeVersion"/>, then this method will attempt to download
+        /// match what's specified in <see cref="KubeVersions"/>, then this method will attempt to download
         /// the binary to <see cref="KubeHelper.ToolsFolder"/>, indicating that this is happening on the
         /// console.
         /// </para>

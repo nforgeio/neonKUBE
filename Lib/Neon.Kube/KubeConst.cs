@@ -224,7 +224,7 @@ namespace Neon.Kube
         /// with our prefix and the cluster version number.
         /// </summary>
         [KubeValue]
-        public const string NeonKubeImageTag = "neonkube-" + KubeVersion.NeonKube;
+        public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
 
         /// <summary>
         /// The size of the OS disk used for base images.

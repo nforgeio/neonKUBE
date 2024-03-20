@@ -28,7 +28,7 @@ namespace Neon.Kube
     /// <summary>
     /// Used by <see cref="KubeHelper.CreateKubeValuePreprocessor"/> to construct a <see cref="PreprocessReader"/>
     /// that will transform variable references like <b>$&lt;KubeVersion.Kubernetes&gt;</b> into their
-    /// respective values.  This includes variables defined by <see cref="KubeVersion"/>, <see cref="KubeNamespace"/>,
+    /// respective values.  This includes variables defined by <see cref="KubeVersions"/>, <see cref="KubeNamespace"/>,
     /// and <see cref="KubePort"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]

@@ -1011,7 +1011,7 @@ namespace Neon.Kube.Hosting.Aws
         public AwsHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersion.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when NEONKUBE was built from a non-release branch.");
+            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when NEONKUBE was built from a non-release branch.");
 
             cluster.HostingManager = this;
 
@@ -2313,14 +2313,14 @@ namespace Neon.Kube.Hosting.Aws
 
             controller.SetGlobalStepStatus("locate: node image");
 
-            var nodeImageName   = $"neonkube-{KubeVersion.NeonKube}{KubeVersion.BranchPart}";
-            var neonKubeVersion = SemanticVersion.Parse(KubeVersion.NeonKube);
+            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
             var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
             if (cloudMarketplace)
             {
-                Covenant.Assert(!string.IsNullOrEmpty(KubeVersion.BranchPart), $"AWS Marketplace image name [{nodeImageName}] is invalid because marketplace image versions never specify a branch.");
+                Covenant.Assert(!string.IsNullOrEmpty(KubeVersions.BranchPart), $"AWS Marketplace image name [{nodeImageName}] is invalid because marketplace image versions never specify a branch.");
 
                 var neonImageFilter = new List<Filter>()
                 {

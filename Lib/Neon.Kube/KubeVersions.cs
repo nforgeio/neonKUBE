@@ -45,7 +45,7 @@ namespace Neon.Kube
     /// be referenced directly from Helm charts like: $%lt;KubeVersion.Kubernetes&gt;
     /// </note>
     /// </summary>
-    public static class KubeVersion
+    public static class KubeVersions
     {
         /// <summary>
         /// Returns the name of the branch from which this assembly was built.
@@ -789,7 +789,7 @@ namespace Neon.Kube
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static KubeVersion()
+        static KubeVersions()
         {
             // Ensure that some of the version constants are reasonable.
 
