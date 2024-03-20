@@ -2319,7 +2319,7 @@ namespace Neon.Kube.Hosting.Aws
 
             if (cloudMarketplace)
             {
-                Covenant.Assert(!string.IsNullOrEmpty(KubeVersions.BranchPart), $"AWS Marketplace image name [{nodeImageName}] is invalid because marketplace image versions never specify a branch.");
+                Covenant.Assert(string.IsNullOrEmpty(KubeVersions.BranchPart), $"AWS Marketplace image name [{nodeImageName}] is invalid because marketplace image versions never specify a branch.");
 
                 var neonImageFilter = new List<Filter>()
                 {
