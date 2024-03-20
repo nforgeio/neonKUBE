@@ -10,7 +10,7 @@ spec:
     plural: neonnodetasks
     shortNames: []
     singular: neonnodetask
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1alpha1

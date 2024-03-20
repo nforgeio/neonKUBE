@@ -10,7 +10,7 @@ spec:
     plural: neonssoconnectors
     shortNames: []
     singular: neonssoconnector
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1alpha1

@@ -10,7 +10,7 @@ spec:
     plural: neonclusterjobs
     shortNames: []
     singular: neonclusterjob
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1alpha1

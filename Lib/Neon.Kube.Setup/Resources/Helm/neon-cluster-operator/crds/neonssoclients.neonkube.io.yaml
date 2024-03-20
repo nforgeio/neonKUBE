@@ -10,7 +10,7 @@ spec:
     plural: neonssoclients
     shortNames: []
     singular: neonssoclient
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1alpha1

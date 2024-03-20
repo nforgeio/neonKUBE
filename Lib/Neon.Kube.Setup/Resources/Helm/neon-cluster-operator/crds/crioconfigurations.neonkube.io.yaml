@@ -10,7 +10,7 @@ spec:
     plural: crioconfigurations
     shortNames: []
     singular: crioconfiguration
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1alpha1
