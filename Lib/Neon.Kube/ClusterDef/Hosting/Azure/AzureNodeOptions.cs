@@ -65,43 +65,19 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the storage type to use the node's primary disk.  This defaults to <see cref="AzureStorageType.Default"/>
-        /// which indicates that <see cref="AzureHostingOptions.DefaultStorageType"/> will specify the storage type
+        /// Optionally specifies the storage type to use the node's primary operating system disk.  This defaults to <see cref="AzureStorageType.Default"/>
+        /// indicating that <see cref="AzureHostingOptions.DefaultStorageType"/> will specify the storage type
         /// for this node.
         /// </para>
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <see cref="AzureStorageType.StandardHDD"/> specifies relatively slow rotating hard drives,
-        /// <see cref="AzureStorageType.StandardSSD"/> specifies standard SSD based drives,
-        /// <see cref="AzureStorageType.PremiumSSD"/> specifies fast SSD based drives, and finally
-        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.
-        /// <note>
-        /// Azure recommends that most production VMs deploy with SSDs.
-        /// </note>
-        /// </para>
-        /// <note>
-        /// <para>
-        /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
-        /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
-        /// for more information.
-        /// </para>
-        /// <para>
-        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
-        /// NEONKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
-        /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
-        /// <see cref="AzureStorageType.UltraSSD"/>.
-        /// </para>
-        /// </note>
-        /// </remarks>
         [JsonProperty(PropertyName = "StorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "storageType", ApplyNamingConventions = false)]
         [DefaultValue(AzureStorageType.Default)]
         public AzureStorageType StorageType { get; set; } = AzureStorageType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the Azure disk to be used as the node's primary disk.
-        /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
+        /// Optionally specifies the size of the Azure disk to be used as the node's primary operating system disk.
+        /// This defaults to <c>null</c> indicating that <see cref="AzureHostingOptions.DefaultDiskSize"/>
         /// will be used.
         /// </summary>
         /// <remarks>
@@ -116,8 +92,8 @@ namespace Neon.Kube.ClusterDef
         public string DiskSize { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the Azure storage type to be used for the the node's OpenEBS cStor disk (if any).  This defaults
-        /// to <see cref="AzureStorageType.Default"/> which indicates that <see cref="AzureHostingOptions.DefaultOpenEbsStorageType"/>
+        /// Optionally specifies the Azure storage type to be used for the node's OpenEBS cStor/Mayastor disk (if any).  This defaults
+        /// to <see cref="AzureStorageType.Default"/> indicating that <see cref="AzureHostingOptions.DefaultOpenEbsStorageType"/>
         /// will specify the volume type for the node.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -126,8 +102,8 @@ namespace Neon.Kube.ClusterDef
         public AzureStorageType OpenEbsStorageType { get; set; } = AzureStorageType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the Azure disk to be used for the node's OpenEBS cStor disk (if any).
-        /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultOpenEbsDiskSize"/>
+        /// Optionally specifies the size of the Azure disk to be used for the node's OpenEBS cStor/Mayastor disk (if any).
+        /// This defaults to <c>null</c> indicating that <see cref="AzureHostingOptions.DefaultOpenEbsDiskSize"/>
         /// will be used for the node.
         /// </summary>
         /// <remarks>

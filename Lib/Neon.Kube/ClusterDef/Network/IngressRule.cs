@@ -46,13 +46,13 @@ namespace Neon.Kube.ClusterDef
     {
         /// <summary>
         /// The default TCP idle timeout in minutes.  TCP connections managed by a rule
-        /// will be reset when the idle timeout is exceeded and <see cref="IdleTcpReset"/>
+        /// will be reset when the idle timeout is exceeded and <see cref="TcpIdleReset"/>
         /// is set to <c>true</c>.
         /// </summary>
         public const int DefaultTcpIdleTimeoutMinutes = 4;
 
         /// <summary>
-        /// The name of the ingress rule.
+        /// Specifies the name of the ingress rule.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
@@ -60,7 +60,7 @@ namespace Neon.Kube.ClusterDef
         public string Name { get; set; }
 
         /// <summary>
-        /// Identifies the network protocol.  This defaults to <see cref="IngressProtocol.Tcp"/>.
+        /// Optionally specifies the network protocol.  This defaults to <see cref="IngressProtocol.Tcp"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Protocol", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "protocol", ApplyNamingConventions = false)]
@@ -68,7 +68,7 @@ namespace Neon.Kube.ClusterDef
         public IngressProtocol Protocol { get; set; } = IngressProtocol.Tcp;
 
         /// <summary>
-        /// The external ingress port used to handle external (generally Internet) traffic 
+        /// Specifies the external ingress port used to handle external (generally Internet) traffic 
         /// received by the cluster load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "ExternalPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -77,7 +77,7 @@ namespace Neon.Kube.ClusterDef
         public int ExternalPort { get; set; }
 
         /// <summary>
-        /// The port on cluster nodes where external traffic received by the load balancer 
+        /// Specifies the port on cluster nodes where external traffic received by the load balancer 
         /// on <see cref="ExternalPort"/> will be forwarded.  The cluster's ingress gateway
         /// (Istio) will be configured to listen for traffic on this port and route it into
         /// the cluster.
@@ -89,7 +89,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// The target ingress port internal to the cluster.  The cluster's ingress gateway
+        /// Specifies the target ingress port internal to the cluster.  The cluster's ingress gateway
         /// (Istio) applies routing rules (virtual service) to the network traffic as it was
         /// received on <see cref="TargetPort"/>.  This decouples routing rules from <see cref="NodePort"/>
         /// which may change for different hosting environments.
@@ -153,18 +153,16 @@ namespace Neon.Kube.ClusterDef
         /// <see cref="IngressProtocol.Http"/>, <see cref="IngressProtocol.Https"/>, and
         /// <see cref="IngressProtocol.Tcp"/>.  Inbound TCP connections that have no network
         /// traffic going either way will be closed by supported load balancers or routers.
-        /// This defaults to <see cref="DefaultTcpIdleTimeoutMinutes"/> (<b>4 minutes</b>).
+        /// This defaults to <b>4 minutes</b>.
         /// </para>
         /// <note>
-        /// <para>
         /// At this point, this property is supported only in cloud environments where we
         /// can easily control the cluster's external loag balancer.  This also has no
-        /// impact for non-TCP rules.
-        /// </para>
-        /// <para>
-        /// Also note that this value may be modified to ensure that it honors the range of
-        /// values supported by the current cloud.
-        /// </para>
+        /// impact for <see cref="IngressProtocol.Udp"/> protocol.
+        /// </note>
+        /// <note>
+        /// Cluster setup may modify this value to ensure that it honors the range of
+        /// values supported by the target cloud cloud.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "TcpIdleTimeoutMinutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -181,7 +179,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Optionally controls whether the cluster router or load balancer sends a TCP RESET
+        /// Optionally specifies whether the cluster router or load balancer sends a TCP RESET
         /// packet to both ends of a TCP connection that has been idle for longer than
         /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>true</c>.
         /// </para>
@@ -191,10 +189,10 @@ namespace Neon.Kube.ClusterDef
         /// impact for non-TCP rules.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "IdleTcpReset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "idleTcpReset", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "TcpIdleReset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tcpIdleReset", ApplyNamingConventions = false)]
         [DefaultValue(true)]
-        public bool IdleTcpReset { get; set; } = true;
+        public bool TcpIdleReset { get; set; } = true;
 
         /// <summary>
         /// Validates the options.

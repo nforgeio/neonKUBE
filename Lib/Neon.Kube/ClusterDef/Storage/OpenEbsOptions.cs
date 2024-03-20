@@ -58,8 +58,8 @@ namespace Neon.Kube.ClusterDef
         public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
-        /// The size of the NFS file system to be created for the cluster.  This defaults
-        /// to <b>10 GiB</b> and cannot be any smaller.
+        /// Specifies the size of the NFS file system to be created for the cluster.
+        /// This defaults to <b>10 GiB</b> and cannot be any smaller.
         /// </summary>
         [JsonProperty(PropertyName = "NfsSize", Required = Required.Default)]
         [YamlMember(Alias = "nfsSize", ApplyNamingConventions = false)]

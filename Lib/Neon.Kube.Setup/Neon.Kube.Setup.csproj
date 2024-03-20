@@ -35,7 +35,9 @@
 
     <ItemGroup>
         <EmbeddedResource Remove="Resources\Helm\README.md" />
-        <Folder Include="Resources\Helm\cluster-crds\templates\" />
+        <Folder Include="Resources\Helm\crd-cluster\templates\" />
+        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
+        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -185,5 +187,17 @@
             </ItemGroup>
         </Otherwise>
     </Choose>
+
+    <!-- DISABLING: This seems to interact badly with the OperatorSDK Analyzer -->
+
+    <!--
+    <Target Name="CleanCrds" BeforeTargets="Clean">
+        <ItemGroup>
+            <FilesToClean Include="Resources\Helm\neon-cluster-operator\crds\*.*" />
+        </ItemGroup>
+
+        <Delete Files="@(FilesToClean)"/>
+    </Target>
+    -->
 
 </Project>

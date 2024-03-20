@@ -61,10 +61,10 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// The AWS access key ID that identifies the IAM key created for the IAM
+        /// Specifies the AWS access key ID that identifies the IAM key created for the IAM
         /// user assigned to NEONKUBE for management activities, including creating
         /// the cluster.  This combined with <see cref="SecretAccessKey"/> will be
-        /// used to confirm the identity.
+        /// used to confirm the identity.  This is required.
         /// </summary>
         [JsonProperty(PropertyName = "AccessKeyId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "accessKeyId", ApplyNamingConventions = false)]
@@ -72,7 +72,8 @@ namespace Neon.Kube.ClusterDef
         public string AccessKeyId { get; set; }
 
         /// <summary>
-        /// The AWS secret used to confirm the <see cref="AccessKeyId"/> identity.
+        /// Specifies the AWS secret used to authenticate the <see cref="AccessKeyId"/>.
+        /// This is required.
         /// </summary>
         [JsonProperty(PropertyName = "SecretAccessKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "secretAccessKey", ApplyNamingConventions = false)]
@@ -187,8 +188,8 @@ namespace Neon.Kube.ClusterDef
         public int WorkerPlacementPartitions { get; set; } = 1;
 
         /// <summary>
-        /// AWS resource group where all cluster components are to be provisioned.  This defaults
-        /// to "neon-" plus the cluster name but can be customized as required.
+        /// Specifies the AWS resource group where all cluster components are to be provisioned.
+        /// This defaults to "neon-" plus the cluster name but can be customized as required.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
@@ -230,7 +231,7 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// Non EBS optimized instances perform disk operation I/O to EBS volumes using the same
         /// network used for other network operations.  This means that you may see some disk
-        /// performance declines when your instance is busy serving web traffic or running
+        /// performance issues when your instance is busy serving web traffic or running
         /// database queries, etc.
         /// </para>
         /// <para>

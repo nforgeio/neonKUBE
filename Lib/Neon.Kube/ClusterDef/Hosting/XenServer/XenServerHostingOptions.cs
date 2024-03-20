@@ -42,7 +42,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Identifies the XenServer storage repository to be used to store the XenServer
+        /// Specifies the XenServer storage repository to be used to store the XenServer
         /// node template as well as the cluster virtual machine images.  This defaults to
         /// <b>Local storage</b>.
         /// </summary>
@@ -52,7 +52,7 @@ namespace Neon.Kube.ClusterDef
         public string StorageRepository { get; set; } = defaultStorageRepository;
 
         /// <summary>
-        /// Optionally directs XenCenter to create the virtual machines using a snapshot of
+        /// Optionally directs XenServer to create the virtual machines using a snapshot of
         /// the virtual machine template rather than creating a full copy.  This defaults
         /// to <c>false</c>.
         /// </summary>
@@ -72,9 +72,9 @@ namespace Neon.Kube.ClusterDef
         /// <note>
         /// For snapshots to work, the storage repository must support them and the virtual
         /// machine template must reside in the same repository where the virtual machines
-        /// are being created.  The current <c>neon-cli</c> implementation persists the
+        /// are being created.  The current <b>neon-cli</b> implementation persists the
         /// cluster VM templates to the local storage repository, so support for non-local
-        /// storage repositories is not support out-of-the-box at this time.
+        /// storage repositories is not supported out-of-the-box at this time.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Snapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

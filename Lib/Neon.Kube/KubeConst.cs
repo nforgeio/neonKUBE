@@ -224,7 +224,7 @@ namespace Neon.Kube
         /// with our prefix and the cluster version number.
         /// </summary>
         [KubeValue]
-        public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
+        public const string NeonKubeImageTag = "neonkube-" + KubeVersion.NeonKube;
 
         /// <summary>
         /// The size of the OS disk used for base images.
@@ -514,6 +514,6 @@ namespace Neon.Kube
         /// package manager is already busy performing another operation, such
         /// as checking for daily updates.
         /// </summary>
-        public const string SafeAptGetToolPath = $"{KubeNodeFolder.Bin}/safe-apt-get";        
+        public const string SafeAptGetToolPath = $"{KubeNodeFolder.Bin}/safe-apt-get";
     }
 }

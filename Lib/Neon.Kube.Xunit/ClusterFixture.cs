@@ -88,7 +88,7 @@ namespace Neon.Kube.Xunit
     /// isLocked: false         # $lt;-- test clusters need to be unlocked
     /// timeSources:
     /// - pool.ntp.org
-    /// kubernetes:
+    /// kubelet:
     ///   allowPodsOnControlPlane: true
     /// hosting:
     ///   environment: hyperv
@@ -581,7 +581,7 @@ namespace Neon.Kube.Xunit
 
             if (string.IsNullOrEmpty(imageUriOrPath))
             {
-                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: KubeVersions.BuildBranch).Result;
+                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: KubeVersion.BuildBranch).Result;
             }
 
             if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
@@ -661,7 +661,7 @@ namespace Neon.Kube.Xunit
                         throw new NeonKubeException($"Cluster is locked: {cluster.Name}");
                     }
 
-                    if (clusterHealth.State == ClusterState.Healthy && clusterInfo.ClusterVersion == KubeVersions.NeonKube)
+                    if (clusterHealth.State == ClusterState.Healthy && clusterInfo.ClusterVersion == KubeVersion.NeonKube)
                     {
                         // We need to reset an existing cluster to ensure it's in a known state.
 

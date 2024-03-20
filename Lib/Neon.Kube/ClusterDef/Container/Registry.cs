@@ -57,10 +57,10 @@ namespace Neon.Kube.ClusterDef
         /// This must be a valid Kubernetes name:
         /// </para>
         /// <list type="bullet">
-        /// <item>contain no more than 253 characters</item>
-        /// <item>contain only lowercase alphanumeric characters, '-' or '.'</item>
-        /// <item>start with an alphanumeric character</item>
-        /// <item>end with an alphanumeric character</item>
+        /// <item>includes no more than 253 characters</item>
+        /// <item>includes only lowercase alphanumeric characters, '-' or '.'</item>
+        /// <item>starts with an alphanumeric character</item>
+        /// <item>ends with an alphanumeric character</item>
         /// </list>
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
@@ -86,7 +86,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Optionally blocks pulls of images from registries that match <see cref="Prefix"/>.  
-        /// This defaults to <c>false.</c>
+        /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Blocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "blocked", ApplyNamingConventions = false)]

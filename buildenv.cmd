@@ -41,12 +41,12 @@ set NK_CACHE=%NK_ROOT%\Build-cache
 set NK_SNIPPETS=%NK_ROOT%\Snippets
 set NK_TEST=%NK_ROOT%\Test
 set NK_TEMP=C:\Temp
-set NK_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
+set NK_ACTIONS_ROOT=%NF_REPOS%\neonCLOUD\Automation\actions
 set NEON_CLUSTER_TESTING=1
 
 REM Persist the environment variables.
 
-setx NK_REPOS "%NK_REPOS%" /M                          > nul
+setx NK_REPOS "%NK_REPOS%" /M                         > nul
 setx NK_ROOT "%NK_ROOT%" /M                           > nul
 setx NK_TOOLBIN "%NK_TOOLBIN%" /M                     > nul
 setx NK_BUILD "%NK_BUILD%" /M                         > nul
@@ -96,3 +96,4 @@ echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
 echo ============================================================================================
+pause

@@ -621,30 +621,30 @@ nodeLeaseDurationSeconds: 40
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
-maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
-shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
-shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
+maxPods: {cluster.SetupState.ClusterDefinition.Kubelet.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodCriticalPodsSeconds}s
 rotateCertificates: true");
 
             clusterConfig.AppendLine($"systemReserved:");
 
-            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
+            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved[systemReservedkey]}");
             }
 
             clusterConfig.AppendLine($"kubeReserved:");
 
-            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
+            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved[kubeReservedKey]}");
             }
 
             clusterConfig.AppendLine($"evictionHard:");
 
-            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
+            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard[evictionHardKey]}");
             }
 
             // Append the KubeProxyConfiguration
@@ -1464,7 +1464,7 @@ exit 1
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
-                    if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                    if (cluster.SetupState.ClusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = (V1NodeList)null;
 
@@ -2131,6 +2131,7 @@ istioctl install --verify -y -f manifest.yaml
         /// <returns></returns>
         public static async Task ConfigureDesktopClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            ConnectCluster(controller);
             await ConfigureCertificatesInternalAsync(controller, controlNode, "desktop");
         }
 
@@ -2200,11 +2201,11 @@ istioctl install --verify -y -f manifest.yaml
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
 
                     secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
 
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
                 });
         }
 

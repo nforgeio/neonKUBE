@@ -385,7 +385,7 @@ ARCH=amd64
 
 # Install the Cilium CLI.
 
-CILIUM_CLI_VERSION={KubeVersions.CiliumCli}
+CILIUM_CLI_VERSION={KubeVersion.CiliumCli}
 curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/download/$CILIUM_CLI_VERSION/cilium-$OS-$ARCH.tar.gz{{,.sha256sum}}
 sha256sum --check cilium-$OS-$ARCH.tar.gz.sha256sum
 tar -C /usr/local/bin -xzvf cilium-$OS-$ARCH.tar.gz
@@ -418,10 +418,10 @@ $@"
 set -euo pipefail
 
 cd /tmp
-curl -L --retry 5 --retry-delay 10 https://github.com/istio/istio/releases/download/{KubeVersions.Istio}/istio-{KubeVersions.Istio}-linux-amd64.tar.gz -o istio-{KubeVersions.Istio}.tar.gz
-tar -xzvf istio-{KubeVersions.Istio}.tar.gz
-cp istio-{KubeVersions.Istio}/bin/* /usr/local/bin
-rm -r istio-{KubeVersions.Istio}*
+curl -L --retry 5 --retry-delay 10 https://github.com/istio/istio/releases/download/{KubeVersion.Istio}/istio-{KubeVersion.Istio}-linux-amd64.tar.gz -o istio-{KubeVersion.Istio}.tar.gz
+tar -xzvf istio-{KubeVersion.Istio}.tar.gz
+cp istio-{KubeVersion.Istio}/bin/* /usr/local/bin
+rm -r istio-{KubeVersion.Istio}*
 ";
                     SudoCommand(CommandBundle.FromScript(script))
                                 .EnsureSuccess();
@@ -619,7 +619,7 @@ location = ""{KubeConst.LocalClusterRegistryHostName}""
             //-----------------------------------------------------------------
             // Install and configure CRI-O.
 
-            var crioVersionFull    = Version.Parse(KubeVersions.Crio);
+            var crioVersionFull    = Version.Parse(KubeVersion.Crio);
             var crioVersionNoPatch = new Version(crioVersionFull.Major, crioVersionFull.Minor);
             var install            = reconfigureOnly ? "false" : "true";
 
@@ -994,7 +994,7 @@ global_auth_file = """"
 
 # The image used to instantiate infra containers.
 # This option supports live configuration reload.
-pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersions.Pause}""
+pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersion.Pause}""
 
 # The path to a file containing credentials specific for pulling the pause_image from
 # above. The file is similar to that of /var/lib/kubelet/config.json
@@ -1120,7 +1120,7 @@ chmod 664 /etc/neonkube/pinned-images
 # Replace the CRI-O binary with our custom one.
 
 systemctl stop crio
-curl {KubeHelper.CurlOptions} {KubeDownloads.NeonKubeStageBucketUri}/cri-o/cri-o.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
+curl {KubeHelper.CurlOptions} {KubeDownloads.NeonKubeStageBucketUri}/cri-o/cri-o.{KubeVersion.Crio}.gz | gunzip --stdout > /usr/bin/crio
 systemctl start crio
 ";
                 var bundle         = CommandBundle.FromScript(crioUpdateScript);
@@ -1394,7 +1394,7 @@ rm -rf linux-amd64
                                     throw new FileNotFoundException($"Setup image folder [{imageFolder}] has no [.import] file.");
                                 }
 
-                                targetTag = KubeVersions.NeonKubeContainerImageTag;
+                                targetTag = KubeVersion.NeonKubeContainerImageTag;
                             }
 
                             var sourceImage = $"{registry}/{imageName}:{targetTag}";
@@ -1591,11 +1591,7 @@ rm -rf linux-amd64
                         {
                             // Perform the install.
 
-<<<<<<< HEAD
-                            var kubernetesFullVersion    = SemanticVersion.Parse(KubeVersions.Kubernetes);
-=======
-                            var kubernetesFullVersion    = SemanticVersion.Parse(KubeVersions.Kubernetes);
->>>>>>> master
+                            var kubernetesFullVersion    = SemanticVersion.Parse(KubeVersion.Kubernetes);
                             var kubernetesVersionNoPatch = new Version(kubernetesFullVersion.Major, kubernetesFullVersion.Minor);
 
                             var mainScript =

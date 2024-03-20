@@ -56,7 +56,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Azure account subscription ID obtained from the Azure portal.
+        /// Specifies your Azure account subscription ID.
         /// </summary>
         [JsonProperty(PropertyName = "SubscriptionId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "subscriptionId", ApplyNamingConventions = false)]
@@ -64,7 +64,7 @@ namespace Neon.Kube.ClusterDef
         public string SubscriptionId { get; set; }
 
         /// <summary>
-        /// Tenant ID generated when creating the neon tool's Azure service principal.
+        /// Specifies your Azure accoount Tenant ID.
         /// </summary>
         [JsonProperty(PropertyName = "TenantId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "tenantId", ApplyNamingConventions = false)]
@@ -72,7 +72,7 @@ namespace Neon.Kube.ClusterDef
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Client/Application ID for the application created to manage Azure access to NEONKUBE provisioning and management tools.. 
+        /// Client/Application ID for the application created to manage Azure access to NEONKUBE provisioning and management tools.
         /// </summary>
         [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientId", ApplyNamingConventions = false)]
@@ -80,7 +80,7 @@ namespace Neon.Kube.ClusterDef
         public string ClientId { get; set; }
 
         /// <summary>
-        /// ClientSecret/AppPassword generated when creating the neon tool's Azure service principal.
+        /// Specifies the ClientSecret/AppPassword generated when creating the neon tool's Azure service principal.
         /// </summary>
         [JsonProperty(PropertyName = "ClientSecret", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientSecret", ApplyNamingConventions = false)]
@@ -88,7 +88,7 @@ namespace Neon.Kube.ClusterDef
         public string ClientSecret { get; set; }
 
         /// <summary>
-        /// Identifies the target Azure region (e.g. <b>westus</b>).
+        /// Specifies the target Azure region (e.g. <b>westus</b>).
         /// </summary>
         [JsonProperty(PropertyName = "Region", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "region", ApplyNamingConventions = false)]
@@ -97,14 +97,14 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Azure resource group where all cluster components are to be provisioned.  This defaults
-        /// to "neon-" plus the cluster name but can be customized as required.
+        /// Optionally spoecifies the Azure resource group where all cluster components are to be provisioned.
+        /// This defaults to <b>"neon-"</b> plus the cluster name but can be customized as required.
         /// </para>
         /// <note>
         /// <para>
         /// <b>IMPORTANT:</b> Everything in this resource group will be deleted when the cluster is
         /// removed.  This means that you must be very careful when adding other resources to this
-        /// group because these will be deleted as well.
+        /// group because they will be deleted as well.
         /// </para>
         /// </note>
         /// </summary>
@@ -114,9 +114,12 @@ namespace Neon.Kube.ClusterDef
         public string ResourceGroup { get; set; }
 
         /// <summary>
+        /// Optionally disables VM proximity placement.  This defaults to <c>false</c>.
+        /// </summary>>
+        /// <remarks>
         /// <para>
         /// NEONKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
-        /// by default.  This ensures the smallest possible network latency between the cluster VMs.
+        /// by default.  This ensures the shortest possible network latency between the cluster VMs.
         /// </para>
         /// <note>
         /// <para>
@@ -144,7 +147,7 @@ namespace Neon.Kube.ClusterDef
         /// This property defaults to <c>false</c>.  You can disable the proximity placement
         /// constraint by setting this to <c>true</c>.
         /// </para>
-        /// </summary>
+        /// </remarks>
         [JsonProperty(PropertyName = "DisableProximityPlacement", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "disableProximityPlacement", ApplyNamingConventions = false)]
         [DefaultValue(false)]
@@ -159,15 +162,11 @@ namespace Neon.Kube.ClusterDef
         public AzureNetworkOptions Network { get; set; }
 
         /// <summary>
-        /// The DNS domain prefix for the public IP address to be assigned to the cluster.
-        /// This defaults to <b>"neon-UUID"</b> where UUID is generated.
+        /// Optionally specifies the DNS domain prefix for the public IP address
+        /// to be assigned to the cluster.  This defaults to <b>neon-UUID</b>
+        /// where UUID is generated.
         /// </summary>
         /// <remarks>
-        /// <note>
-        /// <b>Recomendation:</b> To ensure that there's no conflicts with other 
-        /// services deployed to Azure by you or other companies, we recommend that
-        /// you generate a GUID and assign it to this property.
-        /// </note>
         /// <para>
         /// This must be unique across all services deployed to an Azure region (your
         /// services as well as any other Azure cluster).  The IP address will be exposed
@@ -194,14 +193,14 @@ namespace Neon.Kube.ClusterDef
         public string DomainLabel { get; set; }
 
         /// <summary>
-        /// Specifies the target Azure environment.  This defaults to the 
-        /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
-        /// for other possibilities.
+        /// Optionally specifies the target Azure cloud environment.  This defaults to the 
+        /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/> for other
+        /// possibilities.
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "cloud", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cloud", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public AzureCloudEnvironment Environment { get; set; } = null;
+        public AzureCloudEnvironment Cloud { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -221,9 +220,9 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies the number of Azure update domains the cluster workers will 
+        /// Optionally specifies the number of Azure update domains the cluster workers will 
         /// distributed across.  This defaults to <b>20</b>  You may customize this
-        /// with a value in the range of <b>2</b>...<b>20</b>.
+        /// with a value in the range of: <b>2...20</b>
         /// </para>
         /// <para>
         /// Azure automatically distributes VMs across the specified number of update
@@ -235,7 +234,7 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// A value of <b>2</b> indicates that one half of the cluster servers may be rebooted
         /// at the same time during an update domain upgrade.  A value of <b>20</b> indicates 
-        /// that one twentieth of your VMs may be rebooted at a time.
+        /// that one twentieth of your VMs may be rebooted in parallel.
         /// </para>
         /// <note>
         /// <para>
@@ -272,7 +271,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
+        /// Specifies the default Azure virtual machine size to use for cluster nodes.  The available VM sizes are listed 
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
         /// </para>
         /// <note>
@@ -320,19 +319,19 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Specifies the default Azure disk size to be used when cluster node primary disks.
-        /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes
+        /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes.
         /// via <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="AzureStorageType.StandardHDD"/>, <see cref="AzureStorageType.StandardSSD"/>, and
-        /// <see cref="AzureStorageType.PremiumSSD"/> disks may be provisioned in these
+        /// <see cref="AzureStorageType.StandardHDD"/>, <see cref="AzureStorageType.StandardSSD"/>,
+        /// <see cref="AzureStorageType.PremiumSSD"/> and <see cref="AzureStorageType.PremiumSSDv2"/> disks may be provisioned in these
         /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
         /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
         /// </para>
         /// <para>
         /// <see cref="AzureStorageType.UltraSSD"/> based disks can be provisioned in these sizes:
-        /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
+        /// <b>4 GiB</b>, <b>8 GiB</b>, <b>16 GiB</b>, <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>, <b>512 GiB</b>,
         /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
         /// </para>
         /// <remarks>
@@ -357,18 +356,19 @@ namespace Neon.Kube.ClusterDef
         public string DefaultDiskSize { get; set; } = defaultDiskSize;
 
         /// <summary>
-        /// Specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
+        /// Optionally specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
         /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
         /// nodes via <see cref="AzureNodeOptions.OpenEbsStorageType"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbstorageType", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DefaultOpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEbstorageType", ApplyNamingConventions = false)]
         [DefaultValue(defaultOpenEbsStorageType)]
         public AzureStorageType DefaultOpenEbsStorageType { get; set; } = defaultOpenEbsStorageType;
 
         /// <summary>
-        /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>
-        /// but can be overridden for specific cluster nodes via <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
+        /// Optionally specifies the default size for cluster node secondary data disks used for OpenEBS storage.
+        /// This defaults to <b>128 GiB</b> but can be overridden for specific cluster nodes via
+        /// <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -471,9 +471,9 @@ namespace Neon.Kube.ClusterDef
 
             // Verify [Environment].
 
-            if (Environment != null)
+            if (Cloud != null)
             {
-                Environment.Validate(clusterDefinition);
+                Cloud.Validate(clusterDefinition);
             }
 
             // Verify [DefaultVmSize]

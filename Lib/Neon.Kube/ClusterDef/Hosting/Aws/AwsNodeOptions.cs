@@ -45,9 +45,9 @@ namespace Neon.Kube.ClusterDef
     {
         /// <summary>
         /// <para>
-        /// Optionally specifies the type of ECB instance to provision for this node.  The available
-        /// instance types are listed <a href="https://aws.amazon.com/ec2/instance-types/">here</a>.
-        /// This defaults to <see cref="AwsHostingOptions.DefaultInstanceType"/>.
+        /// Optionally specifies the type of ECB instance to provision for this node.
+        /// See <a href="https://aws.amazon.com/ec2/instance-types/">AWS Instance Types</a>
+        /// for the instance types currently supported by AWS.
         /// </para>
         /// <note>
         /// NEONKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
@@ -110,7 +110,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Optionally specifies the AWS placement group partition the node will be provisioned
         /// within.  This is a <b>1-based</b> partition index which <b>defaults to 0</b>, indicating
-        /// that node placement will be handled automatically.
+        /// that node placement will be handled automatically by AWS.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -138,7 +138,7 @@ namespace Neon.Kube.ClusterDef
         public int PlacementPartition { get; set; } = 0;
 
         /// <summary>
-        /// Optionally specifies the type of AWS volume to be used as the node's primary disk.  This defaults
+        /// Optionally specifies the type of AWS volume to be used as the node's primary operating system disk.  This defaults
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultInstanceType"/>
         /// will specify the volume type for the node.
         /// </summary>
@@ -148,7 +148,7 @@ namespace Neon.Kube.ClusterDef
         public AwsVolumeType VolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the AWS volume to be used as the node's primary disk.
+        /// Optionally specifies the size of the AWS volume to be used as the node's primary operating system disk.
         /// This defaults to <c>null</c> which indicates that <see cref="AwsHostingOptions.DefaultVolumeSize"/>
         /// will be used.
         /// </summary>
@@ -164,7 +164,7 @@ namespace Neon.Kube.ClusterDef
         public string VolumeSize { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the AWS volume type to be used for the the node's OpenEBS cStor disk (if any).  This defaults
+        /// Optionally specifies the AWS volume type to be used for the node's OpenEBS cStor disk (if any).  This defaults
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEbsVolumeType"/>
         /// will specify the volume type for the node.
         /// </summary>
@@ -174,7 +174,7 @@ namespace Neon.Kube.ClusterDef
         public AwsVolumeType OpenEbsVolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS cStor disk (if any).
+        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS cStor/Maystor disk (if any).
         /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
         /// will be used for the node.
         /// </summary>

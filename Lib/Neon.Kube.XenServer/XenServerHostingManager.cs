@@ -753,7 +753,7 @@ namespace Neon.Kube.Hosting.XenServer
             await SyncContext.Clear;
 
             var xenClient    = xenSshProxy.Metadata;
-            var templateName = debugMode ? $"neonkube-base" : $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
+            var templateName = debugMode ? $"neonkube-base" : $"neonkube-{KubeVersion.NeonKubeWithBranchPart}";
 
             // Download the base/node template to the workstation if it's not already present.
 
@@ -972,9 +972,9 @@ namespace Neon.Kube.Hosting.XenServer
             var xenClient = xenSshProxy.Metadata;
             var hostInfo  = xenClient.GetHostInfo();
 
-            if (hostInfo.Version < KubeVersions.MinXenServerVersion)
+            if (hostInfo.Version < KubeVersion.MinXenServerVersion)
             {
-                throw new NotSupportedException($"NEONKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+                throw new NotSupportedException($"NEONKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersion.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
             }
 
             foreach (var node in GetHostedNodes(xenClient))
@@ -986,7 +986,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
+                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersion.NeonKubeWithBranchPart}",
                     vcpus:                      vcpus,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,

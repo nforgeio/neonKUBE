@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -53,6 +54,7 @@ namespace Neon.Kube.ClusterDef
         /// If <see cref="AzureHostingOptions.DefaultStorageType"/>=<see cref="Default"/>
         /// then <see cref="StandardSSD"/> will be provisioned.
         /// </summary>
+        [EnumMember(Value = "default")]
         Default = 0,
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace Neon.Kube.ClusterDef
         /// also very inexpensive.  These may be suited for test or latency
         /// insensitive clusters.  These are available in sizes up to 32TiB.
         /// </summary>
+        [EnumMember(Value = "standard-hdd")]
         StandardHDD,
 
         /// <summary>
@@ -67,6 +70,7 @@ namespace Neon.Kube.ClusterDef
         /// better latancy and reliability than <see cref="StandardHDD"/>.
         /// These are available in sizes up to 32TiB.
         /// </summary>
+        [EnumMember(Value = "standard-ssd")]
         StandardSSD,
 
         /// <summary>
@@ -74,6 +78,7 @@ namespace Neon.Kube.ClusterDef
         /// are suitable for I/O intensive workloads.  These are available in sizes
         /// up to 32TiB.
         /// </summary>
+        [EnumMember(Value = "premium-ssd")]
         PremiumSSD,
 
         /// <summary>
@@ -87,6 +92,7 @@ namespace Neon.Kube.ClusterDef
         /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
         /// </note>
         /// </summary>
+        [EnumMember(Value = "premium-ssd-v2")]
         PremiumSSDv2,
 
         /// <summary>
@@ -99,6 +105,7 @@ namespace Neon.Kube.ClusterDef
         /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
         /// </note>
         /// </summary>
-        UltraSSD,
+        [EnumMember(Value = "ultra-ssd")]
+        UltraSSD
     }
 }

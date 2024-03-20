@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        KubernetesOptions.cs
+// FILE:        KubeletOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -43,9 +43,10 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Describes the Kubernetes options for a NEONKUBE.
+    /// Describes the options for the Kubernetes Kubelet service deployed
+    /// on all cluster nodes.
     /// </summary>
-    public class KubernetesOptions
+    public class KubeletOptions
     {
         private const string minVersion              = "1.13.0";
         private const string defaultVersion          = "default";
@@ -54,28 +55,9 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubernetesOptions()
+        public KubeletOptions()
         {
         }
-
-        /// <summary>
-        /// The version of Kubernetes to be installed.  This defaults to <b>default</b> which
-        /// will install the latest tested version of Kubernetes.  The minimum supported
-        /// version is <b>1.13.0</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "version", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVersion)]
-        public string Version { get; set; } = defaultVersion;
-
-        /// <summary>
-        /// The version of Kubernetes dashboard to be installed.  This defaults to <b>default</b> which
-        /// will install the latest tested version of Kubernetes.
-        /// </summary>
-        [JsonProperty(PropertyName = "DashboardVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "dashboardVersion", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVersion)]
-        public string DashboardVersion { get; set; } = defaultDashboardVersion;
 
         /// <summary>
         /// Enables or disables specific Kubernetes features.  This can be used to enable
@@ -91,25 +73,31 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
         /// </para>
+        /// <para>
+        /// NEONKUBE clusters enable specific features by default when you you haven't
+        /// explicitly disabled them via this property.  Note that some features are 
+        /// required and cannot be disabled.
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>EphemeralContainers</b></term>
+        ///     <description>
+        ///     Enables the ability to add ephemeral containers to running pods.
+        ///     This comes in handy for debugging running pods.
+        ///     </description>
+        /// </item>
+        /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
 
-        /// <summary>
-        /// The version of Helm to be installed.  This defaults to <b>default</b> which
-        /// will install a reasonable version for the Kubernetes release being installed.
-        /// </summary>
-        [JsonProperty(PropertyName = "HelmVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "helmVersion", ApplyNamingConventions = false)]
-        [DefaultValue("default")]
-        public string HelmVersion { get; set; } = "default";
 
         /// <summary>
         /// Enable pods to be scheduled on cluster control-plane nodes.  This defaults to <c>null</c>
         /// which will allow pods to be scheduled on control-plane nodes if the cluster consists only of
-        /// control-plane nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
+        /// control-plane nodes (e.g. for a single node cluster).  This defaults to <c>false</c> for
         /// clusters with worker nodes.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPodsOnControlPlane", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -118,10 +106,7 @@ namespace Neon.Kube.ClusterDef
         public bool? AllowPodsOnControlPlane { get; set; } = null;
 
         /// <summary>
-        /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
-        /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
-        /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
-        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. Default: 250
+        /// Specifies the maximum number of Pods that can be scheduled on a node. This defaults to: <b>250</b>
         /// </summary>
         [JsonProperty(PropertyName = "MaxPodsPerNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "maxPodsPerNode", ApplyNamingConventions = false)]
@@ -129,10 +114,9 @@ namespace Neon.Kube.ClusterDef
         public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
-        /// Specfies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
-        /// while gracefully terminating pods on the node.  This is expressed in seconds and must be
-        /// greater than zero.  This defaults to <b>360 seconds (65 minutes)</b> and cannot be less
-        /// than <b>30 seconds</b>.
+        /// Specifies seconds Kubelet will delay node shutdown while gracefully terminating pods
+        /// on the node.  This is expressed in seconds and must be at least <b>30 seconds</b>.  This
+        /// defaults to:<b>360 seconds</b>
         /// </summary>
         /// <remarks>
         /// <para>
@@ -174,9 +158,9 @@ namespace Neon.Kube.ClusterDef
         public int ShutdownGracePeriodSeconds { get; set; } = 360;
 
         /// <summary>
-        /// Specifies the amount of time that Kubelet running on the cluster nodes will delay node 
-        /// shutdown for critical nodes.  This defaults to <b>120 seconds (2 minutes)</b> and must
-        /// be less than <see cref="ShutdownGracePeriodSeconds"/> and not less than <b>30 seconds</b>.
+        /// Specifies the seconds that Kubelet will delay node shutdown for critical pods.  This
+        /// defaults to <b>120 seconds</b> and must be less than <see cref="ShutdownGracePeriodSeconds"/>
+        /// and not less than <b>30 seconds</b>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -218,8 +202,14 @@ namespace Neon.Kube.ClusterDef
         public int ShutdownGracePeriodCriticalPodsSeconds { get; set; } = 120;
 
         /// <summary>
-        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for non-kubernetes components. 
-        /// Currently only cpu and memory are supported. See http://kubernetes.io/docs/user-guide/compute-resources for more detail. Default: nil
+        /// <para>
+        /// Used to reserve system resources for Linux System related services.
+        /// See <a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources</a>
+        /// for more information.
+        /// </para>
+        /// <para>
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "SystemReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "systemReserved", ApplyNamingConventions = false)]
@@ -227,9 +217,14 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> SystemReserved { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for kubernetes system components.
-        /// Currently cpu, memory and local storage for root file system are supported. 
-        /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details. Default: nil
+        /// <para>
+        /// Used to reserve system resources for Kubernetes related services.
+        /// See <a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources</a>
+        /// for more information.
+        /// </para>
+        /// <para>
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "KubeReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "kubeReserved", ApplyNamingConventions = false)]
@@ -237,9 +232,14 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> KubeReserved { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// A is a map of signal names to quantities that defines hard eviction thresholds. For example: {"memory.available": "300Mi"}. 
-        /// To explicitly disable, pass a 0% or 100% threshold on an arbitrary resource. 
-        /// Default: memory.available: "100Mi" nodefs.available: "10%" nodefs.inodesFree: "5%" imagefs.available: "15%"
+        /// <para>
+        /// Used to specify hard eviction thresholds that Kubelet will use to evict pods with our
+        /// a grace period.  See <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/#hard-eviction-thresholds">Hard eviction thresholds</a>
+        /// for more information.
+        /// </para>
+        /// <para>
+        /// This defaults to an <b>empty map</b> to use the Kubernetes defaults.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "EvictionHard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "evictionHard", ApplyNamingConventions = false)]
@@ -247,69 +247,8 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> EvictionHard { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// Specifies the Kubernetes API Server log verbosity.  This defaults to <b>2</b>.
+        /// Specifies Kubernetes API Server options.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Here are the log verbosity levels:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>1</b></term>
-        ///     <description>
-        ///     Minimal details
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>2</b></term>
-        ///     <description>
-        ///     <b>default</b>: Useful steady state service status and significant changes to the system
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>3</b></term>
-        ///     <description>
-        ///     Extended information about changes.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>4</b></term>
-        ///     <description>
-        ///     Debug level verbosity.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>5</b></term>
-        ///     <description>
-        ///     Undefined
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>6</b></term>
-        ///     <description>
-        ///     Display requested resources.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>7</b></term>
-        ///     <description>
-        ///     Display HTTP request headers.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>8</b></term>
-        ///     <description>
-        ///     Display HTTP request contents.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>8</b></term>
-        ///     <description>
-        ///     Display HTTP request responses.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
         [JsonProperty(PropertyName = "ApiServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "apiServer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
@@ -325,33 +264,9 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
-
-            Version = Version ?? defaultVersion;
-            Version = Version.ToLowerInvariant();
+            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubelet)}";
 
             ApiServer ??= new ApiServerOptions();
-
-            if (Version != defaultVersion)
-            {
-                if (!System.Version.TryParse(Version, out var kubernetesVersion))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
-                }
-
-                if (kubernetesVersion < System.Version.Parse(minVersion))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
-                }
-            }
-
-            if (DashboardVersion != defaultDashboardVersion)
-            {
-                if (!System.Version.TryParse(DashboardVersion, out var vDashboard))
-                {
-                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
-                }
-            }
 
             // Add default NEONKUBE feature gates when the user has not already configured them.
 
@@ -369,40 +284,14 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
-            if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
-            {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
-            }
-
             if (!AllowPodsOnControlPlane.HasValue)
             {
                 AllowPodsOnControlPlane = clusterDefinition.Workers.Count() == 0;
             }
 
-            var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Hypervisor.GetMemory(clusterDefinition);
-
-            EvictionHard = EvictionHard ?? new Dictionary<string, string>();
-
-            if (!EvictionHard.ContainsKey("memory.available"))
-            {
-                EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
-
+            EvictionHard   = EvictionHard ?? new Dictionary<string, string>();
             SystemReserved = SystemReserved ?? new Dictionary<string, string>();
-
-            if (!SystemReserved.ContainsKey("memory"))
-            {
-                var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
-
-                SystemReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
-
-            KubeReserved = KubeReserved ?? new Dictionary<string, string>();
-
-            if (!KubeReserved.ContainsKey("memory"))
-            {
-                KubeReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-            }
+            KubeReserved   = KubeReserved ?? new Dictionary<string, string>();
 
             if (ShutdownGracePeriodSeconds < 30)
             {

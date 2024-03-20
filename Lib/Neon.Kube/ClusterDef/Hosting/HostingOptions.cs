@@ -69,7 +69,7 @@ namespace Neon.Kube.ClusterDef
         public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
-        /// Specifies the Amazon Web Services hosting settings.
+        /// Specifies the Amazon Web Services (AWS) hosting settings.
         /// </summary>
         [JsonProperty(PropertyName = "Aws", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "aws", ApplyNamingConventions = false)]

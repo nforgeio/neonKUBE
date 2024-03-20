@@ -48,8 +48,8 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Allow the Linux package manager to use IPv6 when communicating with
-        /// package mirrors.  This defaults to <c>false</c> to restrict access
-        /// to IPv4.
+        /// package mirrors.  This defaults to <c>false</c> to restrict updates
+        /// to using IPv4.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPackageManagerIPv6", Required = Required.Default)]
         [YamlMember(Alias = "allowPackageManagerIPv6", ApplyNamingConventions = false)]

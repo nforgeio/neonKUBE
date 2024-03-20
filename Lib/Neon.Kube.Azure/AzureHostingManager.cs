@@ -1500,9 +1500,9 @@ namespace Neon.Kube.Hosting.Azure
 
             var environment = ArmEnvironment.AzurePublicCloud;
 
-            if (azureOptions.Environment != null)
+            if (azureOptions.Cloud != null)
             {
-                switch (azureOptions.Environment.Name)
+                switch (azureOptions.Cloud.Name)
                 {
                     case AzureCloudEnvironments.GlobalCloud:
 
@@ -1526,12 +1526,12 @@ namespace Neon.Kube.Hosting.Azure
 
                     case AzureCloudEnvironments.Custom:
 
-                        environment = new ArmEnvironment(new Uri(azureOptions.Environment.Endpoint), azureOptions.Environment.Audience);
+                        environment = new ArmEnvironment(new Uri(azureOptions.Cloud.Endpoint), azureOptions.Cloud.Audience);
                         break;
 
                     default:
 
-                        throw new NotImplementedException($"Azure environment [{azureOptions.Environment.Name}] is not currently supported.");
+                        throw new NotImplementedException($"Azure environment [{azureOptions.Cloud.Name}] is not currently supported.");
                 }
             }
 
@@ -1842,7 +1842,7 @@ namespace Neon.Kube.Hosting.Azure
         {
             await SyncContext.Clear;
 
-            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersion.NeonKube);
             var cpuArchitecture = NeonHelper.CpuArchitecture.ToMemberString();
 
             if (cloudMarketplace)
@@ -1850,7 +1850,7 @@ namespace Neon.Kube.Hosting.Azure
                 // Query the headend to locate the marketplace offer to use.
 
                 var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64);
+                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersion.NeonKube, CpuArchitecture.amd64);
 
                 nodeImageRef = new ImageReference()
                 {
@@ -1874,8 +1874,8 @@ namespace Neon.Kube.Hosting.Azure
                 const string galleryResourceGroupName = "neonkube-images";
                 const string galleryName              = "neonkube.images";
 
-                var nodeImageName           = neonKubeVersion.IsPrerelease ? $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}{KubeVersions.BranchPart}"
-                                                                           : $"neonkube-node-{cpuArchitecture}{KubeVersions.BranchPart}";
+                var nodeImageName           = neonKubeVersion.IsPrerelease ? $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}{KubeVersion.BranchPart}"
+                                                                           : $"neonkube-node-{cpuArchitecture}{KubeVersion.BranchPart}";
                 var nodeImageVersionName    = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
                 var resourceGroupCollection = subscription.GetResourceGroups();
 
@@ -2800,7 +2800,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                     NodePort              = NetworkPorts.KubernetesApiServer,
                     Target                = IngressRuleTarget.ControlPlane,
                     AddressRules          = networkOptions.ManagementAddressRules,
-                    IdleTcpReset          = true,
+                    TcpIdleReset          = true,
                     TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
                 }
             };
@@ -2891,7 +2891,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                             Protocol                  = ToTransportProtocol(ingressRule.Protocol),
                             FrontendPort              = ingressRule.ExternalPort,
                             BackendPort               = ingressRule.NodePort,
-                            EnableTcpReset            = ingressRule.IdleTcpReset,
+                            EnableTcpReset            = ingressRule.TcpIdleReset,
                             IdleTimeoutInMinutes      = tcpIdleTimeout,
                             EnableFloatingIP          = false
                         });

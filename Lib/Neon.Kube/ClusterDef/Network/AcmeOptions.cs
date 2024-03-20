@@ -42,7 +42,7 @@ using Neon.Kube.Resources;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Describes CertManager related options.
+    /// Describes <b>CertManager</b> related options.
     /// </summary>
     public class AcmeOptions
     {
@@ -60,8 +60,8 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
-        /// This defaults to <b>504h</b> (21 days).  See <see cref="GoDuration.Parse(string)"/> for details 
+        /// Optionally specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
+        /// This defaults to <b>2160h0m0s</b> (90 days).  See <see cref="GoDuration.Parse(string)"/> for details 
         /// about the timespan format.
         /// </summary>
         [JsonProperty(PropertyName = "CertificateDuration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -70,8 +70,8 @@ namespace Neon.Kube.ClusterDef
         public string CertificateDuration { get; set; } = defaultCertificateDuration;
 
         /// <summary>
-        /// Specifies the time to wait before attempting to renew for internal cluster TLS certificates.
-        /// This must be less than <see cref="CertificateDuration"/> and defaults to <b>336h</b> (14 days).
+        /// Optionally specifies the time to wait before attempting to renew internal cluster TLS certificates.
+        /// This must be less than <see cref="CertificateDuration"/> and defaults to <b>720h0m0s</b> (24 days).
         /// See <see cref="GoDuration.Parse(string)"/> for details about the timespan format.
         /// </summary>
         [JsonProperty(PropertyName = "CertificateRenewBefore", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -80,7 +80,8 @@ namespace Neon.Kube.ClusterDef
         public string CertificateRenewBefore { get; set; } = defaultCertificateRenewBefore;
 
         /// <summary>
-        /// The specification of an Issuer. This includes any configuration required for the issuer.
+        /// Optionally specifies the certificate issuer, including any configuration required by the issuer.
+        /// This defaults to <c>null</c> which enables the standard NEONKUBE issuer.
         /// </summary>
         [JsonProperty(PropertyName = "Issuer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "issuer", ApplyNamingConventions = false)]

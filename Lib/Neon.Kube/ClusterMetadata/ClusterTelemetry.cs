@@ -130,8 +130,8 @@ namespace Neon.Kube
         /// The NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(KubeVersions.NeonKube)]
-        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
+        [DefaultValue(KubeVersion.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersion.NeonKube;
 
         /// <summary>
         /// Timestamp representing the date that the cluster was created.

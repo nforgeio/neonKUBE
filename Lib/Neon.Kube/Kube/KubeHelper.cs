@@ -2615,7 +2615,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return match.Groups["version"].Value == KubeVersions.Helm;
+                            return match.Groups["version"].Value == KubeVersion.Helm;
                         }
                         else
                         {
@@ -2635,15 +2635,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-windows-amd64.zip";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-arm64.tar.gz";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-linux-arm64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-darwin-arm64.tar.gz";
+                        return $"https://get.helm.sh/helm-v{KubeVersion.Helm}-darwin-arm64.tar.gz";
                     }
                     else
                     {
@@ -2699,7 +2699,7 @@ TCPKeepAlive yes
 
                         if (match.Success)
                         {
-                            return match.Groups["version"].Value == KubeVersions.CiliumCli;
+                            return match.Groups["version"].Value == KubeVersion.CiliumCli;
                         }
                         else
                         {
@@ -2719,15 +2719,15 @@ TCPKeepAlive yes
                 {
                     if (NeonHelper.IsWindows)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-windows-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-windows-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsLinux)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-linux-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-linux-amd64.tar.gz";
                     }
                     else if (NeonHelper.IsOSX)
                     {
-                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersions.CiliumCli}/cilium-darwin-amd64.tar.gz";
+                        return $"https://github.com/cilium/cilium-cli/releases/download/{KubeVersion.CiliumCli}/cilium-darwin-amd64.tar.gz";
                     }
                     else
                     {
@@ -2964,7 +2964,7 @@ TCPKeepAlive yes
         /// <returns>The <b>KubeVersion.cs</b> path.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
-        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersion.NeonKube"/>
         /// constant could not be located.
         /// </exception>
         private static string GetKubeVersionPath()
@@ -2997,7 +2997,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeVersions.NeonKube"/> constant value extracted from the 
+        /// Returns the <see cref="KubeVersion.NeonKube"/> constant value extracted from the 
         /// <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersion.cs</b> source file.  Note that the
         /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
@@ -3005,7 +3005,7 @@ TCPKeepAlive yes
         /// <returns>The <b>NeonKube</b> version.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
-        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersion.NeonKube"/>
         /// constant could not be located.
         /// </exception>
         public static SemanticVersion GetNeonKubeVersion()
@@ -3025,7 +3025,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Edits the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersion.cs</b> source file by setting
-        /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
+        /// the <see cref="KubeVersion.NeonKube"/> constant to the version passed.
         /// </summary>
         /// <param name="version">The new version number.</param>
         /// <returns>
@@ -3501,7 +3501,7 @@ TCPKeepAlive yes
             // table is up-to-date.  You'll need to update the target versioin in the
             // assertion below after updating the valid feature gates.
 
-            Covenant.Assert(KubeVersions.Kubernetes == "1.29.0", $"MAINTAINER: Valid feature gates may not match Kubernetes version [{KubeVersions.Kubernetes}].  Please update.");
+            Covenant.Assert(KubeVersion.Kubernetes == "1.29.0", $"MAINTAINER: Valid feature gates may not match Kubernetes version [{KubeVersion.Kubernetes}].  Please update.");
 
             if (validFeatureGates == null)
             {
@@ -3635,7 +3635,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Constructs a <see cref="PreprocessReader"/> capable of preprocessing version
-        /// constants defined by <see cref="KubeVersions"/>, <see cref="KubeNamespace"/>,
+        /// constants defined by <see cref="KubeVersion"/>, <see cref="KubeNamespace"/>,
         /// <see cref="KubePort"/> and <see cref="KubeConst"/> classes using references
         /// like <b>$&lt;KubeVersion.Kubernetes&gt;</b>.
         /// </summary>
@@ -3667,7 +3667,7 @@ TCPKeepAlive yes
                         typeof(KubeConst),
                         typeof(KubeNamespace),
                         typeof(KubePort),
-                        typeof(KubeVersions)
+                        typeof(KubeVersion)
                     };
 
                     foreach (var type in sourceTypes)

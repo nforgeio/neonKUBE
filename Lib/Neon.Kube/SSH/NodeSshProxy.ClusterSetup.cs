@@ -1412,7 +1412,7 @@ EOF
 
                     var sbFeatures = new StringBuilder();
 
-                    foreach (var featureGate in cluster.SetupState.ClusterDefinition.Kubernetes.FeatureGates
+                    foreach (var featureGate in cluster.SetupState.ClusterDefinition.Kubelet.FeatureGates
                         .Where(featureGate => KubeHelper.IsValidFeatureGate(featureGate.Key)))
                     {
                         sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
@@ -1838,7 +1838,7 @@ systemctl enable kubelet
                     var command    = (List<object>)container["command"];
                     var sbFeatures = new StringBuilder();
 
-                    foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates
+                    foreach (var featureGate in clusterDefinition.Kubelet.FeatureGates
                         .Where(featureGate => KubeHelper.IsValidFeatureGate(featureGate.Key)))
                     {
                         sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");

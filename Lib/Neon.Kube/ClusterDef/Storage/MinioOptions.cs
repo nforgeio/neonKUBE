@@ -56,7 +56,8 @@ namespace Neon.Kube.ClusterDef
         public int VolumesPerNode { get; set; } = 4;
 
         /// <summary>
-        /// The size of each volume to be mounted to each server.
+        /// The size of each volume to be mounted to each server.  This defaults to
+        /// <b>2 GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VolumeSize", Required = Required.Default)]
         [YamlMember(Alias = "volumeSize", ApplyNamingConventions = false)]
@@ -76,7 +77,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMinioServices))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {

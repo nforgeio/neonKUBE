@@ -62,7 +62,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 network:
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: azure
@@ -99,7 +99,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 network:
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: azure
@@ -142,7 +142,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 network:
-kubernetes:
+kubelet:
   allowPodsOnControlPlane: true
 hosting:
   environment: azure

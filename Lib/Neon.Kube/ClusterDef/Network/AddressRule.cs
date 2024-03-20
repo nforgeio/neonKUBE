@@ -132,20 +132,19 @@ namespace Neon.Kube.ClusterDef
         public bool IsAny => string.IsNullOrEmpty(AddressOrSubnet) || AddressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Returns the specified IP address or subnet or <b>"any"</b> or <c>null</c> for all possible IP addresses.
+        /// Returns the specified IP address or subnet or <b>"any"</b> for all possible IP addresses.
+        /// THis defaults to <b>"any"</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "AddressOrSubnet", Required = Required.AllowNull)]
+        [JsonProperty(PropertyName = "AddressOrSubnet", Required = Required.Always)]
         [YamlMember(Alias = "addressOrSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string AddressOrSubnet { get; private set; }
+        public string AddressOrSubnet { get; set; }
 
         /// <summary>
         /// Returns the action to performed for network traffic to/from the address or subnet.
         /// </summary>
         [JsonProperty(PropertyName = "Action", Required = Required.Always)]
         [YamlMember(Alias = "action", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public AddressRuleAction Action { get; private set; }
+        public AddressRuleAction Action { get; set; }
 
         /// <summary>
         /// Validates the address rule.

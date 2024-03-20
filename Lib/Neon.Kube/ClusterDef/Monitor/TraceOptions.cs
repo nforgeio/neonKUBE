@@ -47,7 +47,8 @@ namespace Neon.Kube.ClusterDef
     public class TraceOptions
     {
         /// <summary>
-        /// Trace retention period. Traces beyond this number of days will be purged by the ClusterManager
+        /// Specifies the trace retention period in days. Traces older than this will be purged.
+        /// This defaults to: <b>14 days</b>
         /// </summary>
         [JsonProperty(PropertyName = "TraceRetentionDays", Required = Required.Default)]
         [YamlMember(Alias = "traceRetentionDays", ApplyNamingConventions = false)]
@@ -162,7 +163,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemTraceServices))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {

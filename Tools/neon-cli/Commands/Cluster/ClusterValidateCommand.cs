@@ -80,9 +80,9 @@ ARGUMENTS:
             var clusterDefinition   = ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
             var featureGateWarnings = new List<string>();
 
-            if (clusterDefinition.Kubernetes.FeatureGates != null && clusterDefinition.Kubernetes.FeatureGates.Count > 0)
+            if (clusterDefinition.Kubelet.FeatureGates != null && clusterDefinition.Kubelet.FeatureGates.Count > 0)
             {
-                foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates
+                foreach (var featureGate in clusterDefinition.Kubelet.FeatureGates
                     .Where(featureGate => !KubeHelper.IsValidFeatureGate(featureGate.Key)))
                 {
                     featureGateWarnings.Add($"WARNING: [{featureGate.Key}] kubernetes feature gate is not supported");
@@ -95,7 +95,7 @@ ARGUMENTS:
             }
             else
             {
-                Console.WriteLine($"[{featureGateWarnings.Count}] feature gates are not supported by Kubernetes v{KubeVersions.Kubernetes}");
+                Console.WriteLine($"[{featureGateWarnings.Count}] feature gates are not supported by Kubernetes v{KubeVersion.Kubernetes}");
                 Console.WriteLine($"These feature gates will be ignored:");
                 Console.WriteLine();
 

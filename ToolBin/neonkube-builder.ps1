@@ -43,6 +43,7 @@ if ($codedoc)
     Write-Error " "
     Write-Error "ERROR: Code documentation builds are temporarily disabled until we"
     Write-Error "       port to DocFX.  SHFB doesn't work for multi-targeted projects."
+    Write-Error "       We also need to call the [neon-doc/neondoc-publish.cmd] script."
     Write-Error " "
     Write-Error "       https://github.com/nforgeio/neonkube/issues/1206"
     Write-Error " "
@@ -95,12 +96,12 @@ $env:PATH   += ";$nkBuild"
 $neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersion.cs" NeonKube)
 ThrowOnExitCode
 
-    #------------------------------------------------------------------------------
-	# Specify whether we're building with package or project references.
+#------------------------------------------------------------------------------
+# Specify whether we're building with package or project references.
 
-    # $todo(jefflill): We're hardcoding project references for now.
+# $todo(jefflill): We're hardcoding project references for now.
 
-    $env:NEON_BUILD_USE_NUGETS = "false"
+$env:NEON_BUILD_USE_NUGETS = "false"
 
 #------------------------------------------------------------------------------
 # Perform the operation.
@@ -160,7 +161,20 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
+        # We need to remove the [neon-cluster-operator] CRDs from time-to-time
+        # to prevent obsolete CRDs from accumulating.  This can happen when a
+        # CRD is removed from [Neon.Kube.Resources].  The [operator-sdk] analyzer
+        # regenerates these file, but doesn't know anything about removing old
+        # ones.
+        #
+        # Also, generated CRD files aren't tracked by git, so we can't delete
+        # them that way.
+
+        Remove-Item "$nkRoot\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds\*.yaml"
+
+        # Clean the bin/obj folders.
+
+        Invoke-Program neoncloud-clean
 
         Write-Info ""
         Write-Info "*******************************************************************************"

@@ -424,6 +424,11 @@ namespace Neon.Kube.Config
                 Users.Remove(user);
             }
 
+            foreach (var cluster in Clusters.Where(cluster => cluster.Name == clusterName).ToArray())
+            {
+                Clusters.Remove(cluster);
+            }
+
             Save();
         }
 

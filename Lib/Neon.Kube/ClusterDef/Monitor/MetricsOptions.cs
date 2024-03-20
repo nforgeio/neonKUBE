@@ -42,12 +42,13 @@ namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the options for configuring the cluster integrated Prometheus 
-    /// metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
+    /// metrics stack.
     /// </summary>
     public class MetricsOptions
     {
         /// <summary>
-        /// Indicates where Prometheus metrics should be stored.  This defaults to <see cref="MetricsStorageOptions.Ephemeral"/>.
+        /// Specifies where Prometheus metrics should be stored.
+        /// This defaults to <see cref="MetricsStorageOptions.Ephemeral"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Storage", Required = Required.Default)]
         [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
@@ -64,7 +65,7 @@ namespace Neon.Kube.ClusterDef
         {
             if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMetricServices))
             {
-                if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
