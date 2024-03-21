@@ -598,7 +598,8 @@ namespace Neon.Kube.K8s
                             return false;
                         }
 
-                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
+                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas
+                                                            && deployment.Status.ReadyReplicas == deployment.Status.Replicas);
                     }
                     catch
                     {
@@ -675,7 +676,8 @@ namespace Neon.Kube.K8s
                             return false;
                         }
 
-                        return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
+                        return statefulsets.Items.All(@set => @set.Status.AvailableReplicas == @set.Spec.Replicas
+                                                            && @set.Status.ReadyReplicas == @set.Status.Replicas);
                     }
                     catch
                     {
@@ -751,7 +753,8 @@ namespace Neon.Kube.K8s
                             return false;
                         }
 
-                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled);
+                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled
+                                                            && @set.Status.NumberReady == @set.Status.DesiredNumberScheduled);
                     }
                     catch
                     {
@@ -802,7 +805,8 @@ namespace Neon.Kube.K8s
                     {
                         var pod = await k8sCoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
 
-                        return pod.Status.Phase == "Running";
+                        return pod.Status.Phase == "Running" &&
+                            pod.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True");
                     }
                     catch
                     {
