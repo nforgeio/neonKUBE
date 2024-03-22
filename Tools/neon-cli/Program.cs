@@ -194,6 +194,8 @@ USAGE:
 
     neon toolpath           TOOLNAME
 
+    neon version            [OPTIONS]
+
 ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is

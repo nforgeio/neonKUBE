@@ -44,7 +44,7 @@ Prints the [neon-cli] version or compares the version to an argument.
 
 USAGE:
 
-    neon neon-version [OPTIONS]
+    neon version [OPTIONS]
 
 OPTIONS:
 
@@ -57,7 +57,7 @@ OPTIONS:
 
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "neon-version" }; 
+        public override string[] Words => new string[] { "version" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "-n", "--git", "--minimum" };
