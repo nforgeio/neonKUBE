@@ -75,7 +75,7 @@ namespace Neon.Kube.ClusterDef
 
             var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMinioServices))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemMinioServices))
             {
                 if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
@@ -93,7 +93,7 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
-            var serverCount = clusterDefinition.Nodes.Where(n => n.Labels.SystemMinioServices).Count();
+            var serverCount = clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices).Count();
 
             if (serverCount * VolumesPerNode < 4)
             {

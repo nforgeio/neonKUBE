@@ -149,7 +149,7 @@ namespace Neon.Kube.Setup
             }
 
             this.OperationTitle = title;
-            this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            this.nodes          = nodes.OrderBy(node => node.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
             this.clusterLogPath = Path.Combine(logFolder, KubeConst.ClusterLogName);
@@ -1126,7 +1126,7 @@ namespace Neon.Kube.Setup
         {
             if (isFaulted)
             {
-                throw new NeonKubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new NeonKubeException($"[{nodes.Count(node => node.IsFaulted)}] nodes are faulted.");
             }
         }
 

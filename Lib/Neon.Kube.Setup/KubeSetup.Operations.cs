@@ -130,7 +130,7 @@ backend harbor_backend_http
     mode                    http
     balance                 roundrobin");
 
-            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.SystemIstioServices))
+            foreach (var istioNode in cluster.Nodes.Where(node => node.Metadata.Labels.SystemIstioServices))
             {
                 sbHaProxyConfig.Append(
 $@"
@@ -144,7 +144,7 @@ backend harbor_backend
     mode                    tcp
     balance                 roundrobin");
 
-            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.SystemIstioServices))
+            foreach (var istioNode in cluster.Nodes.Where(node => node.Metadata.Labels.SystemIstioServices))
             {
                 sbHaProxyConfig.Append(
 $@"
@@ -206,7 +206,7 @@ spec:
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/label-nodes",
-                async () =>
+                (Func<Task>)(async () =>
                 {
                     controller.LogProgress(controlNode, verb: "label", message: "nodes");
 
@@ -218,7 +218,7 @@ spec:
                         {
                             controller.ThrowIfCancelled();
 
-                            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).Single();
+                            var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(node => node.Metadata.Name == node.Name)).Single();
 
                             var patch = new V1Node()
                             {
@@ -252,7 +252,7 @@ spec:
                     }
 
                     await Task.CompletedTask;
-                });
+                }));
         }
 
         /// <summary>
@@ -1432,7 +1432,7 @@ exit 1
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             controller.ThrowIfCancelled();
-            node.InvokeIdempotent("cluster-metadata",
+            node.InvokeIdempotent("cluster-manifest",
                 () =>
                 {
                     var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
@@ -1473,7 +1473,7 @@ exit 1
                            {
                                nodes = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
-                               if (!(nodes.Items.All(n => n.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True"))))
+                               if (!(nodes.Items.All(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True"))))
                                {
                                    throw new TimeoutException("Waiting for control-plane nodes.");
                                }
@@ -2505,7 +2505,7 @@ istioctl install --verify -y -f manifest.yaml
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/taint-nodes",
-                async () =>
+                (Func<Task>)(async () =>
                 {
                     controller.LogProgress(controlNode, verb: "taint", message: "nodes");
 
@@ -2517,7 +2517,7 @@ istioctl install --verify -y -f manifest.yaml
                         {
                             Spec = new V1NodeSpec()
                             {
-                                Taints = nodes.Items.Where(n => n.Name() == node.Name).FirstOrDefault().Spec.Taints
+                                Taints = nodes.Items.Where((Func<V1Node, bool>)(node => node.Name() == node.Name)).FirstOrDefault().Spec.Taints
                             }
                         };
 
@@ -2536,7 +2536,7 @@ istioctl install --verify -y -f manifest.yaml
 
                         await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), node.Metadata.Name);
                     }
-                });
+                }));
         }
 
         /// <summary>
@@ -5109,7 +5109,7 @@ $@"- name: StorageType
                     var configmap = new TypedConfigMap<ClusterManifest>(
                         name:       KubeConfigMapName.ClusterManifest, 
                         @namespace: KubeNamespace.NeonSystem, 
-                        data:       KubeSetup.ClusterManifest(debugMode));
+                        data:       ClusterManifest(debugMode));
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(configmap);
                 });

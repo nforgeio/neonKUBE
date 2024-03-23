@@ -63,7 +63,7 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemMetricServices))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemMetricServices))
             {
                 if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {

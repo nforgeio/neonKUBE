@@ -28,15 +28,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
+using k8s.Models;
 
 using Neon.Common;
 using Neon.IO;
 
-using k8s.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -180,7 +181,7 @@ namespace Neon.Kube.ClusterDef
             }
             else
             {
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.SystemTraceServices))
+                foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.SystemTraceServices))
                 {
                     node.Labels.SystemTraceServices = true;
                 }

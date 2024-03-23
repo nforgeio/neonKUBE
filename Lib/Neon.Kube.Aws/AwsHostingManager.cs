@@ -1547,7 +1547,7 @@ namespace Neon.Kube.Hosting.Aws
                     {
                         controller.ThrowIfCancelled();
 
-                        var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+                        var k8sNode = k8sNodes.Where(node => node.Metadata.Name == nodeDefinition.Name).Single();
 
                         var patch = new V1Node()
                         {

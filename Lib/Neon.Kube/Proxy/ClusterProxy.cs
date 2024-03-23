@@ -478,7 +478,7 @@ namespace Neon.Kube.Proxy
                     AddNode(nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0")), nodeDefinition);
                 }
 
-                this.DeploymentControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
+                this.DeploymentControlNode = Nodes.Where(node => node.Metadata.IsControlPane).OrderBy(n => n.Name).First();
             }
         }
 
@@ -600,7 +600,7 @@ namespace Neon.Kube.Proxy
         /// </summary>
         public IEnumerable<NodeSshProxy<NodeDefinition>> ControlNodes
         {
-            get { return Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name); }
+            get { return Nodes.Where(node => node.Metadata.IsControlPane).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -608,7 +608,7 @@ namespace Neon.Kube.Proxy
         /// </summary>
         public IEnumerable<NodeSshProxy<NodeDefinition>> Workers
         {
-            get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
+            get { return Nodes.Where(node => node.Metadata.IsWorker).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -730,7 +730,7 @@ namespace Neon.Kube.Proxy
         /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
         public NodeSshProxy<NodeDefinition> GetNode(string nodeName)
         {
-            var node = Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
+            var node = Nodes.SingleOrDefault(node => string.Compare(node.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
 
             if (node == null)
             {
@@ -747,7 +747,7 @@ namespace Neon.Kube.Proxy
         /// <returns>The node proxy instance or <c>null</c> if the named node does not exist.</returns>
         public NodeSshProxy<NodeDefinition> FindNode(string nodeName)
         {
-            return Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
+            return Nodes.SingleOrDefault(node => string.Compare(node.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
         /// <summary>
@@ -773,7 +773,7 @@ namespace Neon.Kube.Proxy
         public NodeSshProxy<NodeDefinition> GetReachableControlNode(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
             var controlNodeAddresses = ControlNodes
-                .Select(n => n.Address.ToString())
+                .Select(node => node.Address.ToString())
                 .ToList();
 
             var reachableHost = NetHelper.GetReachableHost(controlNodeAddresses, failureMode);
@@ -785,7 +785,7 @@ namespace Neon.Kube.Proxy
 
             // Return the node that is assigned the reachable address.
 
-            return ControlNodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
+            return ControlNodes.Where(node => node.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>
@@ -803,7 +803,7 @@ namespace Neon.Kube.Proxy
         {
             var nodeAddresses = Nodes
                 .Where(predicate)
-                .Select(n => n.Address.ToString())
+                .Select(node => node.Address.ToString())
                 .ToList();
 
             var reachableHost = NetHelper.GetReachableHost(nodeAddresses, failureMode);
@@ -815,7 +815,7 @@ namespace Neon.Kube.Proxy
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
+            return Nodes.Where(node => node.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>

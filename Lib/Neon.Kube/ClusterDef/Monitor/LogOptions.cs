@@ -69,7 +69,7 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"[{logOptionsPrefix}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.SystemLogServices))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemLogServices))
             {
                 if (clusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
                 {

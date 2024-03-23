@@ -311,7 +311,7 @@ namespace Neon.Kube.Setup
                             sbDisplay.AppendLine();
                             sbDisplay.AppendLine(" Workers:");
 
-                            foreach (var node in Nodes.Where(n => (n.Metadata as NodeDefinition).IsWorker))
+                            foreach (var node in Nodes.Where(node => (node.Metadata as NodeDefinition).IsWorker))
                             {
                                 sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }

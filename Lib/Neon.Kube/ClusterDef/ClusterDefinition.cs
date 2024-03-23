@@ -649,35 +649,35 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedNodes => Nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedNodes => Nodes.OrderBy(node => node.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster control-plane node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> ControlNodes => Nodes.Where(n => n.IsControlPane);
+        public IEnumerable<NodeDefinition> ControlNodes => Nodes.Where(node => node.IsControlPane);
 
         /// <summary>
         /// Enumerates the cluster control-plane node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedControlNodes => ControlNodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedControlNodes => ControlNodes.OrderBy(node => node.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Workers => Nodes.Where(n => n.IsWorker);
+        public IEnumerable<NodeDefinition> Workers => Nodes.Where(node => node.IsWorker);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedWorkerNodes => Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedWorkerNodes => Workers.OrderBy(node => node.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster control-plane nodes sorted by name followed by the worker nodes,
@@ -805,7 +805,7 @@ namespace Neon.Kube.ClusterDef
         {
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
-            foreach (var node in SortedNodes.OrderBy(n => n.Name))
+            foreach (var node in SortedNodes.OrderBy(node => node.Name))
             {
                 if (string.IsNullOrEmpty(node.Address))
                 {
