@@ -19,7 +19,7 @@
         <NeonOperatorGenerateCrds>True</NeonOperatorGenerateCrds>
     </PropertyGroup>
 
-    <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
+    <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" Condition="'$(NeonBuildUseNugets)' != 'true'" />
 
     <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
