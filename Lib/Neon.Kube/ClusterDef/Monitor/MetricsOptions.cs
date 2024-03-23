@@ -56,6 +56,16 @@ namespace Neon.Kube.ClusterDef
         public MetricsStorageOptions Storage { get; set; } = MetricsStorageOptions.Ephemeral;
 
         /// <summary>
+        /// Optionally specifies the interval in <b>seconds</b> that Prometheus will scrape metrics from
+        /// NeonKUBE cluster services.  This defaults to <b>zero</b> which has NeonKUBE choose a reasonable
+        /// value based in the size of your cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "ScrapeSeconds", Required = Required.Default)]
+        [YamlMember(Alias = "scrapeSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int ScrapeSeconds { get; set; } = 0;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -79,6 +89,11 @@ namespace Neon.Kube.ClusterDef
                         node.Labels.SystemMetricServices = true;
                     }
                 }
+            }
+
+            if (clusterDefinition.Monitor.Metrics.ScrapeSeconds < 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Monitor)}.{nameof(clusterDefinition.Monitor.Metrics)}.{nameof(clusterDefinition.Monitor.Metrics.ScrapeSeconds)}={clusterDefinition.Monitor.Metrics.ScrapeSeconds}] is invalid.");
             }
         }
     }

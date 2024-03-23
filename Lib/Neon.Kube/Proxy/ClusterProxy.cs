@@ -1615,7 +1615,7 @@ namespace Neon.Kube.Proxy
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
 
             //-----------------------------------------------------------------
-            // Reset Monitoring
+            // Reset Observability
 
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
         }

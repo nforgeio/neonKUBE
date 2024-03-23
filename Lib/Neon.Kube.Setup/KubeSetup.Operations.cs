@@ -474,7 +474,7 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    await InstallMonitoringAsync(controller);
+                    await InstallObservabilityAsync(controller);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
@@ -4718,11 +4718,11 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs an Neon Monitoring to the monitoring namespace.
+        /// Installs NeonKUBE observability components to the observability namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallMonitoringAsync(ISetupController controller)
+        public static async Task InstallObservabilityAsync(ISetupController controller)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
