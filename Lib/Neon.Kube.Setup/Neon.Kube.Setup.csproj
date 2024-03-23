@@ -88,11 +88,6 @@
         <None Remove="Resources\Helm\memcached\templates\_names.tpl" />
         <None Remove="Resources\Helm\memcached\templates\_tplvalues.tpl" />
         <None Remove="Resources\Helm\memcached\templates\_warnings.tpl" />
-        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (2).yaml" />
-        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (3).yaml" />
-        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (4).yaml" />
-        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (5).yaml" />
-        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy.yaml" />
         <None Remove="Resources\Helm\metrics-server\templates\serviceMonitor.yaml" />
         <None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
         <None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
