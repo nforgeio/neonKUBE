@@ -218,7 +218,7 @@ spec:
                         {
                             controller.ThrowIfCancelled();
 
-                            var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(node => node.Metadata.Name == node.Name)).Single();
+                            var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(n => n.Metadata.Name == node.Name)).Single();
 
                             var patch = new V1Node()
                             {
@@ -2517,7 +2517,7 @@ istioctl install --verify -y -f manifest.yaml
                         {
                             Spec = new V1NodeSpec()
                             {
-                                Taints = nodes.Items.Where((Func<V1Node, bool>)(node => node.Name() == node.Name)).FirstOrDefault().Spec.Taints
+                                Taints = nodes.Items.Where((n => n.Name() == node.Name)).FirstOrDefault().Spec.Taints
                             }
                         };
 
