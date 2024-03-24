@@ -697,10 +697,14 @@ namespace Neon.Kube.Hosting.HyperV
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The corresponding node definition if found or <c>null</c>.</returns>
+        /// <returns>
+        /// The corresponding node name if found, or <c>null</c> when the node VM
+        /// could not be identified.
+        /// </returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster?.SetupState?.ClusterDefinition != null);
             cluster.EnsureSetupMode();
 
             // Special case the NEONDESKTOP cluster.
@@ -738,23 +742,26 @@ namespace Neon.Kube.Hosting.HyperV
         /// Optionally specifies a cluster definition for situations where there may
         /// not be a current KubeConfig.
         /// </param>
-        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
+        /// <returns>
+        /// The corresponding node name if found, or <c>null</c> when the node VM
+        /// could not be identified.
+        /// </returns>
         private string VmNameToNodeName(string vmName, ClusterDefinition clusterDefinition = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
             Covenant.Assert(cluster.KubeConfig?.Cluster != null || clusterDefinition != null, "The cluster must be deployed or a cluster definition must be specified.");
 
+            var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
+
             if (clusterDefinition == null)
             {
-                // Special case the NEONDESKTOP cluster whose name is never prefixed.
+                // Special case the NEONDESKTOP cluster whose VM name is never prefixed.
 
                 if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
                     vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return vmName;
                 }
-
-                var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
 
                 if (!prefix.IsNullOrEmpty())
                 {
@@ -780,8 +787,6 @@ namespace Neon.Kube.Hosting.HyperV
                 {
                     return null;
                 }
-
-                var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
 
                 if (!prefix.IsNullOrEmpty())
                 {

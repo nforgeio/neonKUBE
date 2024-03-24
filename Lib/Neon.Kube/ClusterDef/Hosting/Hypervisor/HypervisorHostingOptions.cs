@@ -156,27 +156,28 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironment.XenServer"/> environment.  This is used to avoid
-        /// VM naming conflicts between different clusters.
+        /// on-premise hosting environments like <see cref="HostingEnvironment.HyperV"/>
+        /// and <see cref="HostingEnvironment.XenServer"/>.  This is used to avoid VM naming
+        /// conflicts between different clusters running on the same host.
         /// </para>
         /// <para>
-        /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
-        /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
-        /// value followed by a dash will be used.  If this is an empty string or whitespace then
-        /// the machine names will not be prefixed.
+        /// When this is <c>null</c> (the default) or the empty string, the cluster name followed
+        /// by a dash will prefix the provisioned virtual machine names.  When set to <b>"[none]"</b>,
+        /// the VM named won't be prefixed, otherwise <see cref="NamePrefix"/> followed by a dash
+        /// will be used as the VM prefix.
         /// </para>
         /// <note>
         /// Virtual machine name prefixes will always be converted to lowercase.
         /// </note>
         /// <note>
         /// This property is ignored for cloud hosting environments because cluster VMs will be
-        /// isolated in their own resource groups and private networks.
+        /// isolated in their own resource groups.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NamePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "namePrefix", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string NamePrefix { get; set; }  = null;
+        public string NamePrefix { get; set; } = null;
 
         /// <summary>
         /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments
@@ -193,13 +194,13 @@ namespace Neon.Kube.ClusterDef
                 return String.Empty;
             }
 
-            var prefix = string.Empty;
+            string prefix;
 
-            if (NamePrefix == null)
+            if (string.IsNullOrEmpty(NamePrefix))
             {
                 prefix = $"{clusterDefinition.Name}-".ToLowerInvariant();
             }
-            else if (string.IsNullOrWhiteSpace(NamePrefix))
+            else if (NamePrefix.Trim() == "[none]")
             {
                 prefix = string.Empty;
             }
@@ -225,13 +226,13 @@ namespace Neon.Kube.ClusterDef
                 return String.Empty;
             }
 
-            var prefix = string.Empty;
+            string prefix;
 
-            if (NamePrefix == null)
+            if (string.IsNullOrEmpty(NamePrefix))
             {
                 prefix = $"{configCluster.ClusterInfo.ClusterName}-".ToLowerInvariant();
             }
-            else if (string.IsNullOrWhiteSpace(NamePrefix))
+            else if (NamePrefix == "[none]")
             {
                 prefix = string.Empty;
             }

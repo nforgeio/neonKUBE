@@ -155,8 +155,8 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Specifies the prefix added by the hosting environments to virtual machine names.  This may
-        /// be the empty string form NEONKUBE clusters and always will be <c>null</c> for non-NEONKUBE
+        /// Specifies the prefix added by the hosting environment to virtual machine names.  This may
+        /// be the empty string for NEONKUBE clusters and always will be <c>null</c> for non-NEONKUBE
         /// clusters.
         /// </summary>
         [JsonIgnore]

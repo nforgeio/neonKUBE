@@ -698,10 +698,14 @@ namespace Neon.Kube.Hosting.XenServer
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The matching node definition or <c>null</c>.</returns>
+        /// <returns>
+        /// The corresponding node name if found, or <c>null</c> when the node VM
+        /// could not be identified.
+        /// </returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster?.SetupState?.ClusterDefinition != null);
             cluster.EnsureSetupMode();
 
             var prefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
@@ -726,7 +730,10 @@ namespace Neon.Kube.Hosting.XenServer
         /// defined in the cluster definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
+        /// <returns>
+        /// The corresponding node name if found, or <c>null</c> when the node VM
+        /// could not be identified.
+        /// </returns>
         private string VmNameToNodeName(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
