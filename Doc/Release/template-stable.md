@@ -7,6 +7,8 @@
 
 This release is **stable** and is ready for production.
 
+Release documentation: https://docs.neonforge.com/docs/neonkube
+
 # Release Taxonomy:
 
 | Release Type | Usage                   | Description                                                                        |
