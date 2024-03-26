@@ -241,7 +241,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Podman to be installed.
         /// </summary>
-        public const string Podman = "3.4.2";
+        public const string Podman = "5.0.0";
 
         /// <summary>
         /// The version of Calico to install.
