@@ -171,7 +171,8 @@ namespace Neon.Kube.GrpcProto.Desktop
                 Name           = grpcVirtualMachine.Name,
                 State          = NeonHelper.ParseEnum<VirtualMachineState>(grpcVirtualMachine.State),
                 NetAdapterName = grpcVirtualMachine.InterfaceName,
-                SwitchName     = grpcVirtualMachine.SwitchName
+                SwitchName     = grpcVirtualMachine.SwitchName,
+                Notes          = grpcVirtualMachine.Notes
             };
         }
 
@@ -191,7 +192,8 @@ namespace Neon.Kube.GrpcProto.Desktop
                 name:           virtualMachine.Name,
                 state:          NeonHelper.EnumToString(virtualMachine.State),
                 netAdapterName: virtualMachine.NetAdapterName,
-                switchName:     virtualMachine.SwitchName);
+                switchName:     virtualMachine.SwitchName,
+                notes:          virtualMachine.Notes);
         }
 
         //---------------------------------------------------------------------

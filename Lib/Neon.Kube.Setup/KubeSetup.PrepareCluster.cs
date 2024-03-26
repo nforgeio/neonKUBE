@@ -367,6 +367,50 @@ namespace Neon.Kube.Setup
                     setupState.Save();
                 });
 
+            // Register the cluster domain with the headend, except for NEONDESKTOP clusters.
+
+            controller.AddGlobalStep("neoncluster.io domain",
+                async controller =>
+                {
+                    controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
+
+                    if (options.DesktopReadyToGo)
+                    {
+                        setupState.ClusterId     = KubeHelper.GenerateClusterId();
+                        setupState.ClusterName   = clusterDefinition.Name;
+                        setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+                    }
+                    else
+                    {
+                        var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+                        var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                        var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
+
+                        var result = await headendClient.ClusterSetup.CreateClusterAsync();
+
+                        setupState.ClusterId      = result["Id"];
+                        setupState.NeonCloudToken = result["Token"];
+
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
+
+                        if (options.BuildDesktopImage)
+                        {
+                            setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+                        }
+                        else
+                        {
+                            setupState.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                                clusterId: setupState.ClusterId,
+                                addresses: clusterAddresses);
+                        }
+                    }
+
+                    // Log the cluster ID for debugging purposes.
+
+                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+                    setupState.Save();
+                });
+
             // Give the hosting manager a chance to add any additional provisioning steps.
 
             hostingManager.AddProvisioningSteps(controller);
@@ -458,85 +502,6 @@ namespace Neon.Kube.Setup
                     });
             }
 
-            // Register the cluster domain with the headend, except for NEONDESKTOP clusters.
-            //
-            // Note that we're also going to add this entry to the local [$/etc/hosts] file so clusters
-            // will be recable from this machine even when not connected to the Internet.  We'll do
-            // this for NEONDESKTOP clusters as well.
-
-            controller.AddGlobalStep("neoncluster.io domain",
-                async controller =>
-                {
-                    string    hostName;
-                    IPAddress hostAddress;
-
-                    controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
-
-                    if (options.DesktopReadyToGo)
-                    {
-                        setupState.ClusterId     = KubeHelper.GenerateClusterId();
-                        setupState.ClusterName   = clusterDefinition.Name;
-                        setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
-
-                        hostName    = KubeConst.DesktopClusterDomain;
-                        hostAddress = IPAddress.Parse(clusterDefinition.NodeDefinitions.Values.Single().Address);
-                    }
-                    else
-                    {
-                        var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                        var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                        var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
-
-                        var result = await headendClient.ClusterSetup.CreateClusterAsync();
-
-                        setupState.ClusterId      = result["Id"];
-                        setupState.NeonCloudToken = result["Token"];
-
-                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
-
-                        if (options.BuildDesktopImage)
-                        {
-                            setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
-                        }
-                        else
-                        {
-                            setupState.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
-                                clusterId: setupState.ClusterId,
-                                addresses: clusterAddresses);
-                        }
-
-                        hostName    = setupState.ClusterId;
-                        hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
-                    }
-
-                    // Log the cluster ID for debugging purposes.
-
-                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
-
-                    // For the NEONDESKTOP cluster, add these records to both the
-                    // node's local [/etc/hosts] file.  Note that the node is named
-                    // "neon-desktop".
-                    //
-                    //      ADDRESS     desktop.neoncluster.io
-                    //      ADDRESS     *.desktop.neoncluster.io
-
-                    if (options.DesktopReadyToGo)
-                    {
-                        controller.SetGlobalStepStatus($"configure: node local DNS");
-
-                        var node    = cluster.Nodes.Single();
-                        var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
-
-                        sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
-                        sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
-
-                        node.UploadText("/etc/hosts", sbHosts, permissions: "644");
-                    }
-
-                    setupState.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
-                    setupState.Save();
-                });
-
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
             //
@@ -547,18 +512,37 @@ namespace Neon.Kube.Setup
                 hostingManager.AddPostProvisioningSteps(controller);
             }
 
-            // NEONDESKTOP clusters need to configure the workstation login, etc.
+            // NEONDESKTOP cluster preparation.
 
             if (options.DesktopReadyToGo)
             {
+                // Renew the certificate for NEONDESKTOP because it might have expired
+                // since the desktop image was built.
+
+                controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode);
+
+                // We need to append these DNS records the node's local [/etc/hosts] file
+                // so the cluster will work when offline.
+                //
+                //      ADDRESS     desktop.neoncluster.io
+                //      ADDRESS     *.desktop.neoncluster.io
+
+                var hostName    = KubeConst.DesktopClusterDomain;
+                var hostAddress = IPAddress.Parse(clusterDefinition.NodeDefinitions.Values.Single().Address);
+
+                controller.SetGlobalStepStatus($"configure: node /etc/hosts");
+
+                var node    = cluster.Nodes.Single();
+                var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
+
+                sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
+                sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
+
+                node.UploadText("/etc/hosts", sbHosts, permissions: "644");
+
+                // NEONDESKTOP clusters need to configure the workstation login, etc.
+
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
-            }
-
-            // We need to renew the cert for neon desktop.
-
-            if (options.DesktopReadyToGo)
-            {
-                controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode); ;
             }
 
             // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
@@ -650,6 +634,7 @@ namespace Neon.Kube.Setup
                         setupState.DeploymentStatus = ClusterDeploymentStatus.Prepared;
                     }
 
+                    setupState.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     setupState.Save();
                 },
                 quiet: true);

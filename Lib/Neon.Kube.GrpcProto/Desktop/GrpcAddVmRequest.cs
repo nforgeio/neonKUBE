@@ -75,6 +75,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Optionally specifies any additional virtual drives to be created and 
         /// then attached to the new virtual machine.
         /// </param>
+        /// <param name="notes">Optionally specifies any notes to persist with the VM.</param>
         /// <remarks>
         /// <note>
         /// The <see cref="GrpcVirtualDrive.Path"/> property of <paramref name="extraDrives"/> may be
@@ -93,7 +94,8 @@ namespace Neon.Kube.GrpcProto.Desktop
             bool                            checkpointDrives  = false,
             string?                         templateDrivePath = null,
             string?                         switchName        = null,
-            IEnumerable<GrpcVirtualDrive>?  extraDrives       = null)
+            IEnumerable<GrpcVirtualDrive>?  extraDrives       = null,
+            string?                         notes             = null)
         {
             this.MachineName       = machineName;
             this.MemorySize        = memorySize;
@@ -104,6 +106,7 @@ namespace Neon.Kube.GrpcProto.Desktop
             this.TemplateDrivePath = templateDrivePath;
             this.SwitchName        = switchName;
             this.ExtraDrives       = extraDrives?.ToList();
+            this.Notes             = notes;
         }
 
         /// <summary>
@@ -169,5 +172,11 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         [DataMember(Order = 9)]
         public List<GrpcVirtualDrive>? ExtraDrives { get; set; }
+
+        /// <summary>
+        /// Optionally specifies any VM notes.
+        /// </summary>
+        [DataMember(Order = 10)]
+        public string? Notes { get; set; }
     }
 }

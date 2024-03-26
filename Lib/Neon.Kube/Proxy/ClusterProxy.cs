@@ -1259,7 +1259,6 @@ namespace Neon.Kube.Proxy
                 Latitude           = lat,
                 Longitude          = lon,
                 FeatureOptions     = SetupState.ClusterDefinition.Features,
-
                 ClusterId          = SetupState.ClusterId,
                 Domain             = SetupState.ClusterDomain,
                 PublicAddresses    = SetupState.PublicAddresses
