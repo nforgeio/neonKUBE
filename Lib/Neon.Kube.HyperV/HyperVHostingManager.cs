@@ -1093,15 +1093,11 @@ namespace Neon.Kube.Hosting.HyperV
         /// Returns information about the cluster virtual machines and the cluster node names.
         /// </summary>
         /// <param name="hyperv">The Hyper-V proxy to use.</param>
-        /// <param name="clusterDefinition">
-        /// Optionally specifies a cluster definition for situations where there may
-        /// not be a current KubeConfig.
-        /// </param>
         /// <returns>The cluster virtual machine information.</returns>
-        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv, ClusterDefinition clusterDefinition = null)
+        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv)
         {
-            Covenant.Requires<ArgumentNullException>(hyperv != null, nameof(hyperv));
             Covenant.Assert(cluster != null);
+            Covenant.Assert(!string.IsNullOrEmpty(cluster.Id));
 
             // We're going to rely on the tags we encoded into the VM notes to
             // ensure that the VMs is associated with the current cluster and
@@ -1389,7 +1385,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(GetClusterVms(hyperv, clusterDefinition), parallelOptions,
+                Parallel.ForEach(GetClusterVms(hyperv), parallelOptions,
                     clusterVm =>
                     {
                         if (clusterVm.Machine.State == VirtualMachineState.Running || clusterVm.Machine.State == VirtualMachineState.Starting)

@@ -5041,7 +5041,7 @@ $@"- name: StorageType
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                     {
-                        controller.LogProgress(controlNode, verb: "login", message: "workstation to Harbor");
+                        controller.LogProgress(controlNode, verb: "login", message: "workstation to harbor");
 
                         NeonHelper.ExecuteCapture(NeonHelper.VerifiedDockerCli,
                             new object[]

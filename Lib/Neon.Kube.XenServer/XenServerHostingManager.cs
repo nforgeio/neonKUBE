@@ -142,6 +142,9 @@ namespace Neon.Kube.Hosting.XenServer
         //---------------------------------------------------------------------
         // Static members
 
+        private const string clusterIdTag = "neon-cluster-id";
+        private const string nodeNameTag  = "neon-node-name";
+
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
@@ -339,7 +342,7 @@ namespace Neon.Kube.Hosting.XenServer
             var readiness = new HostingReadiness();
 
             // Collect information about the cluster nodes so we can verify that
-            //cluster makes sense.
+            // the cluster makes sense.
 
             var hostedNodes = clusterDefinition.Nodes
                 .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
@@ -424,7 +427,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 // $hack(jefflill):
                 //
-                // We need the [xenClient] and [sshProxy] to share the same log writer so that both
+                // We need [xenClient] and [sshProxy] to share the same log writer so that both
                 // XenServer commands and normal step/status related logging will be written to
                 // the log file for each xenClient.
                 //
@@ -980,6 +983,18 @@ namespace Neon.Kube.Hosting.XenServer
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
+                // $hack(jefflill):
+                //
+                // I couldn't figure out how to set VM tags (xe reports them as read-only)
+                // so we're going to encode tags in the VM description.  It would be nice
+                // to figure out how to use tags at some point.
+                //
+                // We're going to encode these on a single line like:
+                //
+                //      key1=value;key2=value...
+
+                var description = $"{clusterIdTag}={cluster.Id};{nodeNameTag}={node.Name}";
+
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
@@ -987,7 +1002,8 @@ namespace Neon.Kube.Hosting.XenServer
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Hosting.XenServer.Snapshot,
-                    primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository);
+                    primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository,
+                    description:                description);
 
                 xenSshProxy.Status = string.Empty;
 
@@ -1309,14 +1325,50 @@ namespace Neon.Kube.Hosting.XenServer
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <summary>
+        /// Parses tags from a virtial machine notes.
+        /// </summary>
+        /// <param name="machine">Specifies the virtual machine.</param>
+        /// <returns>The dictionary holding the tags and values.</returns>
+        private Dictionary<string, string> ParseDescriptionTags(XenVirtualMachine machine)
+        {
+            Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
+            Covenant.Assert(cluster != null);
+
+            var tags = new Dictionary<string, string>();
+
+            foreach (var tag in machine.Description.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var equalPos = tag.IndexOf('=');
+
+                if (equalPos < 0)
+                {
+                    continue;
+                }
+
+                var key   = tag.Substring(0, equalPos).Trim();
+                var value = tag.Substring(equalPos + 1).Trim();
+
+                if (!string.IsNullOrEmpty(key))
+                {
+                    tags[key] = value;
+                }
+            }
+
+            return tags;
+        }
+
+        /// <summary>
         /// Returns information about the cluster virtual machines and the related node names.
         /// </summary>
         /// <returns>The cluster virtual machine information.</returns>
         private List<ClusterVm> GetClusterVms()
         {
-            // We're going to assume that all virtual machines that match cluster node names
-            // (after stripping off any cluster prefix) belong to the cluster and will
-            // map the actual VM states to our node states.
+            Covenant.Assert(cluster != null);
+            Covenant.Assert(!string.IsNullOrEmpty(cluster.Id));
+
+            // We're going to rely on the tags we encoded into the VM description
+            // to ensure that the VMs is associated with the current cluster and
+            // also to obtain the node node name.
 
             var clusterVms = new List<ClusterVm>();
 
@@ -1324,9 +1376,15 @@ namespace Neon.Kube.Hosting.XenServer
             {
                 foreach (var machine in xenClient.Machine.List())
                 {
-                    var nodeName = VmNameToNodeName(machine.NameLabel);
+                    var tags = ParseDescriptionTags(machine);
 
-                    if (nodeName != null)
+                    if (!tags.TryGetValue(nodeNameTag, out var nodeName) ||
+                        !tags.TryGetValue(clusterIdTag, out var clusterId))
+                    {
+                        continue;
+                    }
+
+                    if (clusterId == cluster.Id)
                     {
                         clusterVms.Add(new ClusterVm(machine, xenClient, nodeName));
                     }

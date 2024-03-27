@@ -376,6 +376,7 @@ namespace Neon.Kube.Setup
 
                     if (options.DesktopReadyToGo)
                     {
+                        cluster.Id               =
                         setupState.ClusterId     = KubeHelper.GenerateClusterId();
                         setupState.ClusterName   = clusterDefinition.Name;
                         setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
@@ -388,6 +389,7 @@ namespace Neon.Kube.Setup
 
                         var result = await headendClient.ClusterSetup.CreateClusterAsync();
 
+                        cluster.Id                =
                         setupState.ClusterId      = result["Id"];
                         setupState.NeonCloudToken = result["Token"];
 

@@ -482,7 +482,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster ID.
         /// </summary>
-        public string Id { get; private set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Returns the cluster domain.
