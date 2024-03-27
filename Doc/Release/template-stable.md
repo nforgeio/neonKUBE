@@ -7,12 +7,6 @@
 
 This release is **stable** and is ready for production.
 
-Release documentation: https://docs.neonforge.com/docs/neonkube
-
-# Details
-
-**$TODO: DOCUMENT RELEASE DETAILS HERE!**
-
 <details>
 <summary>Release Taxonomy</summary>
 
@@ -25,3 +19,9 @@ Release documentation: https://docs.neonforge.com/docs/neonkube
 | **STABLE**   | production              | Ready for production                                                               |
 
 </details>
+
+Release documentation: https://docs.neonforge.com/docs/neonkube
+
+# Details
+
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**

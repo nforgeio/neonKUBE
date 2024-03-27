@@ -7,12 +7,6 @@
 
 This release is **not a production ready** and is intended to introduce new features and fixes.  This release is suitable for testing purposes but be advised that prerelease  features may see breaking changes in future releases or be removed completely.
 
-Release documentation: https://docs.neonforge.com/docs/neonkube
-
-# Details
-
-**$TODO: DOCUMENT RELEASE DETAILS HERE!**
-
 <details>
 <summary>Release Taxonomy</summary>
 
@@ -25,3 +19,9 @@ Release documentation: https://docs.neonforge.com/docs/neonkube
 | **STABLE**   | production              | Ready for production                                                               |
 
 </details>
+
+Release documentation: https://docs.neonforge.com/docs/neonkube
+
+# Details
+
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**
