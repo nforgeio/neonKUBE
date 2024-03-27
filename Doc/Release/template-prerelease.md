@@ -9,7 +9,12 @@ This release is **not a production ready** and is intended to introduce new feat
 
 Release documentation: https://docs.neonforge.com/docs/neonkube
 
-# Release Taxonomy:
+# Details
+
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**
+
+<details>
+<summary>Release Taxonomy</summary>
 
 | Release Type | Usage                   | Description                                                                        |
 | :----------: | :---------------------: | :--------------------------------------------------------------------------------- |
@@ -19,6 +24,4 @@ Release documentation: https://docs.neonforge.com/docs/neonkube
 | **RC**       | release&nbsp;candidate  | Nearly ready for a stable production release                                       |
 | **STABLE**   | production              | Ready for production                                                               |
 
-# Details
-
-**$TODO: DOCUMENT RELEASE DETAILS HERE!**
+</details>

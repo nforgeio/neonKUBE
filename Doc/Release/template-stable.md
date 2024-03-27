@@ -1,4 +1,4 @@
-# PRODUCTION
+# STABLE
 
 | Component       | Version                |
 | --------------- | :--------------------- |
@@ -9,7 +9,12 @@ This release is **stable** and is ready for production.
 
 Release documentation: https://docs.neonforge.com/docs/neonkube
 
-# Release Taxonomy:
+# Details
+
+**$TODO: DOCUMENT RELEASE DETAILS HERE!**
+
+<details>
+<summary>Release Taxonomy</summary>
 
 | Release Type | Usage                   | Description                                                                        |
 | :----------: | :---------------------: | :--------------------------------------------------------------------------------- |
@@ -18,6 +23,5 @@ Release documentation: https://docs.neonforge.com/docs/neonkube
 | **PREVIEW**  | public&nbsp;testing     | More stable early release.  Release breaking changes are less likely than **BETA** |
 | **RC**       | release&nbsp;candidate  | Nearly ready for a stable production release                                       |
 | **STABLE**   | production              | Ready for production                                                               |
-# Details
 
-**$TODO: DOCUMENT RELEASE DETAILS HERE!**
+</details>
