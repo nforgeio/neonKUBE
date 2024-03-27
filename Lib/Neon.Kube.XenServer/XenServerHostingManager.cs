@@ -983,17 +983,11 @@ namespace Neon.Kube.Hosting.XenServer
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
-                // $hack(jefflill):
-                //
-                // I couldn't figure out how to set VM tags (xe reports them as read-only)
-                // so we're going to encode tags in the VM description.  It would be nice
-                // to figure out how to use tags at some point.
-                //
-                // We're going to encode these on a single line like:
-                //
-                //      key1=value;key2=value...
-
-                var description = $"{clusterIdTag}={cluster.Id};{nodeNameTag}={node.Name}";
+                var tags = new string[]
+                {
+                    $"{clusterIdTag}={cluster.Id}",
+                    $"{nodeNameTag}={node.Name}"
+                };
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
@@ -1003,7 +997,8 @@ namespace Neon.Kube.Hosting.XenServer
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Hosting.XenServer.Snapshot,
                     primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository,
-                    description:                description);
+                    description:                $"NeonKUBE Cluster: {cluster.Name}",
+                    tags:                       tags);
 
                 xenSshProxy.Status = string.Empty;
 
@@ -1325,36 +1320,44 @@ namespace Neon.Kube.Hosting.XenServer
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <summary>
-        /// Parses tags from a virtial machine notes.
+        /// <para>
+        /// Parses tags virtual machine tags like <b>NAME</b>> or <b>NAME=VALUE</b> by extracting the
+        /// name and value (if present) and adding those to a dictionary.
+        /// </para>
+        /// <note>
+        /// Tag items without a value will have their value property set to <c>null</c>.
+        /// </note>
         /// </summary>
         /// <param name="machine">Specifies the virtual machine.</param>
         /// <returns>The dictionary holding the tags and values.</returns>
-        private Dictionary<string, string> ParseDescriptionTags(XenVirtualMachine machine)
+        private Dictionary<string, string> ParseTags(XenVirtualMachine machine)
         {
             Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
             Covenant.Assert(cluster != null);
 
-            var tags = new Dictionary<string, string>();
+            var parsedTags = new Dictionary<string, string>();
 
-            foreach (var tag in machine.Description.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var tag in machine.Tags)
             {
                 var equalPos = tag.IndexOf('=');
 
                 if (equalPos < 0)
                 {
-                    continue;
+                    parsedTags[tag] = null;
                 }
-
-                var key   = tag.Substring(0, equalPos).Trim();
-                var value = tag.Substring(equalPos + 1).Trim();
-
-                if (!string.IsNullOrEmpty(key))
+                else
                 {
-                    tags[key] = value;
+                    var key   = tag.Substring(0, equalPos).Trim();
+                    var value = tag.Substring(equalPos + 1).Trim();
+
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        parsedTags[key] = value;
+                    }
                 }
             }
 
-            return tags;
+            return parsedTags;
         }
 
         /// <summary>
@@ -1376,7 +1379,7 @@ namespace Neon.Kube.Hosting.XenServer
             {
                 foreach (var machine in xenClient.Machine.List())
                 {
-                    var tags = ParseDescriptionTags(machine);
+                    var tags = ParseTags(machine);
 
                     if (!tags.TryGetValue(nodeNameTag, out var nodeName) ||
                         !tags.TryGetValue(clusterIdTag, out var clusterId))
