@@ -367,51 +367,14 @@ namespace Neon.Kube.Setup
                     setupState.Save();
                 });
 
-            // Register the cluster domain with the headend, except for NEONDESKTOP clusters.
+            // For on-premise clusters, we need to register the cluster domain early so that the hosting
+            // manages will already have the cluster ID when creating the cluster VMs so the managers will
+            // be able to tag the VMs with the cluster ID so we can associate VMs with their cluster.
 
-            controller.AddGlobalStep("neoncluster.io domain",
-                async controller =>
-                {
-                    controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
-
-                    if (options.DesktopReadyToGo)
-                    {
-                        cluster.Id               =
-                        setupState.ClusterId     = KubeHelper.GenerateClusterId();
-                        setupState.ClusterName   = clusterDefinition.Name;
-                        setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
-                    }
-                    else
-                    {
-                        var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                        var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                        var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
-
-                        var result = await headendClient.ClusterSetup.CreateClusterAsync();
-
-                        cluster.Id                =
-                        setupState.ClusterId      = result["Id"];
-                        setupState.NeonCloudToken = result["Token"];
-
-                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
-
-                        if (options.BuildDesktopImage)
-                        {
-                            setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
-                        }
-                        else
-                        {
-                            setupState.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
-                                clusterId: setupState.ClusterId,
-                                addresses: clusterAddresses);
-                        }
-                    }
-
-                    // Log the cluster ID for debugging purposes.
-
-                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
-                    setupState.Save();
-                });
+            if (KubeHelper.IsOnPremiseEnvironment(cluster.Hosting.Environment))
+            {
+                controller.AddGlobalStep("neoncluster.io domain", async controller => await RegisterClusterDomainAsync(controller, cluster, options));
+            }
 
             // Give the hosting manager a chance to add any additional provisioning steps.
 
@@ -621,6 +584,14 @@ namespace Neon.Kube.Setup
                     });
             }
 
+            // For cloud clusters, we need to register the cluster domain after provisioning
+            // the cluster so that we'll know the cluster ingress IP addresses.
+
+            if (KubeHelper.IsCloudEnvironment(cluster.Hosting.Environment))
+            {
+                controller.AddGlobalStep("neoncluster.io domain", async controller => await RegisterClusterDomainAsync(controller, cluster, options));
+            }
+
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup
             // will use this to verify that the cluster was prepared successfully before proceeding.
 
@@ -647,6 +618,63 @@ namespace Neon.Kube.Setup
             controller.AddDisposable(desktopServiceProxy);
 
             return await Task.FromResult(controller);
+        }
+
+        /// <summary>
+        /// Opbtains the ID for the new cluster as well as it's <b>neoncluster.io</b> domain.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="cluster">Specifies the cluster proxy.</param>
+        /// <param name="options">Specifies the cluster preare options.</param>
+        /// <returns></returns>
+        private static async Task RegisterClusterDomainAsync(ISetupController controller, ClusterProxy cluster, PrepareClusterOptions options)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+
+            controller.SetGlobalStepStatus("register: neoncluster.io domain");
+
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var setupState        = cluster.SetupState;
+
+            if (options.DesktopReadyToGo)
+            {
+                cluster.Id               =
+                setupState.ClusterId     = KubeHelper.GenerateClusterId();
+                setupState.ClusterName   = clusterDefinition.Name;
+                setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+            }
+            else
+            {
+                var headendClient    = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                var clusterAddresses = string.Join(',', cluster.HostingManager.GetClusterAddresses());
+
+                var result = await headendClient.ClusterSetup.CreateClusterAsync();
+
+                cluster.Id                =
+                setupState.ClusterId      = result["Id"];
+                setupState.NeonCloudToken = result["Token"];
+
+                headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
+
+                if (options.BuildDesktopImage)
+                {
+                    setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+                }
+                else
+                {
+                    setupState.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                        clusterId: setupState.ClusterId,
+                        addresses: clusterAddresses);
+                }
+            }
+
+            // Log the cluster ID for debugging purposes.
+
+            controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+            setupState.Save();
         }
     }
 }

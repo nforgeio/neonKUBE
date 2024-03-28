@@ -1961,7 +1961,7 @@ namespace Neon.Kube.Hosting.Aws
 
                 await foreach (var reservation in instancePaginator.Reservations)
                 {
-                    // Note that terminated instances  hang around for a while, so we need to ignore them.
+                    // Note that terminated instances hang around for a while, so we need to ignore them.
 
                     foreach (var instance in reservation.Instances
                         .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
@@ -3120,6 +3120,7 @@ namespace Neon.Kube.Hosting.Aws
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
