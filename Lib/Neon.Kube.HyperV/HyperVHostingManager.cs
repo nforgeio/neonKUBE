@@ -137,7 +137,7 @@ namespace Neon.Kube.Hosting.HyperV
         // Instance members.
 
         private const string defaultSwitchName = "external";
-        private const string tagMarkerLine     = "---neonkube---";
+        private const string tagMarkerLine     = "neonkube";
         private const string clusterIdTag      = "neon-cluster-id";
         private const string nodeNameTag       = "neon-node-name";
 
@@ -1036,10 +1036,10 @@ namespace Neon.Kube.Hosting.HyperV
 
             // Tags will look something like this:
             //
-            //      ---neonkube---
+            //      neonkube
             //      neon-cluster-id: fe7f-7549-ab25-1583
             //      neon-node-name: control-0
-            //      ---neonkube---
+            //      neonkube
 
             var tags = new Dictionary<string, string>();
 
