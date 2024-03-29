@@ -315,7 +315,7 @@ namespace Neon.Kube.Setup
 
                         controller.SetGlobalStepStatus("generate: SSH password");
 
-                        if (desktopReadyToGo)
+                        if (desktopReadyToGo || options.Insecure)
                         {
                             // We're going to configure a fixed password for NEONDESKTOP clusters.
 
@@ -607,7 +607,11 @@ namespace Neon.Kube.Setup
                         setupState.DeploymentStatus = ClusterDeploymentStatus.Prepared;
                     }
 
-                    setupState.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
+                    if (!options.Insecure)
+                    {
+                        setupState.SshPassword = null;  // We're no longer allowing SSH password authentication so we can clear this.
+                    }
+
                     setupState.Save();
                 },
                 quiet: true);

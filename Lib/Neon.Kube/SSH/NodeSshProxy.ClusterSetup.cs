@@ -71,7 +71,7 @@ namespace Neon.Kube.SSH
                     // I'm not sure where this file comes from .  We're going
                     // to go ahead and delete this when present.
 
-                    DeleteFile("/etc/ssh/sshd_config.d/50-neonkube.confE");
+                    DeleteFile("/etc/ssh/sshd_config.d/60-neonkube.confE");
                 });
 
             InvokeIdempotent("setup/sysstat",
@@ -194,7 +194,7 @@ EOF
 mkdir -p /etc/systemd/user.conf.d
 chmod 764 /etc/systemd/user.conf.d
 
-cat <<EOF > /etc/systemd/user.conf.d/50-neonkube.conf
+cat <<EOF > /etc/systemd/user.conf.d/60-neonkube.conf
 # This file is part of systemd.
 #
 # systemd is free software; you can redistribute it and/or modify it
@@ -213,8 +213,8 @@ DefaultLimitNPROC = infinity
 DefaultLimitMEMLOCK = infinity
 EOF
 
-chmod 664 /etc/systemd/user.conf.d/50-neonkube.conf
-cp /etc/systemd/user.conf.d/50-neonkube.conf /etc/systemd/system.conf
+chmod 664 /etc/systemd/user.conf.d/60-neonkube.conf
+cp /etc/systemd/user.conf.d/60-neonkube.conf /etc/systemd/system.conf
 
 echo ""session required pam_limits.so"" >> /etc/pam.d/common-session
 
