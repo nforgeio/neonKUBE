@@ -36,6 +36,9 @@ namespace Neon.Kube.Setup
         //---------------------------------------------------------------------
         // Static members
 
+        private const int screenBufferWidth  = 300;
+        private const int screenBufferHeight = 600;
+
         /// <summary>
         /// Set to <c>true</c> when the current process has a console.
         /// </summary>
@@ -80,6 +83,40 @@ namespace Neon.Kube.Setup
         public SetupConsoleWriter(bool disabled = false)
         {
             this.disabled = disabled;
+
+            // [Windows Terminal] seems to work differently than [Cmder] and [cmd.exe].
+            // Terminal seems to size its screen buffer to match the size of the terminal
+            // window such that setting a cursor position outside if the screen dimensions
+            // results in an [ArgumentOutOfRangeException], We don't see these with [Cmder]
+            // and [cmd.exe].
+            //
+            //      https://stackoverflow.com/questions/75250559/console-application-window-and-buffer-sizes-in-windows-11
+            //
+            // NOTE: The post above mentions that we should be using ANSI TERM sequences
+            //       for this, rather than the Windows Console API anyway because the
+            //       Console API only works on Windows anyway.
+            //
+            // We're going to address this by explicitly setting a large screen buffer
+            // size: width=300, height=600.  Conservatively assuming that the Unicode
+            // character for each buffer position is 4 bytes and that the color information
+            // for this is also 4 bytes, a buffer of this size will consume:
+            //
+            //      (300*600)*(4+4)= 1,440,000  (not too bad)
+            //
+            // Clusters with a very large number of nodes (we only support up to 100 node
+            // clusters right now), may exceed the height of this buffer, but this should
+            // support clusters with well 500+ nodes if needed.
+            //
+            // NOTE: Formatted console output for cluster with large numbers of nodes isn't
+            //       really going to be that useful anyway, and we'll probably need another
+            //       mechanism to deploy big clusters like that when the time comes.
+            //
+            // NOTE: Only .NET supports setting the screen buffer size on Windows.
+
+            if (OperatingSystem.IsWindows())
+            {
+                Console.SetBufferSize(screenBufferWidth, screenBufferHeight);
+            }
         }
 
         /// <summary>
@@ -88,14 +125,24 @@ namespace Neon.Kube.Setup
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
+            // $hack(jefflill): This is an unfortunate hack!
+            //
+            // We need to detect whether we're running in Windows Terminal and this appears
+            // to be to only semi-reliable way to accomplish this.
+            //
+            // Windows Terminal adjusts its screen buffer size when the user resizes
+            // the Terminal window.  This can result in an [ArgumentOutOfRangeException]
+            // if we try to set a cursor position beyond the edge of the buffer.
+            //
+            // I'm going to work around this behavior by not double-buffering output
+            // for Windows Terminal.
+
+            var isWindowsTerminal = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WT_SESSION"));
+
             if (!HasConsole || disabled)
             {
                 return;
             }
-
-            // Hide the cursor while updating.
-
-            Console.CursorVisible = false;
 
             lock (syncLock)
             {
@@ -103,6 +150,12 @@ namespace Neon.Kube.Setup
                 {
                     return;
                 }
+
+                // Hide the cursor while updating.
+
+                Console.CursorVisible = false;
+
+                // Detect any changes to the console output.
 
                 text ??= string.Empty;
 
@@ -116,6 +169,11 @@ namespace Neon.Kube.Setup
                     // clear the console.
 
                     Console.Clear();
+
+                    for (int i = 0; i < previousLines.Count; i++)
+                    {
+                        previousLines[i] = null;
+                    }
                 }
 
                 if (text == previousText)
@@ -123,26 +181,38 @@ namespace Neon.Kube.Setup
                     return;     // The text hasn't changed
                 }
 
-                // We're going to write the new lines by comparing them against the previous lines and rewriting
-                // only the lines that are different. 
-
-                for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
+                if (isWindowsTerminal)
                 {
-                    var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
-                    var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
+                    Console.Clear();
 
-                    // When the new line is shorter than the previous one, we need to append enough spaces
-                    // to the new line such that the previous line will be completely overwritten.
-
-                    if (newLine.Length < previousLine.Length)
+                    for (int lineIndex = 0; lineIndex < newLines.Count; lineIndex++)
                     {
-                        newLine += new string(' ', previousLine.Length - newLine.Length);
+                        Console.WriteLine(newLines[lineIndex]);
                     }
+                }
+                else
+                {
+                    // We're going to write the new lines by comparing them against the previous lines and rewriting
+                    // only the lines that are different.
 
-                    if (newLine != previousLine)
+                    for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
                     {
-                        Console.SetCursorPosition(0, lineIndex);
-                        Console.Write(newLine);
+                        var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
+                        var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
+
+                        // When the new line is shorter than the previous one, we need to append enough spaces
+                        // to the new line such that the previous line will be completely overwritten.
+
+                        if (newLine.Length < previousLine.Length)
+                        {
+                            newLine += new string(' ', previousLine.Length - newLine.Length);
+                        }
+
+                        if (newLine != previousLine)
+                        {
+                            Console.SetCursorPosition(0, lineIndex);
+                            Console.Write(newLine);
+                        }
                     }
                 }
 
@@ -161,7 +231,7 @@ namespace Neon.Kube.Setup
             {
                 stopped = true;
 
-                if (HasConsole && !disabled)
+                if (!HasConsole && !disabled)
                 {
                     // Move the cursor to the beginning of the second line after the last
                     // non-blank line written by Update() and then re-enable the cursor
