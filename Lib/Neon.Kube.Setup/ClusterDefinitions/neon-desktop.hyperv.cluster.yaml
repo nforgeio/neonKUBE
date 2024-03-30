@@ -7,8 +7,6 @@ timeSources:
 - pool.ntp.org
 kubelet:
   allowPodsOnControlPlane: true
-  evictionHard:
-    memory-available: "400 MiB"
 hosting:
   environment: hyperv
   hyperv:
