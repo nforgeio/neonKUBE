@@ -36,9 +36,6 @@ namespace Neon.Kube.Setup
         //---------------------------------------------------------------------
         // Static members
 
-        private const int screenBufferWidth  = 300;
-        private const int screenBufferHeight = 600;
-
         /// <summary>
         /// Set to <c>true</c> when the current process has a console.
         /// </summary>
@@ -83,40 +80,6 @@ namespace Neon.Kube.Setup
         public SetupConsoleWriter(bool disabled = false)
         {
             this.disabled = disabled;
-
-            // [Windows Terminal] seems to work differently than [Cmder] and [cmd.exe].
-            // Terminal seems to size its screen buffer to match the size of the terminal
-            // window such that setting a cursor position outside if the screen dimensions
-            // results in an [ArgumentOutOfRangeException], We don't see these with [Cmder]
-            // and [cmd.exe].
-            //
-            //      https://stackoverflow.com/questions/75250559/console-application-window-and-buffer-sizes-in-windows-11
-            //
-            // NOTE: The post above mentions that we should be using ANSI TERM sequences
-            //       for this, rather than the Windows Console API anyway because the
-            //       Console API only works on Windows anyway.
-            //
-            // We're going to address this by explicitly setting a large screen buffer
-            // size: width=300, height=600.  Conservatively assuming that the Unicode
-            // character for each buffer position is 4 bytes and that the color information
-            // for this is also 4 bytes, a buffer of this size will consume:
-            //
-            //      (300*600)*(4+4)= 1,440,000  (not too bad)
-            //
-            // Clusters with a very large number of nodes (we only support up to 100 node
-            // clusters right now), may exceed the height of this buffer, but this should
-            // support clusters with well 500+ nodes if needed.
-            //
-            // NOTE: Formatted console output for cluster with large numbers of nodes isn't
-            //       really going to be that useful anyway, and we'll probably need another
-            //       mechanism to deploy big clusters like that when the time comes.
-            //
-            // NOTE: Only .NET supports setting the screen buffer size on Windows.
-
-            if (OperatingSystem.IsWindows())
-            {
-                Console.SetBufferSize(screenBufferWidth, screenBufferHeight);
-            }
         }
 
         /// <summary>
