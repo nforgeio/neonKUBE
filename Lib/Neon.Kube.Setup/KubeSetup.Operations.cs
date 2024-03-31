@@ -1369,7 +1369,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 var existingContext = existingConfig.GetContext(newContext.Name);
                 var existingUser    = existingConfig.GetUser(newUser.Name);
 
-                if (existingConfig != null)
+                if (existingCluster != null)
                 {
                     existingConfig.Clusters.Remove(existingCluster);
                 }

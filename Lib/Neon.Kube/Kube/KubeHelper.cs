@@ -176,7 +176,7 @@ namespace Neon.Kube
                 }
                 catch (FormatException)
                 {
-                    // Ignore this too.
+                    // Ignoring this too.
                 }
 
                 return clientId;
