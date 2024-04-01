@@ -74,7 +74,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task FinalizeAsync(V1MinioBucket resource)
+        public override async Task FinalizeAsync(V1MinioBucket resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
