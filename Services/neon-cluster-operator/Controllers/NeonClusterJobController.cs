@@ -130,7 +130,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobConfig resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterJobConfig resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -272,7 +272,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonClusterJobConfig resource)
+        public override async Task DeletedAsync(V1NeonClusterJobConfig resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
