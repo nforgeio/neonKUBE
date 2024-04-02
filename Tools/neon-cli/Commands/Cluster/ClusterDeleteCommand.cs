@@ -199,7 +199,7 @@ definition or by executing this command on your cluster:
 
             if ((capabilities & HostingCapabilities.Removable) == 0)
             {
-                Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
+                Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Name}] is not removable.");
                 Program.Exit(1);
             }
 
@@ -216,7 +216,7 @@ definition or by executing this command on your cluster:
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Name}] is not running.");
                         Program.Exit(1);
                         break;
                 }
@@ -225,13 +225,13 @@ definition or by executing this command on your cluster:
 
                 if (!isLocked.HasValue)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                    Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Name}] lock status is unknown.");
                     Program.Exit(1);
                 }
 
                 if (isLocked.Value)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                    Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Name}] is locked.");
                     Program.Exit(1);
                 }
 
@@ -261,7 +261,7 @@ definition or by executing this command on your cluster:
             catch (TimeoutException)
             {
                 Console.Error.WriteLine();
-                Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster [{cluster.Name}].");
             }
         }
     }

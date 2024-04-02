@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -283,7 +284,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task OnDemotionAsync()
+        public override async Task OnDemotionAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             await ShutDownAsync();

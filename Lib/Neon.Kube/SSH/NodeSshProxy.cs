@@ -574,8 +574,8 @@ namespace Neon.Kube.SSH
 $@"
 set -euo pipefail
 
-if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ] ; then
-    sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/50-neonkube.conf
+if [ -f ""/etc/ssh/sshd_config.d/60-neonkube.conf"" ] ; then
+    sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/60-neonkube.conf
 fi
 
 sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config

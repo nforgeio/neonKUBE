@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Dex;
@@ -92,7 +93,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoClient resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoClient resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -119,7 +120,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonSsoClient resource)
+        public override async Task DeletedAsync(V1NeonSsoClient resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

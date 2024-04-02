@@ -134,7 +134,7 @@ EXITCODE:
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Name}] is not running.");
                         Program.Exit(1);
                         break;
                 }

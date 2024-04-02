@@ -16,50 +16,33 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
-using Neon.Operator.Attributes;
-using Neon.Operator.ResourceManager;
-using Neon.Operator;
-using Neon.Operator.Rbac;
 using Neon.Net;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
 using Neon.Tasks;
-using Neon.Time;
 
 using Npgsql;
 
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Prometheus;
-using Neon.Operator.Controllers;
 
 namespace NeonClusterOperator
 {
@@ -103,8 +86,9 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public override async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
@@ -138,7 +122,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -170,7 +154,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1Secret resource)
+        public override async Task DeletedAsync(V1Secret resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

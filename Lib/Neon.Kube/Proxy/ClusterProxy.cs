@@ -490,7 +490,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster ID.
         /// </summary>
-        public string Id { get; private set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Returns the cluster domain.
@@ -869,6 +869,8 @@ namespace Neon.Kube.Proxy
         /// <returns><c>true</c> when the cluster reports that it's ready.</returns>
         public async Task<bool> IsClusterReadyAsync()
         {
+            await SyncContext.Clear;
+
             // [HttpClient] takes around 20 seconds to realize that it can't establish a connection
             // with a remote endpoint.  This, combined with the retry policy, means that it may take
             // over a minute to detect that the cluster API is not available.
@@ -923,6 +925,8 @@ namespace Neon.Kube.Proxy
         /// <returns>The <see cref="ClusterDeployment"/> details.</returns>
         public async Task<ClusterDeployment> GetDeploymentAsync()
         {
+            await SyncContext.Clear;
+
             if (SetupState != null)
             {
                 return new ClusterDeployment(SetupState.ClusterDefinition, SetupState.ClusterId, SetupState.ClusterDomain);
@@ -953,6 +957,7 @@ namespace Neon.Kube.Proxy
             CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mcCommand), nameof(mcCommand));
 
             var minioPod = await K8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
@@ -1253,6 +1258,7 @@ namespace Neon.Kube.Proxy
         /// </summary>
         public async Task<ClusterInfo> CreateClusterInfoAsync()
         {
+            await SyncContext.Clear;
             EnsureSetupMode();
 
             // Use the datacenter lat/lon coordinates from the cluster definition
@@ -1287,7 +1293,6 @@ namespace Neon.Kube.Proxy
                 Latitude           = lat,
                 Longitude          = lon,
                 FeatureOptions     = SetupState.ClusterDefinition.Features,
-
                 ClusterId          = SetupState.ClusterId,
                 Domain             = SetupState.ClusterDomain,
                 PublicAddresses    = SetupState.PublicAddresses

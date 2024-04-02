@@ -179,7 +179,7 @@ namespace Neon.Kube
                 }
                 catch (FormatException)
                 {
-                    // Ignore this too.
+                    // Ignoring this too.
                 }
 
                 return clientId;
@@ -2091,7 +2091,7 @@ passphrase:
 # here.  Cluster preparaton works by writing a sub-config file with our custom
 # settings:
 #
-#       /etc/ssh/sshd_config.d/50-neonkube.conf
+#       /etc/ssh/sshd_config.d/60-neonkube.conf
 
 ###############################################################################
 # Default OpenSSH config file                                                 #
@@ -2237,7 +2237,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             var allowPasswordAuthValue = allowPasswordAuth ? "yes" : "no";
 
             return
-$@"# FILE:         /etc/ssh/sshd_config.d/50-neonkube.conf
+$@"# FILE:         /etc/ssh/sshd_config.d/60-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
 # COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #

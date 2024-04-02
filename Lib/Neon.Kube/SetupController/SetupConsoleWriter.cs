@@ -88,14 +88,24 @@ namespace Neon.Kube.Setup
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
+            // $hack(jefflill): This is an unfortunate hack!
+            //
+            // We need to detect whether we're running in Windows Terminal and this appears
+            // to be to only semi-reliable way to accomplish this.
+            //
+            // Windows Terminal adjusts its screen buffer size when the user resizes
+            // the Terminal window.  This can result in an [ArgumentOutOfRangeException]
+            // if we try to set a cursor position beyond the edge of the buffer.
+            //
+            // I'm going to work around this behavior by not double-buffering output
+            // for Windows Terminal.
+
+            var isWindowsTerminal = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WT_SESSION"));
+
             if (!HasConsole || disabled)
             {
                 return;
             }
-
-            // Hide the cursor while updating.
-
-            Console.CursorVisible = false;
 
             lock (syncLock)
             {
@@ -103,6 +113,12 @@ namespace Neon.Kube.Setup
                 {
                     return;
                 }
+
+                // Hide the cursor while updating.
+
+                Console.CursorVisible = false;
+
+                // Detect any changes to the console output.
 
                 text ??= string.Empty;
 
@@ -116,6 +132,11 @@ namespace Neon.Kube.Setup
                     // clear the console.
 
                     Console.Clear();
+
+                    for (int i = 0; i < previousLines.Count; i++)
+                    {
+                        previousLines[i] = null;
+                    }
                 }
 
                 if (text == previousText)
@@ -123,26 +144,38 @@ namespace Neon.Kube.Setup
                     return;     // The text hasn't changed
                 }
 
-                // We're going to write the new lines by comparing them against the previous lines and rewriting
-                // only the lines that are different. 
-
-                for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
+                if (isWindowsTerminal)
                 {
-                    var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
-                    var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
+                    Console.Clear();
 
-                    // When the new line is shorter than the previous one, we need to append enough spaces
-                    // to the new line such that the previous line will be completely overwritten.
-
-                    if (newLine.Length < previousLine.Length)
+                    for (int lineIndex = 0; lineIndex < newLines.Count; lineIndex++)
                     {
-                        newLine += new string(' ', previousLine.Length - newLine.Length);
+                        Console.WriteLine(newLines[lineIndex]);
                     }
+                }
+                else
+                {
+                    // We're going to write the new lines by comparing them against the previous lines and rewriting
+                    // only the lines that are different.
 
-                    if (newLine != previousLine)
+                    for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
                     {
-                        Console.SetCursorPosition(0, lineIndex);
-                        Console.Write(newLine);
+                        var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
+                        var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
+
+                        // When the new line is shorter than the previous one, we need to append enough spaces
+                        // to the new line such that the previous line will be completely overwritten.
+
+                        if (newLine.Length < previousLine.Length)
+                        {
+                            newLine += new string(' ', previousLine.Length - newLine.Length);
+                        }
+
+                        if (newLine != previousLine)
+                        {
+                            Console.SetCursorPosition(0, lineIndex);
+                            Console.Write(newLine);
+                        }
                     }
                 }
 
@@ -161,7 +194,7 @@ namespace Neon.Kube.Setup
             {
                 stopped = true;
 
-                if (HasConsole && !disabled)
+                if (!HasConsole && !disabled)
                 {
                     // Move the cursor to the beginning of the second line after the last
                     // non-blank line written by Update() and then re-enable the cursor

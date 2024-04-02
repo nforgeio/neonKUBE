@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -95,7 +96,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task StatusModifiedAsync(V1NeonNodeTask resource)
+        public override async Task StatusModifiedAsync(V1NeonNodeTask resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

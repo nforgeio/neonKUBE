@@ -1921,12 +1921,14 @@ namespace Neon.Kube.Hosting.Azure
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AcceptPlanTermsAsync()
         {
+            await SyncContext.Clear;
+
             var marketplaceAgreementTermResourceId = MarketplaceAgreementTermResource.CreateResourceIdentifier(
                 subscriptionId: azureOptions.SubscriptionId,
-                offerType: AgreementOfferType.Virtualmachine,
-                publisherId: MarketplacePublisher,
-                offerId: MarketplaceOffer,
-                planId: nodeImagePlan.Name);
+                offerType:      AgreementOfferType.Virtualmachine,
+                publisherId:    MarketplacePublisher,
+                offerId:        MarketplaceOffer,
+                planId:         nodeImagePlan.Name);
 
             var terms = (await azure.GetMarketplaceAgreementTermResource(marketplaceAgreementTermResourceId).GetAsync()).Value;
 

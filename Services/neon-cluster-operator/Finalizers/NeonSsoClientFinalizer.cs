@@ -22,6 +22,7 @@ using System.Linq;
 using System.Resources;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Dex;
@@ -73,7 +74,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task FinalizeAsync(V1NeonSsoClient resource)
+        public override async Task FinalizeAsync(V1NeonSsoClient resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

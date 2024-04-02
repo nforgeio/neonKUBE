@@ -96,7 +96,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -177,7 +177,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1MinioBucket resource)
+        public override async Task DeletedAsync(V1MinioBucket resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

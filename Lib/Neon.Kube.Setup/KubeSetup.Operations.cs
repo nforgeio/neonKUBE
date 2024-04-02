@@ -1346,7 +1346,7 @@ exit 1
                 var existingContext = existingConfig.GetContext(newContext.Name);
                 var existingUser    = existingConfig.GetUser(newUser.Name);
 
-                if (existingConfig != null)
+                if (existingCluster != null)
                 {
                     existingConfig.Clusters.Remove(existingCluster);
                 }
@@ -5071,7 +5071,7 @@ $@"- name: StorageType
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                     {
-                        controller.LogProgress(controlNode, verb: "login", message: "workstation to Harbor");
+                        controller.LogProgress(controlNode, verb: "login", message: "workstation to harbor");
 
                         NeonHelper.ExecuteCapture(NeonHelper.VerifiedDockerCli,
                             new object[]

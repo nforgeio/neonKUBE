@@ -137,6 +137,9 @@ namespace Neon.Kube.Hosting.HyperV
         // Instance members.
 
         private const string defaultSwitchName = "external";
+        private const string tagMarkerLine     = "neonkube";
+        private const string clusterIdTag      = "neon-cluster-id";
+        private const string nodeNameTag       = "neon-node-name";
 
         private ClusterProxy                        cluster;
         private bool                                debugMode;
@@ -734,10 +737,14 @@ namespace Neon.Kube.Hosting.HyperV
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The corresponding node definition if found or <c>null</c>.</returns>
+        /// <returns>
+        /// The corresponding node name if found, or <c>null</c> when the node VM
+        /// could not be identified.
+        /// </returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster?.SetupState?.ClusterDefinition != null);
             cluster.EnsureSetupMode();
 
             // Special case the NEONDESKTOP cluster.
@@ -764,74 +771,6 @@ namespace Neon.Kube.Hosting.HyperV
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Converts a virtual machine name into the corresponding cluster node name, as
-        /// defined in the cluster definition.
-        /// </summary>
-        /// <param name="vmName">The virtual machine name.</param>
-        /// <param name="clusterDefinition">
-        /// Optionally specifies a cluster definition for situations where there may
-        /// not be a current KubeConfig.
-        /// </param>
-        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
-        private string VmNameToNodeName(string vmName, ClusterDefinition clusterDefinition = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
-            Covenant.Assert(cluster.KubeConfig?.Cluster != null || clusterDefinition != null, "The cluster must be deployed or a cluster definition must be specified.");
-
-            if (clusterDefinition == null)
-            {
-                // Special case the NEONDESKTOP cluster whose name is never prefixed.
-
-                if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
-                    vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return vmName;
-                }
-
-                var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
-
-                if (!prefix.IsNullOrEmpty())
-                {
-                    if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return null;
-                    }
-
-                    return vmName.Substring(prefix.Length);
-                }
-
-                return null;
-            }
-            else
-            {
-                // Special case the NEONDESKTOP cluster whose name is never prefixed.
-
-                if (clusterDefinition.IsDesktop && vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return vmName;
-                }
-                else if (clusterDefinition.IsDesktop)
-                {
-                    return null;
-                }
-
-                var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
-
-                if (!prefix.IsNullOrEmpty())
-                {
-                    if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return null;
-                    }
-
-                    return vmName.Substring(prefix.Length);
-                }
-
-                return null;
-            }
         }
 
         /// <summary>
@@ -1013,6 +952,13 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Create the virtual machine.
 
+                var sbNotes = new StringBuilder();
+
+                sbNotes.AppendLineLinux(tagMarkerLine);
+                sbNotes.AppendLineLinux($"{clusterIdTag}: {cluster.SetupState.ClusterId}");
+                sbNotes.AppendLineLinux($"{nodeNameTag}: {node.Name}");
+                sbNotes.AppendLineLinux(tagMarkerLine);
+
                 var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
@@ -1024,7 +970,8 @@ namespace Neon.Kube.Hosting.HyperV
                     driveSize:      osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
-                    switchName:     switchName);
+                    switchName:     switchName,
+                    notes:          sbNotes.ToString());
 
                 // Create a temporary ISO with the [neon-init.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on
@@ -1116,27 +1063,99 @@ namespace Neon.Kube.Hosting.HyperV
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <summary>
-        /// Returns information about the cluster virtual machines and the related node names.
+        /// Parses the NEONKUBE related tags from a virtual machine's notes.
+        /// </summary>
+        /// <param name="machine"></param>
+        /// <returns>The dictionary of tags and values keyed by tag name.</returns>
+        private Dictionary<string, string> ParseNoteTags(VirtualMachine machine)
+        {
+            Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
+
+            // Tags will look something like this:
+            //
+            //      neonkube
+            //      neon-cluster-id: fe7f-7549-ab25-1583
+            //      neon-node-name: control-0
+            //      neonkube
+
+            var tags = new Dictionary<string, string>();
+
+            using (var reader = new StringReader(machine.Notes ?? string.Empty))
+            {
+                // We're going to ignore any lines before the first tag marker line
+                // and then process tags up until the second marker line or the end
+                // of the notes, ignoring anything that doesn't make sense.
+
+                var seenFirstMarker = false;
+
+                foreach (var line in reader.Lines())
+                {
+                    var isMarkerLine = line == tagMarkerLine;
+
+                    if (!seenFirstMarker && isMarkerLine)
+                    {
+                        seenFirstMarker = true;
+                        continue;
+                    }
+                    else if (isMarkerLine)
+                    {
+                        break;  // Must be the second marker line.
+                    }
+
+                    // Parse the tag line.
+
+                    var colonPos = line.IndexOf(':');
+
+                    if (colonPos == -1)
+                    {
+                        break;
+                    }
+
+                    var name  = line.Substring(0, colonPos).Trim();
+                    var value = line.Substring(colonPos+1).Trim();
+
+                    if (name.Length == 0 || value.Length == 0)
+                    {
+                        continue;   // Ignore invalid tags.
+                    }
+
+                    tags[name] = value;
+                }
+            }
+
+            return tags;
+        }
+
+        /// <summary>
+        /// Returns information about the cluster virtual machines and the cluster node names.
         /// </summary>
         /// <param name="hyperv">The Hyper-V proxy to use.</param>
-        /// <param name="clusterDefinition">
-        /// Optionally specifies a cluster definition for situations where there may
-        /// not be a current KubeConfig.
-        /// </param>
         /// <returns>The cluster virtual machine information.</returns>
-        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv, ClusterDefinition clusterDefinition = null)
+        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv)
         {
-            Covenant.Requires<ArgumentNullException>(hyperv != null, nameof(hyperv));
+            Covenant.Assert(cluster != null);
+            Covenant.Assert(!string.IsNullOrEmpty(cluster.Id));
+
+            // We're going to rely on the tags we encoded into the VM notes to
+            // ensure that the VMs is associated with the current cluster and
+            // also to obtain the node node name.
 
             var clusterVms = new List<ClusterVm>();
+            var clusterId  = cluster.Id;
 
             foreach (var machine in hyperv.ListVms())
             {
-                var nodeName = VmNameToNodeName(machine.Name, clusterDefinition);
+                var tags = ParseNoteTags(machine);
 
-                if (nodeName != null)
+                if (!tags.TryGetValue(clusterIdTag, out var machineClusterId) ||
+                    !tags.TryGetValue(nodeNameTag, out var machineNodeName))
                 {
-                    clusterVms.Add(new ClusterVm(machine, nodeName));
+                    continue;
+                }
+
+                if (machineNodeName != null && machineClusterId == clusterId)
+                {
+                    clusterVms.Add(new ClusterVm(machine, machineNodeName));
                 }
             }
 
@@ -1403,7 +1422,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(GetClusterVms(hyperv, clusterDefinition), parallelOptions,
+                Parallel.ForEach(GetClusterVms(hyperv), parallelOptions,
                     clusterVm =>
                     {
                         if (clusterVm.Machine.State == VirtualMachineState.Running || clusterVm.Machine.State == VirtualMachineState.Starting)

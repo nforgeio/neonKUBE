@@ -112,7 +112,7 @@ namespace Neon.Kube.SSH
 
                     var subConfigText = KubeHelper.GetOpenSshPrepareSubConfig(allowPasswordAuth: true);
 
-                    UploadText("/etc/ssh/sshd_config.d/50-neonkube.conf", NeonHelper.ToLinuxLineEndings(subConfigText), permissions: "644"); 
+                    UploadText("/etc/ssh/sshd_config.d/60-neonkube.conf", NeonHelper.ToLinuxLineEndings(subConfigText), permissions: "644"); 
 
                     // Here's some information explaining what how this works:
                     //

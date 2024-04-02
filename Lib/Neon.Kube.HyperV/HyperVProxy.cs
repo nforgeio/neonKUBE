@@ -227,6 +227,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// Optionally specifies any additional virtual drives to be created and 
         /// then attached to the new virtual machine.
         /// </param>
+        /// <param name="notes">Optionally specifies any VM notes.</param>
         /// <remarks>
         /// <note>
         /// The <see cref="VirtualDrive.Path"/> property of <paramref name="extraDrives"/> may be
@@ -245,7 +246,8 @@ namespace Neon.Kube.Hosting.HyperV
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 
             string                      switchName        = null,
-            IEnumerable<VirtualDrive>   extraDrives       = null)
+            IEnumerable<VirtualDrive>   extraDrives       = null,
+            string                      notes             = null)
         {
             if (isAdmin)
             {
@@ -258,7 +260,8 @@ namespace Neon.Kube.Hosting.HyperV
                     checkpointDrives:  checkpointDrives,
                     templateDrivePath: templateDrivePath,
                     switchName:        switchName,
-                    extraDrives:       extraDrives);
+                    extraDrives:       extraDrives,
+                    notes:             notes);
             }
             else
             {
@@ -271,7 +274,8 @@ namespace Neon.Kube.Hosting.HyperV
                     checkpointDrives:  checkpointDrives,
                     templateDrivePath: templateDrivePath,
                     switchName:        switchName,
-                    extraDrives:       extraDrives?.Select(drive => drive.ToProto()));
+                    extraDrives:       extraDrives?.Select(drive => drive.ToProto()),
+                    notes:             notes);
 
                 desktopService.AddVmAsync(request).Result.Error.EnsureSuccess();
             }

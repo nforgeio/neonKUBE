@@ -47,24 +47,26 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="name">Specifies the machine name.</param>
         /// <param name="state">Specifies the machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].</param>
-        /// <param name="switchName">Optionally identifies the attached switch.</param>
-        /// <param name="netAdapterName">Optionall identifies the attached network adaptor.</param>
-        public GrpcVirtualMachine(string name, string state, string? switchName, string? netAdapterName)
+        /// <param name="switchName">Specifies identifies the attached switch.</param>
+        /// <param name="netAdapterName">Specifies identifies the attached network adaptor.</param>
+        /// <param name="notes">Specifies any machine notes.</param>
+        public GrpcVirtualMachine(string name, string state, string? switchName, string? netAdapterName, string? notes)
         {
             this.Name          = name;
             this.State         = state;
             this.SwitchName    = switchName;
             this.InterfaceName = netAdapterName;
+            this.Notes         = notes;
         }
 
         /// <summary>
-        /// The machine name.
+        /// Specifies the machine name.
         /// </summary>
         [DataMember(Order = 1)]
         public string? Name { get; set; }
 
         /// <summary>
-        /// The current machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].
+        /// Specifies the current machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].
         /// </summary>
         [DataMember(Order = 2)]
         public string? State { get; set; }
@@ -80,5 +82,11 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         [DataMember(Order = 4)]
         public string? InterfaceName { get; set; }
+
+        /// <summary>
+        /// Specifies the machine notes (or null).
+        /// </summary>
+        [DataMember(Order = 5)]
+        public string? Notes { get; set; }
     }
 }
