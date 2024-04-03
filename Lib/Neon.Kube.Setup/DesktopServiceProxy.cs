@@ -35,7 +35,7 @@ using ProtoBuf.Grpc.Client;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Used to proxy non-Hyper-V operations to the Neon Desktop service or
+    /// Used to proxy non-Hyper-V operations to the NeonDESKTOP service or
     /// execute them directly when the current process is running with 
     /// elevated privileges.
     /// </summary>
