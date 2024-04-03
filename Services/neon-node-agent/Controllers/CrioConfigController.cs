@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -319,8 +320,9 @@ namespace NeonNodeAgent
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public override async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             if (NeonHelper.IsLinux)
             {
@@ -373,7 +375,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -626,7 +628,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1CrioConfiguration resource)
+        public override async Task DeletedAsync(V1CrioConfiguration resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             

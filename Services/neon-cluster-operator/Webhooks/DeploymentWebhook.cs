@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Routing;
@@ -74,7 +75,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -108,7 +109,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
+        public override async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

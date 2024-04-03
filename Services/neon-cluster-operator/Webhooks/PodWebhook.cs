@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Routing;
@@ -76,7 +77,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public override async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

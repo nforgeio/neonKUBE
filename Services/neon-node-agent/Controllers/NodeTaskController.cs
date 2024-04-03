@@ -21,31 +21,24 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
+
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator.Attributes;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Controllers;
-using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
-
-using k8s;
-using k8s.Models;
-
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Prometheus;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
 using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 
 namespace NeonNodeAgent
 {
@@ -135,8 +128,9 @@ namespace NeonNodeAgent
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public override async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             if (NeonHelper.IsLinux)
             {
@@ -179,7 +173,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource, CancellationToken cancellationToken = default)
         {
             var name = resource.Name();
 

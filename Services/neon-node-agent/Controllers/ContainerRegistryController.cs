@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -320,8 +321,9 @@ namespace NeonNodeAgent
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public override async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             if (NeonHelper.IsLinux)
             {
@@ -374,7 +376,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -450,7 +452,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public override async Task DeletedAsync(V1NeonContainerRegistry resource)
+        public override async Task DeletedAsync(V1NeonContainerRegistry resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             
