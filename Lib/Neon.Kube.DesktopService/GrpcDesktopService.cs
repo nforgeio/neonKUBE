@@ -90,7 +90,8 @@ namespace Neon.Kube.DesktopService
                     checkpointDrives:  request.CheckpointDrives,
                     templateDrivePath: request.TemplateDrivePath,
                     switchName:        request.SwitchName,
-                    extraDrives:       extraDrives);
+                    extraDrives:       extraDrives,
+                    notes:             request.Notes);
 
                 return new GrpcBaseReply();
             }

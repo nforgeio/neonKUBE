@@ -96,7 +96,7 @@ namespace Neon.Kube.Hosting.HyperV
                 Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-                this.Machine = machine;
+                this.Machine  = machine;
                 this.NodeName = nodeName;
             }
 
