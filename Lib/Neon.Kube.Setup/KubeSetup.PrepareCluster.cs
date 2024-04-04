@@ -117,11 +117,21 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
+            var setupState = new KubeSetupState();
+
+            setupState.ClusterDefinition = clusterDefinition;
+
+            if (clusterDefinition.IsDesktop)
+            {
+                setupState.ClusterId     = KubeConst.DesktopClusterId;
+                setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+            }
+
             var cluster = ClusterProxy.Create(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Prepare,
-                setupState:            new KubeSetupState() { ClusterDefinition = clusterDefinition },
+                setupState:            setupState,
                 nodeImageUri:          options.NodeImageUri,
                 nodeImagePath:         options.NodeImagePath,
                 nodeProxyCreator:      (nodeName, nodeAddress) =>
@@ -178,7 +188,6 @@ namespace Neon.Kube.Setup
             // persist setup related state across the cluster prepare and setup phases.
 
             var contextName = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
-            var setupState  = (KubeSetupState)null;
 
             if (KubeSetupState.Exists(contextName))
             {
@@ -481,33 +490,41 @@ namespace Neon.Kube.Setup
 
             if (options.DesktopReadyToGo)
             {
-                // Renew the certificate for NEONDESKTOP because it might have expired
-                // since the desktop image was built.
-
-                controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode);
-
                 // We need to append these DNS records the node's local [/etc/hosts] file
                 // so the cluster will work when offline.
                 //
                 //      ADDRESS     desktop.neoncluster.io
                 //      ADDRESS     *.desktop.neoncluster.io
 
-                var hostName    = KubeConst.DesktopClusterDomain;
-                var hostAddress = IPAddress.Parse(clusterDefinition.NodeDefinitions.Values.Single().Address);
+                controller.AddNodeStep("update: /etc/hosts",
+                    (controller, node) =>
+                    {
+                        var hostName    = KubeConst.DesktopClusterDomain;
+                        var hostAddress = node.Address;
+                        var sbHosts     = new StringBuilder(node.DownloadText("/etc/hosts"));
 
-                controller.SetGlobalStepStatus($"configure: node /etc/hosts");
+                        sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
+                        sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
 
-                var node    = cluster.Nodes.Single();
-                var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
+                        node.UploadText("/etc/hosts", sbHosts, permissions: "644");
+                    });
 
-                sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
-                sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
+                // Set the SSH password.
 
-                node.UploadText("/etc/hosts", sbHosts, permissions: "644");
+                controller.AddNodeStep("set: ssh password",
+                    (controller, node) =>
+                    {
+                        node.SetPassword(setupState.SshUsername, setupState.SshPassword);
+                    });
 
                 // NEONDESKTOP clusters need to configure the workstation login, etc.
 
-                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
+                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode);
+
+                // Renew the certificate for NEONDESKTOP because it might have expired
+                // since the desktop image was built.
+
+                controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode);
             }
 
             // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
@@ -515,7 +532,7 @@ namespace Neon.Kube.Setup
 
             if (options.DesktopReadyToGo)
             {
-                controller.AddGlobalStep("stabilizing: cluster...",
+                controller.AddGlobalStep("stabilize: cluster...",
                     async controller =>
                     {
                         controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
@@ -523,7 +540,7 @@ namespace Neon.Kube.Setup
 
                         // Wait a bit to give the cluster a chance to restart the pods.
 
-                        await Task.Delay(TimeSpan.FromSeconds(60));
+                        await Task.Delay(TimeSpan.FromSeconds(60), controller.CancellationToken);
 
                         // Wait for the pods to stabilize.
 
@@ -536,7 +553,9 @@ namespace Neon.Kube.Setup
 
                             while (true)
                             {
-                                var pods = (await k8s.CoreV1.ListAllPodsAsync()).Items;
+                                controller.CancellationToken.ThrowIfCancellationRequested();
+
+                                var pods = (await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken)).Items;
 
                                 badPods.Clear();
 
@@ -578,7 +597,7 @@ namespace Neon.Kube.Setup
 
                                 // Otherwise wait a bit and retry.
 
-                                await Task.Delay(pauseInterval);
+                                await Task.Delay(pauseInterval, controller.CancellationToken);
                             }
                         }
                     });
@@ -646,9 +665,9 @@ namespace Neon.Kube.Setup
             if (options.DesktopReadyToGo)
             {
                 cluster.Id               =
-                setupState.ClusterId     = KubeHelper.GenerateClusterId();
-                setupState.ClusterName   = clusterDefinition.Name;
+                setupState.ClusterId     = KubeConst.DesktopClusterId;
                 setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
+                setupState.ClusterName   = clusterDefinition.Name;
             }
             else
             {

@@ -365,6 +365,11 @@ namespace Neon.Kube.Setup
         void ThrowIfCancelled();
 
         /// <summary>
+        /// Returns the <see cref="CancellationTokenSource"/> used to cancel setup.
+        /// </summary>
+        CancellationTokenSource CancellationTokenSource { get; }
+
+        /// <summary>
         /// Returns the <see cref="CancellationToken"/> that will be signalled when setup is cancelled.
         /// </summary>
         CancellationToken CancellationToken { get; }

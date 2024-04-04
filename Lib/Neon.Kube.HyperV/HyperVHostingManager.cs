@@ -1097,7 +1097,6 @@ namespace Neon.Kube.Hosting.HyperV
         private List<ClusterVm> GetClusterVms(HyperVProxy hyperv)
         {
             Covenant.Assert(cluster != null);
-            Covenant.Assert(!string.IsNullOrEmpty(cluster.Id));
 
             // We're going to rely on the tags we encoded into the VM notes to
             // ensure that the VMs is associated with the current cluster and
@@ -1105,6 +1104,13 @@ namespace Neon.Kube.Hosting.HyperV
 
             var clusterVms = new List<ClusterVm>();
             var clusterId  = cluster.Id;
+
+            // This can happen when there are no VMs deployed yet. 
+
+            if (!string.IsNullOrEmpty(clusterId))
+            {
+                return clusterVms;
+            }
 
             foreach (var machine in hyperv.ListVms())
             {

@@ -106,9 +106,14 @@ namespace Neon.Kube
         public const string NeonClusterDomain = "neoncluster.io";
 
         /// <summary>
+        /// The fixed ID for all desktop clusters.
+        /// </summary>
+        public const string DesktopClusterId = $"desktop";
+
+        /// <summary>
         /// The fixed domain for all desktop clusters.
         /// </summary>
-        public const string DesktopClusterDomain = $"desktop.{NeonClusterDomain}";
+        public const string DesktopClusterDomain = $"{DesktopClusterId}.{NeonClusterDomain}";
 
         /// <summary>
         /// The default host machine sysadmin username.
