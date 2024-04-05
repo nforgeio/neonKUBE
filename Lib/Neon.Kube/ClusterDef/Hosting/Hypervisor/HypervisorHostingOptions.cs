@@ -258,7 +258,7 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the VM name prefix.
 
-            if (!string.IsNullOrWhiteSpace(NamePrefix))
+            if (!string.IsNullOrWhiteSpace(NamePrefix) && NamePrefix != "[none]")
             {
                 if (!ClusterDefinition.IsValidName(NamePrefix))
                 {

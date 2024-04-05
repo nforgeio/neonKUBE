@@ -13,7 +13,7 @@ hosting:
     neonDesktopBuiltIn: true
     useInternalSwitch: true
   hypervisor:
-    namePrefix: ""
+    namePrefix: "[none]"
     vcpus: 4
     memory: 16 GiB
     osDisk: 48 GiB
