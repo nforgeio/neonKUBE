@@ -1107,7 +1107,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             // This can happen when there are no VMs deployed yet. 
 
-            if (!string.IsNullOrEmpty(clusterId))
+            if (string.IsNullOrEmpty(clusterId))
             {
                 return clusterVms;
             }
