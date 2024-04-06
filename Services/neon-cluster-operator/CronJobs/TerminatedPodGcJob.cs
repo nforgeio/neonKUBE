@@ -131,7 +131,8 @@ namespace NeonClusterOperator
                         {
                             var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase: Failed");
 
-                            foreach (var pod in terminatedPods.Items)
+                            foreach (var pod in terminatedPods.Items
+                                .Where(pod => IsNameGenerated(pod)))
                             {
                                 var lastTransitionTime = pod.Status.Conditions.Max(condition => condition.LastTransitionTime);
 
@@ -163,7 +164,8 @@ namespace NeonClusterOperator
                         {
                             var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase: Succeeded");
 
-                            foreach (var pod in terminatedPods.Items)
+                            foreach (var pod in terminatedPods.Items
+                                .Where(pod => IsNameGenerated(pod)))
                             {
                                 var lastTransitionTime = pod.Status.Conditions.Max(condition => condition.LastTransitionTime);
 
@@ -193,6 +195,44 @@ namespace NeonClusterOperator
 
                 logger?.LogInformationEx(() => $"elapsed={stopwatch.Elapsed}, failedPodsDeleted={failedPodsDeleted}, succeededPodsDeleted={succeededPodsDeleted}");
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether a pod appears to have a generated name, with a UID suffix.
+        /// </para>
+        /// <para>
+        /// We don't delete pods without a generated name to avoid a potential race condition
+        /// where we identify terminated pod to be removed but before we actually remove it,
+        /// something else deletes the pod and then deploys another with the same name and
+        /// then we end up deleting the new pod by mistake.
+        /// </para>
+        /// </summary>
+        /// <param name="pod">Specifies the pod being checked.</param>
+        /// <returns><c>true</c> when the pod has a generated name.</returns>
+        private bool IsNameGenerated(V1Pod pod)
+        {
+            Covenant.Requires<ArgumentNullException>(pod != null, nameof(pod));
+
+            if (string.IsNullOrEmpty(pod.Metadata.GenerateName))
+            {
+                return false;
+            }
+
+            // $note(jefflill):
+            //
+            // There's a chance that the pod was was deployed with both Name and
+            // GeneratedName set and that the name be prefixed with the generated
+            // name property.  In this case, this method will treat the pod as
+            // having a generated name when it actually doesn't.
+            //
+            // I'm going to assume that this situation will be very rare and
+            // combining this with the unlikely chance that we'll encounter
+            // the deletion race condition, that this will be too rare to
+            // worry about.
+
+            return pod.Metadata.Name.Length > pod.Metadata.GenerateName.Length &&
+                   pod.Metadata.Name.StartsWith(pod.Metadata.GenerateName);
         }
     }
 }
