@@ -64,7 +64,9 @@ namespace Neon.Kube.ClusterDef
         /// Parameterized constructor.
         /// </summary>
         /// <param name="enabled">Indicates whether the job is enabled.</param>
-        /// <param name="schedule">Specifies the enhanced Quartz job schedule.</param>
+        /// <param name="schedule">
+        /// Specifies the enhanced Quartz job schedule.  <see cref="Schedule"/> for a description.
+        /// </param>
         public JobSchedule(bool enabled, string schedule)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(schedule), nameof(schedule));
