@@ -495,7 +495,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster domain.
         /// </summary>
-        public string Domain { get; private set; }
+        public string Domain { get; set; }
 
         /// <summary>
         /// Returns the cluster hosting options.

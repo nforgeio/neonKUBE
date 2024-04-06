@@ -33,7 +33,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto
 {
     /// <summary>
-    /// Holds information about an exception caught by the neon desktop service.
+    /// Holds information about an exception caught by the NeonDESKTOP service.
     /// </summary>
     [DataContract]
     public class GrpcError

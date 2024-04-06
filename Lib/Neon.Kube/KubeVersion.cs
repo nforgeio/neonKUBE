@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// </para>
     /// <note>
     /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can
-    /// be referenced directly from Helm charts like: $%lt;KubeVersion.Kubernetes&gt;
+    /// be referenced directly from Helm charts like: $&lt;KubeVersion.Kubernetes&gt;
     /// </note>
     /// </summary>
     public static class KubeVersion

@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// </para>
     /// <note>
     /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can
-    /// be referenced directly from Helm charts like: $%lt;KubePort.NeonNodeAgent&gt;
+    /// be referenced directly from Helm charts like: $&lt;KubePort.NeonNodeAgent&gt;
     /// </note>
     /// </summary>
     public static class KubePort

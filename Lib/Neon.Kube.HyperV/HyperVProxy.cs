@@ -55,11 +55,11 @@ namespace Neon.Kube.Hosting.HyperV
     /// <summary>
     /// <para>
     /// Handles Hyper-V operations by calling a <see cref="HyperVClient"/> directly when the current process
-    /// is running with elevated permissions or calling the <b>Neon Desktop Service</b> via gRPC when the
+    /// is running with elevated permissions or calling the <b>NeonDESKTOP Service</b> via gRPC when the
     /// current process doesn't have these rights.
     /// </para>
     /// <para>
-    /// The <b>Neon Desktop Service</b> is installed along with <b>neon-desktop</b> and <b>neon-cli</b> and
+    /// The <b>NeonDESKTOP Service</b> is installed along with <b>neon-desktop</b> and <b>neon-cli</b> and
     /// runs as a Windows Service as administrator.
     /// </para>
     /// </summary>

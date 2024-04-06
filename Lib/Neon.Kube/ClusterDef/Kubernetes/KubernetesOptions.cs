@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        KubeletOptions.cs
+// FILE:        KubernetesOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -46,7 +46,7 @@ namespace Neon.Kube.ClusterDef
     /// Describes the options for the Kubernetes Kubelet service deployed
     /// on all cluster nodes.
     /// </summary>
-    public class KubeletOptions
+    public class KubernetesOptions
     {
         private const string minVersion              = "1.13.0";
         private const string defaultVersion          = "default";
@@ -55,7 +55,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeletOptions()
+        public KubernetesOptions()
         {
         }
 
@@ -247,6 +247,16 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> EvictionHard { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
+        /// Specifies the threshold at which the terminated pods will start being garbage collected
+        /// by Kubernetes.  Terminated pods will be deleted once the number of terminated pods exceeds
+        /// this number.  This defaults to <b>12500</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminatedPodGcThreshold", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminatedPodGcThreshold", ApplyNamingConventions = false)]
+        [DefaultValue(12500)]
+        public int TerminatedPodGcThreshold { get; set; } = 12500;
+
+        /// <summary>
         /// Specifies Kubernetes API Server options.
         /// </summary>
         [JsonProperty(PropertyName = "ApiServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -264,7 +274,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubelet)}";
+            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
 
             ApiServer ??= new ApiServerOptions();
 
@@ -306,6 +316,11 @@ namespace Neon.Kube.ClusterDef
             if (ShutdownGracePeriodCriticalPodsSeconds >= ShutdownGracePeriodSeconds)
             {
                 throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] must be less than [{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}].");
+            }
+
+            if (TerminatedPodGcThreshold < 0)
+            {
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(TerminatedPodGcThreshold)}={TerminatedPodGcThreshold}] must be greater than or equal to zero.");
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);

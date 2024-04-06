@@ -212,6 +212,27 @@ namespace Neon.Kube.Resources.Cluster
             /// CRON schedule for renewing the cluster certficate.
             /// </summary>
             public JobSchedule ClusterCertificateRenewal { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// CRON schedule for garbage collecting terminated pods.
+            /// </summary>
+            public JobSchedule TerminatedPodGc { get; set; } = new JobSchedule();
+
+            /// <summary>
+            /// Specifies the delay in milliseconds the terminated pod removal job
+            /// will pause after scanning a namespace for terminated jobs and also
+            /// after each job removal to reduce pressure on the API Server.  This
+            /// defaults to <b>1000 milliseconds</b> (1 second).
+            /// </summary>
+            public int TerminatedPodGcDelayMilliseconds { get; set; } = 1000;
+
+            /// <summary>
+            /// Specifies the number of minutes after a pod terminates sucessfully or not before it
+            /// becomes eligible for removal by the <b>neon-cluster-operator</b>.  This defaults to
+            /// <b>720 minutes</b> (12 hours) to give operations teams a chance to investigate
+            /// recent problems.
+            /// </summary>
+            public int TerminatedPodGcThresholdMinutes { get; set; } = 720;
         }
 
         /// <summary>
@@ -245,9 +266,14 @@ namespace Neon.Kube.Resources.Cluster
             public JobStatus TelemetryPing { get; set; } = new JobStatus();
 
             /// <summary>
-            /// Neon Desktop certificate update status.
+            /// Certificate update status.
             /// </summary>
             public JobStatus ClusterCertificateRenewal { get; set; } = new JobStatus();
+
+            /// <summary>
+            /// Terminated pod GC status.
+            /// </summary>
+            public JobStatus TerminatedPodGc { get; set; } = new JobStatus();
         }
 
         /// <summary>

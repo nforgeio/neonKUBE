@@ -83,6 +83,7 @@ namespace NeonClusterOperator
         private static TelemetryPingJob                     telemetryPingJob;
         private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
         private static MinWorkerNodeVcpuJob                 minWorkerNodeVcpuJob;
+        private static TerminatedPodGcJob                   terminatedPodGcJob;
 
         /// <summary>
         /// Static constructor.
@@ -96,6 +97,7 @@ namespace NeonClusterOperator
             telemetryPingJob                 = new TelemetryPingJob();
             renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
             minWorkerNodeVcpuJob             = new MinWorkerNodeVcpuJob();
+            terminatedPodGcJob               = new TerminatedPodGcJob();
         }
 
         //---------------------------------------------------------------------
@@ -235,6 +237,28 @@ namespace NeonClusterOperator
                             {
                                 { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
                             });
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
+                }
+
+                if (resource.Spec.TerminatedPodGc.Enabled)
+                {
+                    try
+                    {
+                        var terminatedPodGcSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TerminatedPodGc.Schedule);
+
+                        terminatedPodGcJob.TerminatedPodGcDelayMilliseconds = resource.Spec.TerminatedPodGcDelayMilliseconds;
+                        terminatedPodGcJob.TerminatedPodGcThresholdMinutes  = resource.Spec.TerminatedPodGcThresholdMinutes;
+
+                        await terminatedPodGcJob.DeleteFromSchedulerAsync(scheduler);
+                        await terminatedPodGcJob.AddToSchedulerAsync(
+                            scheduler,
+                            k8s,
+                            terminatedPodGcSchedule,
+                            new Dictionary<string, object>());
                     }
                     catch (Exception e)
                     {

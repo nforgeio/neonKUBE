@@ -5,7 +5,7 @@ isDesktop: true
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
@@ -13,7 +13,6 @@ hosting:
     neonDesktopBuiltIn: true
     useInternalSwitch: true
   hypervisor:
-    namePrefix: ""
     vcpus: 4
     memory: 16 GiB
     osDisk: 48 GiB

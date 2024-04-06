@@ -1047,8 +1047,9 @@ namespace Neon.Kube.K8s
         /// Lists pods from all cluster namespaces.
         /// </summary>
         /// <param name="k8sCoreV1">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The <see cref="V1PodList"/>.</returns>
-        public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1)
+        public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -1068,7 +1069,7 @@ namespace Neon.Kube.K8s
             await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
                 async (@namespace, cancellationToken) =>
                 {
-                    var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name());
+                    var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name(), cancellationToken: cancellationToken);
 
                     lock (pods)
                     {

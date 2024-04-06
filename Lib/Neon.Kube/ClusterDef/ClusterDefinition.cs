@@ -457,12 +457,12 @@ namespace Neon.Kube.ClusterDef
         public SecurityOptions Security { get; set; } = new SecurityOptions();
 
         /// <summary>
-        /// Specifies Kubernetes Kubelet service cluster options.
+        /// Specifies Kubernetes cluster options.
         /// </summary>
-        [JsonProperty(PropertyName = "Kubelet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kubelet", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "kubernetes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public KubeletOptions Kubelet { get; set; } = new KubeletOptions();
+        public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
 
         /// <summary>
         /// Specifies options for the cluster integrated monitoring stack.
@@ -866,7 +866,7 @@ namespace Neon.Kube.ClusterDef
             Deployment         = Deployment ?? new DeploymentOptions();
             Storage            = Storage ?? new StorageOptions();
             Security           = Security ?? new SecurityOptions();
-            Kubelet            = Kubelet ?? new KubeletOptions();
+            Kubernetes            = Kubernetes ?? new KubernetesOptions();
             Monitor            = Monitor ?? new MonitorOptions();
             Hosting            = Hosting ?? new HostingOptions();
             Hosting.Hypervisor = Hosting.Hypervisor ?? new HypervisorHostingOptions();
@@ -957,7 +957,7 @@ namespace Neon.Kube.ClusterDef
             Hosting.Validate(this);
             Storage.Validate(this);
             Security.Validate(this);
-            Kubelet.Validate(this);
+            Kubernetes.Validate(this);
             Monitor.Validate(this);
             Network.Validate(this);
             NodeOptions.Validate(this);

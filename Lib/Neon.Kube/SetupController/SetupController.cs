@@ -1778,6 +1778,9 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
+        public CancellationTokenSource CancellationTokenSource => cts;
+
+        /// <inheritdoc/>
         public CancellationToken CancellationToken => cts.Token;
 
         /// <inheritdoc/>
