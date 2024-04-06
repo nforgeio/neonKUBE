@@ -6282,7 +6282,8 @@ $@"- name: StorageType
                 {
                     controller.CancellationToken.ThrowIfCancellationRequested();
 
-                    // Remove all failed pods.  These pods may never be removed by Kubernetes:
+                    // Remove all terminated pods.  These pods may never be removed by Kubernetes,
+                    // but [neon-cluster-operator] will eventually remove these:
                     //
                     //      https://midbai.com/en/post/evicted-pods-not-deleted/
 
@@ -6291,7 +6292,8 @@ $@"- name: StorageType
 
                     foreach (var pod in pods.Items)
                     {
-                        if (pod.Status.Phase.Equals("Failed", StringComparison.InvariantCultureIgnoreCase))
+                        if (pod.Status.Phase.Equals("Failed", StringComparison.InvariantCultureIgnoreCase) ||
+                            pod.Status.Phase.Equals("Succeeded", StringComparison.InvariantCultureIgnoreCase))
                         {
                             await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
                             deletedUids.Add(pod.Uid());
