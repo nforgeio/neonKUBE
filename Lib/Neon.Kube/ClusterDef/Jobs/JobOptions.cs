@@ -170,7 +170,7 @@ namespace Neon.Kube.ClusterDef
             TelemetryPing ??= new JobSchedule(enabled: true, schedule: DailyRandomSchedule);
             TelemetryPing.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TelemetryPing)}");
 
-            TerminatedPodGc ??= new JobSchedule(enabled: true, schedule: "0 15 * * * *");
+            TerminatedPodGc ??= new JobSchedule(enabled: true, schedule: "0 15 * * *");
             TerminatedPodGc.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TerminatedPodGc)}");
 
             if (TerminatedPodGcDelayMilliseconds < 0)
