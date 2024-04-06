@@ -180,6 +180,10 @@ namespace NeonClusterOperator
             }
         }
 
+        /// <summary>
+        /// Adds a <see cref="V1NeonContainerRegistry"/> CRD for the local container registry.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNeonLocalRegistryAsync()
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
