@@ -192,8 +192,8 @@ spec:
         /// <summary>
         /// Adds the Kubernetes node labels.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The first control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the first control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -218,7 +218,7 @@ spec:
                         {
                             controller.ThrowIfCancelled();
 
-                            var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(n => n.Metadata.Name == node.Name)).Single();
+                            var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(k8sNode => k8sNode.Metadata.Name == node.Name)).Single();
 
                             var patch = new V1Node()
                             {
@@ -260,9 +260,9 @@ spec:
         /// control-plane nodes and workers to the cluster and then performs the rest of
         /// cluster setup.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="maxParallel">
-        /// The maximum number of operations on separate nodes to be performed in parallel.
+        /// Specifies the maximum number of operations on separate nodes to be performed in parallel.
         /// This defaults to <see cref="defaultMaxParallelNodes"/>.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -495,8 +495,8 @@ spec:
         /// <summary>
         /// Method to generate Kubernetes cluster configuration.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The YAML with the Kubernetes config used to initialize the cluster.</returns>
         public static string GenerateKubernetesClusterConfig(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -621,30 +621,30 @@ nodeLeaseDurationSeconds: 40
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
-maxPods: {cluster.SetupState.ClusterDefinition.Kubelet.MaxPodsPerNode}
-shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodSeconds}s
-shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodCriticalPodsSeconds}s
+maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
 rotateCertificates: true");
 
             clusterConfig.AppendLine($"systemReserved:");
 
-            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved.Keys)
+            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
             }
 
             clusterConfig.AppendLine($"kubeReserved:");
 
-            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved.Keys)
+            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
             }
 
             clusterConfig.AppendLine($"evictionHard:");
 
-            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard.Keys)
+            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
             }
 
             // Append the KubeProxyConfiguration
@@ -663,7 +663,7 @@ mode: {kubeProxyMode}");
         /// <summary>
         /// Uploads a copyright/trademark text files to all of the cluster nodes.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         public static void UploadAttributions(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -689,8 +689,8 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
         /// <summary>
         /// Basic Kubernetes cluster initialization.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="firstControlNode">The first control-plane node in the cluster where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="firstControlNode">Specifies the first control-plane node in the cluster where the operation will be performed.</param>
         public static void ConfigureKubernetes(ISetupController controller, NodeSshProxy<NodeDefinition> firstControlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1051,8 +1051,8 @@ exit 1
         /// <summary>
         /// Configures CoreDns.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureCoreDnsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -1271,8 +1271,8 @@ exit 1
         /// <summary>
         /// Configures the local workstation.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="firstControlNode">The first control-plane node in the cluster where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="firstControlNode">Specifies the first control-plane node in the cluster where the operation will be performed.</param>
         public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> firstControlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1382,8 +1382,8 @@ exit 1
         /// <summary>
         /// Adds the NEONKUBE standard priority classes to the cluster.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigurePriorityClassesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -1422,8 +1422,8 @@ exit 1
         /// <summary>
         /// Uploads cluster related metadata to cluster nodes to <b>/etc/neonkube/metadata</b>
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="node">The target cluster node.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="node">Specifies the target cluster node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallClusterManifestAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
@@ -1446,8 +1446,8 @@ exit 1
         /// <summary>
         /// Configures pods to be schedule on control-plane nodes when enabled.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureControlPlaneTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -1464,7 +1464,7 @@ exit 1
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
-                    if (cluster.SetupState.ClusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
+                    if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = (V1NodeList)null;
 
@@ -1508,8 +1508,8 @@ exit 1
         /// <summary>
         /// Installs Cilium.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         public static void InstallCilium(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1572,8 +1572,8 @@ systemctl restart cri-o
         /// <summary>
         /// Installs Istio.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         public static void InstallIstio(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1803,8 +1803,8 @@ istioctl install --verify -y -f manifest.yaml
     /// <summary>
     /// Configures the default trace sampling rates for cluster namespaces. 
     /// </summary>
-    /// <param name="controller">The setup controller.</param>
-    /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+    /// <param name="controller">Specifies the setup controller.</param>
+    /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
     /// <returns>The tracking <see cref="Task"/>.</returns>
     public static async Task ConfigureNamespaceTraceSamplingAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -1867,8 +1867,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs the Kubernetes Metrics Server service.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -1924,8 +1924,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs CertManager.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2124,11 +2124,11 @@ istioctl install --verify -y -f manifest.yaml
         }
 
         /// <summary>
-        /// Renews the cluster certificates for a neeon desktop cluster. 
+        /// Renews the cluster certificates for a NeonDESKTOP cluster. 
         /// </summary>
-        /// <param name="controller"></param>
-        /// <param name="controlNode"></param>
-        /// <returns></returns>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureDesktopClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             ConnectCluster(controller);
@@ -2138,14 +2138,21 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Configures the cluster certificates.
         /// </summary>
-        /// <param name="controller"></param>
-        /// <param name="controlNode"></param>
-        /// <returns></returns>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await ConfigureCertificatesInternalAsync(controller, controlNode);
         }
 
+        /// <summary>
+        /// Handles the configuration of the cluster's SSL certificate.
+        /// </summary>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="idempotencySuffix">Optionally specifies a suffix to be used for making the operation idempotent.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task ConfigureCertificatesInternalAsync(
             ISetupController             controller,
             NodeSshProxy<NodeDefinition> controlNode,
@@ -2213,8 +2220,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Configures external apiserver access.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureApiserverIngressAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2342,8 +2349,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs tokens needed to authenticate with NeonCLOUD services.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNeonCloudTokenAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2384,8 +2391,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Configures the root Kubernetes user.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2448,8 +2455,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Configures the Kubernetes dashboard.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubernetesDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2492,7 +2499,7 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Adds the node taints.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task TaintNodesAsync(ISetupController controller)
         {
@@ -2542,8 +2549,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs cluster CRDs used later on in setup by various helm charts.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallClusterCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2567,8 +2574,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Deploy Kiali.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2655,8 +2662,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs the Node Problem Detector.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeProblemDetectorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2697,10 +2704,10 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Creates a Kubernetes namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new WatchNamespace name.</param>
-        /// <param name="istioInjectionEnabled">Whether Istio sidecar injection should be enabled.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new namespace name.</param>
+        /// <param name="istioInjectionEnabled">Indicates whether Istio sidecar injection should be enabled for the namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateNamespaceAsync(
             ISetupController                controller,
@@ -2736,8 +2743,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Installs OpenEBS.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOpenEbsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -2928,8 +2935,8 @@ istioctl install --verify -y -f manifest.yaml
         /// Adds the Helm values required for deploying common OpenEBS components
         /// required by all engines.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="values">The target Helm values dictionary.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="values">Specifies the target Helm values dictionary.</param>
         private static void AddOpenEbsCommonHelmValues(ISetupController controller, Dictionary<string, object> values)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -3019,8 +3026,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Adds the Helm values required for deploying the cStor engine.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="values">The target Helm values dictionary.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="values">Specifies the target Helm values dictionary.</param>
         private static void AddOpenEbsCstorHelmValues(ISetupController controller, Dictionary<string, object> values)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -3046,8 +3053,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Adds the Helm values required for deploying the Jiva engine.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="values">The target Helm values dictionary.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="values">Specifies the target Helm values dictionary.</param>
         private static void AddOpenEbsJivaHelmValues(ISetupController controller, Dictionary<string, object> values)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -3137,8 +3144,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Deploys OpenEBS using the cStor engine.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task DeployOpenEbsWithcStor(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -3298,9 +3305,9 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Creates a Kubernetes Storage Class.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new <see cref="V1StorageClass"/> name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="storagePool">Specifies the OpenEBS storage pool.</param>
         /// <param name="isDefault">Optionally indicates that this is the default storage class.</param>
@@ -3361,9 +3368,9 @@ istioctl install --verify -y -f manifest.yaml
         /// <summary>
         /// Creates a Kubernetes Storage Class.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new <see cref="V1StorageClass"/> name.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
@@ -3416,9 +3423,9 @@ $@"- name: StorageType
         /// <summary>
         /// Creates an OpenEBS cStor Kubernetes Storage Class.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new <see cref="V1StorageClass"/> name.</param>
         /// <param name="cstorPoolCluster">Specifies the cStor pool name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
@@ -3481,9 +3488,9 @@ $@"- name: StorageType
         /// <summary>
         /// Creates the approperiate OpenEBS Kubernetes Storage Class for the cluster.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new <see cref="V1StorageClass"/> name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -3538,8 +3545,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs The Grafana Agent to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -3648,8 +3655,8 @@ $@"- name: StorageType
         /// <summary>
         /// Waits for Prometheus to be fully ready.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -3681,8 +3688,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Memcached to the neon-system namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMemcachedAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -3744,8 +3751,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Mimir to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMimirAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -3917,8 +3924,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Loki to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4075,8 +4082,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Tempo to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallTempoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4195,8 +4202,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Kube State Metrics to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubeStateMetricsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4263,8 +4270,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Reloader to the Neon system namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallReloaderAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4331,8 +4338,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Grafana to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4535,8 +4542,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a Minio cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4720,7 +4727,7 @@ $@"- name: StorageType
         /// <summary>
         /// Installs NeonKUBE observability components to the observability namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallObservabilityAsync(ISetupController controller)
         {
@@ -4756,8 +4763,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a harbor container registry and required components.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallRedisAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -4833,8 +4840,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a harbor container registry and required components.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallHarborAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5090,8 +5097,8 @@ $@"- name: StorageType
         /// <summary>
         /// Iploads the cluster manifest as a config..
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task UploadClusterManifestAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5119,8 +5126,8 @@ $@"- name: StorageType
         /// Sets the  <see cref="KubeConfigMapName.ClusterLock"/> config map in the <see cref="KubeNamespace.NeonStatus"/> namespace
         /// using the lock setting from the cluster definition.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task SetClusterLockAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5148,8 +5155,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs <b>neon-cluster-operator</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallClusterOperatorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5263,8 +5270,8 @@ $@"- name: StorageType
         /// <summary>
         /// Creates the standard dashboard resources.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateDashboardsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5348,8 +5355,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs <b>neon-node-agent</b>.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5408,8 +5415,8 @@ $@"- name: StorageType
         /// Adds custom <see cref="V1NeonContainerRegistry"/> resources defined in the cluster definition to
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
@@ -5437,8 +5444,8 @@ $@"- name: StorageType
         /// <summary>
         /// Creates the required namespaces.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5462,8 +5469,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs a Citus-postgres database used by neon-system services.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5675,8 +5682,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs SSO related components.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSsoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5700,8 +5707,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Dex.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallDexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5799,8 +5806,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Neon SSO Session Proxy.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNeonSsoProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -5850,8 +5857,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Glauth.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGlauthAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -6003,8 +6010,8 @@ $@"- name: StorageType
         /// <summary>
         /// Installs Oauth2-proxy.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOauth2ProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -6056,8 +6063,8 @@ $@"- name: StorageType
         /// Returns the Postgres connection string for the default database for the
         /// cluster's <see cref="KubeService.NeonSystemDb"/> deployment.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The connection string.</returns>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <returns>The database connection string.</returns>
         public static async Task<string> GetSystemDatabaseConnectionStringAsync(ISetupController controller)
         {
             await SyncContext.Clear;
@@ -6086,11 +6093,11 @@ $@"- name: StorageType
         /// <summary>
         /// Creates a <see cref="V1NeonDashboard"/> idempotently.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new bucket name.</param>
-        /// <param name="url">The dashboard URL</param>
-        /// <param name="displayName">The Dashboard display name.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
+        /// <param name="name">Specifies the new bucket name.</param>
+        /// <param name="url">Specifies the dashboard URL</param>
+        /// <param name="displayName">Specifies the Dashboard display name.</param>
         /// <param name="enabled">Optionally specify whether the dashboard is enabled.</param>
         /// <param name="displayOrder">Optionally specify the display order.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -6142,8 +6149,8 @@ $@"- name: StorageType
         /// Writes the <see cref="KubeConfigMapName.ClusterInfo"/>
         /// config map to the <see cref="KubeNamespace.NeonStatus"/> namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task UploadClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
@@ -6169,8 +6176,8 @@ $@"- name: StorageType
         /// Writes the <see cref="KubeConfigMapName.ClusterHealth"/> and <see cref="KubeConfigMapName.ClusterLock"/> 
         /// config maps to the <see cref="KubeNamespace.NeonStatus"/> namespace.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
+        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         /// <param name="ready">
         /// Pass <c>false</c> early in the cluster setup process to indicate that the cluster isn't
         /// ready yet and then <c>true</c> as the last setup step indicating that the cluster is ready.
@@ -6210,7 +6217,7 @@ $@"- name: StorageType
         /// <summary>
         /// Waits for the a NEONDESKTOP cluster to stabilize.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StabilizeClusterAsync(ISetupController controller)
         {
@@ -6227,7 +6234,9 @@ $@"- name: StorageType
             await retry.InvokeAsync(
                 async () =>
                 {
-                    var pods = await k8s.CoreV1.ListAllPodsAsync();
+                    controller.CancellationToken.ThrowIfCancellationRequested();
+
+                    var pods = await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken);
 
                     if (!pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase)))
                     {
