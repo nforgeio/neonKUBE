@@ -83,7 +83,6 @@ namespace NeonClusterOperator
             this.logger = logger;
         }
 
-
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource, CancellationToken cancellationToken = default)
         {
@@ -128,6 +127,7 @@ namespace NeonClusterOperator
                     logger?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
 
                     var addPatch = OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                     addPatch.Add(path => path.Spec.Registries, new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                     await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
@@ -148,6 +148,7 @@ namespace NeonClusterOperator
                         crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                         var patch =  OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                         patch.Replace(path => path.Spec.Registries, crioConfig.Spec.Registries);
 
                         await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
