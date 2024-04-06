@@ -528,7 +528,7 @@ namespace Neon.Kube.Setup
             }
 
             // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
-            // We're going to waita maximum of 10 minutes before giving up.
+            // We're going to wait a maximum of 10 minutes before giving up.
 
             if (options.DesktopReadyToGo)
             {
@@ -537,69 +537,7 @@ namespace Neon.Kube.Setup
                     {
                         controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
                         setupState.Save();
-
-                        // Wait a bit to give the cluster a chance to restart the pods.
-
-                        await Task.Delay(TimeSpan.FromSeconds(60), controller.CancellationToken);
-
-                        // Wait for the pods to stabilize.
-
-                        using (var k8s = KubeHelper.CreateKubernetesClient())
-                        {
-                            var startedUtc      = DateTime.UtcNow;
-                            var maxWaitInterval = TimeSpan.FromMinutes(15);
-                            var pauseInterval   = TimeSpan.FromSeconds(5);
-                            var badPods         = new List<V1Pod>();
-
-                            while (true)
-                            {
-                                controller.CancellationToken.ThrowIfCancellationRequested();
-
-                                var pods = (await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken)).Items;
-
-                                badPods.Clear();
-
-                                foreach (var pod in pods)
-                                {
-                                    if (pod.Status.Phase != "Running" || pod.Status.ContainerStatuses.Any(status => !status.Ready))
-                                    {
-                                        badPods.Add(pod);
-                                    }
-                                }
-
-                                if (badPods.Count == 0)
-                                {
-                                    return;
-                                }
-
-                                // Fail if we've exceeded the maximum wait time, logging info
-                                // about the failed pods.
-
-                                if (DateTime.UtcNow - startedUtc >= maxWaitInterval)
-                                {
-                                    var sb = new StringBuilder();
-
-                                    controller.LogGlobalError($"[{badPods.Count}] unhealthy pods are preventing cluster stabilization.");
-
-                                    foreach (var badPod in badPods
-                                        .OrderBy(pod => pod.Namespace())
-                                        .ThenBy(pod => pod.Name()))
-                                    {
-                                        sb.Clear();
-                                        sb.AppendLine();
-                                        sb.AppendLine($"POD: {badPod.Name()}@{badPod.Namespace()}");
-                                        sb.AppendLine("-----------------------------");
-                                        sb.AppendLine(NeonHelper.YamlSerialize(badPod));
-                                    }
-
-                                    throw new TimeoutException($"The cluster hasn't stabilized ");
-                                }
-
-                                // Otherwise wait a bit and retry.
-
-                                await Task.Delay(pauseInterval, controller.CancellationToken);
-                            }
-                        }
+                        await StabilizeClusterAsync(controller);
                     });
             }
 

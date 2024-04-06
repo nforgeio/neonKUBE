@@ -5,7 +5,7 @@ isDesktop: true
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: hyperv

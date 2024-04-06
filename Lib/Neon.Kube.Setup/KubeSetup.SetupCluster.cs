@@ -304,15 +304,9 @@ namespace Neon.Kube.Setup
             cluster.HostingManager.AddPostSetupSteps(controller);
 
             //-----------------------------------------------------------------
-            // Ensure that required pods are running for [neon-desktop] clusters.
-            // This is required because no pods will be running when the [neon-desktop]
-            // image first boots and it may take some time for the pods to start
-            // and stabilize.
+            // Ensure that required pods are running.
 
-            if (options.DesktopReadyToGo)
-            {
-                controller.AddGlobalStep("stabilize cluster...", StabilizeClusterAsync);
-            }
+            controller.AddGlobalStep("stabilize cluster...", StabilizeClusterAsync);
 
             // We need to dispose these after the setup controller runs.
 

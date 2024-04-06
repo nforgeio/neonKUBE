@@ -91,7 +91,7 @@ name: {clusterName}
 purpose: test
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: aws
@@ -112,7 +112,7 @@ datacenter: westus2
 purpose: test
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: azure
@@ -137,7 +137,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
@@ -168,7 +168,7 @@ datacenter: $<profile:datacenter>
 purpose: test
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: xenserver

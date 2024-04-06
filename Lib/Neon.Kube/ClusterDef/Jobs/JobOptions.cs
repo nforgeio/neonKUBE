@@ -102,6 +102,37 @@ namespace Neon.Kube.ClusterDef
         public JobSchedule TelemetryPing { get; set; }
 
         /// <summary>
+        /// Schedules the deletion of pods that have been terminated for at least <see cref="TerminatedPodGcThresholdMinutes"/>.
+        /// This defaults to every 15 minutes.
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminatedPodGc", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminatedPodGc", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public JobSchedule TerminatedPodGc { get; set; }
+
+        /// <summary>
+        /// Specifies the delay in milliseconds that the terminated pod removal job
+        /// will pause after scanning a namespace for terminated jobs and also
+        /// after each job removal to reduce pressure on the API Server.  This
+        /// defaults to <b>1000 milliseconds</b> (1 second).
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminatedPodGcDelayMilliseconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminatedPodGcDelayMilliseconds", ApplyNamingConventions = false)]
+        [DefaultValue(1000)]
+        public int TerminatedPodGcDelayMilliseconds { get; set; } = 1000;
+
+        /// <summary>
+        /// Specifies the number of minutes after a pod terminates sucessfully or not before it
+        /// becomes eligible for removal by the <b>neon-cluster-operator</b>.  This defaults to
+        /// <b>720 minutes</b> (12 hours) to give operations teams a chance to investigate
+        /// potential recent problems.
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminatedPodGcThresholdMinutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminatedPodGcThresholdMinutes", ApplyNamingConventions = false)]
+        [DefaultValue(720)]
+        public int TerminatedPodGcThresholdMinutes { get; set; } = 720;
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -138,6 +169,19 @@ namespace Neon.Kube.ClusterDef
 
             TelemetryPing ??= new JobSchedule(enabled: true, schedule: DailyRandomSchedule);
             TelemetryPing.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TelemetryPing)}");
+
+            TerminatedPodGc ??= new JobSchedule(enabled: true, schedule: "0 15 * * * *");
+            TerminatedPodGc.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TerminatedPodGc)}");
+
+            if (TerminatedPodGcDelayMilliseconds < 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(JobOptions)}.{nameof(TerminatedPodGcDelayMilliseconds)}={TerminatedPodGcDelayMilliseconds}] cannot be negative.");
+            }
+
+            if (TerminatedPodGcThresholdMinutes < 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(JobOptions)}.{nameof(TerminatedPodGcThresholdMinutes)}={TerminatedPodGcThresholdMinutes}] cannot be negative.");
+            }
         }
     }
 }

@@ -356,7 +356,7 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
-                    ConfigureKubelet(controller, cluster.ControlNodes);
+                    ConfigureApiServer(controller, cluster.ControlNodes);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
@@ -642,32 +642,32 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
-maxPods: {cluster.SetupState.ClusterDefinition.Kubelet.MaxPodsPerNode}
-shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodSeconds}s
-shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubelet.ShutdownGracePeriodCriticalPodsSeconds}s
+maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
 rotateCertificates: true
 {kubeletFailSwapOnLine}
 ");
 
             clusterConfig.AppendLine($"systemReserved:");
 
-            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved.Keys)
+            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubelet.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
             }
                
             clusterConfig.AppendLine($"kubeReserved:");
 
-            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved.Keys)
+            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubelet.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
             }
 
             clusterConfig.AppendLine($"evictionHard:");
 
-            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard.Keys)
+            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubelet.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
             }
 
             // Append the KubeProxyConfiguration
@@ -1090,13 +1090,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Configures the Kubernetes feature gates specified by the <see cref="KubeletOptions.FeatureGates"/> dictionary.
-        /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
-        /// on the control-plane nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
+        /// Configures the Kubernetes API Server static pod specified by the static pod manifest located at
+        /// <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b> on the control-plane nodes as required.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNodes">Specifies the target control-plane nodes.</param>
-        public static void ConfigureKubelet(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> controlNodes)
+        public static void ConfigureApiServer(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> controlNodes)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNodes != null, nameof(controlNodes));
@@ -1172,6 +1171,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
             //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
+            //      - --terminated-pod-gc-threshold=500                                         <--- ...AND SOMETHING LIKE THIS TOO!
             //      image: registry.neon.local/neonkube/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
@@ -1208,7 +1208,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var command      = (List<object>)container["command"];
                         var sbFeatures   = new StringBuilder();
 
-                        foreach (var featureGate in clusterDefinition.Kubelet.FeatureGates)
+                        foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates)
                         {
                             sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
                         }
@@ -1239,6 +1239,33 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             command.Add(featureGateOption);
                         }
 
+                        // Search for a [--terminated-pod-gc-threshold] command line argument.  If one is present,
+                        // we'll replace it, otherwise we'll append a new one.
+
+                        var terminatedPodGcThresholdOption = $"--terminated-pod-gc-threshold={clusterDefinition.Kubernetes.TerminatedPodGcThreshold}";
+
+                        existingArgIndex = -1;
+
+                        for (int i = 0; i < command.Count; i++)
+                        {
+                            var arg = (string)command[i];
+
+                            if (arg.StartsWith("--terminated-pod-gc-threshold="))
+                            {
+                                existingArgIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (existingArgIndex >= 0)
+                        {
+                            command[existingArgIndex] = terminatedPodGcThresholdOption;
+                        }
+                        else
+                        {
+                            command.Add(terminatedPodGcThresholdOption);
+                        }
+
                         // Update the [---service-account-issuer] command option as well.
 
                         for (int i = 0; i < command.Count; i++)
@@ -1254,7 +1281,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         // Configure the log level.
 
-                        command.Add($"--v={clusterDefinition.Kubelet.ApiServer.Verbosity}");
+                        command.Add($"--v={clusterDefinition.Kubernetes.ApiServer.Verbosity}");
 
                         // Set GOGC so that GC happens more frequently, reducing memory usage.
 
@@ -1780,7 +1807,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
-                    if (cluster.SetupState.ClusterDefinition.Kubelet.AllowPodsOnControlPlane.GetValueOrDefault())
+                    if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = new V1NodeList();
                         var retry = new LinearRetryPolicy(
@@ -5219,11 +5246,14 @@ $@"- name: StorageType
                         },
                         Spec = new V1NeonClusterJobs.NeonClusterJobsSpec()
                         {
-                            HarborImagePush                = jobOptions.HarborImagePush,
-                            ControlPlaneCertificateRenewal = jobOptions.ControlPlaneCertificateRenewal,
-                            NodeCaCertificateUpdate        = jobOptions.NodeCaCertificateRenewal,
-                            LinuxSecurityPatches           = jobOptions.LinuxSecurityPatches,
-                            TelemetryPing                  = jobOptions.TelemetryPing
+                            HarborImagePush                  = jobOptions.HarborImagePush,
+                            ControlPlaneCertificateRenewal   = jobOptions.ControlPlaneCertificateRenewal,
+                            NodeCaCertificateUpdate          = jobOptions.NodeCaCertificateRenewal,
+                            LinuxSecurityPatches             = jobOptions.LinuxSecurityPatches,
+                            TelemetryPing                    = jobOptions.TelemetryPing,
+                            TerminatedPodGc                  = jobOptions.TerminatedPodGc,
+                            TerminatedPodGcDelayMilliseconds = jobOptions.TerminatedPodGcDelayMilliseconds,
+                            TerminatedPodGcThresholdMinutes  = jobOptions.TerminatedPodGcThresholdMinutes
                         }
                     };
 
@@ -6230,7 +6260,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Waits for the a NEONDESKTOP cluster to stabilize.
+        /// Waits for a NEONDESKTOP cluster to stabilize.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -6238,7 +6268,6 @@ $@"- name: StorageType
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non NEONDESKTOP clusters.");
 
             var k8s   = GetK8sClient(controller);
             var retry = new LinearRetryPolicy(
@@ -6246,16 +6275,42 @@ $@"- name: StorageType
                 retryInterval:     clusterOpPollInterval,
                 timeout:           clusterOpTimeout);
 
+            var timeoutException = new TimeoutException("Waiting for all cluster pods to report as running.");
+
             await retry.InvokeAsync(
                 async () =>
                 {
                     controller.CancellationToken.ThrowIfCancellationRequested();
 
-                    var pods = await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken);
+                    // Remove all failed pods.  These pods may never be removed by Kubernetes:
+                    //
+                    //      https://midbai.com/en/post/evicted-pods-not-deleted/
 
-                    if (!pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase)))
+                    var pods        = await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken);
+                    var deletedUids = new HashSet<string>();
+
+                    foreach (var pod in pods.Items)
                     {
-                        throw new TimeoutException("Waiting for all cluster pods to report as running.");
+                        if (pod.Status.Phase.Equals("Failed", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
+                            deletedUids.Add(pod.Uid());
+                        }
+                    }
+
+                    // Check the status of all non-failed pods.
+
+                    foreach (var pod in pods.Items.Where(pod => !deletedUids.Contains(pod.Uid())))
+                    {
+                        if (!pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw timeoutException;
+                        }
+
+                        if (!pod.Status.ContainerStatuses.All(containerStatus => containerStatus.Ready))
+                        {
+                            throw timeoutException;
+                        }
                     }
                 },
                 cancellationToken: controller.CancellationToken);

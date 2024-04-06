@@ -61,7 +61,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
@@ -101,7 +101,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: hyperv
@@ -150,7 +150,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: hyperv

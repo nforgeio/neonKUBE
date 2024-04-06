@@ -64,7 +64,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: xenserver
@@ -113,7 +113,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
@@ -177,7 +177,7 @@ purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
-kubelet:
+kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
