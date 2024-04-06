@@ -161,11 +161,11 @@ namespace Neon.Kube.ClusterDef
             ControlPlaneCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
             ControlPlaneCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(ControlPlaneCertificateRenewal)}");
 
-            NodeCaCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
-            NodeCaCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(NodeCaCertificateRenewal)}");
-
             LinuxSecurityPatches ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
             LinuxSecurityPatches.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(LinuxSecurityPatches)}");
+
+            NodeCaCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
+            NodeCaCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(NodeCaCertificateRenewal)}");
 
             TelemetryPing ??= new JobSchedule(enabled: true, schedule: DailyRandomSchedule);
             TelemetryPing.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TelemetryPing)}");
