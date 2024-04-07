@@ -1119,7 +1119,7 @@ namespace Neon.Kube.Proxy
         /// such as <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>.  This is used
         /// to help prevent impacting production clusters by accident.
         /// </summary>
-        /// /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>
         /// <c>true</c> when the cluster is locked, <c>false</c> when it's unlocked or <c>null</c> when
         /// the lock status cannot be determined.
@@ -1145,7 +1145,7 @@ namespace Neon.Kube.Proxy
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
         public async Task LockAsync(CancellationToken cancellationToken = default)
@@ -1172,7 +1172,7 @@ namespace Neon.Kube.Proxy
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
         public async Task UnlockAsync(CancellationToken cancellationToken = default)
