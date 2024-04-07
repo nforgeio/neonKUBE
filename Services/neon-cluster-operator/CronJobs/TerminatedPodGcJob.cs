@@ -91,6 +91,7 @@ namespace NeonClusterOperator
                 var stopwatch            = new Stopwatch();
                 var failedPodsDeleted    = 0;
                 var succeededPodsDeleted = 0;
+                var exceptionCount       = 0;
 
                 stopwatch.Start();
 
@@ -113,10 +114,12 @@ namespace NeonClusterOperator
                     //       enabled after being disabled for a long period of time so this
                     //       seems like a reasonable tradeoff.
                     //
-                    // NOTE: We're going to ignore removal errors because namespaces
+                    // NOTE: We're going to mostly ignore removal errors because namespaces
                     //       with terminated pods may be removed out from under us or pods
                     //       could also be removed by the built-in Kubernetes pod GC service
                     //       while we're processing pods.
+                    //
+                    //       
 
                     var namespaces         = await k8s.CoreV1.ListNamespaceAsync();
                     var maxEligibleTimeUtc = DateTime.UtcNow - TimeSpan.FromMinutes(TerminatedPodGcThresholdMinutes);
@@ -138,16 +141,38 @@ namespace NeonClusterOperator
 
                                 if (lastTransitionTime <= maxEligibleTimeUtc)
                                 {
-                                    await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
-                                    await Task.Delay(delay);
+                                    try
+                                    {
+                                        await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
+                                        failedPodsDeleted++;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        logger?.LogErrorEx(e);
+                                        exceptionCount++;
 
-                                    failedPodsDeleted++;
+                                        // Bail on processing the namespace if it no longer exists.
+
+                                        try
+                                        {
+                                            await k8s.CoreV1.ReadNamespaceAsync(@namespace.Name());
+                                        }
+                                        catch
+                                        {
+                                            continue;
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        await Task.Delay(delay);
+                                    }
                                 }
                             }
                         }
                         catch (Exception e)
                         {
                             logger?.LogErrorEx(e);
+                            exceptionCount++;
                         }
                         finally
                         {
@@ -171,16 +196,38 @@ namespace NeonClusterOperator
 
                                 if (lastTransitionTime <= maxEligibleTimeUtc)
                                 {
-                                    await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
-                                    await Task.Delay(delay);
+                                    try
+                                    {
+                                        await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
+                                        succeededPodsDeleted++;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        logger?.LogErrorEx(e);
+                                        exceptionCount++;
 
-                                    succeededPodsDeleted++;
+                                        // Bail on processing the namespace if it no longer exists.
+
+                                        try
+                                        {
+                                            await k8s.CoreV1.ReadNamespaceAsync(@namespace.Name());
+                                        }
+                                        catch
+                                        {
+                                            continue;
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        await Task.Delay(delay);
+                                    }
                                 }
                             }
                         }
                         catch (Exception e)
                         {
                             logger?.LogErrorEx(e);
+                            exceptionCount++;
                         }
                         finally
                         {
@@ -191,9 +238,19 @@ namespace NeonClusterOperator
                 catch (Exception e)
                 {
                     logger?.LogErrorEx(e);
+                    exceptionCount++;
                 }
 
-                logger?.LogInformationEx(() => $"elapsed={stopwatch.Elapsed}, failedPodsDeleted={failedPodsDeleted}, succeededPodsDeleted={succeededPodsDeleted}");
+                // Log a summary of what happened.
+
+                var sbSummary = new StringBuilder();
+
+                sbSummary.AppendLine($"elapsed: {stopwatch.Elapsed}");
+                sbSummary.AppendLine($"failedPodsDeleted: {failedPodsDeleted}=");
+                sbSummary.AppendLine($"succeededPodsDeleted: {succeededPodsDeleted}");
+                sbSummary.AppendLine($"exceptions: {exceptionCount}");
+
+                logger?.LogInformationEx(sbSummary.ToString());
             }
         }
 
