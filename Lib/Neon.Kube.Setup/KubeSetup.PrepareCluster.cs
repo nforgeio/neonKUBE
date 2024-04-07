@@ -459,8 +459,10 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("node credentials",
                 (controller, node) =>
                 {
+                    var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
+
                     node.ConfigureSshKey(controller);
-                    node.AllowSshPasswordLogin(options.Insecure);
+                    node.AllowSshPasswordLogin(desktopReadyToGo || options.Insecure);
 
                     // Update node proxies with the generated SSH credentials.
 
@@ -527,15 +529,13 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode);
             }
 
-            // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
-            // We're going to wait a maximum of 10 minutes before giving up.
+            // Ensure that all pods are ready for NEONDESKTOP clusters.
 
             if (options.DesktopReadyToGo)
             {
-                controller.AddGlobalStep("stabilize: cluster...",
+                controller.AddGlobalStep("stabilize: cluster",
                     async controller =>
                     {
-                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
                         setupState.Save();
                         await StabilizeClusterAsync(controller);
                     });
