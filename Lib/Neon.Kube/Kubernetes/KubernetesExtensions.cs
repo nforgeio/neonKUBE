@@ -113,7 +113,7 @@ namespace Neon.Kube.K8s
         /// <typeparam name="T">Specifies the property value type.</typeparam>
         /// <param name="extensions">Holds the extensions.</param>
         /// <param name="name">Specifies the extension name.</param>
-        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
+        /// <param name="default">Specifies the value to be returned when the extension doesn't exist.</param>
         /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
         /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
         public static T Get<T>(this List<NamedExtension> extensions, string name, T @default)
@@ -166,8 +166,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Sets a label within the metadata, constructing the label dictionary when necessary.
         /// </summary>
-        /// <param name="metadata">The metadata instance.</param>
-        /// <param name="name">The label name.</param>
+        /// <param name="metadata">Specifies the metadata instance.</param>
+        /// <param name="name">Specifies the label name.</param>
         /// <param name="value">Optionally specifies a label value.  This defaults to an empty string.</param>
         public static void SetLabel(this V1ObjectMeta metadata, string name, string value = null)
         {
@@ -184,8 +184,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Sets a collection of labels within the metadata, constructing the label dictionary when necessary.
         /// </summary>
-        /// <param name="metadata">The metadata instance.</param>
-        /// <param name="labels">The dictionary of labels to set.</param>
+        /// <param name="metadata">Specifies the metadata instance.</param>
+        /// <param name="labels">Specifies the dictionary of labels to set.</param>
         public static void SetLabels(this V1ObjectMeta metadata, Dictionary<string, string> labels)
         {
             Covenant.Requires<ArgumentNullException>(labels != null, nameof(labels));
@@ -199,8 +199,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Fetches the value of a label from the metadata.
         /// </summary>
-        /// <param name="metadata">The metadata instance.</param>
-        /// <param name="name">The label name.</param>
+        /// <param name="metadata">Specifies the metadata instance.</param>
+        /// <param name="name">Specifies the label name.</param>
         /// <returns>The label value or <c>null</c> when the label doesn't exist.</returns>
         public static string GetLabel(this V1ObjectMeta metadata, string name)
         {
@@ -227,8 +227,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Restarts a <see cref="V1Deployment"/>.
         /// </summary>
-        /// <param name="deployment">The target deployment.</param>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="deployment">Specifies the target deployment.</param>
+        /// <param name="k8s">Specifies the <see cref="IKubernetes"/> client to be used for the operation.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
         {
@@ -294,8 +294,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Restarts a <see cref="V1StatefulSet"/>.
         /// </summary>
-        /// <param name="statefulset">The deployment being restarted.</param>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="statefulset">Specifies the deployment being restarted.</param>
+        /// <param name="k8s">Specifies the <see cref="IKubernetes"/> client to be used for the operation.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
         {
@@ -361,8 +361,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Restarts a <see cref="V1DaemonSet"/>.
         /// </summary>
-        /// <param name="daemonset">The daemonset being restarted.</param>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="daemonset">Specifies the daemonset being restarted.</param>
+        /// <param name="k8s">Specifies the <see cref="IKubernetes"/> client to be used for the operation.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1DaemonSet daemonset, IKubernetes k8s)
         {
@@ -454,7 +454,7 @@ namespace Neon.Kube.K8s
         /// <b>Kind</b> properties from the <see cref="KubernetesEntityAttribute"/> attached to the
         /// object's type.
         /// </summary>
-        /// <param name="obj">The object.</param>
+        /// <param name="obj">Specifies the object.</param>
         /// <exception cref="InvalidDataException">Thrown when the object's type does not have a <see cref="KubernetesEntityAttribute"/>.</exception>
         /// <remarks>
         /// <para>
@@ -515,36 +515,38 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Adds a new Kubernetes secret or updates an existing secret.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="secret">The secret.</param>
-        /// <param name="namespaceParameter">Optionally overrides the default namespace.</param>
+        /// <param name="k8s">Specifies the <see cref="Kubernetes"/> client.</param>
+        /// <param name="secret">Specifies the secret.</param>
+        /// <param name="namespaceParameter">Specifies the target namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter = null)
+        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
-            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(secret => secret.Metadata.Name == secret.Name()))
             {
-                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), namespaceParameter);
+                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), namespaceParameter, cancellationToken: cancellationToken);
             }
             else
             {
-                return await k8s.CreateNamespacedSecretAsync(secret, namespaceParameter);
+                return await k8s.CreateNamespacedSecretAsync(secret, namespaceParameter, cancellationToken: cancellationToken);
             }
         }
 
         /// <summary>
         /// Waits for a service deployment to start successfully.
         /// </summary>
-        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
-        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="k8sAppsV1">Specifies the <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
+        /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="name">Optionally specifies the deployment name.</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -591,15 +593,15 @@ namespace Neon.Kube.K8s
                 {
                     try
                     {
-                        var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector, cancellationToken: cancellationToken);
 
                         if (deployments == null || deployments.Items.Count == 0)
                         {
                             return false;
                         }
 
-                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas
-                                                            && deployment.Status.ReadyReplicas == deployment.Status.Replicas);
+                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas &&
+                                                                   deployment.Status.ReadyReplicas == deployment.Status.Replicas);
                     }
                     catch
                     {
@@ -615,14 +617,14 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Waits for a stateful set to start successfully.
         /// </summary>
-        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
-        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="k8sAppsV1">Specifies the <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
+        /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="name">Optionally specifies the stateful set name..</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -692,14 +694,14 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Waits for a daemon set to start successfully.
         /// </summary>
-        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
-        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="k8sAppsV1">Specifies the <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
+        /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="name">Optionally specifies the daemonset name.</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -746,15 +748,15 @@ namespace Neon.Kube.K8s
                 {
                     try
                     {
-                        var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector, cancellationToken: cancellationToken);
 
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
                             return false;
                         }
 
-                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled
-                                                            && @set.Status.NumberReady == @set.Status.DesiredNumberScheduled);
+                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled &&
+                                                            @set.Status.NumberReady == @set.Status.DesiredNumberScheduled);
                     }
                     catch
                     {
@@ -769,12 +771,12 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Waits for a pod to start successfully.
         /// </summary>
-        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
-        /// <param name="name">The pod name.</param>
-        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="k8sCoreV1">Specifies the <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="name">Specifies the pod name.</param>
+        /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         public static async Task WaitForPodAsync(
             this ICoreV1Operations  k8sCoreV1, 
@@ -806,7 +808,7 @@ namespace Neon.Kube.K8s
                         var pod = await k8sCoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
 
                         return pod.Status.Phase == "Running" &&
-                            pod.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True");
+                               pod.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True");
                     }
                     catch
                     {
@@ -823,7 +825,7 @@ namespace Neon.Kube.K8s
         /// Waits for a custom resource definition to be created in the API server.
         /// </summary>
         /// <typeparam name="TEntity">Specifies the custom resource type.</typeparam>
-        /// <param name="k8sApiextensionsV1">The <see cref="Kubernetes"/> client's <see cref="IApiextensionsV1Operations"/>.</param>
+        /// <param name="k8sApiextensionsV1">Specifies the <see cref="Kubernetes"/> client's <see cref="IApiextensionsV1Operations"/>.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 5 seconds.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait.  This defaults to 90 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
@@ -857,7 +859,7 @@ namespace Neon.Kube.K8s
                     {
                         var typeMetadata                     = typeof(TEntity).GetKubernetesTypeMetadata();
                         var pluralNameGroup                  = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
-                        var existingList                     = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={pluralNameGroup}");
+                        var existingList                     = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={pluralNameGroup}", cancellationToken: cancellationToken);
                         var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
                         if (existingCustomResourceDefinition != null)
@@ -874,32 +876,35 @@ namespace Neon.Kube.K8s
                         return false;
                     }
                 },
-                timeout:        timeout,
-                pollInterval:   pollInterval,
-                timeoutMessage: $"Timeout waiting for CRD: {typeof(TEntity).FullName}");
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                timeoutMessage:    $"Timeout waiting for CRD: {typeof(TEntity).FullName}",
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
         /// Returns a running pod within the specified namespace that matches a label selector. 
         /// </summary>
-        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="k8sCoreV1">Specifies the <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="labelSelector">
         /// Specifies the label selector to constrain the set of pods to be targeted.
         /// This is required.
         /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The <see cref="V1Pod"/>.</returns>
         /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
         public static async Task<V1Pod> GetNamespacedRunningPodAsync(
             this ICoreV1Operations  k8sCoreV1,
             string                  namespaceParameter,
-            string                  labelSelector)
+            string                  labelSelector,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
-            var pods = (await k8sCoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
+            var pods = (await k8sCoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector, cancellationToken: cancellationToken)).Items;
             var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
 
             if (pod == null)
@@ -913,7 +918,7 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Executes a command within a pod container.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8s">Specifies the <see cref="Kubernetes"/> client.</param>
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
@@ -970,8 +975,8 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Executes a command within a pod container with a <see cref="IRetryPolicy"/>
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="retryPolicy">The <see cref="IRetryPolicy"/>.</param>
+        /// <param name="k8s">Specifies the <see cref="Kubernetes"/> client.</param>
+        /// <param name="retryPolicy">Specifies the <see cref="IRetryPolicy"/>.</param>
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
@@ -1007,9 +1012,9 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Watches a Kubernetes resource with a callback.
         /// </summary>
-        /// <typeparam name="T">The type parameter.</typeparam>
-        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="actionAsync">The async action called as watch events are received.</param>
+        /// <typeparam name="T">Specifies the type parameter.</typeparam>
+        /// <param name="k8s">Specifies the <see cref="IKubernetes"/> instance.</param>
+        /// <param name="actionAsync">Specifies the async action called as watch events are received.</param>
         /// <param name="namespaceParameter">Optionally specifies a Kubernetes namespace.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector</param>
         /// <param name="labelSelector">Optionally specifies a label selector</param>
@@ -1046,7 +1051,7 @@ namespace Neon.Kube.K8s
         /// <summary>
         /// Lists pods from all cluster namespaces.
         /// </summary>
-        /// <param name="k8sCoreV1">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="k8sCoreV1">Specifies the <see cref="IKubernetes"/> instance.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The <see cref="V1PodList"/>.</returns>
         public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1, CancellationToken cancellationToken = default)
