@@ -2357,18 +2357,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = "neon-cluster-certificate",
-                            NamespaceProperty = KubeNamespace.NeonIngress
+                            Name = "neon-cluster-certificate",
                         },
                         Data = cert,
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
-
-                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
-
-                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
+                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, KubeNamespace.NeonIngress, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -6268,6 +6263,8 @@ $@"- name: StorageType
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.SetGlobalStepStatus("Waiting for pods to start...");
 
             var k8s   = GetK8sClient(controller);
             var retry = new LinearRetryPolicy(
