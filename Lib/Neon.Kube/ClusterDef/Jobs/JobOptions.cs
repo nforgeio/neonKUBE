@@ -102,8 +102,17 @@ namespace Neon.Kube.ClusterDef
         public JobSchedule TelemetryPing { get; set; }
 
         /// <summary>
+        /// <para>
         /// Schedules the deletion of pods that have been terminated for at least <see cref="TerminatedPodGcThresholdMinutes"/>.
         /// This defaults to every 15 minutes.
+        /// </para>>
+        /// <note>
+        /// To avoid a potential race condition, <b>neon-cluster-operator</b> only removes
+        /// pods with what looks like a generated name, including a unique ID suffix.  This
+        /// avoids situations where the operator identifies a pod to be deleted but before
+        /// the operator has a chance to delete the pod, something else deletes and then
+        /// recreates the pod with the same name, resulting in the wrong pod being removed.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "TerminatedPodGc", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "terminatedPodGc", ApplyNamingConventions = false)]
