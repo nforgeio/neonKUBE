@@ -99,6 +99,7 @@ namespace NeonClusterOperator
                 var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 
                 V1CrioConfiguration crioConfig;
+
                 if (crioConfigList.Items.IsEmpty())
                 {
                     crioConfig                 = new V1CrioConfiguration().Initialize();
@@ -116,7 +117,6 @@ namespace NeonClusterOperator
                 if (crioConfig.Spec.Registries.IsEmpty())
                 {
                     crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
-
                     await k8s.CustomObjects.UpsertClusterCustomObjectAsync(body: crioConfig, name: crioConfig.Name());
 
                     return null;
@@ -132,7 +132,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
                         patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(addPatch),
-                        name: crioConfig.Name());
+                        name:  crioConfig.Name());
                 }
                 else
                 {
@@ -153,7 +153,7 @@ namespace NeonClusterOperator
 
                         await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
                             patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(patch),
-                            name: crioConfig.Name());
+                            name:  crioConfig.Name());
                     }
                 }
 
