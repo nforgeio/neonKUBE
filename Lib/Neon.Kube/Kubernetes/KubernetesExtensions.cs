@@ -520,13 +520,13 @@ namespace Neon.Kube.K8s
         /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter, CancellationToken cancellationToken = default)
+        public static async Task<V1Secret> UpsertNamespacedSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
-            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(secret => secret.Metadata.Name == secret.Name()))
+            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(s => s.Metadata.Name == secret.Name()))
             {
                 return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), namespaceParameter, cancellationToken: cancellationToken);
             }

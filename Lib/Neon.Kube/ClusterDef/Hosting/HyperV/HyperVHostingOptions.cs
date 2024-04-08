@@ -121,11 +121,11 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// <b>INTERNAL USE ONLY:</b> Indicates whether this is the special NEONDESKTOP built-in
-        /// single-node cluster and the node's private address will be overridden by <see cref="NeonDesktopNodeAddress"/>
-        /// when this is <c>true</c>.
+        /// single-node cluster and that the node's private address will be overridden by
+        /// <see cref="NeonDesktopNodeAddress"/> when this is <c>true</c>.
         /// </para>
         /// <note>
-        /// Setting this to <c>true</c> implies setting <see cref="UseInternalSwitch"/><c>=true</c>.
+        /// Setting this to <c>true</c> also implies setting <see cref="UseInternalSwitch"/><c>=true</c>.
         /// </note>
         /// <para>
         /// This defaults to <c>false</c>.

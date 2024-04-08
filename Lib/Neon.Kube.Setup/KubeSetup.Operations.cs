@@ -228,7 +228,6 @@ spec:
         public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -300,7 +299,6 @@ spec:
         public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -1171,7 +1169,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
             //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
-            //      - --terminated-pod-gc-threshold=500                                         <--- ...AND SOMETHING LIKE THIS TOO!
             //      image: registry.neon.local/neonkube/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
@@ -1237,33 +1234,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         else
                         {
                             command.Add(featureGateOption);
-                        }
-
-                        // Search for a [--terminated-pod-gc-threshold] command line argument.  If one is present,
-                        // we'll replace it, otherwise we'll append a new one.
-
-                        var terminatedPodGcThresholdOption = $"--terminated-pod-gc-threshold={clusterDefinition.Kubernetes.TerminatedPodGcThreshold}";
-
-                        existingArgIndex = -1;
-
-                        for (int i = 0; i < command.Count; i++)
-                        {
-                            var arg = (string)command[i];
-
-                            if (arg.StartsWith("--terminated-pod-gc-threshold="))
-                            {
-                                existingArgIndex = i;
-                                break;
-                            }
-                        }
-
-                        if (existingArgIndex >= 0)
-                        {
-                            command[existingArgIndex] = terminatedPodGcThresholdOption;
-                        }
-                        else
-                        {
-                            command.Add(terminatedPodGcThresholdOption);
                         }
 
                         // Update the [---service-account-issuer] command option as well.
@@ -1478,7 +1448,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -1861,7 +1830,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -1914,7 +1882,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2083,7 +2050,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2186,7 +2152,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.ExternalAccountBinding.Key = null;
                     }
@@ -2206,7 +2172,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.PrivateKey                  = null;
                         issuer.Spec.Acme.DisableAccountKeyGeneration = true;
@@ -2229,7 +2195,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 }
                             };
 
-                            await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                            await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                             solver.Dns01.Route53.SecretAccessKey = null;
                         }
@@ -2363,7 +2329,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, KubeNamespace.NeonIngress, cancellationToken: controller.CancellationToken);
+                    // This secret needs to be in multiple namespaces.
+
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret: secret, KubeNamespace.NeonIngress, cancellationToken: controller.CancellationToken);
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret: secret, KubeNamespace.NeonSystem, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -2376,7 +2345,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task ConfigureApiserverIngressAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2505,7 +2473,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallNeonCloudTokenAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2522,8 +2489,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            NamespaceProperty = KubeNamespace.NeonSystem,
-                            Name              = "neoncloud-headend-token"
+                            Name = "neoncloud-headend-token"
                         },
                         StringData = new Dictionary<string, string>()
                         {
@@ -2531,11 +2497,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                    // We secret needs to be in multiple namespaces.
 
-                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
-
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, KubeNamespace.NeonIngress);
                 });
         }
 
@@ -2548,7 +2513,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2708,7 +2672,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         public static async Task InstallCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -3836,7 +3799,7 @@ $@"- name: StorageType
                             citusSecret.Data["username"] = dbSecret.Data["username"];
                             citusSecret.Data["password"] = dbSecret.Data["password"];
 
-                            await k8s.CoreV1.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.UpsertNamespacedSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
                         }
                         );
 
@@ -4907,14 +4870,14 @@ $@"- name: StorageType
                     {
                         harborSecret.Data["postgresql-password"] = dbSecret.Data["password"];
 
-                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
                         harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
-                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
                 });
 
@@ -5039,6 +5002,10 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
+                    // $todo(jefflill): This is failing!
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1898
+#if TODO
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
@@ -5058,6 +5025,7 @@ $@"- name: StorageType
                             },
                             cancellationToken: controller.CancellationToken);
                     }
+#endif
                 });
 
             controller.ThrowIfCancelled();

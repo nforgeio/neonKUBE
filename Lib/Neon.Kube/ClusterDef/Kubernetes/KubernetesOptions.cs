@@ -246,16 +246,6 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, string> EvictionHard { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// Specifies the threshold at which the terminated pods will start being garbage collected
-        /// by Kubernetes.  Terminated pods will be deleted once the number of terminated pods exceeds
-        /// this number.  This defaults to <b>12500</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "TerminatedPodGcThreshold", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "terminatedPodGcThreshold", ApplyNamingConventions = false)]
-        [DefaultValue(12500)]
-        public int TerminatedPodGcThreshold { get; set; } = 12500;
-
-        /// <summary>
         /// Specifies Kubernetes API Server options.
         /// </summary>
         [JsonProperty(PropertyName = "ApiServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -308,11 +298,6 @@ namespace Neon.Kube.ClusterDef
             if (ShutdownGracePeriodCriticalPodsSeconds >= ShutdownGracePeriodSeconds)
             {
                 throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] must be less than [{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}].");
-            }
-
-            if (TerminatedPodGcThreshold < 0)
-            {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(TerminatedPodGcThreshold)}={TerminatedPodGcThreshold}] must be greater than or equal to zero.");
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
