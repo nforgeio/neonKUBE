@@ -45,9 +45,7 @@ using OpenTelemetry.Trace;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// <para>
-    /// Configures Neon SSO using <see cref="V1NeonContainerRegistry"/>.
-    /// </para>
+    /// Configures CRI-O Harbor credentials using <see cref="V1NeonContainerRegistry"/>.
     /// </summary>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
@@ -181,13 +179,17 @@ namespace NeonClusterOperator
             }
         }
 
+        /// <summary>
+        /// Configures CRI-O Harbor credentials.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNeonLocalRegistryAsync()
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 logger?.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
 
-                // todo(marcusbooyah): make this use robot accounts.
+                // $todo(marcusbooyah): make this use robot accounts.
 
                 var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
                 var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));
