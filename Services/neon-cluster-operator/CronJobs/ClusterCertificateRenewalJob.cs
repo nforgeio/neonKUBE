@@ -70,7 +70,6 @@ namespace NeonClusterOperator
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
-
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(ClusterCertificateRenewalJob)));

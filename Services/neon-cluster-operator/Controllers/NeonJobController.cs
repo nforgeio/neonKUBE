@@ -74,9 +74,10 @@ namespace NeonClusterOperator
         /// </summary>
         private static readonly JobSchedule minWorkerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
 
+        private static AsyncMutex                           asyncLock = new AsyncMutex();
         private static IScheduler                           scheduler;
         private static StdSchedulerFactory                  schedulerFactory;
-        private static bool                                 initialized;
+        private static bool                                 isRunning;
         private static NodeCaCertificatesUpdateJob          nodeCaCertificatesUpdateJob;
         private static ControlPlaneCertificateRenewalJob    renewControlPlaneCertificatesJob;
         private static HarborImagePushJob                   pushHarborImagesJob;
@@ -149,22 +150,24 @@ namespace NeonClusterOperator
                     return null;
                 }
 
-                if (!initialized)
-                {
-                    await InitializeSchedulerAsync();
-                }
+                await StartSchedulerAsync();
 
                 // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than picking up its
                 // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
                 // only on the first reconcile callback.
 
-                // todo(jefflill): figure out why this is broken and causes the controller to barf when reconcilling
-                //if (!startedWorkerNodeVcpuSchedule)
-                //{
-                //    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWowe canrkerNodeVcpuSchedule.Schedule);
+                // $todo(jefflill): figure out why this is broken and causes the controller to barf when reconciling
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1899
 
-                //    startedWorkerNodeVcpuSchedule = true;
-                //}
+#if TODO
+                if (!startedWorkerNodeVcpuSchedule)
+                {
+                    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWowe canrkerNodeVcpuSchedule.Schedule);
+
+                    startedWorkerNodeVcpuSchedule = true;
+                }
+#endif
 
                 if (resource.Spec.NodeCaCertificateUpdate.Enabled)
                 {
@@ -287,7 +290,7 @@ namespace NeonClusterOperator
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
-                return null;
+                return ResourceControllerResult.Ok();
             }
         }
 
@@ -306,7 +309,7 @@ namespace NeonClusterOperator
                 }
                 
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
-                await ShutDownAsync();
+                await StopSchedulerAsync();
             }
         }
 
@@ -314,34 +317,54 @@ namespace NeonClusterOperator
         public override async Task OnDemotionAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
-            await ShutDownAsync();
+            await StopSchedulerAsync();
         }
 
-        private async Task InitializeSchedulerAsync()
+        /// <summary>
+        /// Initializes the job scheduler if it's not running.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task StartSchedulerAsync()
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            using (await asyncLock.AcquireAsync())
             {
-                logger?.LogInformationEx(() => $"Initialize Scheduler");
+                if (!isRunning)
+                {
+                    using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+                    {
+                        logger?.LogInformationEx(() => $"Start Quartz scheduler");
 
-                scheduler = await schedulerFactory.GetScheduler();
+                        scheduler = await schedulerFactory.GetScheduler();
 
-                await scheduler.Start();
+                        await scheduler.Start();
 
-                initialized = true;
+                        isRunning = true;
+                    }
+                }
             }
         }
 
-        private async Task ShutDownAsync()
+        /// <summary>
+        /// Stops the job scheduler if it's running.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task StopSchedulerAsync()
         {
             await SyncContext.Clear;
 
-            logger?.LogInformationEx(() => $"Shutdown Scheduler");
+            using (await asyncLock.AcquireAsync())
+            {
+                if (isRunning)
+                {
+                    logger?.LogInformationEx(() => $"Shutdown Quartz scheduler");
 
-            await scheduler.Shutdown(waitForJobsToComplete: true);
+                    await scheduler.Shutdown(waitForJobsToComplete: true);
 
-            initialized = false;
+                    isRunning = false;
+                }
+            }
         }
     }
 }

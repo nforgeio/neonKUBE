@@ -75,7 +75,7 @@ namespace NeonClusterOperator
         public int TerminatedPodGcDelayMilliseconds { get; set; }
 
         /// <summary>
-        /// Specifies the number of minutes after a pod terminates sucessfully or not before it
+        /// Specifies the number of minutes after a pod terminates before it
         /// becomes eligible for removal by the <b>neon-cluster-operator</b>.
         /// </summary>
         public int TerminatedPodGcThresholdMinutes { get; set; }
@@ -97,7 +97,7 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    logger.LogInformationEx(() => "GC terminated jobs.");
+                    logger.LogInformationEx(() => "START: GC terminated pods.");
 
                     var dataMap = context.MergedJobDataMap;
                     var k8s     = (IKubernetes)dataMap["Kubernetes"];
@@ -117,9 +117,7 @@ namespace NeonClusterOperator
                     // NOTE: We're going to mostly ignore removal errors because namespaces
                     //       with terminated pods may be removed out from under us or pods
                     //       could also be removed by the built-in Kubernetes pod GC service
-                    //       while we're processing pods.
-                    //
-                    //       
+                    //       while we're processing them.
 
                     var namespaces         = await k8s.CoreV1.ListNamespaceAsync();
                     var maxEligibleTimeUtc = DateTime.UtcNow - TimeSpan.FromMinutes(TerminatedPodGcThresholdMinutes);
@@ -245,6 +243,7 @@ namespace NeonClusterOperator
 
                 var sbSummary = new StringBuilder();
 
+                sbSummary.AppendLine("END: GC terminated pods.");
                 sbSummary.AppendLine($"elapsed: {stopwatch.Elapsed}");
                 sbSummary.AppendLine($"failedPodsDeleted: {failedPodsDeleted}=");
                 sbSummary.AppendLine($"succeededPodsDeleted: {succeededPodsDeleted}");
