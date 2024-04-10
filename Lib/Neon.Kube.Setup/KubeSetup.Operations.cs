@@ -5005,6 +5005,8 @@ $@"- name: StorageType
                     // $todo(jefflill): This is failing!
                     //
                     //      https://github.com/nforgeio/neonKUBE/issues/1898
+
+                    await Task.CompletedTask;
 #if TODO
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
