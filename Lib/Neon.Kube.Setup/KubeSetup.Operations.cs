@@ -1049,7 +1049,7 @@ exit 1
         }
 
         /// <summary>
-        /// Configures CoreDns.
+        /// Configures CoreDNS.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
@@ -1659,7 +1659,7 @@ systemctl restart cri-o
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         public static void InstallIstio(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-
+        {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
