@@ -323,9 +323,9 @@ namespace Neon.Kube.Setup
             cluster.HostingManager.AddPostSetupSteps(controller);
 
             //-----------------------------------------------------------------
-            // Ensure that required pods are running.
+            // Ensure that all pods are ready.
 
-            controller.AddGlobalStep("stabilize cluster...", StabilizeClusterAsync);
+            controller.AddGlobalStep("stabilize cluster", StabilizeClusterAsync);
 
             // We need to dispose these after the setup controller runs.
 

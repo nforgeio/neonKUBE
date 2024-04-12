@@ -2760,7 +2760,7 @@ TCPKeepAlive yes
         /// Determines the health of a cluster by querying the API server.
         /// </summary>
         /// <param name="context">The cluster context.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>A <see cref="ClusterHealth"/> instance.</returns>
         public static async Task<ClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
         {

@@ -42,7 +42,7 @@ namespace Neon.Kube.PortForward
         /// <param name="localPort">Specifies the local port.</param>
         /// <param name="localAddress">The local IP Address. Defaults to <see cref="IPAddress.Loopback"/>.</param>
         /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         public PortListener(
             int               localPort, 
             IPAddress         localAddress      = null,

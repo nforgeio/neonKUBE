@@ -45,9 +45,7 @@ using OpenTelemetry.Trace;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// <para>
-    /// Configures Neon SSO using <see cref="V1NeonContainerRegistry"/>.
-    /// </para>
+    /// Configures CRI-O Harbor credentials using <see cref="V1NeonContainerRegistry"/>.
     /// </summary>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
@@ -83,7 +81,6 @@ namespace NeonClusterOperator
             this.logger = logger;
         }
 
-
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource, CancellationToken cancellationToken = default)
         {
@@ -100,6 +97,7 @@ namespace NeonClusterOperator
                 var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
 
                 V1CrioConfiguration crioConfig;
+
                 if (crioConfigList.Items.IsEmpty())
                 {
                     crioConfig                 = new V1CrioConfiguration().Initialize();
@@ -117,7 +115,6 @@ namespace NeonClusterOperator
                 if (crioConfig.Spec.Registries.IsEmpty())
                 {
                     crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
-
                     await k8s.CustomObjects.UpsertClusterCustomObjectAsync(body: crioConfig, name: crioConfig.Name());
 
                     return null;
@@ -128,11 +125,12 @@ namespace NeonClusterOperator
                     logger?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
 
                     var addPatch = OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                     addPatch.Add(path => path.Spec.Registries, new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                     await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
                         patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(addPatch),
-                        name: crioConfig.Name());
+                        name:  crioConfig.Name());
                 }
                 else
                 {
@@ -148,11 +146,12 @@ namespace NeonClusterOperator
                         crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
 
                         var patch =  OperatorHelper.CreatePatch<V1CrioConfiguration>();
+
                         patch.Replace(path => path.Spec.Registries, crioConfig.Spec.Registries);
 
                         await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
                             patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(patch),
-                            name: crioConfig.Name());
+                            name:  crioConfig.Name());
                     }
                 }
 
@@ -181,7 +180,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Adds a <see cref="V1NeonContainerRegistry"/> CRD for the local container registry.
+        /// Configures CRI-O Harbor credentials.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNeonLocalRegistryAsync()
@@ -190,7 +189,7 @@ namespace NeonClusterOperator
             {
                 logger?.LogInformationEx(() => $"Upserting registry: [{KubeConst.LocalClusterRegistryHostName}]");
 
-                // todo(marcusbooyah): make this use robot accounts.
+                // $todo(marcusbooyah): make this use robot accounts.
 
                 var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
                 var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));

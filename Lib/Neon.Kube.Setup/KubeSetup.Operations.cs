@@ -1068,6 +1068,90 @@ exit 1
             var clusterAdvice     = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var coreDnsAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.CoreDns);
 
+            // We need to generate a "--feature-gates=..." command line option and add it to the end
+            // of the command arguments in the API server static pod manifest at: 
+            //
+            //      /etc/kubernetes/manifests/kube-apiserver.yaml
+            //
+            // and while we're at it, we need to modify the [--service-account-issuer] option to
+            // pass the Kubernetes compliance tests.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1385
+            //
+            // Here's what the static pod manifest looks like:
+            //
+            //  apiVersion: v1
+            //  kind: Pod
+            //  metadata:
+            //  annotations:
+            //      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 100.64.0.2:6443
+            //    creationTimestamp: null
+            //    labels:
+            //      component: kube-apiserver
+            //      tier: control-plane
+            //    name: kube-apiserver
+            //    namespace: kube-system
+            //  spec:
+            //    containers:
+            //    - command:
+            //      - kube-apiserver
+            //      - --advertise-address=0.0.0.0
+            //      - --allow-privileged=true
+            //      - --api-audiences=api
+            //      - --authorization-mode=Node,RBAC
+            //      - --bind-address=0.0.0.0
+            //      - --client-ca-file=/etc/kubernetes/pki/ca.crt
+            //      - --default-not-ready-toleration-seconds=30
+            //      - --default-unreachable-toleration-seconds=30
+            //      - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+            //      - --enable-bootstrap-token-auth=true
+            //      - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+            //      - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+            //      - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+            //      - --etcd-servers=https://127.0.0.1:2379
+            //      - --insecure-port=0
+            //      - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+            //      - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+            //      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+            //      - --logging-format=json
+            //      - --oidc-client-id=kubernetes
+            //      - --oidc-groups-claim=groups
+            //      - --oidc-groups-prefix=
+            //      - --oidc-issuer-url=https://neon-sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
+            //      - --oidc-username-claim=email
+            //      - --oidc-username-prefix=-
+            //      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
+            //      - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+            //      - --requestheader-allowed-names=front-proxy-client
+            //      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+            //      - --requestheader-extra-headers-prefix=X-Remote-Extra-
+            //      - --requestheader-group-headers=X-Remote-Group
+            //      - --requestheader-username-headers=X-Remote-User
+            //      - --secure-port=6443
+            //      - --service-account-issuer=https://kubernetes.default.svc                   <--- WE NEED TO REPLACE THE ORIGINAL SETTING WITH THIS TO PASS KUBERNETES COMPLIANCE TESTS
+            //      - --service-account-key-file=/etc/kubernetes/pki/sa.key
+            //      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+            //      - --service-cluster-ip-range=10.253.0.0/16
+            //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+            //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+            //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
+            //      image: registry.neon.local/neonkube/kube-apiserver:v1.21.4
+            //      imagePullPolicy: IfNotPresent
+            //      livenessProbe:
+            //        failureThreshold: 8
+            //        httpGet:
+            //          host: 100.64.0.2
+            //          path: /livez
+            //          port: 6443
+            //          scheme: HTTPS
+            //        initialDelaySeconds: 10
+            //        periodSeconds: 10
+            //        timeoutSeconds: 15
+            //      name: kube-apiserver
+            //      ...
+            //
+            // Note that Kubelet will automatically restart the API server's static pod when it
+            // notices that that static pod manifest has been modified.
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/coredns",
                 async () =>
@@ -1110,7 +1194,7 @@ exit 1
                             //
                             // We need to configure pod affinity/anti-affinity to prevent multiple
                             // replicas from being scheduled on the same control-plane node.
-
+                        
                             // Configure the memory request/limit.
 
                             coreDnsDeployment.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(KubeHelper.ToSiString(coreDnsAdvice.PodMemoryRequest));
@@ -1575,7 +1659,7 @@ systemctl restart cri-o
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
         public static void InstallIstio(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
@@ -2031,7 +2115,7 @@ istioctl install --verify -y -f manifest.yaml
                             }
                         };
 
-                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.ExternalAccountBinding.Key = null;
                     }
@@ -2051,7 +2135,7 @@ istioctl install --verify -y -f manifest.yaml
                             }
                         };
 
-                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.PrivateKey                  = null;
                         issuer.Spec.Acme.DisableAccountKeyGeneration = true;
@@ -2074,7 +2158,7 @@ istioctl install --verify -y -f manifest.yaml
                                 }
                             };
 
-                            await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+                            await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, secret.Namespace());
 
                             solver.Dns01.Route53.SecretAccessKey = null;
                         }
@@ -2200,19 +2284,16 @@ istioctl install --verify -y -f manifest.yaml
                     var secret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
-                        {
-                            Name              = "neon-cluster-certificate",
-                            NamespaceProperty = KubeNamespace.IstioSystem
+                            Name = "neon-cluster-certificate",
                         },
                         Data = cert,
                         Type = "kubernetes.io/tls"
                     };
 
-                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
+                    // This secret needs to be in multiple namespaces.
 
-                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
-
-                    await k8s.CoreV1.UpsertSecretAsync(secret: secret, namespaceParameter: secret.Namespace());
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret: secret, KubeNamespace.NeonIngress, cancellationToken: controller.CancellationToken);
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret: secret, KubeNamespace.NeonSystem, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -2371,20 +2452,18 @@ istioctl install --verify -y -f manifest.yaml
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            NamespaceProperty = KubeNamespace.NeonSystem,
-                            Name              = "neoncloud-headend-token"
+                            Name = "neoncloud-headend-token"
                         },
                         StringData = new Dictionary<string, string>()
                         {
                             { "token", cluster.SetupState.NeonCloudToken }
                         }
                     };
+                    // This secret needs to be in multiple namespaces.
+                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
 
-                    await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
-
-                    secret.Metadata.NamespaceProperty = KubeNamespace.IstioSystem;
-
-                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
+                    await k8s.CoreV1.UpsertNamespacedSecretAsync(secret, KubeNamespace.NeonIngress);
                 });
         }
 
@@ -3870,7 +3949,7 @@ $@"- name: StorageType
                             citusSecret.Data["username"] = dbSecret.Data["username"];
                             citusSecret.Data["password"] = dbSecret.Data["password"];
 
-                            await k8s.CoreV1.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.UpsertNamespacedSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
                         }
                         );
 
@@ -4028,8 +4107,8 @@ $@"- name: StorageType
                         spaceBeforeUnit: true,
                         removeByteUnit:  false);
 
-                    var byteUnitParts = replayMemoryCeiling.Split(' ');
-                    var bytes = double.Parse(byteUnitParts.First());
+                    var byteUnitParts   = replayMemoryCeiling.Split(' ');
+                    var bytes           = double.Parse(byteUnitParts.First());
                     replayMemoryCeiling = $"{Math.Round(bytes)}{byteUnitParts.Last()}";
 
                     values.Add("ingester.config.wal.replay_memory_ceiling", replayMemoryCeiling);
@@ -4921,14 +5000,14 @@ $@"- name: StorageType
                     {
                         harborSecret.Data["postgresql-password"] = dbSecret.Data["password"];
 
-                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
                         harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
-                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertNamespacedSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
                 });
 
@@ -5053,6 +5132,12 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
+                    // $todo(jefflill): This is failing!
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1898
+
+                    await Task.CompletedTask;
+#if TODO
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login {KubeConst.LocalClusterRegistryHostName} --username {user.Name} --password-stdin";
@@ -5067,6 +5152,7 @@ $@"- name: StorageType
                             },
                             cancellationToken: controller.CancellationToken);
                     }
+#endif
                 });
 
             controller.ThrowIfCancelled();
@@ -6224,6 +6310,8 @@ $@"- name: StorageType
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non NEONDESKTOP clusters.");
+
+            controller.SetGlobalStepStatus("Waiting for pods to start...");
 
             var k8s   = GetK8sClient(controller);
             var retry = new LinearRetryPolicy(
