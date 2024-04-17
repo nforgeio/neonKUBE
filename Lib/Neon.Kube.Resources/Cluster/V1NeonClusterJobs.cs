@@ -154,7 +154,7 @@ namespace Neon.Kube.Resources.Cluster
             /// allowed range for a field.  For example:
             /// </para>
             /// <para>
-            /// 0 0 R R * *
+            /// 0 R R * * *
             /// </para>
             /// <para>
             /// schedules the job for a random hour and minute during the day.  This is useful
