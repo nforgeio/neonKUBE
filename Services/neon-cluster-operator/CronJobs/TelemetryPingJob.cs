@@ -53,15 +53,20 @@ namespace NeonClusterOperator
     /// Handles the transmission of telemetry pings to the headend. 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class TelemetryPingJob : CronJob, IJob
+    public class TelemetryPingJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<TelemetryPingJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public TelemetryPingJob()
-            : base(typeof(TelemetryPingJob))
         {
         }
 

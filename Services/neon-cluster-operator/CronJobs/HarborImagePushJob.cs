@@ -57,7 +57,7 @@ namespace NeonClusterOperator
     /// Harbor.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class HarborImagePushJob : CronJob, IJob
+    public class HarborImagePushJob : IJob
     {
         //---------------------------------------------------------------------
         // Static members
@@ -74,7 +74,6 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         public HarborImagePushJob()
-            : base(typeof(HarborImagePushJob))
         {
         }
 
@@ -109,13 +108,13 @@ namespace NeonClusterOperator
                         var node      = masters.Items.SelectRandom(1).First();
                         var tempDir   = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
                         var labels    = new Dictionary<string, string>
-                    {
-                        { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                        { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync },
-                        { "project", KubeConst.LocalClusterRegistryProject },
-                        { "image", imageName },
-                        { "tag", tag },
-                    };
+                        {
+                            { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                            { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync },
+                            { "project", KubeConst.LocalClusterRegistryProject },
+                            { "image", imageName },
+                            { "tag", tag },
+                        };
 
                         if (await HarborHoldsContainerImageAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
                         {
@@ -177,7 +176,7 @@ rm -rf {tempDir}
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

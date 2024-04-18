@@ -91,7 +91,7 @@ namespace Neon.Kube.Resources.Cluster
         public NeonClusterJobsStatus Status { get; set; }
 
         /// <summary>
-        /// Specifies the enhanced cron schedule for a cluster job as well as an
+        /// Specifies the enhanced CRON schedule for a cluster job as well as an
         /// indication of whether the job is enabled or disabled.
         /// </summary>
         public class JobSchedule
@@ -122,7 +122,7 @@ namespace Neon.Kube.Resources.Cluster
             public bool Enabled { get; set; } = false;
 
             /// <summary>
-            /// The update schedule. This is enxtended Quartz cron expression.  This defaults
+            /// The update schedule. This is extended Quartz CRON expression.  This defaults
             /// to <b>"R R 0 ? * *"</b> which fires every day at a random minute and second
             /// between 12:00am and 1:00am.
             /// </summary>
@@ -141,7 +141,7 @@ namespace Neon.Kube.Resources.Cluster
             ///     <item>Year (optional) (1970..2099)</item>
             /// </list>
             /// <para>
-            /// An example of a complete cron expression is <code>0 0 15 ? * MON</code> which means
+            /// An example of a complete CRON expression is <code>0 0 15 ? * MON</code> which means
             /// every Monday at 3pm.
             /// </para>        /// <para>
             /// For the full documentation which describes special characters, see: 
@@ -185,7 +185,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <summary>
             /// CRON schedule for applying Linux security patches to the cluster nodes.
             /// </summary>
-            public JobSchedule LinuxSecurityPatches { get; set; } = new JobSchedule();
+            public JobSchedule LinuxSecurityPatch { get; set; } = new JobSchedule();
 
             /// <summary>
             /// CRON schedule for ensuring that the required NEONKUBE container images
@@ -243,7 +243,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <summary>
             /// Update spec for security status.
             /// </summary>
-            public JobStatus LinuxSecurityPatches { get; set; } = new JobStatus();
+            public JobStatus LinuxSecurityPatch { get; set; } = new JobStatus();
 
             /// <summary>
             /// Container images push to Harbor update status.
@@ -261,6 +261,11 @@ namespace Neon.Kube.Resources.Cluster
             public JobStatus ClusterCertificateRenewal { get; set; } = new JobStatus();
 
             /// <summary>
+            /// Worker VCPU check status.
+            /// </summary>
+            public JobStatus MinWorkerNodeVcpu { get; set; } = new JobStatus();
+
+            /// <summary>
             /// Terminated pod GC status.
             /// </summary>
             public JobStatus TerminatedPodGc { get; set; } = new JobStatus();
@@ -271,6 +276,21 @@ namespace Neon.Kube.Resources.Cluster
         /// </summary>
         public class JobStatus
         {
+            /// <summary>
+            /// The original CRON schedule specified in the job spec.  This is used
+            /// to detect when the job schedule has been changed.
+            /// </summary>
+            public string OriginalCronSchedule { get; set; }
+
+            /// <summary>
+            /// The CRON schedule for the job, with any <b>"R"</b> fields resolved to
+            /// specific values.  When not <c>null</c> or empty, this will be used to
+            /// schedule the job instead of the CRON schedule in the spec to avoid the
+            /// possibility of having jobs run multiple times when controller leadership
+            /// changes.
+            /// </summary>
+            public string ResolvedCronSchedule { get; set; }
+
             /// <summary>
             /// The time that the job last completed.
             /// </summary>

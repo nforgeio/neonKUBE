@@ -24,11 +24,11 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
@@ -36,6 +36,7 @@ using Neon.Kube.Resources.Cluster;
 using Neon.Operator.Attributes;
 using Neon.Operator.Controllers;
 using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 using Neon.Tasks;
 
 using NeonClusterOperator.CronJobs;
@@ -55,6 +56,8 @@ namespace NeonClusterOperator
     /// control-plane certificates, ensuring that required container images are pushed to
     /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
     /// </summary>
+    [RbacRule<V1Namespace>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonClusterJobs>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
@@ -67,6 +70,8 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
+        private const string JobGroup = nameof(NeonJobController);
+
         /// <summary>
         /// The <see cref="MinWorkerNodeVcpuJob"/> schedule is not present in the <see cref="V1NeonClusterJobs"/>
         /// resource because we don't want the user to be able to disable this.  We're going to fix this to
@@ -74,31 +79,17 @@ namespace NeonClusterOperator
         /// </summary>
         private static readonly JobSchedule minWorkerNodeVcpuSchedule = new JobSchedule(enabled: true, "0 0 0/2 ? * *");
 
-        private static AsyncMutex                           asyncLock = new AsyncMutex();
-        private static IScheduler                           scheduler;
-        private static StdSchedulerFactory                  schedulerFactory;
-        private static bool                                 isRunning;
-        private static NodeCaCertificatesUpdateJob          nodeCaCertificatesUpdateJob;
-        private static ControlPlaneCertificateRenewalJob    renewControlPlaneCertificatesJob;
-        private static HarborImagePushJob                   pushHarborImagesJob;
-        private static TelemetryPingJob                     telemetryPingJob;
-        private static ClusterCertificateRenewalJob         renewClusterCertificateJob;
-        private static MinWorkerNodeVcpuJob                 minWorkerNodeVcpuJob;
-        private static TerminatedPodGcJob                   terminatedPodGcJob;
+        private static AsyncMutex           asyncLock = new AsyncMutex();
+        private static IScheduler           scheduler;
+        private static StdSchedulerFactory  schedulerFactory;
+        private static bool                 isRunning;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
         static NeonJobController() 
         {
-            schedulerFactory                 = new StdSchedulerFactory();
-            nodeCaCertificatesUpdateJob      = new NodeCaCertificatesUpdateJob();
-            renewControlPlaneCertificatesJob = new ControlPlaneCertificateRenewalJob();
-            pushHarborImagesJob              = new HarborImagePushJob();
-            telemetryPingJob                 = new TelemetryPingJob();
-            renewClusterCertificateJob       = new ClusterCertificateRenewalJob();
-            minWorkerNodeVcpuJob             = new MinWorkerNodeVcpuJob();
-            terminatedPodGcJob               = new TerminatedPodGcJob();
+            schedulerFactory = new StdSchedulerFactory();
         }
 
         //---------------------------------------------------------------------
@@ -143,7 +134,7 @@ namespace NeonClusterOperator
 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
 
-                // Ignore all events when the controller hasn't been started.
+                // Ignore all resources except for the one named: KubeService.NeonClusterOperator
 
                 if (resource.Name() != KubeService.NeonClusterOperator)
                 {
@@ -152,31 +143,38 @@ namespace NeonClusterOperator
 
                 await StartSchedulerAsync();
 
-                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule rather than picking up its
-                // schedule from the [V1NeonClusterJobs] resource, so we're going to schedule the job
-                // only on the first reconcile callback.
+                // The [workerNodeVcpuScheduleJob] uses a hardcoded schedule (1:30am UTC) rather than picking up its
+                // schedule from the [V1NeonClusterJobs] resource.
 
-                // $todo(jefflill): figure out why this is broken and causes the controller to barf when reconciling
+                // $todo(jefflill): figure out why this is broken and causes the controller to barf when reconciling.
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/1899
 
 #if TODO
-                if (!startedWorkerNodeVcpuSchedule)
-                {
-                    await minWorkerNodeVcpuJob.AddToSchedulerAsync(scheduler, k8s, minWowe canrkerNodeVcpuSchedule.Schedule);
-
-                    startedWorkerNodeVcpuSchedule = true;
-                }
+                await ScheduleJobAsync<MinWorkerNodeVcpuJob>(
+                    scheduler,
+                    k8s,
+                    "0 30 1 ? * *");
 #endif
+
+                // We're going to accumulate any patches to the job status with the
+                // original and resolved CRON schedules.
+
+                var patch = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
 
                 if (resource.Spec.NodeCaCertificateUpdate.Enabled)
                 {
                     try
                     {
-                        var nodeCaSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.NodeCaCertificateUpdate.Schedule);
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.NodeCaCertificateUpdate.Schedule, resource.Status?.NodeCaCertificateUpdate);
 
-                        await nodeCaCertificatesUpdateJob.DeleteFromSchedulerAsync(scheduler);
-                        await nodeCaCertificatesUpdateJob.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                        await ScheduleJobAsync<ClusterCertificateRenewalJob>(
+                            scheduler,
+                            k8s,
+                            resolvedSchedule);
+
+                        patch.Replace(path => path.Status.NodeCaCertificateUpdate.OriginalCronSchedule, resource.Spec.NodeCaCertificateUpdate.Schedule);
+                        patch.Replace(path => path.Status.NodeCaCertificateUpdate.ResolvedCronSchedule, resolvedSchedule);
                     }
                     catch (Exception e)
                     {
@@ -188,10 +186,15 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var controlPlaneCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ControlPlaneCertificateRenewal.Schedule);
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.ControlPlaneCertificateRenewal.Schedule, resource.Status?.ControlPlaneCertificateRenewal);
 
-                        await renewControlPlaneCertificatesJob.DeleteFromSchedulerAsync(scheduler);
-                        await renewControlPlaneCertificatesJob.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                        await ScheduleJobAsync<ControlPlaneCertificateRenewalJob>(
+                            scheduler,
+                            k8s,
+                            resolvedSchedule);
+
+                        patch.Replace(path => path.Status.ControlPlaneCertificateRenewal.OriginalCronSchedule, resource.Spec.ControlPlaneCertificateRenewal.Schedule);
+                        patch.Replace(path => path.Status.ControlPlaneCertificateRenewal.ResolvedCronSchedule, resolvedSchedule);
                     }
                     catch (Exception e)
                     {
@@ -203,17 +206,19 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var containerImageSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.HarborImagePush.Schedule);
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.HarborImagePush.Schedule, resource.Status?.HarborImagePush);
 
-                        await pushHarborImagesJob.DeleteFromSchedulerAsync(scheduler);
-                        await pushHarborImagesJob.AddToSchedulerAsync(
+                        await ScheduleJobAsync<HarborImagePushJob>(
                             scheduler,
                             k8s,
-                            containerImageSchedule,
+                            resolvedSchedule,
                             new Dictionary<string, object>()
                             {
                                 { "HarborClient", harborClient }
                             });
+
+                        patch.Replace(path => path.Status.HarborImagePush.OriginalCronSchedule, resource.Spec.HarborImagePush.Schedule);
+                        patch.Replace(path => path.Status.HarborImagePush.ResolvedCronSchedule, resolvedSchedule);
                     }
                     catch (Exception e)
                     {
@@ -225,17 +230,19 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var clusterTelemetrySchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TelemetryPing.Schedule);
-
-                        await telemetryPingJob.DeleteFromSchedulerAsync(scheduler);
-                        await telemetryPingJob.AddToSchedulerAsync(
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.TelemetryPing.Schedule, resource.Status?.TelemetryPing);
+                         
+                        await ScheduleJobAsync<TelemetryPingJob>(
                             scheduler,
                             k8s,
-                            clusterTelemetrySchedule,
+                            resolvedSchedule,
                             new Dictionary<string, object>()
                             {
                                 { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
                             });
+
+                        patch.Replace(path => path.Status.TelemetryPing.OriginalCronSchedule, resource.Spec.TelemetryPing.Schedule);
+                        patch.Replace(path => path.Status.TelemetryPing.ResolvedCronSchedule, resolvedSchedule);
                     }
                     catch (Exception e)
                     {
@@ -247,17 +254,20 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var terminatedPodGcSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.TerminatedPodGc.Schedule);
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.TerminatedPodGc.Schedule, resource.Status?.TerminatedPodGc);
 
-                        terminatedPodGcJob.TerminatedPodGcDelayMilliseconds = resource.Spec.TerminatedPodGcDelayMilliseconds;
-                        terminatedPodGcJob.TerminatedPodGcThresholdMinutes  = resource.Spec.TerminatedPodGcThresholdMinutes;
-
-                        await terminatedPodGcJob.DeleteFromSchedulerAsync(scheduler);
-                        await terminatedPodGcJob.AddToSchedulerAsync(
+                        await ScheduleJobAsync<TerminatedPodGcJob>(
                             scheduler,
                             k8s,
-                            terminatedPodGcSchedule,
-                            new Dictionary<string, object>());
+                            resolvedSchedule,
+                            new Dictionary<string, object>()
+                            {
+                                { "TerminatedPodGcDelayMilliseconds", resource.Spec.TerminatedPodGcDelayMilliseconds },
+                                { "TerminatedPodGcThresholdMinutes", resource.Spec.TerminatedPodGcThresholdMinutes }
+                            });
+
+                        patch.Replace(path => path.Status.TerminatedPodGc.OriginalCronSchedule, resource.Spec.TerminatedPodGc.Schedule);
+                        patch.Replace(path => path.Status.TerminatedPodGc.ResolvedCronSchedule, resolvedSchedule);
                     }
                     catch (Exception e)
                     {
@@ -269,18 +279,61 @@ namespace NeonClusterOperator
                 {
                     try
                     {
-                        var neonDesktopCertSchedule = NeonExtendedHelper.FromEnhancedCronExpression(resource.Spec.ClusterCertificateRenewal.Schedule);
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.ClusterCertificateRenewal.Schedule, resource.Status?.ClusterCertificateRenewal);
 
-                        await renewClusterCertificateJob.DeleteFromSchedulerAsync(scheduler);
-                        await renewClusterCertificateJob.AddToSchedulerAsync(
+                        await ScheduleJobAsync<ClusterCertificateRenewalJob>(
                             scheduler, 
                             k8s, 
-                            neonDesktopCertSchedule,
+                            resolvedSchedule,
                             new Dictionary<string, object>()
                             {
                                 { "HeadendClient", headendClient },
                                 { "ClusterInfo", clusterInfo}
                             });
+
+                        patch.Replace(path => path.Status.ClusterCertificateRenewal.OriginalCronSchedule, resource.Spec.ClusterCertificateRenewal.Schedule);
+                        patch.Replace(path => path.Status.ClusterCertificateRenewal.ResolvedCronSchedule, resolvedSchedule);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
+                }
+
+                if (resource.Spec.LinuxSecurityPatch.Enabled)
+                {
+                    try
+                    {
+                        var resolvedSchedule = GetResolvedJobSchedule(resource.Spec.LinuxSecurityPatch.Schedule, resource.Status?.LinuxSecurityPatch);
+
+                        await ScheduleJobAsync<LinuxSecurityPatchJob>(
+                            scheduler,
+                            k8s,
+                            resolvedSchedule);
+
+                        patch.Replace(path => path.Status.LinuxSecurityPatch.OriginalCronSchedule, resource.Spec.LinuxSecurityPatch.Schedule);
+                        patch.Replace(path => path.Status.LinuxSecurityPatch.ResolvedCronSchedule, resolvedSchedule);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
+                }
+
+                // Update [V1NeonClusterJobs.Status] with any changes to job CRON schedule info.
+
+                if (patch.Operations.Count > 0)
+                {
+                    try
+                    {
+                        if (resource.Status == null)
+                        {
+                            patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
+                        }
+
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                            patch: OperatorHelper.ToV1Patch(patch),
+                            name:  resource.Name());
                     }
                     catch (Exception e)
                     {
@@ -334,7 +387,7 @@ namespace NeonClusterOperator
                 {
                     using (var activity = TelemetryHub.ActivitySource?.StartActivity())
                     {
-                        logger?.LogInformationEx(() => $"Start Quartz scheduler");
+                        logger?.LogInformationEx(() => $"START: Quartz scheduler");
 
                         scheduler = await schedulerFactory.GetScheduler();
 
@@ -358,12 +411,113 @@ namespace NeonClusterOperator
             {
                 if (isRunning)
                 {
-                    logger?.LogInformationEx(() => $"Shutdown Quartz scheduler");
+                    logger?.LogInformationEx(() => $"STOP: Quartz scheduler");
 
                     await scheduler.Shutdown(waitForJobsToComplete: true);
 
                     isRunning = false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns the CRON schedule (with any random <b>"R"</b> fields resolved)
+        /// to be used for a job.  This returns the schedule from the job status
+        /// if present or returns the resolved <paramref name="cronSchedule"/> when
+        /// there's no Job status or the original CRON schedule has been modified.
+        /// </summary>
+        /// <param name="cronSchedule">Specifies the CRON schedule from <see cref="V1NeonClusterJobs"/>.</param>
+        /// <param name="jobStatus">Specifies the job status for the target job from <see cref="V1NeonClusterJobs"/>  (or <c>null</c>).</param>
+        /// <returns>The resolved CRON schedule for the job.</returns>
+        public string GetResolvedJobSchedule(string cronSchedule, V1NeonClusterJobs.JobStatus jobStatus)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cronSchedule), nameof(cronSchedule));
+
+            var resolvedSchedule = NeonExtendedHelper.FromEnhancedCronExpression(cronSchedule);
+
+            if (string.IsNullOrEmpty(jobStatus?.OriginalCronSchedule) || cronSchedule != jobStatus.OriginalCronSchedule)
+            {
+                return resolvedSchedule;
+            }
+
+            Covenant.Assert(!string.IsNullOrEmpty(jobStatus.ResolvedCronSchedule), $"Expected [{nameof(jobStatus.ResolvedCronSchedule)}] to have the original schedule.");
+
+            return jobStatus.ResolvedCronSchedule;
+        }
+
+        /// <summary>
+        /// Adds a job to a specified Quartz scheduler.
+        /// </summary>
+        /// <typeparam name="TJob">Specifies the job implementation type.</typeparam>
+        /// <param name="scheduler">Specifies the scheduler.</param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="cronSchedule">Specifies the schedule.</param>
+        /// <param name="data">Optionally specifies a dictionary with additional data.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ScheduleJobAsync<TJob>(
+            IScheduler                  scheduler,
+            IKubernetes                 k8s,
+            string                      cronSchedule,
+            Dictionary<string, object>  data = null)
+
+            where TJob : IJob
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(scheduler != null, nameof(scheduler));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cronSchedule), nameof(cronSchedule));
+
+            var jobType = typeof(TJob);
+            var jobKey  = new JobKey(jobType.Name, JobGroup);
+
+            //-----------------------------------------------------------------
+            // Remove the job from the scheduler, if it's already present.
+
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                Tracer.CurrentSpan?.AddEvent($"cancel-job: {jobType.Name}/{cronSchedule}");
+
+                try
+                {
+                    await scheduler.DeleteJob(jobKey);
+                }
+                catch (NullReferenceException)
+                {
+                    return;
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Add the job to the scheduler.
+
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                Tracer.CurrentSpan?.AddEvent($"schedule-job: {jobType.Name}");
+
+                var job = JobBuilder.Create(jobType)
+                    .WithIdentity(jobType.Name, JobGroup)
+                    .Build();
+
+                job.JobDataMap.Put("Kubernetes", k8s);
+
+                if (data != null)
+                {
+                    foreach (var item in data)
+                    {
+                        job.JobDataMap.Put(item.Key, item.Value);
+                    }
+                }
+
+                // Trigger the job to run now, and then repeat as scheduled.
+
+                var trigger = TriggerBuilder.Create()
+                    .WithIdentity(jobKey.Name, jobKey.Group)
+                    .WithCronSchedule(cronSchedule)
+                    .Build();
+
+                // Tell quartz to schedule the job using our trigger.
+
+                await scheduler.ScheduleJob(job, trigger);
             }
         }
     }

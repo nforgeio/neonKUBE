@@ -164,18 +164,23 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task UpdateGlauthUsersAsync(V1Secret resource)
+        /// <summary>
+        /// Updates an SSO user secret.
+        /// </summary>
+        /// <param name="secret">Specifies the secret resource including the user identity and passwword.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateGlauthUsersAsync(V1Secret secret)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var conn = new NpgsqlConnection(connectionString);
                 await conn.OpenAsync();
 
-                foreach (var user in resource.Data.Keys)
+                foreach (var user in secret.Data.Keys)
                 {
                     using (var userActivity = TelemetryHub.ActivitySource?.StartActivity("AddUser"))
                     {
-                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data[user]));
                         var name         = userData.Name;
                         var givenname    = userData.Name;
                         var mail         = userData.Mail ?? $"{userData.Name}@{service.ClusterInfo.Domain}";
@@ -228,18 +233,23 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task UpdateGlauthGroupsAsync(V1Secret resource)
+        /// <summary>
+        /// Updates an SSO group secret.
+        /// </summary>
+        /// <param name="secret">Specifies the secret resource including the user identity and passwword.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateGlauthGroupsAsync(V1Secret secret)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var conn = new NpgsqlConnection(connectionString);
                 await conn.OpenAsync();
 
-                foreach (var key in resource.Data.Keys)
+                foreach (var key in secret.Data.Keys)
                 {
                     using (var groupActivity = TelemetryHub.ActivitySource?.StartActivity("AddGroup"))
                     {
-                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(resource.Data[key]));
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(secret.Data[key]));
 
                         await using (var cmd = new NpgsqlCommand(
                             $@"INSERT INTO groups(name, gidnumber)

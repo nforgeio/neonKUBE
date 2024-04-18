@@ -50,15 +50,20 @@ namespace NeonClusterOperator
     /// Handles updating of Linux CA certificates on cluster nodes.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class NodeCaCertificatesUpdateJob : CronJob, IJob
+    public class NodeCaCertificatesUpdateJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<NodeCaCertificatesUpdateJob>();
-     
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Constructor.
         /// </summary>
         public NodeCaCertificatesUpdateJob()
-            : base(typeof(NodeCaCertificatesUpdateJob))
         {
         }
         

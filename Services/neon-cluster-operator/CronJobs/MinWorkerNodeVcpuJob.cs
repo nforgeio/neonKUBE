@@ -57,15 +57,20 @@ namespace NeonClusterOperator.CronJobs
     /// cloud native Kubernetes clusters where the control plane is free.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class MinWorkerNodeVcpuJob : CronJob, IJob
+    public class MinWorkerNodeVcpuJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<MinWorkerNodeVcpuJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinWorkerNodeVcpuJob()
-            : base(typeof(MinWorkerNodeVcpuJob))
         {
         }
 
@@ -158,6 +163,21 @@ namespace NeonClusterOperator.CronJobs
                     {
                         logger.LogCriticalEx(() => $"Removed [{removedCount}] worker nodes they don't have at least [{KubeConst.MinWorkerNodeVCpus}] vCPUs.");
                     }
+
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
+
+                    if (clusterOperator.Status == null)
+                    {
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
+                    }
+
+                    patch.Replace(path => path.Status.MinWorkerNodeVcpu, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.MinWorkerNodeVcpu.LastCompleted, DateTime.UtcNow);
+
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

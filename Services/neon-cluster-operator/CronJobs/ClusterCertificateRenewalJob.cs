@@ -52,15 +52,20 @@ namespace NeonClusterOperator
     /// Handles renewal of the Kubernetes root certificate.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class ClusterCertificateRenewalJob : CronJob, IJob
+    public class ClusterCertificateRenewalJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<ClusterCertificateRenewalJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ClusterCertificateRenewalJob()
-            : base(typeof(ClusterCertificateRenewalJob))
         {
         }
         
@@ -125,7 +130,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

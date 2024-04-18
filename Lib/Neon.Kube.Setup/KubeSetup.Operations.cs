@@ -5214,7 +5214,7 @@ $@"- name: StorageType
                             HarborImagePush                  = jobOptions.HarborImagePush,
                             ControlPlaneCertificateRenewal   = jobOptions.ControlPlaneCertificateRenewal,
                             NodeCaCertificateUpdate          = jobOptions.NodeCaCertificateRenewal,
-                            LinuxSecurityPatches             = jobOptions.LinuxSecurityPatches,
+                            LinuxSecurityPatch             = jobOptions.LinuxSecurityPatches,
                             TelemetryPing                    = jobOptions.TelemetryPing,
                             TerminatedPodGc                  = jobOptions.TerminatedPodGc,
                             TerminatedPodGcDelayMilliseconds = jobOptions.TerminatedPodGcDelayMilliseconds,

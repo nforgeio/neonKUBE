@@ -55,30 +55,22 @@ namespace NeonClusterOperator
     /// longer than a threshold period of time.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class TerminatedPodGcJob : CronJob, IJob
+    public class TerminatedPodGcJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<TelemetryPingJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public TerminatedPodGcJob()
-            : base(typeof(TerminatedPodGcJob))
         {
         }
-
-        /// <summary>
-        /// Specifies the delay in milliseconds the terminated pod removal job
-        /// will pause after scanning a namespace for terminated jobs and also
-        /// after each job removal to reduce pressure on the API Server.
-        /// </summary>
-        public int TerminatedPodGcDelayMilliseconds { get; set; }
-
-        /// <summary>
-        /// Specifies the number of minutes after a pod terminates before it
-        /// becomes eligible for removal by the <b>neon-cluster-operator</b>.
-        /// </summary>
-        public int TerminatedPodGcThresholdMinutes { get; set; }
 
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
@@ -97,7 +89,7 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    logger.LogInformationEx(() => "START: GC terminated pods.");
+                    logger.LogInformationEx(() => "START: GC terminated pods");
 
                     var dataMap = context.MergedJobDataMap;
                     var k8s     = (IKubernetes)dataMap["Kubernetes"];
@@ -119,9 +111,11 @@ namespace NeonClusterOperator
                     //       could also be removed by the built-in Kubernetes pod GC service
                     //       while we're processing them.
 
-                    var namespaces         = await k8s.CoreV1.ListNamespaceAsync();
-                    var maxEligibleTimeUtc = DateTime.UtcNow - TimeSpan.FromMinutes(TerminatedPodGcThresholdMinutes);
-                    var delay              = TimeSpan.FromMilliseconds(TerminatedPodGcDelayMilliseconds);
+                    var terminatedPodGcThresholdMinutes  = (int)context.MergedJobDataMap["TerminatedPodGcThresholdMinutes"];
+                    var terminatedPodGcDelayMilliseconds = (int)context.MergedJobDataMap["TerminatedPodGcDelayMilliseconds"];
+                    var namespaces                       = await k8s.CoreV1.ListNamespaceAsync();
+                    var maxEligibleTimeUtc               = DateTime.UtcNow - TimeSpan.FromMinutes(terminatedPodGcThresholdMinutes);
+                    var delay                            = TimeSpan.FromMilliseconds(terminatedPodGcDelayMilliseconds);
 
                     //---------------------------------------------------------
                     // Process terminated/failed pods.
@@ -130,7 +124,7 @@ namespace NeonClusterOperator
                     {
                         try
                         {
-                            var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase: Failed");
+                            var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase==Failed");
 
                             foreach (var pod in terminatedPods.Items
                                 .Where(pod => IsNameGenerated(pod)))
@@ -185,7 +179,7 @@ namespace NeonClusterOperator
                     {
                         try
                         {
-                            var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase: Succeeded");
+                            var terminatedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name(), fieldSelector: "status.phase==Succeeded");
 
                             foreach (var pod in terminatedPods.Items
                                 .Where(pod => IsNameGenerated(pod)))
@@ -232,6 +226,21 @@ namespace NeonClusterOperator
                             await Task.Delay(delay);
                         }
                     }
+
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
+
+                    if (clusterOperator.Status == null)
+                    {
+                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
+                    }
+
+                    patch.Replace(path => path.Status.TerminatedPodGc, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.TerminatedPodGc.LastCompleted, DateTime.UtcNow);
+
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {
@@ -243,9 +252,9 @@ namespace NeonClusterOperator
 
                 var sbSummary = new StringBuilder();
 
-                sbSummary.AppendLine("END: GC terminated pods.");
+                sbSummary.AppendLine("FINISH: GC terminated pods");
                 sbSummary.AppendLine($"elapsed: {stopwatch.Elapsed}");
-                sbSummary.AppendLine($"failedPodsDeleted: {failedPodsDeleted}=");
+                sbSummary.AppendLine($"failedPodsDeleted: {failedPodsDeleted}");
                 sbSummary.AppendLine($"succeededPodsDeleted: {succeededPodsDeleted}");
                 sbSummary.AppendLine($"exceptions: {exceptionCount}");
 
