@@ -120,7 +120,7 @@ namespace NeonClusterOperator.CronJobs
 
                     do
                     {
-                        var nodes = await k8s.CoreV1.ListNodeAsync(continueParameter: continueToken, limit: 10);
+                        var nodes = await k8s.CoreV1.ListNodeAsync(continueParameter: continueToken);
 
                         continueToken = nodes.Continue();
 
