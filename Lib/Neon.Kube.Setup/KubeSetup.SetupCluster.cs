@@ -375,6 +375,35 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
+        /// Executes a <b>kubectl/neon</b> command on the cluster node and then returns a
+        /// summary of the command and its output to a file.
+        /// </summary>
+        /// <param name="cluster">Specifies the cluster proxy.</param>
+        /// <param name="args">Specifies the command arguments.</param>
+        private static string CaptureKubectl(ClusterProxy cluster, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+
+            var result = KubeHelper.NeonCliExecuteCapture(args);
+            var sb     = new StringBuilder();
+
+            sb.AppendLine($"# kubectl {NeonHelper.NormalizeExecArgs(args)}");
+            sb.AppendLine($"# EXITCODE: {result.ExitCode}");
+            sb.AppendLine("---------------------------------------");
+            sb.AppendLine();
+
+            using (var reader = new StringReader(result.AllText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    sb.AppendLine(line);
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Captures additional information about the cluster including things like cluster pod status
         /// and logs from failed cluster pod containers and persisting that to the logs folder.
         /// </summary>
@@ -416,6 +445,31 @@ namespace Neon.Kube.Setup
                 CaptureKubectl(clusterProxy, logDetailsFolder, "events.txt", "get", "events", "-A");
                 CaptureKubectl(clusterProxy, logDetailsFolder, "events.yaml", "get", "events", "-A", "-o=yaml");
 
+                //-----------------------------------------------------------------
+                // Capture pod descriptions for all pods.
+
+                using (var k8s = KubeHelper.CreateKubernetesClient())
+                {
+                    var podDescFolder = Path.Combine(logDetailsFolder, "pod-desc");
+                    var notReady      = string.Empty;
+
+                    Directory.CreateDirectory(podDescFolder);
+
+                    foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
+                    {
+                        if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                        {
+                            notReady = " (not-Ready)";
+                        }
+
+                        var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "describe", "pod", pod.Name(), $"--namespace={pod.Namespace()}" })
+                            .EnsureSuccess();
+
+                        File.WriteAllText(Path.Combine(podDescFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.yaml"), response.OutputText);
+                    }
+                }
+
+                //-----------------------------------------------------------------
                 // Capture logs from all pods, adding "(not-ready)" to the log file name for
                 // pods with containers that aren't ready yet.
 
@@ -435,7 +489,7 @@ namespace Neon.Kube.Setup
                         }
 
                         var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
-                        .EnsureSuccess();
+                            .EnsureSuccess();
 
                         File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
                     }
