@@ -149,7 +149,7 @@ namespace NeonClusterOperator
                 await ScheduleJobAsync<MinWorkerNodeVcpuJob>(
                     scheduler,
                     k8s,
-                    0 30 1 ? **");  // 1:30am UTC
+                    "0 30 1 ? * *");    // 1:30am everyday
 
                 // We're going to accumulate any patches to the job status with the
                 // original and resolved CRON schedules.
