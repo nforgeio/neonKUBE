@@ -410,7 +410,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the Kubernetes context name for the NEONDESKTOP cluster.
         /// </summary>
-        public const string NeonDesktopContextName = $"{RootUser}@{NeonDesktopClusterName}";
+        public const string NeonDesktopContextName = $"{SysAdminUser}@{NeonDesktopClusterName}";
 
         /// <summary>
         /// Identifies the Hyper-V virtual machine used to host the NEONDESKTOP cluster.

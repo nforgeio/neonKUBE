@@ -6234,7 +6234,7 @@ $@"- name: StorageType
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("Waiting for pods to start...");
+            controller.SetGlobalStepStatus("Waiting for pods to start and stabilize...");
 
             var k8s   = GetK8sClient(controller);
             var retry = new LinearRetryPolicy(
