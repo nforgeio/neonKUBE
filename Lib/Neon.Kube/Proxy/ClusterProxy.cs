@@ -1623,6 +1623,10 @@ namespace Neon.Kube.Proxy
             {
                 KubeHelper.KubeConfig.RemoveContext(context);
             }
+
+            // Remove the cluster's SSH key file, if present.
+
+            NeonHelper.DeleteFile(Path.Combine(KubeHelper.UserSshFolder, $"{KubeConst.SysAdminUser}@{Name}"));
         }
     }
 }
