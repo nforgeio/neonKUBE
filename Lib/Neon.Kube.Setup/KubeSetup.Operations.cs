@@ -865,16 +865,16 @@ exit 1
 
                             // Edit the Kubernetes configuration file to rename the context:
                             //
-                            //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                            //       CLUSTERNAME-admin@kubernetes --> sysadmin@CLUSTERNAME
                             //
                             // rename the user:
                             //
-                            //      CLUSTERNAME-admin --> CLUSTERNAME-root 
+                            //      CLUSTERNAME-admin --> CLUSTERNAME-sysadmin 
 
                             var adminConfig = firstControlNode.DownloadText("/etc/kubernetes/admin.conf");
 
-                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Name}", $"root@{cluster.SetupState.ClusterDefinition.Name}");
-                            adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Name}");
+                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Name}", $"sysadmin@{cluster.SetupState.ClusterDefinition.Name}");
+                            adminConfig = adminConfig.Replace("kubernetes-admin", $"sysadmin@{cluster.Name}");
 
                             firstControlNode.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });

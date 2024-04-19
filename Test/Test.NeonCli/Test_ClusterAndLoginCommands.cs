@@ -83,7 +83,7 @@ namespace Test.NeonCli
 
         private const string clusterName  = "test-neoncli";
         private const string namePrefix   = "test-neoncli";
-        private const string clusterLogin = $"root@{clusterName}";
+        private const string clusterLogin = $"sysadmin@{clusterName}";
 
         private const string awsClusterDefinition =
 $@"

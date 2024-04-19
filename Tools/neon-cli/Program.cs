@@ -183,7 +183,7 @@ USAGE:
     neon cluster pause      [OPTIONS]
     neon cluster delete     [OPTIONS]
     neon cluster reset      [OPTIONS]
-    neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster setup      [OPTIONS] sysadmin@CLUSTER-NAME
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock

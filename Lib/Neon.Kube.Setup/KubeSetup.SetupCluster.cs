@@ -92,9 +92,9 @@ namespace Neon.Kube.Setup
             var logFolder = KubeHelper.LogFolder;
 
             // Ensure that the cluster's setup state file exists and that it
-            // indicates that tyhe cluster was prepared.
+            // indicates that the cluster was prepared.
 
-            var contextName    = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var contextName    = KubeContextName.Parse($"sysadmin@{clusterDefinition.Name}");
             var setupStatePath = KubeSetupState.GetPath((string)contextName);
             var setupState     = (KubeSetupState)null;
 

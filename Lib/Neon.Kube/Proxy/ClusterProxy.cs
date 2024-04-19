@@ -1614,7 +1614,7 @@ namespace Neon.Kube.Proxy
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
+            var contextName = KubeContextName.Parse($"{KubeConst.SysAdminUser}@{Name}");
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             await HostingManager.DeleteClusterAsync(SetupState?.ClusterDefinition);

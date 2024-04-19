@@ -624,7 +624,7 @@ namespace Neon.Kube.Xunit
             // its cluster definition matches the test cluster's definition.
             ;
             var clusterExists     = false;
-            var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var configContextName = KubeContextName.Parse($"sysadmin@{clusterDefinition.Name}");
             var configContext     = KubeHelper.KubeConfig.GetContext(configContextName);
 
             if (configContext != null)

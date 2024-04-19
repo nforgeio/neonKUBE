@@ -63,7 +63,7 @@ prepare the cluster to provision any virtual machines ane network infrastructure
 and then you setup NEONKUBE on that, like:
 
     neon cluster prepare CLUSTER-DEF
-    neon cluster setup root@CLUSTER-NAME
+    neon cluster setup sysadmin@CLUSTER-NAME
 
 USAGE:
 

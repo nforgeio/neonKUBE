@@ -225,13 +225,7 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// <para>
-        /// Specifies the SSH padmin assword for cluster nodes.
-        /// </para>
-        /// <note>
-        /// Technically, this is actually the admin user account password on the cluster nodes,
-        /// not an SSH password because clusters disable SSH password authentication.
-        /// </note>
+        /// Specifies the SSH admin password for cluster nodes.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]

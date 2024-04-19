@@ -67,18 +67,18 @@ stages, where you first prepare the cluster to provision any virtual
 machines and network infrastructure and then you setup NEONKUBE, like:
 
     neon cluster prepare CLUSTER-DEF
-    neon cluster setup root@CLUSTER-NAME
+    neon cluster setup sysadmin@CLUSTER-NAME
 
 NOTE: This is used by maintainers while debugging cluster setup.
 
 USAGE: 
 
-    neon cluster setup [OPTIONS] root@CLUSTER-NAME
+    neon cluster setup [OPTIONS] sysadmin@CLUSTER-NAME
 
 ARGUMENTS:
 
     CONTEXT-NAME        - Specifies the context name for the cluster, typically
-                          root@CLUSTER-NAME for a newly prepared cluster.
+                          sysadmin@CLUSTER-NAME for a newly prepared cluster.
 
 OPTIONS:
 
@@ -164,7 +164,7 @@ stage process is typically used only by NEONKUBE maintainers.
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [sysadmin@CLUSTER-NAME] argument is required.");
                 Program.Exit(-1);
             }
 

@@ -187,7 +187,7 @@ namespace Neon.Kube.Setup
             // Initialize the setup state.  This is backed by a file and is used to
             // persist setup related state across the cluster prepare and setup phases.
 
-            var contextName = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
+            var contextName = $"{KubeConst.SysAdminUser}@{clusterDefinition.Name}";
 
             if (KubeSetupState.Exists(contextName))
             {
@@ -392,7 +392,7 @@ namespace Neon.Kube.Setup
             // Add the provisioning steps.
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("check node operating system", (controller, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check operating system", (controller, node) => node.VerifyNodeOS());
 
             controller.AddNodeStep("delete boot script",
                 (controller, node) =>
