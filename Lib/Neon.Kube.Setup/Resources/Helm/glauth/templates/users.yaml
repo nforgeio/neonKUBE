@@ -82,7 +82,7 @@ stringData:
       name = "root"
       givenname="root"
       sn=""
-      mail = "root@{{ $clusterDomain }}"
+      mail = "sysadmin@{{ $clusterDomain }}"
       uidnumber = 5001
       primarygroup = 5501
       passsha256 = "{{ .Values.users.root.password | sha256sum }}" # {{ .Values.users.root.password }}

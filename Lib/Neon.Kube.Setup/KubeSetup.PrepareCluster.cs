@@ -370,7 +370,7 @@ namespace Neon.Kube.Setup
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
-                    setupState.SsoUsername = KubeConst.RootUser;
+                    setupState.SsoUsername = KubeConst.SysAdminUser;
                     setupState.SsoPassword = clusterDefinition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                     setupState.Save();

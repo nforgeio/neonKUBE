@@ -84,11 +84,6 @@ namespace Neon.Kube
         public const int MinWorkerNodeNics = 1;
 
         /// <summary>
-        /// The root Kubernetes context username for provisioned clusters. 
-        /// </summary>
-        public const string RootUser = "root";
-
-        /// <summary>
         /// <para>
         /// The fixed SSO password for desktop clusters.
         /// </para>

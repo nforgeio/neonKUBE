@@ -2528,7 +2528,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = $"{KubeConst.RootUser}-user",
+                            Name              = $"{KubeConst.SysAdminUser}-user",
                             NamespaceProperty = KubeNamespace.KubeSystem
                         }
                     };
@@ -2539,7 +2539,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"{KubeConst.RootUser}-user",
+                            Name = $"{KubeConst.SysAdminUser}-user",
                         },
                         RoleRef = new V1RoleRef()
                         {
@@ -2551,7 +2551,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             new V1Subject()
                             {
-                                Name              = $"{KubeConst.RootUser}-user",
+                                Name              = $"{KubeConst.SysAdminUser}-user",
                                 Kind              = "ServiceAccount",
                                 NamespaceProperty = KubeNamespace.KubeSystem
                             },
