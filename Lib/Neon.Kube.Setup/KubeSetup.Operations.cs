@@ -5008,7 +5008,7 @@ $@"- name: StorageType
 
                     await Task.CompletedTask;
 #if TODO
-                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
 
@@ -5034,7 +5034,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login-workstation",
                 async () =>
                 {
-                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
@@ -5046,8 +5046,7 @@ $@"- name: StorageType
                             {
                                 "login",
                                 $"{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
-                                "--username",
-                                "root",
+                                "--username", KubeConst.SysAdminUser,
                                 "--password-stdin"
                             },
                             input: new StringReader(cluster.SetupState.SsoPassword));
@@ -5898,7 +5897,7 @@ $@"- name: StorageType
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
-            values.Add("users.root.password", cluster.SetupState.SsoPassword);
+            values.Add("users.sysadmin.password", cluster.SetupState.SsoPassword);
             values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)

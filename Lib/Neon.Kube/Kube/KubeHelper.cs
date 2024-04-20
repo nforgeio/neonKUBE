@@ -1957,9 +1957,9 @@ exit 0
         /// Creates a SSH key for a NEONKUBE cluster.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
-        /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
+        /// <param name="userName">Specifies the user name.</param>
         /// <returns>A <see cref="KubeSshKey"/> holding the public and private parts of the key.</returns>
-        public static KubeSshKey GenerateSshKey(string clusterName, string userName = "root")
+        public static KubeSshKey GenerateSshKey(string clusterName, string userName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName), nameof(userName));

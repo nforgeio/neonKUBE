@@ -79,13 +79,13 @@ stringData:
 
     # This user record shows all of the possible fields available
     [[users]]
-      name = "root"
-      givenname="root"
+      name = "sysadmin"
+      givenname="sysadmin"
       sn=""
       mail = "sysadmin@{{ $clusterDomain }}"
       uidnumber = 5001
       primarygroup = 5501
-      passsha256 = "{{ .Values.users.root.password | sha256sum }}" # {{ .Values.users.root.password }}
+      passsha256 = "{{ .Values.users.sysadmin.password | sha256sum }}" # {{ .Values.users.sysadmin.password }}
     [[users]]
       name = "serviceuser"
       givenname="serviceuser"

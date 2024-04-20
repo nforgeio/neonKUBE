@@ -49,93 +49,86 @@ namespace Neon.Kube
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
-        /// The maximum number of cluster control-plane nodes.
+        /// Specifies the maximum number of cluster control-plane nodes.
         /// </summary>
         public const int MaxControlPlaneNodes = 5;
 
         /// <summary>
-        /// The minimum number of vCPUs required by control-plane nodes.
+        /// Specifies the minimum number of vCPUs required by control-plane nodes.
         /// </summary>
         public const int MinControlNodeVCpus = 2;
 
         /// <summary>
-        /// The minimum number of vCPUs required by worker nodes.
+        /// Specifies the minimum number of vCPUs required by worker nodes.
         /// </summary>
         public const int MinWorkerNodeVCpus = 4;
 
         /// <summary>
-        /// The minimum RAM (MiB) required for control-plane nodes.
+        /// Specifies the minimum RAM (MiB) required for control-plane nodes.
         /// </summary>
         public const int MinControlPlaneNodeRamMiB = 8192;
 
         /// <summary>
-        /// The minimum RAM (MiB) required for worker nodes.
+        /// Specifies the minimum RAM (MiB) required for worker nodes.
         /// </summary>
         public const int MinWorkerNodeRamMiB = 8192;
 
         /// <summary>
-        /// The minimum required network interface cards for control-plane nodes.
+        /// Specifies the minimum required network interface cards for control-plane nodes.
         /// </summary>
         public const int MinControlPlaneNodeNics = 1;
 
         /// <summary>
-        /// The minimum required network interface cards for worker nodes.
+        /// Specifies the minimum required network interface cards for worker nodes.
         /// </summary>
         public const int MinWorkerNodeNics = 1;
 
         /// <summary>
-        /// <para>
-        /// The fixed SSO password for desktop clusters.
-        /// </para>
-        /// <note>
-        /// This isn't really a security risk because the desktop cluster cannot be
-        /// reached from outside the computer because the cluster IP address is not
-        /// routable.
-        /// </note>
-        /// </summary>
-        public const string RootDesktopPassword = "root";
-
-        /// <summary>
-        /// The NEONKUBE domain used to host NEONKUBE cluster DNS records.
+        /// Specifies the NEONKUBE domain used to host NEONKUBE cluster DNS records.
         /// </summary>
         public const string NeonClusterDomain = "neoncluster.io";
 
         /// <summary>
-        /// The fixed ID for all desktop clusters.
+        /// Specifies the fixed ID for all desktop clusters.
         /// </summary>
         public const string DesktopClusterId = $"desktop";
 
         /// <summary>
-        /// The fixed domain for all desktop clusters.
+        /// Specifies the fixed domain for all desktop clusters.
         /// </summary>
         public const string DesktopClusterDomain = $"{DesktopClusterId}.{NeonClusterDomain}";
 
         /// <summary>
-        /// The default host machine sysadmin username.
+        /// Specifies the default host machine sysadmin username.
         /// </summary>
         public const string SysAdminUser = "sysadmin";
 
         /// <summary>
-        /// The default host machine sysadmin user ID.
+        /// Specifies the default host machine sysadmin user ID.
         /// </summary>
         public const int SysAdminUID = 1000;
 
         /// <summary>
-        /// The default host machine sysadmin group.
+        /// Specifies the default host machine sysadmin group.
         /// </summary>
         public const string SysAdminGroup = "sysadmin";
 
         /// <summary>
-        /// The default host machine sysadmin group ID.
+        /// Specifies the default host machine sysadmin group ID.
         /// </summary>
         public const int SysAdminGID = 1000;
 
         /// <summary>
-        /// The default <b>sysadmin</b> account password baked into NEONKUBE
+        /// Specifies the default <b>sysadmin</b> account password baked into NEONKUBE
         /// base images.  This will generally be changed to a secure password 
         /// during cluster provisioning.
         /// </summary>
         public const string SysAdminPassword = "sysadmin0000";
+
+        /// <summary>
+        /// Specifies the SSH and SSO passwords to be used for NeonDESKTOP and insecure clusters.
+        /// </summary>
+        public const string SysAdminInsecurePassword = "sysadmin";
 
         /// <summary>
         /// <b>$/etc/hosts</b> section name used by NEONKUBE applications for persisting
@@ -145,14 +138,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The default name for the local <see cref="k8s.Models.V1StorageClass"/>
+        /// Specifies the default name for the local <see cref="k8s.Models.V1StorageClass"/>
         /// </para>
         /// </summary>
         public const string LocalStorageClassName = "local-storage";
 
         /// <summary>
         /// <para>
-        /// The default path for the <see cref="LocalStorageClassName"/>
+        /// Specifies the default path for the <see cref="LocalStorageClassName"/>
         /// </para>
         /// <note>
         /// This is temporary, once Kubernetes supports dynamic provisioning of local storage volumes, we'll use
@@ -178,7 +171,7 @@ namespace Neon.Kube
         public const string ImagePrebuiltDesktopPath = "/etc/neonkube/prebuilt-desktop";
 
         /// <summary>
-        /// The number of IP addresses reserved by cloud deployments at the beginning of the 
+        /// Specifies the number of IP addresses reserved by cloud deployments at the beginning of the 
         /// node subnet by the cloud provider and also for future NEONKUBE features.
         /// This typically includes the cloud default gateway and DNS forwarding IPs as well
         /// as potential future NEONKUBE features such as an integrated VPN and perhaps 
@@ -187,7 +180,7 @@ namespace Neon.Kube
         public const int CloudSubnetStartReservedIPs = 10;
 
         /// <summary>
-        /// The number of IP addresses reserved by cloud deployments at the end of the node
+        /// Specifies the number of IP addresses reserved by cloud deployments at the end of the node
         /// subnet by the cloud provider.  This typically includes the network UDP broadcast
         /// address.
         /// </summary>
@@ -204,19 +197,19 @@ namespace Neon.Kube
         public const string DefaultServiceSubnet = "10.253.0.0/16";
 
         /// <summary>
-        /// The container image tag used to reference cluster container images tagged 
+        /// Specifies the container image tag used to reference cluster container images tagged 
         /// our prefix and the cluster version number.
         /// </summary>
         public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
 
         /// <summary>
-        /// The size of the OS disk used for base images.
+        /// Specifies the size of the OS disk used for base images.
         /// </summary>
         public const int BaseDiskSizeGiB = 10;
 
         /// <summary>
         /// <para>
-        /// The minimum supported cluster node disk size in GiB.
+        /// Specifies the minimum supported cluster node disk size in GiB.
         /// </para>
         /// <note>
         /// This size should match the size of the virtual disks created the base
@@ -226,7 +219,7 @@ namespace Neon.Kube
         public const int MinNodeDiskSizeGiB = 48;
 
         /// <summary>
-        /// The maximum support cluster node disk size in GiB.
+        /// Specifies the maximum support cluster node disk size in GiB.
         /// </summary>
         public const int MaxNodeDiskSizeGiB = 16 * 1024;
 
@@ -253,7 +246,7 @@ namespace Neon.Kube
         public const string LocalClusterRegistryHostName = $"registry.{ClusterNodeDomain}";
 
         /// <summary>
-        /// The local cluster registry project.
+        /// Specifies the local cluster registry project.
         /// </summary>
         public const string LocalClusterRegistryProject = "neonkube";
 
@@ -266,7 +259,7 @@ namespace Neon.Kube
         /// User name used to log CRI-O on the cluster nodes into the local
         /// Harbor registry via <b>podman</b>.
         /// </summary>
-        public const string HarborCrioUser = "root";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/neonKUBE/issues/1404)
+        public const string HarborCrioUser = "sysadmin";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/neonKUBE/issues/1404)
 
         /// <summary>
         /// Returns the Harbor Project name.
@@ -391,14 +384,14 @@ namespace Neon.Kube
         public const string ClusterImagesLastChecked = "cluster-images-last-checked";
 
         /// <summary>
-        /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
+        /// Specifies the name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
         /// for creating the internal virtual switch where the NEONDESKTOP cluster
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
         public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
-        /// The NEONDESKTOP cluster name.
+        /// Specifies the NEONDESKTOP cluster name.
         /// </summary>
         public const string NeonDesktopClusterName = "neon-desktop";
 
@@ -418,7 +411,7 @@ namespace Neon.Kube
         public const string ClusterLogName = "cluster.log";
 
         /// <summary>
-        /// The maximum size in bytes of a node image part published as a GitHub release.
+        /// Specifies the maximum size in bytes of a node image part published as a GitHub release.
         /// </summary>
         public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
 
@@ -428,17 +421,17 @@ namespace Neon.Kube
         public const string NeonKubeResourceGroup = "neonkube.io";
 
         /// <summary>
-        /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
+        /// Specifies the minimum amount of OS disk on a cluster node after accounting for Minio volumes.
         /// </summary>
         public const string MinimumOsDiskAfterMinio = "40 GiB";
 
         /// <summary>
-        /// The CIR-O socket.
+        /// Specifies the CIR-O socket path.
         /// </summary>
         public const string CrioSocketPath = "/var/run/crio/crio.sock";
 
         /// <summary>
-        /// The maximum label length allowed.
+        /// Specifies the maximum label length allowed.
         /// </summary>
         public const byte MaxLabelLength = 63;
 

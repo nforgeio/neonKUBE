@@ -298,7 +298,7 @@ namespace Neon.Kube.Setup
                         //
                         // WARNING: This should never be used for production clusters!
 
-                        setupState.SshPassword = KubeConst.SysAdminPassword;
+                        setupState.SshPassword = KubeConst.SysAdminInsecurePassword;
                     }
                     else
                     {
@@ -326,9 +326,9 @@ namespace Neon.Kube.Setup
 
                         if (desktopReadyToGo || options.Insecure)
                         {
-                            // We're going to configure a fixed password for NEONDESKTOP clusters.
+                            // We're going to configure a fixed password for NEONDESKTOP and insecure clusters.
 
-                            setupState.SshPassword = KubeConst.SysAdminPassword;
+                            setupState.SshPassword = KubeConst.SysAdminInsecurePassword;
                         }
                         else
                         {
@@ -371,7 +371,7 @@ namespace Neon.Kube.Setup
                     controller.SetGlobalStepStatus("generate: SSO password");
 
                     setupState.SsoUsername = KubeConst.SysAdminUser;
-                    setupState.SsoPassword = clusterDefinition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    setupState.SsoPassword = clusterDefinition.SsoPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                     setupState.Save();
                 });

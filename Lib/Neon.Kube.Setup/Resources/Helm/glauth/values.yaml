@@ -109,8 +109,6 @@ config:
     enabled: false
 
 users:
-  root:
-    password: ""
   sysadmin:
     password: ""
   user:

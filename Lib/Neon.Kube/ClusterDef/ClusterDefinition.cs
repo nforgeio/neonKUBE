@@ -617,14 +617,21 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// <para>
         /// Optionally specifies the cluster root single sign-on (SSO) password.  A random password
         /// with of <see cref="SecurityOptions.PasswordLength"/> will be created by default when no
         /// password is specified here.
+        /// </para>
+        /// <note>
+        /// The NeonDESKTOP SSO cluster's SSO password is always set to <see cref="KubeConst.SysAdminInsecurePassword"/>
+        /// to make the cluster easier to use.  This isn't a big security risk, because the desktop cluster is
+        /// not accessable from the LAN.
+        /// </note>>
         /// </summary>
-        [JsonProperty(PropertyName = "RootPassword", Required = Required.Default)]
-        [YamlMember(Alias = "rootPassword", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default)]
+        [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string RootPassword { get; set; } = null;
+        public string SsoPassword { get; set; } = null;
 
         /// <summary>
         /// Clones the current cluster definition and then removes any hosting related 
