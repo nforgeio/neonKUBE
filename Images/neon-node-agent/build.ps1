@@ -22,7 +22,7 @@ try
 {
     # Build and publish the app to a local [bin] folder.
 
-    DeleteFolder bin
+    Delete-Folder bin
 
     mkdir bin | Out-Null
     ThrowOnExitCode
@@ -46,5 +46,5 @@ finally
 {
     # Clean up
 
-    DeleteFolder bin
+    Delete-Folder bin
 }

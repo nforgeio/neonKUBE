@@ -72,23 +72,6 @@ if (-not $neonKubeBranch.StartsWith("release-"))
 }
 
 #------------------------------------------------------------------------------
-# Deletes a file if it exists.
-
-function DeleteFile
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$Path
-    )
-
-	if (Test-Path $Path) 
-	{ 
-		Remove-Item $Path 
-	} 
-}
-
-#------------------------------------------------------------------------------
 # Returns the current date (UTC) formatted as "yyyyMMdd".
 
 function UtcDate

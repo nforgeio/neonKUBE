@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         utility.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -308,22 +308,45 @@ function Invoke-CaptureStreams
 
         $exitCode = $LastExitCode
 
-        # Read the output files.
-
         $stdout = ""
-
-        if ([System.IO.File]::Exists($stdoutPath))
-        {
-            $stdout = [System.IO.File]::ReadAllText($stdoutPath)
-        }
-
         $stderr = ""
 
-        if (!$interleave)
+        try
         {
-            if ([System.IO.File]::Exists($stderrPath))
+            # Read the output files.
+
+            if ([System.IO.File]::Exists($stdoutPath))
             {
-                $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
+            }
+
+            if (!$interleave)
+            {
+                if ([System.IO.File]::Exists($stderrPath))
+                {
+                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                }
+            }
+        }
+        catch
+        {
+            # It appears that something might be holding these files open.
+            # We're going to workaround this by delaying a bit and trying
+            # again.
+
+            [System.Threading.Thread]::Sleep(1000)
+
+            if ([System.IO.File]::Exists($stdoutPath))
+            {
+                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
+            }
+
+            if (!$interleave)
+            {
+                if ([System.IO.File]::Exists($stderrPath))
+                {
+                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                }
             }
         }
 
@@ -356,17 +379,12 @@ function Invoke-CaptureStreams
     }
     finally
     {
+        [System.Threading.Thread]::Sleep(250)
+
         # Delete the temporary output files
 
-        if ([System.IO.File]::Exists($stdoutPath))
-        {
-            [System.IO.File]::Delete($stdoutPath)
-        }
-
-        if ([System.IO.File]::Exists($stderrPath))
-        {
-            [System.IO.File]::Delete($stderrPath)
-        }
+        Delete-File($stdoutPath)
+        Delete-File($stderrPath)
     }
 
     return $result
@@ -500,23 +518,6 @@ function ConvertTo-Yaml
     $serializer = $(New-Object "YamlDotNet.Serialization.SerializerBuilder").Build()
 
     return $serializer.Serialize($table)
-}
-
-#------------------------------------------------------------------------------
-# Deletes a folder if it exists.
-
-function DeleteFolder
-{
-    [CmdletBinding()]
-    param (
-		[Parameter(Position=0, Mandatory=$true)]
-		[string]$Path
-    )
-
-	if (Test-Path $Path) 
-	{ 
-		Remove-Item -Recurse $Path | Out-Null
-	} 
 }
 
 #------------------------------------------------------------------------------
