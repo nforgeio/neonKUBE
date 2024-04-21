@@ -100,13 +100,8 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            //################################
-            // $debug(jefflill): RESTORE THIS!
-            //################################
-
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-#if TODO
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
                 
                 logger?.LogInformationEx(() => $"Reconciling {resource.GetType().FullName} [{resource.Namespace()}/{resource.Name()}].");
@@ -176,7 +171,6 @@ namespace NeonClusterOperator
                     namespaceParameter: resource.Namespace());
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
-#endif
 
                 return null;
             }
