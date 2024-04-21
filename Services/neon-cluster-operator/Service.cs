@@ -209,9 +209,10 @@ namespace NeonClusterOperator
                .CreateDefaultBuilder()
                .ConfigureOperator(settings =>
                {
-                   settings.AssemblyScanningEnabled = false;
-                   settings.Name                    = Name;
-                   settings.PodNamespace            = KubeNamespace.NeonSystem;
+                   settings.AssemblyScanningEnabled  = false;
+                   settings.Name                     = Name;
+                   settings.PodNamespace             = KubeNamespace.NeonSystem;
+                   settings.UserImpersonationEnabled = false;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
