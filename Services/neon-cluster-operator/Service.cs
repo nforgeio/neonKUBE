@@ -291,7 +291,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Starts the <see cref="ClusterInfo"/> watcher.
+        /// Waits for the <see cref="ClusterInfo"/> object to be created for the cluster.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the cluster information could not be retrieved after a grace period.</exception>
@@ -300,6 +300,11 @@ namespace NeonClusterOperator
             await SyncContext.Clear;
 
             // Start the watcher.
+
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
+
 
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
@@ -315,7 +320,7 @@ namespace NeonClusterOperator
                 retryDelay:         TimeSpan.FromSeconds(30),
                 logger:             Logger);
 
-            // Wait for the watcher to see the [ClusterInfo].
+            // Wait for the watcher to discover the [ClusterInfo].
 
             NeonHelper.WaitFor(() => ClusterInfo != null, timeout: TimeSpan.FromSeconds(60), timeoutMessage: "Timeout obtaining: cluster-info.");
         }
@@ -377,6 +382,10 @@ namespace NeonClusterOperator
             {
                 HarborClient.BaseUrl = $"https://neon-registry.{ClusterInfo.Domain}/api/v2.0";
             }
+
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
 
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>

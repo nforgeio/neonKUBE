@@ -299,6 +299,10 @@ namespace NeonNodeAgent
         {
             await SyncContext.Clear;
 
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
+
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
                 {
