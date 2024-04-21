@@ -64,7 +64,7 @@ using OpenTelemetry.Trace;
 using Quartz.Logging;
 
 using KubeHelper = Neon.Kube.KubeHelper;
-using Task = System.Threading.Tasks.Task;
+using Task       = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -345,12 +345,12 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+                    var pod = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
 
                     PortForwardManager.StartPodPortForward(
-                        name: pod.Name(),
+                        name:       pod.Name(),
                         @namespace: KubeNamespace.NeonSystem,
-                        localPort: localPort,
+                        localPort:  localPort,
                         remotePort: dexPort);
                 }
                 catch
@@ -386,6 +386,9 @@ namespace NeonClusterOperator
             // $todo(jefflill): This watcher should be disposed promptly.
             //
             //      https://github.com/nforgeio/operator-sdk/issues/26
+            //
+            // Also: WHY ISN'T THIS BEING HANDLED BY A PROPER OPERATOR CONTROLLER???
+            //       SEEMS LIKE A HACK!
 
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>

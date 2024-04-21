@@ -54,21 +54,15 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Npgsql;
-
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using YamlDotNet.RepresentationModel;
-using System.Net.Http;
-using KubeHelper = Neon.Kube.KubeHelper;
 using Neon.Operator.Attributes;
 using Neon.Operator.Rbac;
+
+using KubeHelper = Neon.Kube.KubeHelper;
 
 namespace NeonNodeAgent
 {
@@ -302,6 +296,11 @@ namespace NeonNodeAgent
             // $todo(jefflill): This watcher should be disposed promptly.
             //
             //      https://github.com/nforgeio/operator-sdk/issues/26
+            //
+            // Also, this looks like it's depending on the watcher never being
+            // GC'ed (which is probably the case but we're assumning the opposite
+            // elsewhere).  We should make this explicit by persisting the watcher
+            // task to a member field or wrapping this in a class.
 
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>

@@ -51,16 +51,22 @@ namespace NeonClusterOperator
     /// </summary>
     [ResourceController(
         ManageCustomResourceDefinitions = false,
-        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
-        MaxConcurrentReconciles = 1)]
+        LabelSelector                   = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
+        MaxConcurrentReconciles         = 1)]
     [RbacRule<V1Secret>(
-        Verbs         = RbacVerb.All, 
-        Scope         = EntityScope.Cluster,
-        Namespace     = KubeNamespace.NeonSystem)]
+        Verbs     = RbacVerb.All, 
+        Scope     = EntityScope.Cluster,
+        Namespace = KubeNamespace.NeonSystem)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
-        private static string                       connectionString;
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static string   connectionString;
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private readonly IKubernetes                k8s;
         private readonly ILogger<GlauthController>  logger;
@@ -70,9 +76,9 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         public GlauthController(
-            IKubernetes k8s, 
+            IKubernetes               k8s, 
             ILogger<GlauthController> logger,
-            Service service)
+            Service                   service)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -111,9 +117,9 @@ namespace NeonClusterOperator
                     connectionString = $"Host=localhost;Port={localPort};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
                     service.PortForwardManager.StartPodPortForward(
-                        name: pod.Name(),
+                        name:       pod.Name(),
                         @namespace: KubeNamespace.NeonSystem,
-                        localPort: localPort,
+                        localPort:  localPort,
                         remotePort: 5432);
                 }
 
