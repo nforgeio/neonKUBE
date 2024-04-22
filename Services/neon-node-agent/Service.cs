@@ -222,10 +222,6 @@ namespace NeonNodeAgent
 
             _ = operatorHost.RunAsync();
 
-            // Indicate that the service is running.
-
-            await StartedAsync();
-
             // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();

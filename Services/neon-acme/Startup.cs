@@ -15,27 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.Diagnostics;
-using Neon.Net;
 using Neon.Web;
 
 using Prometheus;
@@ -116,6 +102,10 @@ namespace NeonAcme
                 {
                     endpoints.MapControllers();
                 });
+
+            // Indicate that the service is ready for business.
+
+            NeonAcmeService.StartedAsync().GetAwaiter().GetResult();
         }
     }
 }

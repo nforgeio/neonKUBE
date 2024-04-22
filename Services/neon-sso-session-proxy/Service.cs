@@ -220,10 +220,6 @@ namespace NeonSsoSessionProxy
 
             Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
 
-            // Indicate that the service is ready for business.
-
-            await SetStatusAsync(NeonServiceStatus.Running);
-
             // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();
