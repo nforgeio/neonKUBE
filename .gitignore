@@ -104,7 +104,4 @@ KubernetesWithRetry.cs
 /Test/TestOperator/Manifests
 /Lib/Neon.Kube.Models/.buildComplete
 /Services/neon-dashboard/package-lock.json
-/Test/Test.Neon.Kube.Operator/**.yaml
-/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*.yaml
-/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/templates/clusterrole-neon-cluster-operator.yaml
-/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/templates/role-neon-cluster-operator.yaml
+*.g.yaml

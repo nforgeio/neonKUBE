@@ -55,8 +55,7 @@ namespace NeonClusterOperator
         MaxConcurrentReconciles         = 1)]
     [RbacRule<V1Secret>(
         Verbs     = RbacVerb.All, 
-        Scope     = EntityScope.Cluster,
-        Namespace = KubeNamespace.NeonSystem)]
+        Scope     = EntityScope.Cluster)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
