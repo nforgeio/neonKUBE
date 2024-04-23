@@ -1617,6 +1617,15 @@ helmLogPath=/tmp/{chartName}.helm.log
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
 
+################################
+# $debug(jefflill): DELETE THIS!
+echo ""#####################""
+echo EXITCODE: $exitcode
+echo ""LOGS:""
+cat $helmLogPath
+echo ""#####################""
+################################
+
 if [ ! $exitcode ] ; then
 
     echo ""===============================================================================""

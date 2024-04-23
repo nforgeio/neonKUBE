@@ -54,9 +54,8 @@ namespace NeonClusterOperator
         LabelSelector                   = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
         MaxConcurrentReconciles         = 1)]
     [RbacRule<V1Secret>(
-        Verbs     = RbacVerb.All, 
-        Scope     = EntityScope.Cluster,
-        Namespace = KubeNamespace.NeonSystem)]
+        Verbs = RbacVerb.All, 
+        Scope = EntityScope.Cluster)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
@@ -179,8 +178,8 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await using var conn = new NpgsqlConnection(connectionString);
-                await conn.OpenAsync();
+                await using var connection = new NpgsqlConnection(connectionString);
+                await connection.OpenAsync();
 
                 foreach (var user in secret.Data.Keys)
                 {
@@ -202,7 +201,7 @@ namespace NeonClusterOperator
                                         mail         = '{mail}',
                                         uidnumber    = '{uidnumber}',
                                         primarygroup = '{primarygroup}',
-                                        passsha256   = '{passsha256}';", conn))
+                                        passsha256   = '{passsha256}';", connection))
                         {
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -217,7 +216,7 @@ namespace NeonClusterOperator
                                     await using (var cmd = new NpgsqlCommand(
                                         $@"SELECT count(*)
                                             FROM capabilities
-                                            WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", conn))
+                                            WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", connection))
                                     {
                                         count = (long)await cmd.ExecuteScalarAsync();
                                     }
@@ -226,7 +225,7 @@ namespace NeonClusterOperator
                                     {
                                         await using (var cmd = new NpgsqlCommand(
                                         $@"INSERT INTO capabilities(userid, action, object)
-                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", conn))
+                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", connection))
                                         {
                                             await cmd.ExecuteNonQueryAsync();
                                         }
@@ -248,8 +247,8 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await using var conn = new NpgsqlConnection(connectionString);
-                await conn.OpenAsync();
+                await using var conection = new NpgsqlConnection(connectionString);
+                await conection.OpenAsync();
 
                 foreach (var key in secret.Data.Keys)
                 {
@@ -261,7 +260,7 @@ namespace NeonClusterOperator
                             $@"INSERT INTO groups(name, gidnumber)
                             VALUES('{group.Name}','{group.GidNumber}') 
                                 ON CONFLICT (name) DO UPDATE
-                                    SET gidnumber = '{group.GidNumber}';", conn))
+                                    SET gidnumber = '{group.GidNumber}';", conection))
                         {
                             await cmd.ExecuteNonQueryAsync();
                         }

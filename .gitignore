@@ -87,6 +87,7 @@ node_modules/
 GeneratedEntities.cs
 GeneratedTypes.cs
 GeneratedUxTypes.cs
+*.g.yaml
 /Test/**/TestResults/**
 
 #############################
