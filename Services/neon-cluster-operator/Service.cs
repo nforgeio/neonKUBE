@@ -120,7 +120,7 @@ namespace NeonClusterOperator
     /// </remarks>
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Cluster)]
     public partial class Service : NeonService
     {
         private const int dexPort = 5557;
