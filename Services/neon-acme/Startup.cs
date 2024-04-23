@@ -105,7 +105,7 @@ namespace NeonAcme
 
             // Indicate that the service is ready for business.
 
-            NeonAcmeService.StartedAsync().GetAwaiter().GetResult();
+            NeonAcmeService.Started();
         }
     }
 }

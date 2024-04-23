@@ -90,7 +90,7 @@ namespace NeonNodeAgent
 
             // Indicate that the service is ready for business.
 
-            Service.StartedAsync().GetAwaiter().GetResult();
+            Service.Started();
         }
     }
 }
