@@ -54,26 +54,10 @@ namespace NeonClusterOperator
     [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonSsoClientController : ResourceControllerBase<V1NeonSsoClient>
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoClientController>();
-
-        private Dex.Dex.DexClient dexClient;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static NeonSsoClientController()
-        {
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private readonly IKubernetes                        k8s;
         private readonly IFinalizerManager<V1NeonSsoClient> finalizerManager;
         private readonly ILogger<NeonSsoClientController>   logger;
+        private readonly Dex.Dex.DexClient                  dexClient;
 
         /// <summary>
         /// Constructor.
@@ -101,8 +85,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                // Ignore all events when the controller hasn't been started.
-
                 var patch = OperatorHelper.CreatePatch<V1NeonSsoClient>();
 
                 patch.Replace(path => path.Status, new V1SsoClientStatus());
@@ -128,12 +110,11 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                // Ignore all events when the controller hasn't been started.
-
-                await dexClient.DeleteClientAsync(new DeleteClientReq()
-                {
-                    Id = resource.Spec.Id
-                });
+                await dexClient.DeleteClientAsync(
+                    new DeleteClientReq()
+                    {
+                        Id = resource.Spec.Id
+                    });
 
                 var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
                 var alphaConfig       = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
@@ -199,6 +180,7 @@ namespace NeonClusterOperator
                             Name    = client.Name,
                             LogoUrl = client.LogoUrl
                         };
+
                         updateClientRequest.RedirectUris.AddRange(client.RedirectUris);
                         updateClientRequest.TrustedPeers.AddRange(client.TrustedPeers);
 

@@ -51,21 +51,6 @@ namespace NeonClusterOperator
     [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonSsoCallbackUrlController : ResourceControllerBase<V1NeonSsoCallbackUrl>
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoCallbackUrlController>();
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static NeonSsoCallbackUrlController()
-        {
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private readonly IKubernetes                             k8s;
         private readonly IFinalizerManager<V1NeonSsoCallbackUrl> finalizerManager;
         private readonly ILogger<NeonSsoCallbackUrlController>   logger;
@@ -73,7 +58,8 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonSsoCallbackUrlController(IKubernetes k8s,
+        public NeonSsoCallbackUrlController(
+            IKubernetes                                 k8s,
             IFinalizerManager<V1NeonSsoCallbackUrl>     manager,
             ILogger<NeonSsoCallbackUrlController>       logger)
         {
