@@ -120,7 +120,7 @@ namespace NeonClusterOperator
     /// </remarks>
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced)]
     public partial class Service : NeonService
     {
         private const int dexPort = 5557;
@@ -220,10 +220,6 @@ namespace NeonClusterOperator
                .Build();
 
             _ = operatorHost.RunAsync();
-
-            // Indicate that the service is running.
-
-            await StartedAsync();
 
             // Handle termination gracefully.
 
