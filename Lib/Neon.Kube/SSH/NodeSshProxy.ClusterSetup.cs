@@ -1615,18 +1615,10 @@ $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
+
 exitcode=$?
 
-################################
-# $debug(jefflill): DELETE THIS!
-echo ""#####################""
-echo EXITCODE: $exitcode
-echo ""LOGS:""
-cat $helmLogPath
-echo ""#####################""
-################################
-
-if [ ! $exitcode ] ; then
+if [ $exitcode ] ; then
 
     echo ""===============================================================================""
     echo ""HELM INSTALL ERROR: $exitcode""
@@ -1658,34 +1650,11 @@ done
 
                     try
                     {
-                        await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                try
-                                {
-                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
-
-                                    return await Task.FromResult(true);
-                                }
-                                catch
-                                {
-                                    return await Task.FromResult(false);
-                                }
-                            },
-                            timeout:           TimeSpan.FromSeconds(300),
-                            pollInterval:      TimeSpan.FromSeconds(1),
-                            cancellationToken: controller.CancellationToken);
+                        SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError);
                     }
-                    catch (Exception e)
+                    catch
                     {
                         controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
-                        controller.LogProgressError(e.Message);
-
-                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
-
-                        controller.LogProgressError(status.AllText);
-
-                        throw;
                     }
                 });
         }
