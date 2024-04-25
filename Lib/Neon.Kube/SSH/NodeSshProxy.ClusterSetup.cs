@@ -1720,7 +1720,7 @@ systemctl enable kubelet
                                 () =>
                                 {
                                     var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
-                                    .EnsureSuccess();
+                                        .EnsureSuccess();
 
                                     return response.OutputText.Contains("STATUS: deployed");
                                 },
