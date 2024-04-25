@@ -5447,8 +5447,7 @@ $@"- name: StorageType
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
             var poolerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbPooler);
             var metricsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDbMetrics);
-
-            var values = new Dictionary<string, object>();
+            var values        = new Dictionary<string, object>();
 
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -5929,6 +5928,9 @@ $@"- name: StorageType
                     var users  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
                     var groups = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthGroups, KubeNamespace.NeonSystem);
 
+                    //---------------------------------------------------------
+                    // Initialize the [groups] table.
+
                     foreach (var key in groups.Data.Keys)
                     {
                         var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
@@ -5940,6 +5942,9 @@ $@"- name: StorageType
                                     ON CONFLICT (name) DO UPDATE
                                         SET gidnumber = '{group.GidNumber}';");
                     }
+
+                    //---------------------------------------------------------
+                    // Initialize the [users] table.
 
                     foreach (var user in users.Data.Keys)
                     {
