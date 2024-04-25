@@ -1452,7 +1452,10 @@ systemctl enable kubelet
         /// </note>
         /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
-        /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b>.</param>
+        /// <param name="namespace">
+        /// Optionally specifies the namespace where Kubernetes namespace where the Helm
+        /// chart should be installed. This defaults to <b>default</b>.
+        /// </param>
         /// <param name="prioritySpec">
         /// <para>
         /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.
@@ -1466,10 +1469,15 @@ systemctl enable kubelet
         /// </note>
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
-        /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
+        /// <param name="progressMessage">
+        /// Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.
+        /// </param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined
+        /// by <see cref="PriorityClass"/>.
+        /// </exception>
         /// <remarks>
         /// NEONKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
         /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
@@ -1546,8 +1554,8 @@ systemctl enable kubelet
 
             // Install the chart when we haven't already done so.
 
-            await InvokeIdempotentAsync($"setup/helm-install-{releaseName}",
-                async () =>
+            InvokeIdempotent($"setup/helm-install-{releaseName}",
+                () =>
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
@@ -1590,10 +1598,10 @@ systemctl enable kubelet
                         }
                     }
 
-                    var helmChartScript = new StringBuilder();
-                    var timeoutSeconds  = (int)Math.Ceiling(timeout.TotalSeconds);
+                    var sbScript       = new StringBuilder();
+                    var timeoutSeconds = (int)Math.Ceiling(timeout.TotalSeconds);
 
-                    helmChartScript.AppendLineLinux(
+                    sbScript.AppendLineLinux(
 $@"
 set +e
 
@@ -1602,7 +1610,7 @@ cd { KubeNodeFolder.Helm}"
 
                     if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
-                        helmChartScript.AppendLine(
+                        sbScript.AppendLine(
 $@"
 if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
     helm uninstall {releaseName} --namespace {@namespace}
@@ -1610,7 +1618,7 @@ fi
 ");
                     }
 
-                    helmChartScript.AppendLineLinux(
+                    sbScript.AppendLineLinux(
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
@@ -1621,8 +1629,8 @@ exitcode=$?
 if [ $exitcode ] ; then
 
     echo ""===============================================================================""
-    echo ""HELM INSTALL ERROR: $exitcode""
-    echo ""---------------------""
+    echo ""HELM INSTALL ERROR:""
+    echo ""-------------------""
     cat $helmLogPath
     echo ""===============================================================================""
 
@@ -1646,15 +1654,15 @@ do
    sleep 1
 done
 ");
-                    var scriptString = helmChartScript.ToString();
-
                     try
                     {
-                        SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError);
+                        SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError)
+                            .EnsureSuccess();
                     }
                     catch
                     {
-                        controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
+                        controller.LogProgressError($"Helm install failed: {@namespace}/{releaseName}");
+                        throw;
                     }
                 });
         }
