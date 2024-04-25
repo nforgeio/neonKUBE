@@ -1,5 +1,5 @@
 apiVersion: v2
-name: crd-cluster
+name: cluster-crds
 description: A Helm chart to install important CRDs that need to be installed early on in cluster setup.
 
 # A chart can be either an 'application' or a 'library' chart.

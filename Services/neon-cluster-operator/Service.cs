@@ -392,15 +392,15 @@ namespace NeonClusterOperator
                 {
                     await SyncContext.Clear;
 
-                    var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
-                    var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
+                    var sysadminUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data[KubeConst.SysAdminUser]));
+                    var authString   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{sysadminUser.Name}:{sysadminUser.Password}"));
 
                     harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                     Logger.LogInformationEx("Updated Harbor Client");
                 },
                 namespaceParameter: KubeNamespace.NeonSystem,
-                fieldSelector:      $"metadata.name=glauth-users",
+                fieldSelector:      $"metadata.name={KubeSecretName.GlauthUsers}",
                 retryDelay:         TimeSpan.FromSeconds(30),
                 logger:             Logger);
         }

@@ -1437,7 +1437,7 @@ systemctl enable kubelet
         }
 
         /// <summary>
-        /// Installs a prepositioned Helm chart from a control-plane node.
+        /// Installs a prepositioned Helm chart on a target control-plane node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="chartName">
@@ -1451,11 +1451,11 @@ systemctl enable kubelet
         /// chart name passed can be the same as the release name in the calling code.
         /// </note>
         /// </param>
-        /// <param name="releaseName">Optionally specifies the component release name.</param>
-        /// <param name="namespace">
-        /// Optionally specifies the namespace where Kubernetes namespace where the Helm
-        /// chart should be installed. This defaults to <b>default</b>.
+        /// <param name="releaseName">
+        /// Optionally specifies the component release name.  This defaults to the Helm
+        /// chart name with any embedded underscores converted to dashes.
         /// </param>
+        /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b>.</param>
         /// <param name="prioritySpec">
         /// <para>
         /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.
@@ -1468,31 +1468,74 @@ systemctl enable kubelet
         /// name is specified.
         /// </note>
         /// </param>
-        /// <param name="values">Optionally specifies Helm chart values.</param>
-        /// <param name="progressMessage">
-        /// Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.
+        /// <param name="valuesFile">
+        /// Optionally specifies Helm chart values as a YAML string.  These strings will be
+        /// persisted as an individual YAML file on the node and are applied when installing
+        /// the chart before applying any <paramref name="values"/>.
         /// </param>
+        /// <param name="values">Optionally specifies Helm chart values.</param>
+        /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
+        /// <param name="mode">
+        /// <para>
+        /// Specifies whether the Helm chart will be installed (<see cref="HelmMode.Install"/>), simulates a dry-run
+        /// (<see cref="HelmMode.DryRun"/>), or generates a manifest without validating anything against the Kubernetes
+        /// cluster (<see cref="HelmMode.Template"/>). optionally specifies that Helm will simulate installation of the
+        /// chart.
+        /// </para>
+        /// <para>
+        /// The <see cref="HelmMode.DryRun"/> and (<see cref="HelmMode.Template"/>) modes will write the generated manifests
+        /// to <c>/home/sysadmin/helm-manifest.yaml</c> on the target node for your examination.
+        /// </para>
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="KeyNotFoundException">
-        /// Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined
-        /// by <see cref="PriorityClass"/>.
-        /// </exception>
+        /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
+        /// <para>
         /// NEONKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
         /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
         /// method unzips that file to the same folder (if it hasn't been unzipped already) and then installs
         /// the helm chart (if it hasn't already been installed).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// Values are applied in this order, with the last named value set "winning":
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// Values from the <b>values.yaml</b> file within the chart.
+        /// </item>
+        /// <item>
+        /// YAML formmatted values from the <paramref name="valuesFile"/> parameter (if present).
+        /// </item>
+        /// <item>
+        /// Values from the <paramref name="values"/> (if present).
+        /// </item>
+        /// <item>
+        /// <para>
+        /// Any structured values (if present).
+        /// </para>
+        /// <note>
+        /// These are always applied last.
+        /// </note>
+        /// </item>
+        /// </list>
+        /// </note>
+        /// <note>
+        /// This operation is idempotent.
+        /// </note>
         /// </remarks>
         public async Task InstallHelmChartAsync(
-            ISetupController                    controller,
-            string                              chartName,
-            string                              releaseName     = null,
-            string                              @namespace      = "default",
-            string                              prioritySpec    = null,
-            Dictionary<string, object>          values          = null,
-            string                              progressMessage = null,
-            TimeSpan                            timeout         = default)
+            ISetupController            controller,
+            string                      chartName,
+            string                      releaseName      = null,
+            string                      @namespace       = "default",
+            string                      prioritySpec     = null,
+            string                      valuesFile       = null,
+            Dictionary<string, object>  values           = null,
+            string                      progressMessage  = null,
+            TimeSpan                    timeout          = default,
+            HelmMode                    mode             = HelmMode.Install)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1559,11 +1602,39 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
-                    var valueOverrides = new StringBuilder();
+                    const string debugManifestPath = "/home/sysadmin/debug-manifest.yaml";
+
+                    var sbScript         = new StringBuilder();
+                    var structuredValues = new List<string>();
+                    var command          = mode == HelmMode.Template ? "template" : "install";
+                    var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run=client";
+                    var debugOption      = mode != HelmMode.Install ? null : "--debug";
+
+                    sbScript.AppendLine($"rm -f {debugManifestPath}");
+                    sbScript.AppendLine();
+                    sbScript.AppendLine($"helm {command} {releaseName} \\");
+
+                    if (dryRunOption != null)
+                    {
+                        sbScript.AppendLine($"    {dryRunOption} \\");
+                    }
+
+                    if (debugOption != null)
+                    {
+                        sbScript.AppendLine($"    {debugOption} \\");
+                    }
+
+                    sbScript.AppendLine($"    --namespace {@namespace} \\");
+                    sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
+
+                    if (valuesFile != null)
+                    {
+                        sbScript.AppendLine($"    -f override-values.yaml \\");
+                    }
 
                     if (!string.IsNullOrEmpty(priorityClassVariable))
                     {
-                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}={priorityClassName}");
+                        sbScript.AppendLine($"    --set {priorityClassVariable}=\"{priorityClassName}\" \\");
                     }
 
                     if (values != null)
@@ -1572,7 +1643,7 @@ systemctl enable kubelet
                         {
                             if (value.Value == null)
                             {
-                                valueOverrides.AppendWithSeparator($"--set {value.Key}=null");
+                                sbScript.AppendLine($"    --set {value.Key}=null \\");
                                 continue;
                             }
 
@@ -1580,89 +1651,94 @@ systemctl enable kubelet
 
                             switch (value.Value)
                             {
-                                case string s:
+                                case string stringValue:
 
-                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\"");
+                                    sbScript.AppendLine($"    --set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\" \\");
                                     break;
 
-                                case Boolean b:
+                                case Boolean boolValue:
 
-                                    valueOverrides.AppendWithSeparator($"--set {value.Key}=\"{value.Value.ToString().ToLower()}\"");
+                                    sbScript.AppendLine($"    --set {value.Key}=\"{value.Value.ToString().ToLower()}\" \\");
                                     break;
 
+                                // $todo(jefflill): RESTORE AFTER MERGING [jeff] BRANCH!
+#if TODO
+                                case StructuredHelmValue structuredValue:
+
+                                    structuredValues.Add($"{value.Key}: {structuredValue.Value}");
+                                    break;
+#endif
                                 default:
 
-                                    valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                    sbScript.AppendLine($"    --set {value.Key}={value.Value} \\");
                                     break;
                             }
                         }
                     }
 
-                    var sbScript       = new StringBuilder();
-                    var timeoutSeconds = (int)Math.Ceiling(timeout.TotalSeconds);
-
-                    sbScript.AppendLineLinux(
-$@"
-set +e
-
-cd { KubeNodeFolder.Helm}"
-);
-
-                    if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
+                    if (structuredValues.Count > 0)
                     {
-                        sbScript.AppendLine(
-$@"
-if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
-    helm uninstall {releaseName} --namespace {@namespace}
-fi
-");
+                        sbScript.AppendLine("    -f structured-values.yaml \\");
                     }
 
-                    sbScript.AppendLineLinux(
-$@"
-helmLogPath=/tmp/{chartName}.helm.log
+                    var dryRunRedirect = string.Empty;
 
-helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
-
-exitcode=$?
-
-if [ $exitcode ] ; then
-
-    echo ""===============================================================================""
-    echo ""HELM INSTALL ERROR:""
-    echo ""-------------------""
-    cat $helmLogPath
-    echo ""===============================================================================""
-
-    rm $helmLogPath
-    exit $exitcode
-fi
-
-rm $helmLogPath
-
-START=`date +%s`
-DEPLOY_END=$((START+{timeoutSeconds}))
-
-until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
-do
-    if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.'
-        helm uninstall {releaseName} --namespace {@namespace} || true
-        exit 1
-   fi
-
-   sleep 1
-done
-");
-                    try
+                    if (mode == HelmMode.DryRun || mode == HelmMode.Template)
                     {
-                        SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError)
-                            .EnsureSuccess();
+                        dryRunRedirect = $" > {debugManifestPath}";
                     }
-                    catch
+
+                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
+
+                    var bundle = CommandBundle.FromScript(sbScript);
+
+                    if (valuesFile != null)
                     {
-                        controller.LogProgressError($"Helm install failed: {@namespace}/{releaseName}");
-                        throw;
+                        bundle.AddFile($"override-values.yaml", valuesFile, linuxCompatible: true);
+                    }
+
+                    if (structuredValues.Count > 0)
+                    {
+                        var sbStructuredValues = new StringBuilder();
+
+                        foreach (var value in structuredValues)
+                        {
+                            sbStructuredValues.AppendLine(value);
+                        }
+
+                        bundle.AddFile($"structured-values.yaml", sbStructuredValues.ToString(), linuxCompatible: true);
+                    }
+
+                    SudoCommand(bundle)
+                        .EnsureSuccess();
+
+                    if (mode == HelmMode.Install)
+                    {
+                        try
+                        {
+                            NeonHelper.WaitFor(
+                                () =>
+                                {
+                                    var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
+                                    .EnsureSuccess();
+
+                                    return response.OutputText.Contains("STATUS: deployed");
+                                },
+                                timeout:           TimeSpan.FromSeconds(300),
+                                pollInterval:      TimeSpan.FromSeconds(1),
+                                cancellationToken: controller.CancellationToken);
+                        }
+                        catch (TimeoutException e)
+                        {
+                            controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
+                            controller.LogProgressError(e.Message);
+
+                            var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
+                                .EnsureSuccess();
+
+                            controller.LogProgressError(status.AllText);
+                            throw;
+                        }
                     }
                 });
         }

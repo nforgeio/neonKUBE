@@ -34,10 +34,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Remove="Resources\Helm\cluster-crds\templates\**" />
+      <EmbeddedResource Remove="Resources\Helm\cluster-crds\templates\**" />
+      <None Remove="Resources\Helm\cluster-crds\templates\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Remove="Resources\Helm\README.md" />
-        <Folder Include="Resources\Helm\crd-cluster\templates\" />
-        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
-        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
     </ItemGroup>
 
     <!-- Non-NEONFORGE package references -->

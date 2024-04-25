@@ -137,19 +137,19 @@ namespace NeonClusterOperator
 
                 switch (resource.Name())
                 {
-                    case "glauth-users":
+                    case KubeSecretName.GlauthUsers:
 
                         await UpdateGlauthUsersAsync(resource);
                         break;
 
-                    case "glauth-groups":
+                    case KubeSecretName.GlauthGroups:
 
                         await UpdateGlauthGroupsAsync(resource);
                         break;
 
                     default:
-                        break;
 
+                        break;
                 }
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
@@ -224,8 +224,8 @@ namespace NeonClusterOperator
                                     if (count == 0)
                                     {
                                         await using (var cmd = new NpgsqlCommand(
-                                        $@"INSERT INTO capabilities(userid, action, object)
-                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", connection))
+                                            $@"INSERT INTO capabilities(userid, action, object)
+                                                VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", connection))
                                         {
                                             await cmd.ExecuteNonQueryAsync();
                                         }

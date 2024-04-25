@@ -14,7 +14,7 @@
         <Configurations>Debug;Release</Configurations>
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>kubernetes</PackageTags>
-        <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds</NeonOperatorCrdOutputDir>
+        <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\cluster-crds\crds</NeonOperatorCrdOutputDir>
         <NeonOperatorGenerateRbac>False</NeonOperatorGenerateRbac>
         <NeonOperatorGenerateCrds>True</NeonOperatorGenerateCrds>
     </PropertyGroup>

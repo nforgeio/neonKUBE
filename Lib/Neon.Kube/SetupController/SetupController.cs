@@ -1775,6 +1775,11 @@ namespace Neon.Kube.Setup
         public void ThrowIfCancelled()
         {
             cts.Token.ThrowIfCancellationRequested();
+
+            if (IsFaulted)
+            {
+                throw new NeonKubeException("FAULTED");
+            }
         }
 
         /// <inheritdoc/>

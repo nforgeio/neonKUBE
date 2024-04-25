@@ -468,6 +468,10 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
+                    await InstallSsoAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -477,10 +481,6 @@ spec:
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallNodeAgentAsync(controller, controlNode);
-
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelled();
-                    await InstallSsoAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
@@ -2682,8 +2682,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "Install", message: "CRDs");
 
-                    await controlNode.InstallHelmChartAsync(controller, "crd-cluster",
-                        releaseName: "crd-cluster",
+                    await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
+                        releaseName: "cluster-crds",
                         @namespace:  KubeNamespace.NeonSystem);
                 });
         }
@@ -5900,6 +5900,9 @@ $@"- name: StorageType
             values.Add("users.sysadmin.password", cluster.SetupState.SsoPassword);
             values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
 
+            values.Add("secrets.usersName", KubeSecretName.GlauthUsers);
+            values.Add("secrets.groupsName", KubeSecretName.GlauthGroups);
+
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
                 values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
@@ -5918,6 +5921,61 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/glauth-users",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "create", message: "glauth users");
+
+                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
+                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthGroups, KubeNamespace.NeonSystem);
+
+                    foreach (var key in groups.Data.Keys)
+                    {
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
+
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO groups(name, gidnumber)
+                                VALUES('{group.Name}','{group.GidNumber}') 
+                                    ON CONFLICT (name) DO UPDATE
+                                        SET gidnumber = '{group.GidNumber}';");
+                    }
+
+                    foreach (var user in users.Data.Keys)
+                    {
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
+                        var name         = userData.Name;
+                        var givenname    = userData.Name;
+                        var mail         = $"{userData.Name}@{cluster.SetupState.ClusterDomain}";
+                        var uidnumber    = userData.UidNumber;
+                        var primarygroup = userData.PrimaryGroup;
+                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
+
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
+                                VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
+                                    ON CONFLICT (name) DO UPDATE
+                                        SET givenname    = '{givenname}',
+                                            mail         = '{mail}',
+                                            uidnumber    = '{uidnumber}',
+                                            primarygroup = '{primarygroup}',
+                                            passsha256   = '{passsha256}';");
+
+                        if (userData.Capabilities != null)
+                        {
+                            foreach (var capability in userData.Capabilities)
+                            {
+                                controller.ThrowIfCancelled();
+                                await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"INSERT INTO capabilities(userid, action, object)
+                                        VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
+                            }
+                        }
+                    }
+                });
+
+            controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/glauth-ready",
                 async () =>
                 {
@@ -5925,8 +5983,8 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
                     // Wait for the [glauth postgres.so] plugin to initialize its database
-                    // by quering the three tables we'll be modifying later below.  The database
-                    // will be ready when these queries succeed.
+                    // by quering the three related tables.  The database will be ready when
+                    // these queries succeed.
 
                     var retry = new LinearRetryPolicy(
                         transientDetector: null,
@@ -5968,61 +6026,6 @@ $@"- name: StorageType
                             }
                         },
                         cancellationToken: controller.CancellationToken);
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/glauth-users",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "create", message: "glauth users");
-
-                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
-                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
-
-                    foreach (var key in groups.Data.Keys)
-                    {
-                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
-
-                        controller.ThrowIfCancelled();
-                        await cluster.ExecSystemDbCommandAsync("glauth",
-                            $@"INSERT INTO groups(name, gidnumber)
-                                   VALUES('{group.Name}','{group.GidNumber}') 
-                                       ON CONFLICT (name) DO UPDATE
-                                           SET gidnumber = '{group.GidNumber}';");
-                    }
-
-                    foreach (var user in users.Data.Keys)
-                    {
-                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
-                        var name         = userData.Name;
-                        var givenname    = userData.Name;
-                        var mail         = $"{userData.Name}@{cluster.SetupState.ClusterDomain}";
-                        var uidnumber    = userData.UidNumber;
-                        var primarygroup = userData.PrimaryGroup;
-                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
-
-                        controller.ThrowIfCancelled();
-                        await cluster.ExecSystemDbCommandAsync("glauth",
-                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
-                                    VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
-                                        ON CONFLICT (name) DO UPDATE
-                                            SET givenname    = '{givenname}',
-                                                mail         = '{mail}',
-                                                uidnumber    = '{uidnumber}',
-                                                primarygroup = '{primarygroup}',
-                                                passsha256   = '{passsha256}';");
-
-                        if (userData.Capabilities != null)
-                        {
-                            foreach (var capability in userData.Capabilities)
-                            {
-                                controller.ThrowIfCancelled();
-                                await cluster.ExecSystemDbCommandAsync("glauth",
-                                    $@"INSERT INTO capabilities(userid, action, object)
-                                           VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
-                            }
-                        }
-                    }
                 });
         }
 

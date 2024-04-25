@@ -447,7 +447,7 @@ namespace Neon.Kube.SSH
             }
 
             var stateFolder = KubeNodeFolder.State;
-            var slashPos = actionId.LastIndexOf('/');
+            var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
             {
@@ -496,7 +496,7 @@ namespace Neon.Kube.SSH
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId = actionId.Substring(slashPos + 1);
+                actionId    = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }

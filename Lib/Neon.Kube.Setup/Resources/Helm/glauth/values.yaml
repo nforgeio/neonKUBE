@@ -121,3 +121,7 @@ groups:
     id: 5501
   - name: admin
     id: 5502
+
+secrets:
+  usersName: ""
+  groupsName: ""
