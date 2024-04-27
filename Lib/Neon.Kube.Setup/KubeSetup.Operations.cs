@@ -5920,16 +5920,47 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/glauth-users",
+            await controlNode.InvokeIdempotentAsync("setup/glauth-db",
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "create", message: "glauth users");
 
-                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
-                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthGroups, KubeNamespace.NeonSystem);
+                    // Wait for [Glauth] to create the [users] and [groups] Postgres tables.
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            try
+                            {
+                                var response = await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"SELECT tablename
+                                        FROM pg_catalog.pg_tables
+                                        WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';");
+
+                                if (response.ExitCode != 0)
+                                {
+                                    return false;
+                                }
+
+                                var rows         = new StringReader(response.OutputText).Lines();
+                                var usersExists  = rows.Any(row => row.Contains("users", StringComparison.CurrentCultureIgnoreCase));
+                                var groupsExists = rows.Any(row => row.Contains("groups", StringComparison.CurrentCultureIgnoreCase));
+
+                                return usersExists && groupsExists;
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        },
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
 
                     //---------------------------------------------------------
                     // Initialize the [groups] table.
+
+                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthGroups, KubeNamespace.NeonSystem);
 
                     foreach (var key in groups.Data.Keys)
                     {
@@ -5945,6 +5976,8 @@ $@"- name: StorageType
 
                     //---------------------------------------------------------
                     // Initialize the [users] table.
+
+                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
 
                     foreach (var user in users.Data.Keys)
                     {
