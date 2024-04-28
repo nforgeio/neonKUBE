@@ -1607,7 +1607,7 @@ systemctl enable kubelet
                     var sbScript         = new StringBuilder();
                     var structuredValues = new List<string>();
                     var command          = mode == HelmMode.Template ? "template" : "install";
-                    var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run=client";
+                    var dryRunOption     = mode == HelmMode.Install ? null : "--dry-run";
                     var debugOption      = mode != HelmMode.Install ? null : "--debug";
 
                     sbScript.AppendLine($"rm -f {debugManifestPath}");
