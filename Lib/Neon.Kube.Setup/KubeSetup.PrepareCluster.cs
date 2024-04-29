@@ -365,13 +365,28 @@ namespace Neon.Kube.Setup
                         }
                     }
 
-                    // We also need to generate the cluster's root SSO password, unless this was specified
+                    // We also need to generate the cluster's [sysadmin] SSO password, unless this was specified
                     // in the cluster definition (typically for NEONDESKTOP clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
                     setupState.SsoUsername = KubeConst.SysAdminUser;
-                    setupState.SsoPassword = clusterDefinition.SsoPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+
+                    if (clusterDefinition.SsoPassword != null)
+                    {
+                        setupState.SsoPassword = clusterDefinition.SsoPassword;
+                    }
+                    else
+                    {
+                        if (options.Insecure)
+                        {
+                            setupState.SsoPassword = KubeConst.SysAdminInsecurePassword;
+                        }
+                        else
+                        {
+                            setupState.SsoPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        }
+                    }
 
                     setupState.Save();
                 });

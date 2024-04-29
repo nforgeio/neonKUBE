@@ -75,7 +75,7 @@ stringData:
   users.cfg: |
     #################
     # The users section contains a hardcoded list of valid users.
-    #   to create a passSHA256:   echo -n "mysecret" | openssl dgst -sha256
+    # to create a passSHA256:   echo -n "mysecret" | openssl dgst -sha256
 
     # This user record shows all of the possible fields available
     [[users]]

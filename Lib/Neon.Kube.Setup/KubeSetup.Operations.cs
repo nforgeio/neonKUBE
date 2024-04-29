@@ -5002,12 +5002,6 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
-                    // $todo(jefflill): This is failing!
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1898
-
-                    await Task.CompletedTask;
-#if TODO
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
@@ -5027,7 +5021,6 @@ $@"- name: StorageType
                             },
                             cancellationToken: controller.CancellationToken);
                     }
-#endif
                 });
 
             controller.ThrowIfCancelled();
