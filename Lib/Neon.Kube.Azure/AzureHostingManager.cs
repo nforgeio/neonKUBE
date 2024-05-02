@@ -3471,7 +3471,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We just need to delete the cluster resource group and everything within it.
 
             await ConnectAzureAsync();
-            await resourceGroup.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
+            await resourceGroup?.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
         }
     }
 }
