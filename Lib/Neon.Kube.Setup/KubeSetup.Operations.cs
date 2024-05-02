@@ -2280,12 +2280,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             NodeSshProxy<NodeDefinition> controlNode,
             string                       idempotencySuffix = null)
         {
-            controller.LogProgress(controlNode, verb: "setup", message: "cluster-certificate");
+            controller.LogProgress(controlNode, verb: "setup", message: "cluster-tls-certificate");
 
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s                = GetK8sClient(controller);
-            var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var idempotencyKey     = "setup/cluster-certificates";
+            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s            = GetK8sClient(controller);
+            var headendClient  = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var idempotencyKey = "setup/cluster-tls-certificate";
 
             if (!idempotencySuffix.IsNullOrEmpty())
             {
@@ -2296,7 +2296,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync(idempotencyKey,
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "configure", message: "neon-cluster-certificate");
+                    controller.LogProgress(controlNode, verb: "configure", message: "cluster-tls-certificate");
 
                     var retry = new LinearRetryPolicy(
                         transientDetector: null,
@@ -2323,7 +2323,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "neon-cluster-certificate",
+                            Name = KubeSecretName.ClusterTlsCertificate,
                         },
                         Data = cert,
                         Type = "kubernetes.io/tls"
@@ -4787,7 +4787,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs a harbor container registry and required components.
+        /// Installs Harbor container registry and required components.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
@@ -4950,6 +4950,7 @@ $@"- name: StorageType
                     values.Add("notary.server.priorityClassName", PriorityClass.NeonData.Name);
                     values.Add("notary.signer.priorityClassName", PriorityClass.NeonData.Name);
                     values.Add("trivy.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("clusterTlsCertificateName", KubeSecretName.ClusterTlsCertificate);
 
                     await controlNode.InstallHelmChartAsync(controller, "harbor",
                         releaseName:  "registry-harbor",

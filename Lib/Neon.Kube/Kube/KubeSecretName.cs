@@ -59,5 +59,10 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         public const string GlauthGroups = "glauth-groups";
+
+        /// <summary>
+        /// Holds the cluster's TLS certificate.
+        /// </summary>
+        public const string ClusterTlsCertificate = "cluster-tls-certificate";
     }
 }
