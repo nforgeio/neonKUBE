@@ -6284,8 +6284,8 @@ $@"- name: StorageType
                 {
                     controller.CancellationToken.ThrowIfCancellationRequested();
 
-                    // Remove all terminated pods.  These pods may never be removed by Kubernetes,
-                    // but [neon-cluster-operator] will eventually remove these:
+                    // Remove all terminated pods here so we don't consider these
+                    // to be failed pods:
                     //
                     //      https://midbai.com/en/post/evicted-pods-not-deleted/
 
