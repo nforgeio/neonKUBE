@@ -131,7 +131,7 @@ namespace Neon.Kube
         /// 0.9.2-alpha.BRANCH
         /// </para>
         /// <note>
-        /// <b>IMPORTANT: </b>This convention allows multiple developers to work with their 
+        /// <b>IMPORTANT:</b> This convention allows multiple developers to work with their 
         /// own versions of intermediate releases in parallel while avoiding conflicts with
         /// other developers.
         /// </note>
