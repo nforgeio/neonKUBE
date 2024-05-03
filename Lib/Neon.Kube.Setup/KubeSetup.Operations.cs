@@ -2218,6 +2218,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add($"resources.requests.memory", ToSiString(acmeAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(acmeAdvice.PodMemoryLimit));
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("clusterTlsCertificateName", KubeSecretName.ClusterTlsCertificate);
 
                     int i = 0;
 
