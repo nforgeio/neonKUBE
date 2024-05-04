@@ -124,8 +124,6 @@ namespace NeonSsoSessionProxy
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            await SetStatusAsync(NeonServiceStatus.Starting);
-
             Neon.Kube.KubeHelper.InitializeJson(); 
             
             k8s = Neon.Kube.KubeHelper.CreateKubernetesClient();

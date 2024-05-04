@@ -101,8 +101,6 @@ namespace NeonAcme
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            await SetStatusAsync(NeonServiceStatus.Starting);
-
             KubeHelper.InitializeJson();
 
             HeadendClient = new JsonClient()
