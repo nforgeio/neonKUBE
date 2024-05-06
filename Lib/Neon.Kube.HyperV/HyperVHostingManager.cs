@@ -516,6 +516,11 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<ArgumentNullException>(reservedMemory >= 0, nameof(reservedMemory));
             Covenant.Requires<ArgumentNullException>(reservedDisk >= 0, nameof(reservedDisk));
 
+            if (reservedMemory == 0)
+            {
+                reservedMemory = (long)ByteUnits.Parse("500 MiB");
+            }
+
             var hostMachineName = Environment.MachineName;
             var allNodeNames    = cluster.SetupState.ClusterDefinition.NodeDefinitions.Keys.ToList();
             var deploymentCheck = new HostingResourceAvailability();
@@ -656,8 +661,6 @@ namespace Neon.Kube.Hosting.HyperV
 
             if (!Win32.GlobalMemoryStatusEx(memoryStatus))
             {
-                var error = Marshal.GetLastWin32Error();
-
                 if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
                 {
                     hostContraintList = new List<HostingResourceConstraint>();
@@ -675,12 +678,12 @@ namespace Neon.Kube.Hosting.HyperV
             }
             else
             {
-                // Verify that we have enough memory, taking reserved memory into account.
+                // Verify that we have enough free physical memory, taking reserved free memory into account.
 
-                var physicalMemory  = (long)memoryStatus.ullTotalPhys;
-                var availableMemory = physicalMemory - reservedMemory;
+                var freePhysicalMemory      = (long)memoryStatus.ullAvailPhys;
+                var availablePhysicalMemory = freePhysicalMemory - reservedMemory;
 
-                if (availableMemory < requiredMemory)
+                if (availablePhysicalMemory < requiredMemory)
                 {
                     if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
                     {
@@ -689,8 +692,8 @@ namespace Neon.Kube.Hosting.HyperV
                         deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
                     }
 
-                    var humanPhysicalMemory  = ByteUnits.Humanize(physicalMemory,  powerOfTwo: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory - reservedMemory, powerOfTwo: true);
+                    var humanPhysicalMemory  = ByteUnits.Humanize(freePhysicalMemory,  powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(freePhysicalMemory - reservedMemory, powerOfTwo: true);
                     var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
                     var humanReservedMemory  = ByteUnits.Humanize(reservedMemory, powerOfTwo: true);
 

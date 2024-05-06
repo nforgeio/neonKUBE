@@ -211,7 +211,9 @@ namespace Neon.Kube.Setup
                         clusterDefinition.Hosting.Hypervisor.VCpus = 3;
                     }
 
-                    clusterDefinition.RootPassword = KubeConst.RootDesktopPassword;
+                    // Use the insecure SSO password for NeonDESKTOP clusters.
+
+                    clusterDefinition.SsoPassword = KubeConst.SysAdminInsecurePassword;
 
                     return clusterDefinition;
                 }

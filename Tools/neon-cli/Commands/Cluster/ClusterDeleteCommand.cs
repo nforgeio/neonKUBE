@@ -117,7 +117,7 @@ definition or by executing this command on your cluster:
             }
 
             var clusterName = commandLine.Arguments.ElementAtOrDefault(0);
-            var contextName = $"root@{clusterName}";
+            var contextName = $"sysadmin@{clusterName}";
             var force       = commandLine.HasOption("--force");
             var orgContext  = (KubeConfigContext)null;
 

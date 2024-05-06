@@ -57,15 +57,20 @@ namespace NeonClusterOperator.CronJobs
     /// cloud native Kubernetes clusters where the control plane is free.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class MinWorkerNodeVcpuJob : CronJob, IJob
+    public class MinWorkerNodeVcpuJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<MinWorkerNodeVcpuJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinWorkerNodeVcpuJob()
-            : base(typeof(MinWorkerNodeVcpuJob))
         {
         }
 
@@ -115,7 +120,7 @@ namespace NeonClusterOperator.CronJobs
 
                     do
                     {
-                        var nodes = await k8s.CoreV1.ListNodeAsync(continueParameter: continueToken, limit: 10);
+                        var nodes = await k8s.CoreV1.ListNodeAsync(continueParameter: continueToken);
 
                         continueToken = nodes.Continue();
 
@@ -158,6 +163,21 @@ namespace NeonClusterOperator.CronJobs
                     {
                         logger.LogCriticalEx(() => $"Removed [{removedCount}] worker nodes they don't have at least [{KubeConst.MinWorkerNodeVCpus}] vCPUs.");
                     }
+
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobConfig>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobConfig>();
+
+                    if (clusterOperator.Status == null)
+                    {
+                        patch.Replace(path => path.Status, new V1NeonClusterJobConfig.NeonClusterJobsStatus());
+                    }
+
+                    patch.Replace(path => path.Status.MinWorkerNodeVcpu, new V1NeonClusterJobConfig.JobStatus());
+                    patch.Replace(path => path.Status.MinWorkerNodeVcpu.LastCompleted, DateTime.UtcNow);
+
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

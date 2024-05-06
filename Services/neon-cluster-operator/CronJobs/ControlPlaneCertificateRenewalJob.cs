@@ -50,15 +50,20 @@ namespace NeonClusterOperator
     /// Handles renewal of the control plane certificate. 
     /// </summary>
     [DisallowConcurrentExecution]
-    public class ControlPlaneCertificateRenewalJob : CronJob, IJob
+    public class ControlPlaneCertificateRenewalJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<ControlPlaneCertificateRenewalJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ControlPlaneCertificateRenewalJob()
-            : base(typeof(ControlPlaneCertificateRenewalJob))
         {
         }
         

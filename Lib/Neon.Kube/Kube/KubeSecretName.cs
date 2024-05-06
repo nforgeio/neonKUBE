@@ -37,5 +37,32 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         public const string ClusterDeployment = "cluster-deployment";
+
+        /// <summary>
+        /// <para>
+        /// <b>Hack:</b> Secret holding the cluster user credentials.  This will eventually
+        /// be replaced by user CRDs.
+        /// </para>
+        /// <para>
+        /// This configmap is located in the <see cref="KubeNamespace.NeonSystem"/> namespace.
+        /// </para>
+        /// </summary>
+        public const string GlauthUsers = "glauth-users";
+
+        /// <summary>
+        /// <para>
+        /// <b>Hack:</b> Secret holding the cluster user groups.  This will eventually
+        /// be replaced by group CRDs.
+        /// </para>
+        /// <para>
+        /// This configmap is located in the <see cref="KubeNamespace.NeonSystem"/> namespace.
+        /// </para>
+        /// </summary>
+        public const string GlauthGroups = "glauth-groups";
+
+        /// <summary>
+        /// Holds the cluster's TLS certificate.
+        /// </summary>
+        public const string ClusterTlsCertificate = "cluster-tls-certificate";
     }
 }

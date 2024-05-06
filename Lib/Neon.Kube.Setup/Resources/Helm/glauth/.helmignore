@@ -13,6 +13,7 @@
 # Common backup files
 *.swp
 *.bak
+*.txt
 *.tmp
 *.orig
 *~

@@ -103,6 +103,10 @@ namespace NeonClusterOperator
             }
 
             app.UseKubernetesOperator();
+
+            // Indicate that the service is ready for business.
+
+            Service.Started();
         }
     }
 }

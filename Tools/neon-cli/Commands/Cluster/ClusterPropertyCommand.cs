@@ -113,7 +113,7 @@ OPTIONS:
 
                 case "sso-username":
 
-                    value = "root";
+                    value = KubeConst.SysAdminUser;
                     break;
 
                 case "sso-password":

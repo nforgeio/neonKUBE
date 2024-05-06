@@ -66,12 +66,12 @@ spec:
       ingress:
         host: {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
       tls:
-        certificateRef: neon-cluster-certificate
+        certificateRef: {{ .Values.clusterTlsCertificateName }}
     notary:
       ingress:
         host: {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}
       tls:
-        certificateRef: neon-cluster-certificate
+        certificateRef: {{ .Values.clusterTlsCertificateName }}
   externalURL: https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
   harborAdminPasswordRef: registry
   storage:

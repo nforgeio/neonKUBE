@@ -109,8 +109,6 @@ config:
     enabled: false
 
 users:
-  root:
-    password: ""
   sysadmin:
     password: ""
   user:
@@ -123,3 +121,7 @@ groups:
     id: 5501
   - name: admin
     id: 5502
+
+secrets:
+  usersName: ""
+  groupsName: ""

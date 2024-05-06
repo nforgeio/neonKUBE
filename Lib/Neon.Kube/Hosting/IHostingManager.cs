@@ -71,7 +71,7 @@ namespace Neon.Kube.Hosting
         void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
-        /// Performs any final hosting environmet readiness check before deploying a cluster.
+        /// Performs any final hosting environment readiness checks before deploying a cluster.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

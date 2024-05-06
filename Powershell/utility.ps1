@@ -308,22 +308,45 @@ function Invoke-CaptureStreams
 
         $exitCode = $LastExitCode
 
-        # Read the output files.
-
         $stdout = ""
-
-        if ([System.IO.File]::Exists($stdoutPath))
-        {
-            $stdout = [System.IO.File]::ReadAllText($stdoutPath)
-        }
-
         $stderr = ""
 
-        if (!$interleave)
+        try
         {
-            if ([System.IO.File]::Exists($stderrPath))
+            # Read the output files.
+
+            if ([System.IO.File]::Exists($stdoutPath))
             {
-                $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
+            }
+
+            if (!$interleave)
+            {
+                if ([System.IO.File]::Exists($stderrPath))
+                {
+                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                }
+            }
+        }
+        catch
+        {
+            # It appears that something might be holding these files open.
+            # We're going to workaround this by delaying a bit and trying
+            # again.
+
+            [System.Threading.Thread]::Sleep(1000)
+
+            if ([System.IO.File]::Exists($stdoutPath))
+            {
+                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
+            }
+
+            if (!$interleave)
+            {
+                if ([System.IO.File]::Exists($stderrPath))
+                {
+                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
+                }
             }
         }
 
@@ -356,17 +379,12 @@ function Invoke-CaptureStreams
     }
     finally
     {
+        [System.Threading.Thread]::Sleep(250)
+
         # Delete the temporary output files
 
-        if ([System.IO.File]::Exists($stdoutPath))
-        {
-            [System.IO.File]::Delete($stdoutPath)
-        }
-
-        if ([System.IO.File]::Exists($stderrPath))
-        {
-            [System.IO.File]::Delete($stderrPath)
-        }
+        Delete-File($stdoutPath)
+        Delete-File($stderrPath)
     }
 
     return $result
@@ -503,25 +521,8 @@ function ConvertTo-Yaml
 }
 
 #------------------------------------------------------------------------------
-# Deletes a folder if it exists.
-
-function DeleteFolder
-{
-    [CmdletBinding()]
-    param (
-		[Parameter(Position=0, Mandatory=$true)]
-		[string]$Path
-    )
-
-	if (Test-Path $Path) 
-	{ 
-		Remove-Item -Recurse $Path | Out-Null
-	} 
-}
-
-#------------------------------------------------------------------------------
-# Pushes a Docker image to the public registry with retry as an attempt to handle
-# transient registry issues.
+# Pushes a Docker container image to a container registry, retrying in the face
+# of transient registry issues.
 #
 # Note that you may set [$noImagePush=$true] to disable image pushing for debugging
 # purposes.  The [publish.ps1] scripts accept the [--nopush] switchto control this.

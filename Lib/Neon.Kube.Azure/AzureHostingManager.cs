@@ -3450,10 +3450,6 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // We're going to signal all cluster VMs to stop.
 
-            // $todo(jefflill): Note that the fluent SDK doesn't appear to support forced shutdown:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1546
-
             await ConnectAzureAsync();
 
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
@@ -3471,7 +3467,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We just need to delete the cluster resource group and everything within it.
 
             await ConnectAzureAsync();
-            await resourceGroup.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
+            await resourceGroup?.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
         }
     }
 }

@@ -1702,274 +1702,95 @@ systemctl enable kubelet
                         }
                     }
 
-                    if (structuredValues.Count > 0)
+                    var helmChartScript = new StringBuilder();
+                    var timeoutSeconds  = (int)Math.Ceiling(timeout.TotalSeconds);
+
+                    helmChartScript.AppendLineLinux(
+$@"
+set +e
+
+cd { KubeNodeFolder.Helm}"
+);
+
+                    if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
-                        sbScript.AppendLine("    -f structured-values.yaml \\");
+                        helmChartScript.AppendLine(
+$@"
+if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
+    helm uninstall {releaseName} --namespace {@namespace}
+fi
+");
                     }
 
-                    var dryRunRedirect = string.Empty;
+                    helmChartScript.AppendLineLinux(
+$@"
+helmLogPath=/tmp/{chartName}.helm.log
 
-                    if (mode == HelmMode.DryRun || mode == HelmMode.Template)
+helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
+exitcode=$?
+
+if [ ! $exitcode ] ; then
+
+    echo ""===============================================================================""
+    echo ""HELM INSTALL ERROR: $exitcode""
+    echo ""---------------------""
+    cat $helmLogPath
+    echo ""===============================================================================""
+
+    rm $helmLogPath
+    exit $exitcode
+fi
+
+rm $helmLogPath
+
+START=`date +%s`
+DEPLOY_END=$((START+{timeoutSeconds}))
+
+until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
+do
+    if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
+        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.'
+        helm uninstall {releaseName} --namespace {@namespace} || true
+        exit 1
+   fi
+
+   sleep 1
+done
+");
+                    var scriptString = helmChartScript.ToString();
+
+                    try
                     {
-                        dryRunRedirect = $" > {debugManifestPath}";
-                    }
-
-                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
-
-                    var bundle = CommandBundle.FromScript(sbScript);
-
-                    if (valuesFile != null)
-                    {
-                        bundle.AddFile($"override-values.yaml", valuesFile, linuxCompatible: true);
-                    }
-
-                    if (structuredValues.Count > 0)
-                    {
-                        var sbStructuredValues = new StringBuilder();
-
-                        foreach (var value in structuredValues)
-                        {
-                            sbStructuredValues.AppendLine(value);
-                        }
-
-                        bundle.AddFile($"structured-values.yaml", sbStructuredValues.ToString(), linuxCompatible: true);
-                    }
-
-                    SudoCommand(bundle)
-                        .EnsureSuccess();
-
-                    if (mode == HelmMode.Install)
-                    {
-                        try
-                        {
-                            NeonHelper.WaitFor(
-                                () =>
+                        NeonHelper.WaitFor(
+                            () =>
+                            {
+                                try
                                 {
-                                    var response = SudoCommand($"helm status {releaseName} --namespace {@namespace}")
-                                    .EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
 
-                                    return response.OutputText.Contains("STATUS: deployed");
-                                },
-                                timeout:           TimeSpan.FromSeconds(300),
-                                pollInterval:      TimeSpan.FromSeconds(1),
-                                cancellationToken: controller.CancellationToken);
-                        }
-                        catch (TimeoutException e)
-                        {
-                            controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
-                            controller.LogProgressError(e.Message);
+                                    return await Task.FromResult(true);
+                                }
+                                catch
+                                {
+                                    return await Task.FromResult(false);
+                                }
+                            },
+                            timeout:           TimeSpan.FromSeconds(300),
+                            pollInterval:      TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
+                        controller.LogProgressError(e.Message);
 
-                            var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc")
-                                .EnsureSuccess();
+                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
 
-                            controller.LogProgressError(status.AllText);
-                            throw;
-                        }
+                        controller.LogProgressError(status.AllText);
+
+                        throw;
                     }
                 });
-        }
-
-        /// <summary>
-        /// Fixes any problems with the Kubernetes static pod manifests.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void UpdateKubernetesStaticManifests(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var clusterDefinition = cluster.SetupState.ClusterDefinition;
-
-            controller.LogProgress(this, verb: "fix", message: "kubernetes static pod manifests");
-
-            try
-            {
-                // $hack(jefflill):
-                //
-                // We need to remove the [--pod-eviction-timeout] line in the [kube-controller-manager] manifest
-                // file.  [kubeadm init] generated the manifest file with this option but [kube-controller-manager]
-                // complains that this is an unknown option.
-
-                var manifestText = DownloadText("/etc/kubernetes/manifests/kube-controller-manager.yaml");
-                var sb           = new StringBuilder();
-
-                foreach (var line in new StringReader(manifestText).Lines())
-                {
-                    if (!line.Contains("--pod-eviction-timeout"))
-                    {
-                        sb.AppendLineLinux(line);
-                    }
-                }
-
-                UploadText("/etc/kubernetes/manifests/kube-controller-manager.yaml", sb.ToString(), permissions: "600", owner: "root");
-
-                // $hack(jefflill):
-                //
-                // For control-plane nodes, We need to update the API Server manifest's [--enable-admission-plugins]
-                // line the to include the default [NodeRestriction] plugin as well as the other plugins required
-                // for NEONKUBE SSO.
-                //
-                // WE also need to search for a [--feature-gates] command line argument.  If one is present,
-                // we'll replace it, otherwise we'll append a new one with any feature gates enabled in the
-                // cluster definition.
-                //
-                // Finally, we're going to add the [--v=LOG_LEVEL] option specifying the log level from the
-                // cluster definition and we're going to set the [GOGC=25] environment variable to enable
-                // more aggressive GC.
-
-                if (this.Role == NodeRole.ControlPlane)
-                {
-                    manifestText = DownloadText("/etc/kubernetes/manifests/kube-apiserver.yaml");
-
-                    // Update the features gates.
-
-                    sb.Clear();
-                    foreach (var line in new StringReader(manifestText).Lines())
-                    {
-                        if (!line.Contains("--enable-admission-plugins"))
-                        {
-                            sb.AppendLineLinux($"{line},NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota");
-                        }
-                    }
-
-                    var manifest   = NeonHelper.YamlDeserialize<dynamic>(manifestText);
-                    var spec       = manifest["spec"];
-                    var containers = spec["containers"];
-                    var container  = containers[0];
-                    var command    = (List<object>)container["command"];
-                    var sbFeatures = new StringBuilder();
-
-                    foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates
-                        .Where(featureGate => KubeHelper.IsValidFeatureGate(featureGate.Key)))
-                    {
-                        sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
-                    }
-
-                    if (sbFeatures.Length > 0)
-                    {
-                        var featureGateOption = $"--feature-gates={sbFeatures}";
-                        var existingArgIndex  = -1;
-
-                        for (int i = 0; i < command.Count; i++)
-                        {
-                            var arg = (string)command[i];
-
-                            if (arg.StartsWith("--feature-gates="))
-                            {
-                                existingArgIndex = i;
-                                break;
-                            }
-                        }
-
-                        if (existingArgIndex >= 0)
-                        {
-                            command[existingArgIndex] = featureGateOption;
-                        }
-                        else
-                        {
-                            command.Add(featureGateOption);
-                        }
-                    }
-
-                    // Add the GOGC environment variable.
-
-                    var env = (List<Dictionary<string, string>>)null;
-
-                    foreach (var item in container)
-                    {
-                        if (item.Key == "env")
-                        {
-                            env = (List<Dictionary<string, string>>)item.Value;
-                            break;
-                        }
-                    }
-
-                    if (env == null)
-                    {
-                        container.Add("env", env = new List<Dictionary<string, string>>());
-                    }
-
-                    env.Add(
-                        new Dictionary<string, string>()
-                        {
-                            { "name", "GOGC" },
-                            { "value", "25" }
-                        });
-
-                    // $hack(jefflill):
-                    //
-                    // For some reason, the API server fails when the [GOGC] environment variable
-                    // value is not surrounded by double quotes which [NeonHelper.YamlSerialize()]
-                    // doesn't do for dynamic properties.  We could deserailize the manifest into
-                    // a proper type and use the:
-                    //
-                    //      [YamlMember(ScalarStyle = ScalarStyle.DoubleQuoted)]
-                    //
-                    // attribute but I don't want to mess with that right now.
-                    //
-                    // We're going to fix this with code that adds double quotes to any [env] values
-                    // that don't already have them.  This is a bit fragile because it assumes that
-                    // there's a maximum of only one "env:" property section in the manifest.
-
-                    var manifestYaml      = (string)NeonHelper.YamlSerialize(manifest);
-                    var manifestYamlLines = manifestYaml.ToLines().ToArray();
-                    var envLineIndex      = -1;
-
-                    for (int i = 0; i < manifestYamlLines.Length; i++)
-                    {
-                        if (manifestYamlLines[i].Trim().StartsWith("env:"))
-                        {
-                            envLineIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (envLineIndex >= 0)
-                    {
-                        var i = envLineIndex + 1;
-
-                        while (i + 1 < manifestYamlLines.Length)
-                        {
-                            // The [i] and [1+1] lines are expected to be the name/value properties.
-
-                            if (!manifestYamlLines[i].Trim().StartsWith("- name:") ||
-                                !manifestYamlLines[i + 1].Trim().StartsWith("value:"))
-                            {
-                                break;
-                            }
-
-                            var valueLine = manifestYamlLines[i + 1];
-                            var colonPos  = valueLine.IndexOf(':');
-                            var value     = valueLine.Substring(colonPos + 1).Trim();
-
-                            if (!value.StartsWith("\"") && !value.EndsWith("\""))
-                            {
-                                valueLine = $"{valueLine.Substring(0, colonPos)}: \"{value}\"";
-                                manifestYamlLines[i + 1] = valueLine;
-                            }
-
-                            i += 2;
-                        }
-
-                        var sbManifest = new StringBuilder();
-
-                        foreach (var line in manifestYamlLines)
-                        {
-                            sbManifest.AppendLineLinux(line);
-                        }
-
-                        manifestYaml = sbManifest.ToString();
-                    }
-
-                    // Upload the manifest; the pod will restart automatically.
-
-                    UploadText("/etc/kubernetes/manifests/kube-apiserver.yaml", manifestYaml, permissions: "600", owner: "root");
-                }
-
-            }
-            catch (Exception e)
-            {
-                controller.LogProgressError(NeonHelper.ExceptionError(e));
-            }
         }
     }
 }

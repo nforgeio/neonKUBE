@@ -64,7 +64,7 @@ using OpenTelemetry.Trace;
 using Quartz.Logging;
 
 using KubeHelper = Neon.Kube.KubeHelper;
-using Task = System.Threading.Tasks.Task;
+using Task       = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -120,7 +120,7 @@ namespace NeonClusterOperator
     /// </remarks>
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Cluster)]
     public partial class Service : NeonService
     {
         private const int dexPort = 5557;
@@ -209,9 +209,10 @@ namespace NeonClusterOperator
                .CreateDefaultBuilder()
                .ConfigureOperator(settings =>
                {
-                   settings.AssemblyScanningEnabled = false;
-                   settings.Name                    = Name;
-                   settings.PodNamespace            = KubeNamespace.NeonSystem;
+                   settings.AssemblyScanningEnabled  = false;
+                   settings.Name                     = Name;
+                   settings.PodNamespace             = KubeNamespace.NeonSystem;
+                   settings.UserImpersonationEnabled = false;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
@@ -219,10 +220,6 @@ namespace NeonClusterOperator
                .Build();
 
             _ = operatorHost.RunAsync();
-
-            // Indicate that the service is running.
-
-            await StartedAsync();
 
             // Handle termination gracefully.
 
@@ -291,7 +288,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Starts the <see cref="ClusterInfo"/> watcher.
+        /// Waits for the <see cref="ClusterInfo"/> object to be created for the cluster.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the cluster information could not be retrieved after a grace period.</exception>
@@ -300,6 +297,11 @@ namespace NeonClusterOperator
             await SyncContext.Clear;
 
             // Start the watcher.
+
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
+
 
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
@@ -315,7 +317,7 @@ namespace NeonClusterOperator
                 retryDelay:         TimeSpan.FromSeconds(30),
                 logger:             Logger);
 
-            // Wait for the watcher to see the [ClusterInfo].
+            // Wait for the watcher to discover the [ClusterInfo].
 
             NeonHelper.WaitFor(() => ClusterInfo != null, timeout: TimeSpan.FromSeconds(60), timeoutMessage: "Timeout obtaining: cluster-info.");
         }
@@ -340,12 +342,12 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+                    var pod = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
 
                     PortForwardManager.StartPodPortForward(
-                        name: pod.Name(),
+                        name:       pod.Name(),
                         @namespace: KubeNamespace.NeonSystem,
-                        localPort: localPort,
+                        localPort:  localPort,
                         remotePort: dexPort);
                 }
                 catch
@@ -378,20 +380,27 @@ namespace NeonClusterOperator
                 HarborClient.BaseUrl = $"https://neon-registry.{ClusterInfo.Domain}/api/v2.0";
             }
 
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
+            //
+            // Also: WHY ISN'T THIS BEING HANDLED BY A PROPER OPERATOR CONTROLLER???
+            //       SEEMS LIKE A HACK!
+
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>
                 {
                     await SyncContext.Clear;
 
-                    var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
-                    var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
+                    var sysadminUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data[KubeConst.SysAdminUser]));
+                    var authString   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{sysadminUser.Name}:{sysadminUser.Password}"));
 
                     harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                     Logger.LogInformationEx("Updated Harbor Client");
                 },
                 namespaceParameter: KubeNamespace.NeonSystem,
-                fieldSelector:      $"metadata.name=glauth-users",
+                fieldSelector:      $"metadata.name={KubeSecretName.GlauthUsers}",
                 retryDelay:         TimeSpan.FromSeconds(30),
                 logger:             Logger);
         }

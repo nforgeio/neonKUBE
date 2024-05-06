@@ -35,9 +35,10 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     public class JobOptions
     {
-        private const string Random                    = "R R 0 ? * TUE";
-        private const string OnceAWeekMidnightSchedule = "0 0 0 ? * TUE";
-        private const string DailyRandomSchedule       = "R R 0 ? * *";
+        private const string Random                = "R R 0 ? * TUE";
+        private const string OnceAWeek12amSchedule = "0 0 0 ? * TUE";
+        private const string OnceAWeek2amSchedule  = "0 0 2 ? * TUE";
+        private const string DailyRandomSchedule   = "R R 0 ? * *";
 
         /// <summary>
         /// Default constructor.
@@ -150,7 +151,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            ClusterCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
+            ClusterCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeek12amSchedule);
             ClusterCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(ClusterCertificateRenewal)}");
 
             if (HarborImagePush == null)
@@ -158,7 +159,7 @@ namespace Neon.Kube.ClusterDef
                 // We're going to disable harbor pushing by default for DESKTOP clusters,
                 // but we will honor the schedule in the cluster definition if present.
 
-                HarborImagePush = new JobSchedule(enabled: !clusterDefinition.IsDesktop, schedule: OnceAWeekMidnightSchedule);
+                HarborImagePush = new JobSchedule(enabled: !clusterDefinition.IsDesktop, schedule: OnceAWeek12amSchedule);
             }
             else
             {
@@ -167,19 +168,19 @@ namespace Neon.Kube.ClusterDef
 
             HarborImagePush.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(HarborImagePush)}");
 
-            ControlPlaneCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
+            ControlPlaneCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeek12amSchedule);
             ControlPlaneCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(ControlPlaneCertificateRenewal)}");
 
-            LinuxSecurityPatches ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
+            LinuxSecurityPatches ??= new JobSchedule(enabled: true, schedule: OnceAWeek2amSchedule);
             LinuxSecurityPatches.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(LinuxSecurityPatches)}");
 
-            NodeCaCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeekMidnightSchedule);
+            NodeCaCertificateRenewal ??= new JobSchedule(enabled: true, schedule: OnceAWeek12amSchedule);
             NodeCaCertificateRenewal.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(NodeCaCertificateRenewal)}");
 
             TelemetryPing ??= new JobSchedule(enabled: true, schedule: DailyRandomSchedule);
             TelemetryPing.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TelemetryPing)}");
 
-            TerminatedPodGc ??= new JobSchedule(enabled: true, schedule: "0 15 * ? * *");
+            TerminatedPodGc ??= new JobSchedule(enabled: true, schedule: "0 0/15 * ? * *");
             TerminatedPodGc.Validate(clusterDefinition, $"{nameof(JobOptions)}.{nameof(TerminatedPodGc)}");
 
             if (TerminatedPodGcDelayMilliseconds < 0)

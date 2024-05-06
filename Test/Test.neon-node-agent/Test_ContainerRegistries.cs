@@ -43,11 +43,11 @@ using Tomlyn;
 
 namespace TestNeonNodeAgent
 {
-    public class Test_ContainerRegistries : IClassFixture<TestOperatorFixture>
+    public class Test_ContainerRegistries : IClassFixture<OperatorFixture>
     {
-        private TestOperatorFixture fixture;
+        private OperatorFixture fixture;
 
-        public Test_ContainerRegistries(TestOperatorFixture fixture)
+        public Test_ContainerRegistries(OperatorFixture fixture)
         {
             this.fixture = fixture;
 

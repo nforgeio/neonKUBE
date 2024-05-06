@@ -276,7 +276,7 @@ or when switching contexts to set the current namespace afterwards.
                 {
                     clusterInfo       = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
                     clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedSecretAsync<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
-                    registryUser      = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    registryUser      = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                 }
                 catch
                 {
@@ -408,7 +408,7 @@ or when switching contexts to set the current namespace afterwards.
                                 "login",
                                 $"{ClusterHost.HarborRegistry}.{clusterDomain}",
                                 "--username",
-                                "root",
+                                KubeConst.SysAdminUser,
                                 "--password-stdin"
                             },
                             input: new StringReader(registryUser.Password));

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         files.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,4 +99,50 @@ function Clear-Directory
             [System.IO.Directory]::Delete($folderPath, $true)
         }
     }
+}
+
+#------------------------------------------------------------------------------
+# Deletes a file if it exists.
+
+function Delete-File
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$Path
+    )
+
+    try
+    {
+        if ([System.IO.File]::Exists($Path))
+        {
+            [System.IO.File]::Delete($Path)
+        }
+    }
+    catch
+    {
+        # We've seen some files remaining open by another process
+        # for a brief period of time while the process is terminating.
+        # We'll wait a bit and then try again once.
+
+        [System.Threading.Thread]::Sleep(1000)
+        [System.IO.File]::Delete($Path)
+    }
+}
+
+#------------------------------------------------------------------------------
+# Deletes a folder if it exists.
+
+function Delete-Folder
+{
+    [CmdletBinding()]
+    param (
+		[Parameter(Position=0, Mandatory=$true)]
+		[string]$Path
+    )
+
+	if (Test-Path $Path) 
+	{ 
+		Remove-Item -Recurse $Path | Out-Null
+	} 
 }

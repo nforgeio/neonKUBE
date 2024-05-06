@@ -1642,7 +1642,7 @@ namespace Neon.Kube.Proxy
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
+            var contextName = KubeContextName.Parse($"{KubeConst.SysAdminUser}@{Name}");
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             await HostingManager.DeleteClusterAsync(SetupState?.ClusterDefinition);
@@ -1651,6 +1651,10 @@ namespace Neon.Kube.Proxy
             {
                 KubeHelper.KubeConfig.RemoveContext(context);
             }
+
+            // Remove the cluster's SSH key file, if present.
+
+            NeonHelper.DeleteFile(Path.Combine(KubeHelper.UserSshFolder, $"{KubeConst.SysAdminUser}@{Name}"));
         }
     }
 }

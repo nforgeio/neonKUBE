@@ -443,6 +443,10 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
+                    await InstallSsoAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -452,10 +456,6 @@ spec:
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
-
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelled();
-                    await CreateDashboardsAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
@@ -528,7 +528,7 @@ spec:
             foreach (var node in cluster.ControlNodes)
             {
                 sanNames[node.Metadata.Address] = null;
-                sanNames[node.Name] = null;
+                sanNames[node.Name]             = null;
             }
 
             if (cluster.SetupState.ClusterDefinition.IsDesktop)
@@ -851,16 +851,16 @@ exit 1
 
                             // Edit the Kubernetes configuration file to rename the context:
                             //
-                            //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                            //       CLUSTERNAME-admin@kubernetes --> sysadmin@CLUSTERNAME
                             //
                             // rename the user:
                             //
-                            //      CLUSTERNAME-admin --> CLUSTERNAME-root 
+                            //      CLUSTERNAME-admin --> CLUSTERNAME-sysadmin 
 
                             var adminConfig = firstControlNode.DownloadText("/etc/kubernetes/admin.conf");
 
-                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Name}", $"root@{cluster.SetupState.ClusterDefinition.Name}");
-                            adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Name}");
+                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Name}", $"sysadmin@{cluster.SetupState.ClusterDefinition.Name}");
+                            adminConfig = adminConfig.Replace("kubernetes-admin", $"sysadmin@{cluster.Name}");
 
                             firstControlNode.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
@@ -2181,6 +2181,7 @@ istioctl install --verify -y -f manifest.yaml
                     values.Add($"resources.requests.memory", KubeHelper.ToSiString(acmeAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", KubeHelper.ToSiString(acmeAdvice.PodMemoryLimit));
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("clusterTlsCertificateName", KubeSecretName.ClusterTlsCertificate);
 
                     int i = 0;
 
@@ -2242,12 +2243,12 @@ istioctl install --verify -y -f manifest.yaml
             NodeSshProxy<NodeDefinition> controlNode,
             string                       idempotencySuffix = null)
         {
-            controller.LogProgress(controlNode, verb: "setup", message: "cluster-certificate");
+            controller.LogProgress(controlNode, verb: "setup", message: "cluster-tls-certificate");
 
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s                = GetK8sClient(controller);
-            var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var idempotencyKey     = "setup/cluster-certificates";
+            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s            = GetK8sClient(controller);
+            var headendClient  = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var idempotencyKey = "setup/cluster-tls-certificate";
 
             if (!idempotencySuffix.IsNullOrEmpty())
             {
@@ -2258,7 +2259,7 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync(idempotencyKey,
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "configure", message: "neon-cluster-certificate");
+                    controller.LogProgress(controlNode, verb: "configure", message: "cluster-tls-certificate");
 
                     var retry = new LinearRetryPolicy(
                         transientDetector: null,
@@ -2284,7 +2285,8 @@ istioctl install --verify -y -f manifest.yaml
                     var secret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
-                            Name = "neon-cluster-certificate",
+                        {
+                            Name = KubeSecretName.ClusterTlsCertificate,
                         },
                         Data = cert,
                         Type = "kubernetes.io/tls"
@@ -2491,7 +2493,7 @@ istioctl install --verify -y -f manifest.yaml
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = $"{KubeConst.RootUser}-user",
+                            Name              = $"{KubeConst.SysAdminUser}-user",
                             NamespaceProperty = KubeNamespace.KubeSystem
                         }
                     };
@@ -2502,7 +2504,7 @@ istioctl install --verify -y -f manifest.yaml
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"{KubeConst.RootUser}-user",
+                            Name = $"{KubeConst.SysAdminUser}-user",
                         },
                         RoleRef = new V1RoleRef()
                         {
@@ -2514,7 +2516,7 @@ istioctl install --verify -y -f manifest.yaml
                         {
                             new V1Subject()
                             {
-                                Name              = $"{KubeConst.RootUser}-user",
+                                Name              = $"{KubeConst.SysAdminUser}-user",
                                 Kind              = "ServiceAccount",
                                 NamespaceProperty = KubeNamespace.KubeSystem
                             },
@@ -4917,7 +4919,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs a harbor container registry and required components.
+        /// Installs Harbor container registry and required components.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
@@ -5080,6 +5082,7 @@ $@"- name: StorageType
                     values.Add("notary.server.priorityClassName", PriorityClass.NeonData.Name);
                     values.Add("notary.signer.priorityClassName", PriorityClass.NeonData.Name);
                     values.Add("trivy.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("clusterTlsCertificateName", KubeSecretName.ClusterTlsCertificate);
 
                     await controlNode.InstallHelmChartAsync(controller, "harbor",
                         releaseName:  "registry-harbor",
@@ -5132,13 +5135,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
-                    // $todo(jefflill): This is failing!
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1898
-
-                    await Task.CompletedTask;
-#if TODO
-                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login {KubeConst.LocalClusterRegistryHostName} --username {user.Name} --password-stdin";
 
@@ -5152,14 +5149,13 @@ $@"- name: StorageType
                             },
                             cancellationToken: controller.CancellationToken);
                     }
-#endif
                 });
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/harbor-login-workstation",
                 async () =>
                 {
-                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
@@ -5171,8 +5167,7 @@ $@"- name: StorageType
                             {
                                 "login",
                                 $"{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
-                                "--username",
-                                "root",
+                                "--username", KubeConst.SysAdminUser,
                                 "--password-stdin"
                             },
                             input: new StringReader(cluster.SetupState.SsoPassword));
@@ -5336,11 +5331,14 @@ $@"- name: StorageType
                         },
                         Spec = new V1NeonClusterJobConfig.NeonClusterJobsSpec()
                         {
-                            HarborImagePush                = jobOptions.HarborImagePush,
-                            ControlPlaneCertificateRenewal = jobOptions.ControlPlaneCertificateRenewal,
-                            NodeCaCertificateUpdate        = jobOptions.NodeCaCertificateRenewal,
-                            LinuxSecurityPatches           = jobOptions.LinuxSecurityPatches,
-                            TelemetryPing                  = jobOptions.TelemetryPing
+                            HarborImagePush                  = jobOptions.HarborImagePush,
+                            ControlPlaneCertificateRenewal   = jobOptions.ControlPlaneCertificateRenewal,
+                            NodeCaCertificateUpdate          = jobOptions.NodeCaCertificateRenewal,
+                            LinuxSecurityPatch               = jobOptions.LinuxSecurityPatches,
+                            TelemetryPing                    = jobOptions.TelemetryPing,
+                            TerminatedPodGc                  = jobOptions.TerminatedPodGc,
+                            TerminatedPodGcDelayMilliseconds = jobOptions.TerminatedPodGcDelayMilliseconds,
+                            TerminatedPodGcThresholdMinutes  = jobOptions.TerminatedPodGcThresholdMinutes
                         }
                     };
 
@@ -5568,6 +5566,7 @@ $@"- name: StorageType
             var k8s            = GetK8sClient(controller);
             var clusterAdvice  = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var operatorAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbOperator);
+            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
             var poolerAdvice   = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbPooler);
             var metricsAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDbMetrics);
             var databaseAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonSystemDb);
@@ -5968,8 +5967,11 @@ $@"- name: StorageType
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
-            values.Add("users.root.password", cluster.SetupState.SsoPassword);
+            values.Add("users.sysadmin.password", cluster.SetupState.SsoPassword);
             values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
+
+            values.Add("secrets.usersName", KubeSecretName.GlauthUsers);
+            values.Add("secrets.groupsName", KubeSecretName.GlauthGroups);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -5990,6 +5992,105 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/glauth-db",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "create", message: "glauth users");
+
+                    // Wait for [Glauth] to create the [users] and [groups] Postgres tables.
+
+                    await operationRetry.InvokeAsync(
+                        async () =>
+                        {
+                            try
+                            {
+                                var response = await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"SELECT tablename
+                                        FROM pg_catalog.pg_tables
+                                        WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';");
+
+                                if (response.ExitCode != 0)
+                                {
+                                    return false;
+                                }
+
+                                var rows         = new StringReader(response.OutputText).Lines();
+                                var usersExists  = rows.Any(row => row.Contains("users", StringComparison.CurrentCultureIgnoreCase));
+                                var groupsExists = rows.Any(row => row.Contains("groups", StringComparison.CurrentCultureIgnoreCase));
+
+                                return usersExists && groupsExists;
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        },
+                            catch
+                            {
+                                return false;
+                            }
+                        },
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
+
+                    //---------------------------------------------------------
+                    // Initialize the [groups] table.
+
+                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthGroups, KubeNamespace.NeonSystem);
+
+                    foreach (var key in groups.Data.Keys)
+                    {
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
+
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO groups(name, gidnumber)
+                                VALUES('{group.Name}','{group.GidNumber}') 
+                                    ON CONFLICT (name) DO UPDATE
+                                        SET gidnumber = '{group.GidNumber}';");
+                    }
+
+                    //---------------------------------------------------------
+                    // Initialize the [users] table.
+
+                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
+
+                    foreach (var user in users.Data.Keys)
+                    {
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
+                        var name         = userData.Name;
+                        var givenname    = userData.Name;
+                        var mail         = $"{userData.Name}@{cluster.SetupState.ClusterDomain}";
+                        var uidnumber    = userData.UidNumber;
+                        var primarygroup = userData.PrimaryGroup;
+                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
+
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
+                                VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
+                                    ON CONFLICT (name) DO UPDATE
+                                        SET givenname    = '{givenname}',
+                                            mail         = '{mail}',
+                                            uidnumber    = '{uidnumber}',
+                                            primarygroup = '{primarygroup}',
+                                            passsha256   = '{passsha256}';");
+
+                        if (userData.Capabilities != null)
+                        {
+                            foreach (var capability in userData.Capabilities)
+                            {
+                                controller.ThrowIfCancelled();
+                                await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"INSERT INTO capabilities(userid, action, object)
+                                        VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
+                            }
+                        }
+                    }
+                });
+
+            controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/glauth-ready",
                 async () =>
                 {
@@ -5997,10 +6098,15 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
                     // Wait for the [glauth postgres.so] plugin to initialize its database
-                    // by quering the three tables we'll be modifying later below.  The database
-                    // will be ready when these queries succeed.
+                    // by quering the three related tables.  The database will be ready when
+                    // these queries succeed.
 
-                    await operationRetry.InvokeAsync(
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
+                    await retry.InvokeAsync(
                         async () =>
                         {
                             // Verify [groups] table.
@@ -6035,61 +6141,6 @@ $@"- name: StorageType
                             }
                         },
                         cancellationToken: controller.CancellationToken);
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/glauth-users",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "create", message: "glauth users");
-
-                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
-                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
-
-                    foreach (var key in groups.Data.Keys)
-                    {
-                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
-
-                        controller.ThrowIfCancelled();
-                        await cluster.ExecSystemDbCommandAsync("glauth",
-                            $@"INSERT INTO groups(name, gidnumber)
-                                   VALUES('{group.Name}','{group.GidNumber}') 
-                                       ON CONFLICT (name) DO UPDATE
-                                           SET gidnumber = '{group.GidNumber}';");
-                    }
-
-                    foreach (var user in users.Data.Keys)
-                    {
-                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
-                        var name         = userData.Name;
-                        var givenname    = userData.Name;
-                        var mail         = $"{userData.Name}@{cluster.SetupState.ClusterDomain}";
-                        var uidnumber    = userData.UidNumber;
-                        var primarygroup = userData.PrimaryGroup;
-                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
-
-                        controller.ThrowIfCancelled();
-                        await cluster.ExecSystemDbCommandAsync("glauth",
-                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
-                                    VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
-                                        ON CONFLICT (name) DO UPDATE
-                                            SET givenname    = '{givenname}',
-                                                mail         = '{mail}',
-                                                uidnumber    = '{uidnumber}',
-                                                primarygroup = '{primarygroup}',
-                                                passsha256   = '{passsha256}';");
-
-                        if (userData.Capabilities != null)
-                        {
-                            foreach (var capability in userData.Capabilities)
-                            {
-                                controller.ThrowIfCancelled();
-                                await cluster.ExecSystemDbCommandAsync("glauth",
-                                    $@"INSERT INTO capabilities(userid, action, object)
-                                           VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
-                            }
-                        }
-                    }
                 });
         }
 
@@ -6311,7 +6362,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non NEONDESKTOP clusters.");
 
-            controller.SetGlobalStepStatus("Waiting for pods to start...");
+            controller.SetGlobalStepStatus("Waiting for pods to start and stabilize...");
 
             var k8s   = GetK8sClient(controller);
             var retry = new LinearRetryPolicy(
@@ -6324,7 +6375,32 @@ $@"- name: StorageType
                 {
                     controller.CancellationToken.ThrowIfCancellationRequested();
 
-                    var pods = await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken);
+                    // Remove all terminated pods here so we don't consider these
+                    // to be failed pods:
+                    //
+                    //      https://midbai.com/en/post/evicted-pods-not-deleted/
+
+                    var pods        = await k8s.CoreV1.ListAllPodsAsync(controller.CancellationToken);
+                    var deletedUids = new HashSet<string>();
+
+                    foreach (var pod in pods.Items)
+                    {
+                        if (pod.Status.Phase.Equals("Failed", StringComparison.InvariantCultureIgnoreCase) ||
+                            pod.Status.Phase.Equals("Succeeded", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            await k8s.CoreV1.DeleteNamespacedPodAsync(pod.Name(), pod.Namespace());
+                            deletedUids.Add(pod.Uid());
+                        }
+                    }
+
+                    // Check the status of all non-failed pods.
+
+                    foreach (var pod in pods.Items.Where(pod => !deletedUids.Contains(pod.Uid())))
+                    {
+                        if (!pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw timeoutException;
+                        }
 
                     if (!pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase)))
                     {

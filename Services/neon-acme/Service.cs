@@ -101,8 +101,6 @@ namespace NeonAcme
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            await SetStatusAsync(NeonServiceStatus.Starting);
-
             KubeHelper.InitializeJson();
 
             HeadendClient = new JsonClient()
@@ -169,10 +167,6 @@ namespace NeonAcme
             _ = webHost.RunAsync();
 
             Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
-
-            // Indicate that the service is ready for business.
-
-            await SetStatusAsync(NeonServiceStatus.Running);
 
             // Handle termination gracefully.
 

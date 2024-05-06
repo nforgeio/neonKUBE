@@ -303,8 +303,6 @@ namespace Neon.Kube.Resources.Cluster
             Status?.Validate();
         }
 
-
-
         /// <summary>
         /// The node execute task specification.
         /// </summary>

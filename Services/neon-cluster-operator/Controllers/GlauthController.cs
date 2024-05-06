@@ -51,28 +51,26 @@ namespace NeonClusterOperator
     /// </summary>
     [ResourceController(
         ManageCustomResourceDefinitions = false,
-        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
-        MaxConcurrentReconciles = 1)]
+        LabelSelector                   = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller",
+        MaxConcurrentReconciles         = 1)]
     [RbacRule<V1Secret>(
-        Verbs         = RbacVerb.All, 
-        Scope         = EntityScope.Cluster,
-        Namespace     = KubeNamespace.NeonSystem)]
+        Verbs = RbacVerb.All, 
+        Scope = EntityScope.Cluster)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : ResourceControllerBase<V1Secret>
     {
-        private static string                       connectionString;
-
         private readonly IKubernetes                k8s;
         private readonly ILogger<GlauthController>  logger;
         private readonly Service                    service;
+        private static string                       connectionString;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public GlauthController(
-            IKubernetes k8s, 
+            IKubernetes               k8s, 
             ILogger<GlauthController> logger,
-            Service service)
+            Service                   service)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -111,9 +109,9 @@ namespace NeonClusterOperator
                     connectionString = $"Host=localhost;Port={localPort};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
                     service.PortForwardManager.StartPodPortForward(
-                        name: pod.Name(),
+                        name:       pod.Name(),
                         @namespace: KubeNamespace.NeonSystem,
-                        localPort: localPort,
+                        localPort:  localPort,
                         remotePort: 5432);
                 }
 
@@ -132,19 +130,19 @@ namespace NeonClusterOperator
 
                 switch (resource.Name())
                 {
-                    case "glauth-users":
+                    case KubeSecretName.GlauthUsers:
 
                         await UpdateGlauthUsersAsync(resource);
                         break;
 
-                    case "glauth-groups":
+                    case KubeSecretName.GlauthGroups:
 
                         await UpdateGlauthGroupsAsync(resource);
                         break;
 
                     default:
-                        break;
 
+                        break;
                 }
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
@@ -164,18 +162,23 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task UpdateGlauthUsersAsync(V1Secret resource)
+        /// <summary>
+        /// Updates an SSO user secret.
+        /// </summary>
+        /// <param name="secret">Specifies the secret resource including the user identity and passwword.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateGlauthUsersAsync(V1Secret secret)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await using var conn = new NpgsqlConnection(connectionString);
-                await conn.OpenAsync();
+                await using var connection = new NpgsqlConnection(connectionString);
+                await connection.OpenAsync();
 
-                foreach (var user in resource.Data.Keys)
+                foreach (var user in secret.Data.Keys)
                 {
                     using (var userActivity = TelemetryHub.ActivitySource?.StartActivity("AddUser"))
                     {
-                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data[user]));
                         var name         = userData.Name;
                         var givenname    = userData.Name;
                         var mail         = userData.Mail ?? $"{userData.Name}@{service.ClusterInfo.Domain}";
@@ -191,7 +194,7 @@ namespace NeonClusterOperator
                                         mail         = '{mail}',
                                         uidnumber    = '{uidnumber}',
                                         primarygroup = '{primarygroup}',
-                                        passsha256   = '{passsha256}';", conn))
+                                        passsha256   = '{passsha256}';", connection))
                         {
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -206,7 +209,7 @@ namespace NeonClusterOperator
                                     await using (var cmd = new NpgsqlCommand(
                                         $@"SELECT count(*)
                                             FROM capabilities
-                                            WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", conn))
+                                            WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", connection))
                                     {
                                         count = (long)await cmd.ExecuteScalarAsync();
                                     }
@@ -214,8 +217,8 @@ namespace NeonClusterOperator
                                     if (count == 0)
                                     {
                                         await using (var cmd = new NpgsqlCommand(
-                                        $@"INSERT INTO capabilities(userid, action, object)
-                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", conn))
+                                            $@"INSERT INTO capabilities(userid, action, object)
+                                                VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", connection))
                                         {
                                             await cmd.ExecuteNonQueryAsync();
                                         }
@@ -228,24 +231,29 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task UpdateGlauthGroupsAsync(V1Secret resource)
+        /// <summary>
+        /// Updates an SSO group secret.
+        /// </summary>
+        /// <param name="secret">Specifies the secret resource including the user identity and passwword.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateGlauthGroupsAsync(V1Secret secret)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await using var conn = new NpgsqlConnection(connectionString);
-                await conn.OpenAsync();
+                await using var conection = new NpgsqlConnection(connectionString);
+                await conection.OpenAsync();
 
-                foreach (var key in resource.Data.Keys)
+                foreach (var key in secret.Data.Keys)
                 {
                     using (var groupActivity = TelemetryHub.ActivitySource?.StartActivity("AddGroup"))
                     {
-                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(resource.Data[key]));
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(secret.Data[key]));
 
                         await using (var cmd = new NpgsqlCommand(
                             $@"INSERT INTO groups(name, gidnumber)
                             VALUES('{group.Name}','{group.GidNumber}') 
                                 ON CONFLICT (name) DO UPDATE
-                                    SET gidnumber = '{group.GidNumber}';", conn))
+                                    SET gidnumber = '{group.GidNumber}';", conection))
                         {
                             await cmd.ExecuteNonQueryAsync();
                         }

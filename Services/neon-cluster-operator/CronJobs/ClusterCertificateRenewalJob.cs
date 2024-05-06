@@ -52,15 +52,20 @@ namespace NeonClusterOperator
     /// Handles renewal of the Kubernetes root certificate.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class ClusterCertificateRenewalJob : CronJob, IJob
+    public class ClusterCertificateRenewalJob : IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<ClusterCertificateRenewalJob>();
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ClusterCertificateRenewalJob()
-            : base(typeof(ClusterCertificateRenewalJob))
         {
         }
         
@@ -80,8 +85,8 @@ namespace NeonClusterOperator
                     var k8s           = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
                     var clusterInfo   = (ClusterInfo)dataMap["ClusterInfo"];
-                    var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.IstioSystem);
-                    var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
+                    var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.ClusterTlsCertificate, KubeNamespace.NeonIngress);
+                    var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.ClusterTlsCertificate, KubeNamespace.NeonSystem);
 
                     var ingressCertificate = X509Certificate2.CreateFromPem(
                         Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
@@ -96,6 +101,7 @@ namespace NeonClusterOperator
                         await Task.Delay(TimeSpan.FromMinutes(Random.Shared.Next(90)));
 
                         IDictionary<string, byte[]> cert;
+
                         if (clusterInfo.IsDesktop)
                         {
                             cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
@@ -125,7 +131,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

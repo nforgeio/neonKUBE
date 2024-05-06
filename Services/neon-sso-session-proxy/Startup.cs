@@ -159,7 +159,10 @@ namespace NeonSsoSessionProxy
                     endpoints.MapHealthChecks("/healthz");
                     endpoints.MapControllers();
                 });
+
+            // Indicate that the service is ready for business.
+
+            Service.Started();
         }
     }
 }
-

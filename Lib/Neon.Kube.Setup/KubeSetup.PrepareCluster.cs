@@ -187,7 +187,7 @@ namespace Neon.Kube.Setup
             // Initialize the setup state.  This is backed by a file and is used to
             // persist setup related state across the cluster prepare and setup phases.
 
-            var contextName = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
+            var contextName = $"{KubeConst.SysAdminUser}@{clusterDefinition.Name}";
 
             if (KubeSetupState.Exists(contextName))
             {
@@ -297,7 +297,7 @@ namespace Neon.Kube.Setup
                         //
                         // WARNING: This should never be used for production clusters!
 
-                        setupState.SshPassword = KubeConst.SysAdminPassword;
+                        setupState.SshPassword = KubeConst.SysAdminInsecurePassword;
                     }
                     else
                     {
@@ -325,9 +325,9 @@ namespace Neon.Kube.Setup
 
                         if (desktopReadyToGo || options.Insecure)
                         {
-                            // We're going to configure a fixed password for NEONDESKTOP clusters.
+                            // We're going to configure a fixed password for NEONDESKTOP and insecure clusters.
 
-                            setupState.SshPassword = KubeConst.SysAdminPassword;
+                            setupState.SshPassword = KubeConst.SysAdminInsecurePassword;
                         }
                         else
                         {
@@ -364,13 +364,28 @@ namespace Neon.Kube.Setup
                         }
                     }
 
-                    // We also need to generate the cluster's root SSO password, unless this was specified
+                    // We also need to generate the cluster's [sysadmin] SSO password, unless this was specified
                     // in the cluster definition (typically for NEONDESKTOP clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
-                    setupState.SsoUsername = KubeConst.RootUser;
-                    setupState.SsoPassword = clusterDefinition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    setupState.SsoUsername = KubeConst.SysAdminUser;
+
+                    if (clusterDefinition.SsoPassword != null)
+                    {
+                        setupState.SsoPassword = clusterDefinition.SsoPassword;
+                    }
+                    else
+                    {
+                        if (options.Insecure)
+                        {
+                            setupState.SsoPassword = KubeConst.SysAdminInsecurePassword;
+                        }
+                        else
+                        {
+                            setupState.SsoPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        }
+                    }
 
                     setupState.Save();
                 });

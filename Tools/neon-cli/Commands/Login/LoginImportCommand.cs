@@ -129,6 +129,20 @@ to disable this behavior and just import the context.
             KubeHelper.KubeConfig.Users.Add(newLogin.User);
             KubeHelper.KubeConfig.Save();
 
+            // Persist any [sysadmin] login SSH key to the user's SSH folder.
+
+            var sshUser     = newLogin.Cluster.SshUsername;
+            var clusterInfo = newLogin.Cluster.ClusterInfo;
+
+            if (!string.IsNullOrEmpty(sshUser) && clusterInfo != null)
+            {
+                var path = Path.Combine(KubeHelper.UserSshFolder, $"{sshUser}@{newLogin.Cluster.Name}");
+
+                File.WriteAllText(path, clusterInfo.SshKey.PrivatePEM);
+            }
+
+            // Log into the cluster unless the user specified: --no-login
+
             Console.Error.WriteLine($"Imported: {newLogin.Context.Name}");
 
             if (commandLine.GetOption("--no-login") == null)

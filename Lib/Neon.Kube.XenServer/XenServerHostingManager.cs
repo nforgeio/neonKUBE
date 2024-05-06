@@ -1473,7 +1473,7 @@ namespace Neon.Kube.Hosting.XenServer
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to the XenServer hosts.
 
-            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
+            var contextName = $"{KubeConst.SysAdminUser}@{cluster.Name}";
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Report when any XenServer hosts are offline.

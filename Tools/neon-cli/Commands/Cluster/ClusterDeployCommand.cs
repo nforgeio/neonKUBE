@@ -231,7 +231,7 @@ stage process is typically used only by NEONKUBE maintainers.
             //-----------------------------------------------------------------
             // neon cluster setup ...
 
-            args = new List<string>() { "cluster", "setup", $"root@{clusterDefinition.Name}" };
+            args = new List<string>() { "cluster", "setup", $"sysadmin@{clusterDefinition.Name}" };
 
             if (check)
             {

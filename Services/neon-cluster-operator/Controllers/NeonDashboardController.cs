@@ -94,8 +94,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                // Ignore all events when the controller hasn't been started.
-
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }

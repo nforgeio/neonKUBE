@@ -1744,9 +1744,9 @@ exit 0
         /// Creates a SSH key for a NEONKUBE cluster.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
-        /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
+        /// <param name="userName">Specifies the user name.</param>
         /// <returns>A <see cref="KubeSshKey"/> holding the public and private parts of the key.</returns>
-        public static KubeSshKey GenerateSshKey(string clusterName, string userName = "root")
+        public static KubeSshKey GenerateSshKey(string clusterName, string userName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName), nameof(userName));
@@ -1928,7 +1928,7 @@ exit 0
             //
             // This key was generated using the NEONCLOUD neon-image tool via:
             //
-            //      neon-image sshkey NEONDESKTOP root
+            //      neon-image sshkey neon-desktop sysadmin
             //
             // SSH keys don't have an expiration so this key could potentionally work
             // forever, as long as the encryption algorithms are still supported.
@@ -1936,85 +1936,85 @@ exit 0
             var keyYaml =
 @"
 publicPUB: |
-  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMn/0u0xfoXbY5Uvcct/6oz5SzVW7g6wmGR2bN5YA5E6i+ivWMiJNNity47WrGLuAHQYYVawgKGesRrXjpmRVOhg35nreKGISa8eRoferQXaGF+hKfPOaordLyNGTzTiuRhuvth4DsKRNz+g0n4JOgfnIa7MsgNnCnC163yj8itcLCLSN/14OkKQRX7RRsEpnMOHDkXOsDok7YVA9ZmlBwQjCrhERxUOJSsGkByakDk9OGBsVg6nCYQ59xNWGAQL8MLFfCg3/KrvTPtW1y5+BqVI0TKJ8XgyhkjgEmHRh1wK/F1FPJ4ogGcZNj1ZV+7GR+cs9o1lzl7ns2CNberIHr root@neon-desktop
-publicOpenSSH: |+
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEslLqqMimG0SIrQFs+nPl7Ah8TSoKRBJuPwhVkefMzUol1Rvlm7Yc0kRwhBTQkS7H9g51CENEo42D8trorj3d1rRTGpiOjCuxvMg71l0xDPN3Kjovde2TT3rDp0apqT24+SGu8xupbd2cmsK13eOfEL4RxufIyJSnpc7sxGM7MmbnFC8fDrE3yxZTA4+Qa1bUpM66XD569mCSr4l0zSQcVkGxlPCYIVT0WLWxf1Jbe+ZVvMQrvQ5S5tBejvp7O+SPZXONewzX+nOWhyOuMin+PELMPQiYAyRf8DpQ4l/e1h0MnQcAv09TBk9H4bJefGgPfNcDB5OAN6QafT6Nwfyn sysadmin@neon-desktop
+publicOpenSSH: |
   -----BEGIN RSA PUBLIC KEY-----
-  MIIBCgKCAQEAzJ/9LtMX6F22OVL3HLf+qM+Us1Vu4OsJhkdmzeWAOROovor1jIiT
-  TYrcuO1qxi7gB0GGFWsIChnrEa146ZkVToYN+Z63ihiEmvHkaH3q0F2hhfoSnzzm
-  qK3S8jRk804rkYbr7YeA7CkTc/oNJ+CToH5yGuzLIDZwpwtet8o/IrXCwi0jf9eD
-  pCkEV+0UbBKZzDhw5FzrA6JO2FQPWZpQcEIwq4REcVDiUrBpAcmpA5PThgbFYOpw
-  mEOfcTVhgEC/DCxXwoN/yq70z7VtcufgalSNEyifF4MoZI4BJh0YdcCvxdRTyeKI
-  BnGTY9WVfuxkfnLPaNZc5e57NgjW3qyB6wIDAQAB
+  MIIBCgKCAQEAxLJS6qjIphtEiK0BbPpz5ewIfE0qCkQSbj8IVZHnzM1KJdUb5Zu2
+  HNJEcIQU0JEux/YOdQhDRKONg/La6K493da0UxqYjowrsbzIO9ZdMQzzdyo6L3Xt
+  k096w6dGqak9uPkhrvMbqW3dnJrCtd3jnxC+EcbnyMiUp6XO7MRjOzJm5xQvHw6x
+  N8sWUwOPkGtW1KTOulw+evZgkq+JdM0kHFZBsZTwmCFU9Fi1sX9SW3vmVbzEK70O
+  UubQXo76ezvkj2VzjXsM1/pzlocjrjIp/jxCzD0ImAMkX/A6UOJf3tYdDJ0HAL9P
+  UwZPR+GyXnxoD3zXAweTgDekGn0+jcH8pwIDAQAB
   -----END RSA PUBLIC KEY-----
-publicSSH2: |+
+publicSSH2: |
   ---- BEGIN SSH2 PUBLIC KEY ----
-  AAAAB3NzaC1yc2EAAAADAQABAAABAQDMn/0u0xfoXbY5Uvcct/6oz5SzVW7g6wmGR2bN5Y
-  A5E6i+ivWMiJNNity47WrGLuAHQYYVawgKGesRrXjpmRVOhg35nreKGISa8eRoferQXaGF
-  +hKfPOaordLyNGTzTiuRhuvth4DsKRNz+g0n4JOgfnIa7MsgNnCnC163yj8itcLCLSN/14
-  OkKQRX7RRsEpnMOHDkXOsDok7YVA9ZmlBwQjCrhERxUOJSsGkByakDk9OGBsVg6nCYQ59x
-  NWGAQL8MLFfCg3/KrvTPtW1y5+BqVI0TKJ8XgyhkjgEmHRh1wK/F1FPJ4ogGcZNj1ZV+7G
-  R+cs9o1lzl7ns2CNberIHr
+  AAAAB3NzaC1yc2EAAAADAQABAAABAQDEslLqqMimG0SIrQFs+nPl7Ah8TSoKRBJuPwhVke
+  fMzUol1Rvlm7Yc0kRwhBTQkS7H9g51CENEo42D8trorj3d1rRTGpiOjCuxvMg71l0xDPN3
+  Kjovde2TT3rDp0apqT24+SGu8xupbd2cmsK13eOfEL4RxufIyJSnpc7sxGM7MmbnFC8fDr
+  E3yxZTA4+Qa1bUpM66XD569mCSr4l0zSQcVkGxlPCYIVT0WLWxf1Jbe+ZVvMQrvQ5S5tBe
+  jvp7O+SPZXONewzX+nOWhyOuMin+PELMPQiYAyRf8DpQ4l/e1h0MnQcAv09TBk9H4bJefG
+  gPfNcDB5OAN6QafT6Nwfyn
   ---- END SSH2 PUBLIC KEY ----
 privateOpenSSH: |
   -----BEGIN OPENSSH PRIVATE KEY-----
   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
-  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
+  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
   -----END OPENSSH PRIVATE KEY-----
 privatePEM: |
   -----BEGIN RSA PRIVATE KEY-----
-  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
+  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
   -----END RSA PRIVATE KEY-----
 fingerprint-SHA256: |-
-  2048 SHA256:/iqR31hw7aZI4BFWNjBd/Lsf5xZrwkd1+jIq6PafEpc root@neon-desktop (RSA)
+  2048 SHA256:3RSnLcWeie26esBIDmfy4LrHEkGf+gQYIjL13KHcGbg sysadmin@neon-desktop (RSA)
 fingerprint-MD5: |-
-  2048 MD5:14:17:80:10:c0:66:1a:b6:34:e8:64:0c:f3:5b:66:21 root@neon-desktop (RSA)
+  2048 MD5:a7:e5:58:d6:9f:88:b8:3e:b7:81:f9:f3:d6:8c:9c:98 sysadmin@neon-desktop (RSA)
 passphrase: 
 ";
             return NeonHelper.YamlDeserialize<KubeSshKey>(keyYaml);
@@ -2751,7 +2751,7 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            var users = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+            var users = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
 
             return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
         }

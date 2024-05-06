@@ -360,7 +360,8 @@ namespace Neon.Kube.Setup
         void Cancel();
 
         /// <summary>
-        /// Throws a <see cref="OperationCanceledException"/> when <see cref="Cancel()"/> has been called.
+        /// Throws a <see cref="OperationCanceledException"/> when <see cref="Cancel()"/> has been called
+        /// or cluster setup is faulted.
         /// </summary>
         void ThrowIfCancelled();
 

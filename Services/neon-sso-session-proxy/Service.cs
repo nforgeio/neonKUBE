@@ -124,8 +124,6 @@ namespace NeonSsoSessionProxy
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            await SetStatusAsync(NeonServiceStatus.Starting);
-
             Neon.Kube.KubeHelper.InitializeJson(); 
             
             k8s = Neon.Kube.KubeHelper.CreateKubernetesClient();
@@ -219,10 +217,6 @@ namespace NeonSsoSessionProxy
             _ = webHost.RunAsync();
 
             Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
-
-            // Indicate that the service is ready for business.
-
-            await SetStatusAsync(NeonServiceStatus.Running);
 
             // Handle termination gracefully.
 

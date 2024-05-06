@@ -191,7 +191,7 @@ namespace NeonClusterOperator
 
                 // $todo(marcusbooyah): make this use robot accounts.
 
-                var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeSecretName.GlauthUsers, KubeNamespace.NeonSystem);
                 var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));
 
                 var registry = new V1NeonContainerRegistry()

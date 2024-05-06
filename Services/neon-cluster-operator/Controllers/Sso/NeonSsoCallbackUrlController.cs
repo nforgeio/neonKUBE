@@ -51,19 +51,6 @@ namespace NeonClusterOperator
     [ResourceController(MaxConcurrentReconciles = 1)]
     public class NeonSsoCallbackUrlController : ResourceControllerBase<V1NeonSsoCallbackUrl>
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static NeonSsoCallbackUrlController()
-        {
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private readonly IKubernetes                             k8s;
         private readonly IFinalizerManager<V1NeonSsoCallbackUrl> finalizerManager;
         private readonly ILogger<NeonSsoCallbackUrlController>   logger;
@@ -71,7 +58,8 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonSsoCallbackUrlController(IKubernetes k8s,
+        public NeonSsoCallbackUrlController(
+            IKubernetes                                 k8s,
             IFinalizerManager<V1NeonSsoCallbackUrl>     manager,
             ILogger<NeonSsoCallbackUrlController>       logger)
         {
@@ -97,6 +85,7 @@ namespace NeonClusterOperator
                 {
                     patch.Replace(path => path.Status, new V1SsoCallbackUrlStatus());
                 }
+
                 patch.Replace(path => path.Status.State, "reconciling");
                 await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoCallbackUrl>(OperatorHelper.ToV1Patch<V1NeonSsoCallbackUrl>(patch), resource.Name());
 
@@ -106,6 +95,7 @@ namespace NeonClusterOperator
                 patch.Replace(path => path.Status.State, "reconciled");
                 patch.Replace(path => path.Status.LastAppliedSsoClient, resource.Spec.SsoClient);
                 patch.Replace(path => path.Status.LastAppliedUrl, resource.Spec.Url);
+
                 await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoCallbackUrl>(OperatorHelper.ToV1Patch<V1NeonSsoCallbackUrl>(patch), resource.Name());
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
@@ -131,8 +121,8 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                if (resource.Spec.SsoClient != resource.Status?.LastAppliedSsoClient
-                    && resource.Status?.LastAppliedSsoClient != null)
+                if (resource.Spec.SsoClient != resource.Status?.LastAppliedSsoClient &&
+                    resource.Status?.LastAppliedSsoClient != null)
                 {
                     var oldSsoClient = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonSsoClient>(resource.Status.LastAppliedSsoClient);
 
