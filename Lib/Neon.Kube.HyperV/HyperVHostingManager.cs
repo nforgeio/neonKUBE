@@ -835,7 +835,7 @@ namespace Neon.Kube.Hosting.HyperV
                     }
                 }
 
-                controller.ThrowIfCancelled();
+                controller.ThrowIfCancelledOrFaulted();
 
                 // Ensure that the cluster virtual machines exist and are stopped,
                 // taking care to issue a warning if any machines already exist 
@@ -929,7 +929,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                             while (true)
                             {
-                                controller.ThrowIfCancelled();
+                                controller.ThrowIfCancelledOrFaulted();
 
                                 cb     = decompressor.Read(buffer, 0, buffer.Length);
                                 cbRead = input.Position;
@@ -992,7 +992,7 @@ namespace Neon.Kube.Hosting.HyperV
                     // Create a temporary ISO with the prep script and mount it
                     // to the node VM.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
 
                     node.Status = $"mount: neon-init iso";
                     tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.SetupState.ClusterDefinition, node.Metadata, nodeMtu: NodeMtu, newPassword: secureSshPassword);
@@ -1002,7 +1002,7 @@ namespace Neon.Kube.Hosting.HyperV
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
 
                     node.Status = $"start: virtual machine";
                     hyperv.StartVm(vmName);
@@ -1011,7 +1011,7 @@ namespace Neon.Kube.Hosting.HyperV
                     // hardcoded SSH key for ready-to-go NEONDESKTOP clusters and then wait for the node
                     // to boot.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
 
                     if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
@@ -1023,7 +1023,7 @@ namespace Neon.Kube.Hosting.HyperV
                     }
 
                     node.WaitForBoot();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
 
                     // Extend the primary partition and file system to fill 
                     // the virtual drive.

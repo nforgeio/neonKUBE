@@ -1266,43 +1266,43 @@ EOF
             InvokeIdempotent("setup/node",
                 () =>
                 {
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     PrepareNode(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConfigureEnvironmentVariables(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConfigureLocalHosts(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     BaseCreateKubeFolders(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     SetupPackageProxy(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInitialize(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInstallCriO(controller, clusterManifest);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInstallPodman(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInstallHelmCli(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInstallKubernetes(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     SetupKubelet(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallCiliumCli(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallIstioCli(controller);
                 });
 

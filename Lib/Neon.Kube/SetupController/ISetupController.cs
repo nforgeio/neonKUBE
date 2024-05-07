@@ -354,7 +354,7 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// Attempts to cancel the setup operation.  This will cause <see cref="IsCancelPending"/> 
-        /// to return <c>true</c> and calls to <see cref="ThrowIfCancelled()"/> to throw a
+        /// to return <c>true</c> and calls to <see cref="ThrowIfCancelledOrFaulted()"/> to throw a
         /// <see cref="OperationCanceledException"/>.
         /// </summary>
         void Cancel();
@@ -363,7 +363,7 @@ namespace Neon.Kube.Setup
         /// Throws a <see cref="OperationCanceledException"/> when <see cref="Cancel()"/> has been called
         /// or cluster setup is faulted.
         /// </summary>
-        void ThrowIfCancelled();
+        void ThrowIfCancelledOrFaulted();
 
         /// <summary>
         /// Returns the <see cref="CancellationTokenSource"/> used to cancel setup.

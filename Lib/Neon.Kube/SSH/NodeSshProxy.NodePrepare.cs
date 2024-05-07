@@ -444,34 +444,34 @@ rm -r istio-{KubeVersion.Istio}*
                 {
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     UpgradeLinuxKernel(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     UpdateRootCertificates(aptGetTool: KubeConst.SafeAptGetToolPath);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     RemoveSwapFile(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     NodeInstallTools(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     DisableSnap(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConfigureJournald(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallXfs(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallNVMe(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallNFS(controller);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     PrepareForOpenEbs(controller);
                 });
         }

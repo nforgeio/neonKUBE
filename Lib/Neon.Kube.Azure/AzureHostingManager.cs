@@ -1319,7 +1319,7 @@ namespace Neon.Kube.Hosting.Azure
 
                     foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
                     {
-                        controller.ThrowIfCancelled();
+                        controller.ThrowIfCancelledOrFaulted();
 
                         var k8sNode = k8sNodes.Where(node => node.Metadata.Name == nodeDefinition.Name).Single();
 

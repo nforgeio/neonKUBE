@@ -204,7 +204,7 @@ spec:
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/label-nodes",
                 (Func<Task>)(async () =>
                 {
@@ -216,7 +216,7 @@ spec:
 
                         foreach (var node in cluster.Nodes)
                         {
-                            controller.ThrowIfCancelled();
+                            controller.ThrowIfCancelledOrFaulted();
 
                             var k8sNode = k8sNodes.Where((Func<V1Node, bool>)(k8sNode => k8sNode.Metadata.Name == node.Name)).Single();
 
@@ -315,169 +315,169 @@ spec:
                     controller.SetGlobalStepStatus();
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     UploadAttributions(controller);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConfigureKubernetes(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConfigureWorkstation(controller, cluster.DeploymentControlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     ConnectCluster(controller);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigureControlPlaneTaintsAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await TaintNodesAsync(controller);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await LabelNodesAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await CreateNamespacesAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await UploadClusterInfoAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await UploadClusterManifestAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await SetClusterLockAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await SetClusterHealthAsync(controller, controlNode, ready: false);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallClusterCrdsAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await CreateRootUserAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigurePriorityClassesAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallCilium(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     InstallIstio(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigureCoreDnsAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigureNamespaceTraceSamplingAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallMetricsServerAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallPrometheusAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallNeonCloudTokenAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallCertManagerAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigureClusterCertificatesAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await ConfigureApiserverIngressAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallKubernetesDashboardAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
                         controller.ClearStatus();
-                        controller.ThrowIfCancelled();
+                        controller.ThrowIfCancelledOrFaulted();
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
                     }
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallOpenEbsAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallReloaderAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallSystemDbAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallRedisAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallSsoAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallNodeAgentAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallSsoAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
                         controller.ClearStatus();
-                        controller.ThrowIfCancelled();
+                        controller.ThrowIfCancelledOrFaulted();
                         await InstallKialiAsync(controller, controlNode);
                     }
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallMinioAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallHarborAsync(controller, controlNode);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallObservabilityAsync(controller);
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
 
                     // IMPORTANT:
@@ -486,7 +486,7 @@ spec:
                     // has been successfully deployed.
 
                     controller.ClearStatus();
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await SetClusterHealthAsync(controller, controlNode, ready: true);
                 },
                 controller.CancellationToken);
@@ -699,7 +699,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             firstControlNode.InvokeIdempotent("setup/config-kubernetes",
                 () =>
                 {
@@ -710,7 +710,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
                     // Initialize Kubernetes:
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     firstControlNode.InvokeIdempotent("setup/config-kubernetes-init",
                         () =>
                         {
@@ -748,7 +748,7 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
                             retry.Invoke(
                                 () =>
                                 {
-                                    controller.ThrowIfCancelled();
+                                    controller.ThrowIfCancelledOrFaulted();
 
                                     var socketResponse = firstControlNode.SudoCommand("cat", new object[] { "/proc/net/unix" })
                                         .EnsureSuccess();
@@ -843,7 +843,7 @@ exit 1
                             controller.LogProgress(firstControlNode, verb: "created", message: "cluster");
                         });
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     firstControlNode.InvokeIdempotent("setup/config-kubernetes-kubectl",
                         () =>
                         {
@@ -890,7 +890,7 @@ exit 1
                     {
                         try
                         {
-                            controller.ThrowIfCancelled();
+                            controller.ThrowIfCancelledOrFaulted();
                             controlNode.InvokeIdempotent("setup/config-kubernetes-kubectl",
                                 () =>
                                 {
@@ -912,7 +912,7 @@ exit 1
 
                                     // Join the cluster:
 
-                                    controller.ThrowIfCancelled();
+                                    controller.ThrowIfCancelledOrFaulted();
                                     controlNode.InvokeIdempotent("setup/config-kubernetes-join-control-plane",
                                         () =>
                                         {
@@ -936,7 +936,7 @@ exit 1
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                             {
-                                                controller.ThrowIfCancelled();
+                                                controller.ThrowIfCancelledOrFaulted();
 
                                                 var response = controlNode.SudoCommand(cluster.SetupState.ClusterJoinCommand + " --control-plane --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
@@ -954,11 +954,11 @@ exit 1
                                                 throw new Exception($"Unable to join node [{controlNode.Name}] to the after [{maxJoinAttempts}] attempts.");
                                             }
 
-                                            controller.ThrowIfCancelled();
+                                            controller.ThrowIfCancelledOrFaulted();
                                             controlNode.SudoCommand("podman kill neon-etcd-proxy");
                                             controlNode.SudoCommand("podman rm neon-etcd-proxy");
 
-                                            controller.ThrowIfCancelled();
+                                            controller.ThrowIfCancelledOrFaulted();
                                             controlNode.UpdateKubernetesStaticManifests(controller);
                                         });
                                 });
@@ -987,7 +987,7 @@ exit 1
                         {
                             try
                             {
-                                controller.ThrowIfCancelled();
+                                controller.ThrowIfCancelledOrFaulted();
                                 worker.InvokeIdempotent("setup/config-kubernetes-worker-join",
                                     () =>
                                     {
@@ -999,7 +999,7 @@ exit 1
 
                                         controller.LogProgress(worker, verb: "join", message: "as worker");
 
-                                        controller.ThrowIfCancelled();
+                                        controller.ThrowIfCancelledOrFaulted();
                                         worker.SudoCommand("podman run",
                                             "--name=neon-etcd-proxy",
                                             "--detach",
@@ -1012,7 +1012,7 @@ exit 1
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
-                                            controller.ThrowIfCancelled();
+                                            controller.ThrowIfCancelledOrFaulted();
 
                                             var response = worker.SudoCommand(cluster.SetupState.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
@@ -1030,7 +1030,7 @@ exit 1
                                             throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
                                         }
 
-                                        controller.ThrowIfCancelled();
+                                        controller.ThrowIfCancelledOrFaulted();
                                         worker.SudoCommand("podman kill neon-etcd-proxy");
                                         worker.SudoCommand("podman rm neon-etcd-proxy");
                                     });
@@ -1068,7 +1068,7 @@ exit 1
             var clusterAdvice     = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var coreDnsAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.CoreDns);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/coredns",
                 async () =>
                 {
@@ -1076,7 +1076,7 @@ exit 1
 
                     // Wait for CoreDNS deployment to report that it's deployed.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "coredns",
                         timeout:           clusterOpTimeout,
                         pollInterval:      clusterOpPollInterval,
@@ -1086,7 +1086,7 @@ exit 1
                     // replicas to match the number of control-plane nodes, and also configure
                     // the CoreDNS memory request/limit.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/coredns-configure",
                         async () =>
                         {
@@ -1125,7 +1125,7 @@ exit 1
 
                     // Deploy a [dnsutils] container and then verify DNS is actually working.
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/coredns-utils",
                         async () =>
                         {
@@ -1173,7 +1173,7 @@ exit 1
                                 cancellationToken:  controller.CancellationToken);
                         });
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/coredns-verify",
                         async () =>
                         {
@@ -1223,7 +1223,7 @@ exit 1
 
             if (coreDnsAdvice.MetricsEnabled)
             {
-                controller.ThrowIfCancelled();
+                controller.ThrowIfCancelledOrFaulted();
                 await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
                     async () =>
                     {
@@ -1394,7 +1394,7 @@ exit 1
             var cluster = controlNode.Cluster;
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             controlNode.InvokeIdempotent("setup/priorityclass",
                 async () =>
                 {
@@ -1431,7 +1431,7 @@ exit 1
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             node.InvokeIdempotent("cluster-manifest",
                 () =>
                 {
@@ -1458,7 +1458,7 @@ exit 1
             var cluster = controlNode.Cluster;
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-control-plane-taints",
                 async () =>
                 {
@@ -1482,7 +1482,7 @@ exit 1
 
                         foreach (var controlNode in nodes.Items)
                         {
-                            controller.ThrowIfCancelled();
+                            controller.ThrowIfCancelledOrFaulted();
 
                             if (controlNode.Spec.Taints == null)
                             {
@@ -1524,7 +1524,7 @@ exit 1
             var coreDnsAdvice    = clusterAdvice.GetServiceAdvice(ClusterAdvice.CoreDns);
             var mtu              = hostingManager.NodeMtu;
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             controlNode.InvokeIdempotent("setup/install-cilium",
                 () =>
                 {
@@ -1588,7 +1588,7 @@ systemctl restart cri-o
 
             // Install Istio.
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             controlNode.InvokeIdempotent("setup/istio-install",
                 () =>
                 {
@@ -1815,7 +1815,7 @@ istioctl install --verify -y -f manifest.yaml
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/namespace-trace-sampling",
                 async () =>
                 {
@@ -1881,7 +1881,7 @@ istioctl install --verify -y -f manifest.yaml
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.MetricsServer);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
@@ -1908,7 +1908,7 @@ istioctl install --verify -y -f manifest.yaml
                         values:     values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
                 async () =>
                 {
@@ -1942,7 +1942,7 @@ istioctl install --verify -y -f manifest.yaml
             var proxyAdvice        = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioProxy);
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
                 {
@@ -1970,7 +1970,7 @@ istioctl install --verify -y -f manifest.yaml
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cert-manager-ready",
                 async () =>
                 {
@@ -1987,7 +1987,7 @@ istioctl install --verify -y -f manifest.yaml
                         cancellationToken: controller.CancellationToken);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-acme",
                 async () =>
                 {
@@ -2080,7 +2080,7 @@ istioctl install --verify -y -f manifest.yaml
                         }
                     }
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/neon-acme-issuer",
                         async () =>
                         {
@@ -2171,7 +2171,7 @@ istioctl install --verify -y -f manifest.yaml
                 idempotencyKey += $"-{idempotencySuffix}";
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync(idempotencyKey,
                 async () =>
                 {
@@ -2231,7 +2231,7 @@ istioctl install --verify -y -f manifest.yaml
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-service",
                 async () =>
                 {
@@ -2261,7 +2261,7 @@ istioctl install --verify -y -f manifest.yaml
 
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-destination-rule",
                 async () =>
                 {
@@ -2292,7 +2292,7 @@ istioctl install --verify -y -f manifest.yaml
 
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-virtual-service",
                 async () =>
                 {
@@ -2360,7 +2360,7 @@ istioctl install --verify -y -f manifest.yaml
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
                 async () =>
                 {
@@ -2399,7 +2399,7 @@ istioctl install --verify -y -f manifest.yaml
 
             var k8s = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
@@ -2466,7 +2466,7 @@ istioctl install --verify -y -f manifest.yaml
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.KubernetesDashboard);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kube-dashboard",
                 async () =>
                 {
@@ -2507,7 +2507,7 @@ istioctl install --verify -y -f manifest.yaml
             var k8s          = GetK8sClient(controller);
             var controlNode  = cluster.DeploymentControlNode;
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/taint-nodes",
                 (Func<Task>)(async () =>
                 {
@@ -2556,7 +2556,7 @@ istioctl install --verify -y -f manifest.yaml
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cluster-crds",
                 async () =>
                 {
@@ -2585,7 +2585,7 @@ istioctl install --verify -y -f manifest.yaml
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Kiali);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
@@ -2639,7 +2639,7 @@ istioctl install --verify -y -f manifest.yaml
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
@@ -2681,7 +2681,7 @@ istioctl install --verify -y -f manifest.yaml
             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval);
             values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/node-problem-detector",
                 async () =>
                 {
@@ -2690,7 +2690,7 @@ istioctl install --verify -y -f manifest.yaml
                         @namespace:   KubeNamespace.NeonSystem);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/node-problem-detector-ready",
                 async () =>
                 {
@@ -2718,7 +2718,7 @@ istioctl install --verify -y -f manifest.yaml
 
             var k8s = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync($"setup/namespace-{name}",
                 async () =>
                 {
@@ -2780,13 +2780,13 @@ istioctl install --verify -y -f manifest.yaml
                 throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "openebs");
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
@@ -3325,7 +3325,7 @@ istioctl install --verify -y -f manifest.yaml
 
             var k8s = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
                 async () =>
                 {
@@ -3383,7 +3383,7 @@ istioctl install --verify -y -f manifest.yaml
 
             var k8s = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
                 {
@@ -3443,7 +3443,7 @@ $@"- name: StorageType
 
             var k8s = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
@@ -3508,7 +3508,7 @@ $@"- name: StorageType
             var clusterDefinition = cluster.SetupState.ClusterDefinition;
             var storageOptions    = clusterDefinition.Storage;
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
 
             switch (storageOptions.OpenEbs.Engine)
             {
@@ -3558,7 +3558,7 @@ $@"- name: StorageType
             var blackboxAdvice  = clusterAdvice.GetServiceAdvice(ClusterAdvice.BlackboxExporter);
             var istioAdvice     = clusterAdvice.GetServiceAdvice(ClusterAdvice.IstioProxy);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
@@ -3620,7 +3620,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus-blackbox-exporter",
                 async () =>
                 {
@@ -3664,7 +3664,7 @@ $@"- name: StorageType
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-agent-ready",
                 async () =>
                 {
@@ -3694,7 +3694,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
@@ -3702,7 +3702,7 @@ $@"- name: StorageType
 
             var values = new Dictionary<string, object>();
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/memcached",
                 async () =>
                 {
@@ -3735,7 +3735,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/memcached-ready",
                 async () =>
                 {
@@ -3759,7 +3759,7 @@ $@"- name: StorageType
 
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-mimir");
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-all",
                 async () =>
                 {
@@ -3847,7 +3847,7 @@ $@"- name: StorageType
                         values.Add($"blocksStorage.bucketStore.ignore_deletion_mark_delay", "15m");
                     }
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
                         async () =>
                         {
@@ -3899,7 +3899,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonMonitor,
                         values:     values);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-ready",
                         async () =>
                         {
@@ -3945,7 +3945,7 @@ $@"- name: StorageType
 
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-loki");
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
@@ -4060,7 +4060,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-loki-ready",
                 async () =>
                 {
@@ -4100,7 +4100,7 @@ $@"- name: StorageType
 
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-tempo");
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
@@ -4182,7 +4182,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-tempo-ready",
                 async () =>
                 {
@@ -4213,7 +4213,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.KubeStateMetrics);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
                 async () =>
                 {
@@ -4254,7 +4254,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
                 async () =>
                 {
@@ -4281,7 +4281,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Reloader);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/reloader",
                 async () =>
                 {
@@ -4322,7 +4322,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/reloader-ready",
                 async () =>
                 {
@@ -4349,7 +4349,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Grafana);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana",
                 async () =>
                 {
@@ -4374,7 +4374,7 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("replicas", serviceAdvice.Replicas);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",
                         async () =>
                         {
@@ -4428,7 +4428,7 @@ $@"- name: StorageType
                         values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
                     }
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InstallHelmChartAsync(controller, "grafana",
                         @namespace:   KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
@@ -4440,10 +4440,10 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "grafana");
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
@@ -4557,10 +4557,10 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
                 {
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await CreateHostPathStorageClass(controller, controlNode, "neon-internal-minio");
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
@@ -4647,7 +4647,7 @@ $@"- name: StorageType
                                 values:       values);
                         });
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("configure/minio-secrets",
                         async () =>
                         {
@@ -4672,7 +4672,7 @@ $@"- name: StorageType
                             await k8s.CoreV1.CreateNamespacedSecretAsync(monitoringSecret, KubeNamespace.NeonMonitor);
                         });
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/minio-ready",
                         async () =>
                         {
@@ -4689,7 +4689,7 @@ $@"- name: StorageType
                                 cancellationToken: controller.CancellationToken);
                         });
 
-                    controller.ThrowIfCancelled();
+                    controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/minio-policy",
                         async () =>
                         {
@@ -4711,7 +4711,7 @@ $@"- name: StorageType
                                             $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
                                         })).EnsureSuccess();
 
-                                    controller.ThrowIfCancelled();
+                                    controller.ThrowIfCancelledOrFaulted();
                                     (await cluster.ExecMinioCommandAsync(
                                         retryPolicy:    podExecRetry,
                                         mcCommand:      "admin policy create minio superadmin /tmp/superadmin.json")).EnsureSuccess();
@@ -4774,7 +4774,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Redis);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/redis",
                 async () =>
                 {
@@ -4824,7 +4824,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/redis-ready",
                 async () =>
                 {
@@ -4851,7 +4851,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Harbor);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("configure/registry-minio-secret",
                 async () =>
                 {
@@ -4879,7 +4879,7 @@ $@"- name: StorageType
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/harbor-db",
                 async () =>
                 {
@@ -4929,7 +4929,7 @@ $@"- name: StorageType
                     }
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
@@ -5007,7 +5007,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
@@ -5047,7 +5047,7 @@ $@"- name: StorageType
                         cancellationToken: controller.CancellationToken);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
@@ -5067,7 +5067,7 @@ $@"- name: StorageType
                     }
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/harbor-login-workstation",
                 async () =>
                 {
@@ -5106,7 +5106,7 @@ $@"- name: StorageType
             var k8s       = GetK8sClient(controller);
             var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cluster-manifest",
                 async () =>
                 {
@@ -5166,7 +5166,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonClusterOperator);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator",
                 async () =>
                 {
@@ -5212,7 +5212,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator-ready",
                 async () =>
                 {
@@ -5232,7 +5232,7 @@ $@"- name: StorageType
                         });
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/jobs",
                 async () =>
                 {
@@ -5284,7 +5284,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonNodeAgent);
             
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
                 async () =>
                 {
@@ -5369,7 +5369,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.NeonNodeAgent);
             
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent",
                 async () =>
                 {
@@ -5402,7 +5402,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent-ready",
                 async () =>
                 {
@@ -5430,7 +5430,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/container-registries",
                 async () =>
                 {
@@ -5453,7 +5453,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
 
             var tasks = new List<Task>();
 
@@ -5497,7 +5497,7 @@ $@"- name: StorageType
                 values.Add($"persistence.size", "1Gi");
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await CreateHostPathStorageClass(controller, controlNode, "neon-internal-system-db");
 
             if (operatorAdvice.PodMemoryRequest.HasValue && operatorAdvice.PodMemoryLimit.HasValue)
@@ -5524,7 +5524,7 @@ $@"- name: StorageType
                 values.Add($"metrics.resources.limits.memory", KubeHelper.ToSiString(metricsAdvice.PodMemoryLimit));
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/db-credentials-admin",
                 async () =>
                 {
@@ -5552,7 +5552,7 @@ $@"- name: StorageType
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/db-credentials-service",
                 async () =>
                 {
@@ -5580,7 +5580,7 @@ $@"- name: StorageType
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/system-db-volumes",
                 async () =>
                 {
@@ -5630,7 +5630,7 @@ $@"- name: StorageType
                     }
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
@@ -5664,7 +5664,7 @@ $@"- name: StorageType
                         progressMessage: "neon-system-db");
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
@@ -5692,16 +5692,16 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await InstallGlauthAsync(controller, controlNode);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await InstallDexAsync(controller, controlNode);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await InstallNeonSsoProxyAsync(controller, controlNode);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await InstallOauth2ProxyAsync(controller, controlNode);
         }
 
@@ -5758,7 +5758,7 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/dex-install",
                 async () =>
                 {
@@ -5769,7 +5769,7 @@ $@"- name: StorageType
                         progressMessage: "dex");
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/dex-ready",
                 async () =>
                 {
@@ -5778,7 +5778,7 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/dex-sso-clients",
                 async () =>
                 {
@@ -5834,7 +5834,7 @@ $@"- name: StorageType
             values.Add("resources.limits.memory", $"{KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit)}");
             values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
@@ -5846,7 +5846,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
                 async () =>
                 {
@@ -5895,7 +5895,7 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", KubeHelper.ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/glauth-install",
                 async () =>
                 {
@@ -5907,7 +5907,7 @@ $@"- name: StorageType
                         values:       values);
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/glauth-db",
                 async () =>
                 {
@@ -5952,7 +5952,7 @@ $@"- name: StorageType
                     {
                         var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
 
-                        controller.ThrowIfCancelled();
+                        controller.ThrowIfCancelledOrFaulted();
                         await cluster.ExecSystemDbCommandAsync("glauth",
                             $@"INSERT INTO groups(name, gidnumber)
                                 VALUES('{group.Name}','{group.GidNumber}') 
@@ -5975,7 +5975,7 @@ $@"- name: StorageType
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
 
-                        controller.ThrowIfCancelled();
+                        controller.ThrowIfCancelledOrFaulted();
                         await cluster.ExecSystemDbCommandAsync("glauth",
                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
                                 VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
@@ -5990,7 +5990,7 @@ $@"- name: StorageType
                         {
                             foreach (var capability in userData.Capabilities)
                             {
-                                controller.ThrowIfCancelled();
+                                controller.ThrowIfCancelledOrFaulted();
                                 await cluster.ExecSystemDbCommandAsync("glauth",
                                     $@"INSERT INTO capabilities(userid, action, object)
                                         VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
@@ -5999,7 +5999,7 @@ $@"- name: StorageType
                     }
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/glauth-ready",
                 async () =>
                 {
@@ -6029,7 +6029,7 @@ $@"- name: StorageType
 
                             // Verify [users] table.
 
-                            controller.ThrowIfCancelled();
+                            controller.ThrowIfCancelledOrFaulted();
 
                             result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM users;", noSuccessCheck: true);
 
@@ -6040,7 +6040,7 @@ $@"- name: StorageType
 
                             // Verify [capabilities] table.
 
-                            controller.ThrowIfCancelled();
+                            controller.ThrowIfCancelledOrFaulted();
 
                             result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM capabilities;", noSuccessCheck: true);
 
@@ -6070,7 +6070,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.Oauth2Proxy);
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy",
                 async () =>
                 {
@@ -6094,7 +6094,7 @@ $@"- name: StorageType
                         progressMessage: "neon-sso-oauth2-proxy");
                 });
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy-ready",
                 async () =>
                 {
@@ -6182,7 +6182,7 @@ $@"- name: StorageType
                 }
             };
 
-            controller.ThrowIfCancelled();
+            controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync($"setup/neon-dashboard-{name}",
                 async () =>
                 {

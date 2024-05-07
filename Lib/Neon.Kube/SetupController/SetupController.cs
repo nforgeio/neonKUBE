@@ -1772,7 +1772,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void ThrowIfCancelled()
+        public void ThrowIfCancelledOrFaulted()
         {
             cts.Token.ThrowIfCancellationRequested();
 
