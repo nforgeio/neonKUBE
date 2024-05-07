@@ -36,7 +36,7 @@ namespace TestGrpc
     /// <summary>
     /// These tests verify that the internal <see cref="HyperVProxy"/> class from the <b>Neon.Kube.HyperV</b>
     /// library is able to perform <see cref="HyperVClient"/> operations directly when running in simulated 
-    /// admin mode as well indirectly via the neon desktop server when running in simulated non-admin mode.
+    /// admin mode as well indirectly via the NeonDESKTOP server when running in simulated non-admin mode.
     /// </summary>
     [Trait(TestTrait.Category, TestArea.NeonHyperV)]
     public class Test_HyperVProxy

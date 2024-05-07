@@ -182,7 +182,7 @@ stage process is typically used only by NEONKUBE maintainers.
             // commands directly in process.
             //
             // NOTE: This requires that the cluster prepare and setup to not explicitly
-            //       terminate the neon-cli process when they complete successfully.
+            //       terminate the NeonCLIENT process when they complete successfully.
             //       It's OK if these commands terminate on error.
 
             var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath);

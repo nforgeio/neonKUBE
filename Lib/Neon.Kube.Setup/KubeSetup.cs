@@ -96,7 +96,7 @@ namespace Neon.Kube.Setup
         /// </para>
         /// <para>
         /// The cluster manifest is uploaded to our S3 bucket at <see cref="KubeDownloads.NeonClusterManifestUri"/>
-        /// and is available from there and for installed <b>neon-desktop</b> and <b>neon-cli</b> applications,
+        /// and is available from there and for installed <b>NeonDESKTOP</b> and <b>NeonCLIENT</b> applications,
         /// the cluster manifest will also be persisted as <b>cluster-manifest.json</b> in the app installation
         /// folder.
         /// </para>

@@ -27,7 +27,7 @@ using Neon.ModelGen;
 namespace Neon.Kube.Models.Headend
 {
     /// <summary>
-    /// Defines the Neon Desktop cluster management REST APIs.
+    /// Defines the NeonDESKTOP cluster management REST APIs.
     /// </summary>
     [Target("all")]
     [Target("headend")]
@@ -38,10 +38,10 @@ namespace Neon.Kube.Models.Headend
     {
         /// <summary>
         /// <para>
-        /// Returns the current Neon Desktop Certificate.
+        /// Returns the current NeonDESKTOP Certificate.
         /// </para>
         /// <note>
-        /// All Neon Desktop clusters share the same certificate.  We don't consider this to
+        /// All NeonDESKTOP clusters share the same certificate.  We don't consider this to
         /// be a security problem because Desktop Clusters are not reachable from outside the
         /// host machine and also becase desktop cluster should never be used for production.
         /// </note>

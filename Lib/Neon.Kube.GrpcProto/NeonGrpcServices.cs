@@ -41,12 +41,12 @@ namespace Neon.Kube.GrpcProto
     public static class NeonGrpcServices
     {
         /// <summary>
-        /// Creates a gRPC channel that can be used to access the Neon Desktop Service.
+        /// Creates a gRPC channel that can be used to access the NeonDESKTOP Service.
         /// </summary>
         /// <param name="socketPath">
         /// Optionally specifies an alternative path to the desktop services Unix domain socket
         /// for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
-        /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
+        /// where <b>NeonDESKTOP</b> and <b>NeonCLIENT</b> expect it to be.
         /// </param>
         /// <returns>A <see cref="IGrpcDesktopService"/> or <c>null</c> when the <b>neon-desktop-service</b> is not running.</returns>
         public static GrpcChannel? CreateDesktopServiceChannel(string? socketPath = null)

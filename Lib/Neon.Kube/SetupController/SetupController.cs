@@ -1138,13 +1138,13 @@ namespace Neon.Kube.Setup
         // code can receive and process these.
         //
         // The setup code has evolved over 4+ years, starting with the setup controller
-        // being configured by the [neon-cli] console application assuming that status
+        // being configured by the [NeonCLIENT] console application assuming that status
         // can be written directly to the console and that errors can be handled by
-        // just terminating [neon-cli].
+        // just terminating [NeonCLIENT].
         // 
         // This is part of the final setup refactor where all cluster prepare/setup 
         // related code is relocated to the [Neon.Kube] library so it can be referenced
-        // by different kinds of applications.  This will include [neon-cli] as well
+        // by different kinds of applications.  This will include [NeonCLIENT] as well
         // as NEONDESKTOP right now and perhaps Temporal based workflows in the future
         // as part of a NEONCLOUD offering.
         //

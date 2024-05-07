@@ -27,7 +27,7 @@ namespace OpenTelemetry.Exporter
     /// <summary>
     /// This class wraps the OpenTelemetry <c>internal OtlpLogExporter</c> class via
     /// reflection so the <b>neon-desktop-service</b> can instantiate an instance for
-    /// forwarding logs from <b>neon-desktop</b> and <b>neon-cli</b>.
+    /// forwarding logs from <b>NeonDESKTOP</b> and <b>NeonCLIENT</b>.
     /// </summary>
     public class OtlpLogExporterWrapper
     {

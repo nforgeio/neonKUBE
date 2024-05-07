@@ -251,7 +251,7 @@ namespace Neon.Kube.Hosting
             // $todo(jefflill):
             //
             // The ARP cache lookups need more testing and will be disabled until then.
-            // We've seen situations when deploying a neon-desktop cluster when the
+            // We've seen situations when deploying a NeonDESKTOP cluster when the
             // cluster IP is reported as being in use.  This may also impact other
             // clusters as well.
             //

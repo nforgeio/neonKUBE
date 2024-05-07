@@ -195,7 +195,7 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <para>
     /// The fixture also provides the <see cref="NeonExecuteCaptureAsync(string[])"/> method which can be used for 
-    /// executing <b>kubectl</b>, <b>helm</b>, and other commands using the <b>neon-cli</b>.  Commands
+    /// executing <b>kubectl</b>, <b>helm</b>, and other commands using <b>NeonCLIENT</b>.  Commands
     /// will be executed against the test cluster (as the current config) and a <see cref="ExecuteResponse"/>
     /// will be returned holding the command exit code as well as the output text.
     /// </para>
@@ -1003,17 +1003,17 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
-        /// Executes a <b>neon-cli</b> command against the current test cluster.
+        /// Executes a <b>NeonCLIENT</b> command against the current test cluster.
         /// </summary>
         /// <param name="args">The command arguments.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the exit code and output text.</returns>
         /// <remarks>
         /// <para>
-        /// <b>neon-cli</b> is a wrapper around the <b>kubectl</b> and <b>helm</b> tools.
+        /// <b>NeonCLIENT</b> is a wrapper around the <b>kubectl</b> and <b>helm</b> tools.
         /// </para>
         /// <para><b>KUBECTL COMMANDS:</b></para>
         /// <para>
-        /// <b>neon-cli</b> implements <b>kubectl</b> commands directly like:
+        /// <b>NeonCLIENT</b> implements <b>kubectl</b> commands directly like:
         /// </para>
         /// <code>
         /// neon get pods
@@ -1021,7 +1021,7 @@ namespace Neon.Kube.Xunit
         /// </code>
         /// <para><b>HELM COMMANDS:</b></para>
         /// <para>
-        /// <b>neon-cli</b> implements <b>helm</b> commands like <b>neon helm...</b>:
+        /// <b>NeonCLIENT</b> implements <b>helm</b> commands like <b>neon helm...</b>:
         /// </para>
         /// <code>
         /// neon helm install -f values.yaml myapp .

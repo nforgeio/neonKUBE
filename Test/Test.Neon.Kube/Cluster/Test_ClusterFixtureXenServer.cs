@@ -90,7 +90,7 @@ namespace TestKube
         [ClusterFact]
         public async Task NeonCli()
         {
-            // Verify that we can execute a neon-cli command.
+            // Verify that we can execute a NeonCLIENT command.
 
             var response = (await fixture.NeonExecuteCaptureAsync("get", "namespaces"))
                 .EnsureSuccess();

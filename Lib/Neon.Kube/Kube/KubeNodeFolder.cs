@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// replace whenever you change any of these values.
     /// </note>
     /// <note>
-    /// Changing any of these will likely break [neon-cli] interactions
+    /// Changing any of these will likely break NeonCLIENT interactions
     /// with existing clusters that use the previous folder path.  Be
     /// ver sure you know what you're doing when you make changes.
     /// </note>

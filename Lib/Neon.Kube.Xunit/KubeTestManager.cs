@@ -35,7 +35,7 @@ namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// Creates a temporary folder and puts <see cref="KubeHelper"/> into test mode
-    /// to support <b>neon-cli</b> unit testing.  <see cref="Dispose"/> reverts the 
+    /// to support <b>NeonCLIENT</b> unit testing.  <see cref="Dispose"/> reverts the 
     /// test mode and deletes the temporary folder.
     /// </summary>
     public sealed class KubeTestManager : IDisposable

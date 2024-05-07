@@ -72,7 +72,7 @@ namespace Neon.Kube.ClusterDef
         /// <note>
         /// For snapshots to work, the storage repository must support them and the virtual
         /// machine template must reside in the same repository where the virtual machines
-        /// are being created.  The current <b>neon-cli</b> implementation persists the
+        /// are being created.  The current <b>NeonCLIENT</b> implementation persists the
         /// cluster VM templates to the local storage repository, so support for non-local
         /// storage repositories is not supported out-of-the-box at this time.
         /// </note>

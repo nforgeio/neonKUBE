@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Defines the Neon Desktop Service contract.  This is used by <b>neon-desktop</b> and <b>neon-cli</b>
+    /// Defines the NeonDESKTOP Service contract.  This is used by <b>NeonDESKTOP</b> and <b>NeonCLIENT</b>
     /// to perform privileged operations.
     /// </summary>
     [ServiceContract]

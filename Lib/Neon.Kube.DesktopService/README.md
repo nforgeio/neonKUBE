@@ -1,4 +1,4 @@
-﻿Neon.DesktopService
+Neon.DesktopService
 ===================
 
-**INTERNAL USE ONLY:** Implements the Neon Desktop (gRPC) Service
+**INTERNAL USE ONLY:** Implements the NeonDESKTOP (gRPC) Service

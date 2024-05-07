@@ -32,8 +32,8 @@ namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// <para>
-    /// Used to submit a batch of telemetry logs from <b>neon-desktop</b> and
-    /// <b>neon-cli</b> to the <b>neon-desktop-service</b> which will then forward
+    /// Used to submit a batch of telemetry logs from <b>NeonDESKTOP</b> and
+    /// <b>NeonCLIENT</b> to the <b>neon-desktop-service</b> which will then forward
     /// them to the headend.
     /// </para>
     /// <note>

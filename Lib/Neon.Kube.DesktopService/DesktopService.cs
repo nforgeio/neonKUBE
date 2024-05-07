@@ -40,7 +40,7 @@ namespace Neon.Kube.DesktopService
     /// Implements a gPRC service that implements Hyper-V and other operations that may
     /// require elevated permissions.  The idea is to deploy this within a Windows Service
     /// that runs as administrator so that this service can perform these operations on
-    /// behalf of the neon-desktop or neon-cli applications that do not have these
+    /// behalf of the NeonDESKTOP or NeonCLIENT applications that do not have these
     /// rights.
     /// </summary>
     public sealed class DesktopService : IDisposable
@@ -49,14 +49,14 @@ namespace Neon.Kube.DesktopService
         // Static members
 
         /// <summary>
-        /// Returns the log exporter used to relay logs from <b>neon-cli</b> and
-        /// <b>neon-desktop</b> to the headend.
+        /// Returns the log exporter used to relay logs from <b>NeonCLIENT</b> and
+        /// <b>NeonDESKTOP</b> to the headend.
         /// </summary>
         public static OtlpLogExporterWrapper LogExporter { get; private set; }
 
         /// <summary>
-        /// Returns the trace exporter used to relay traces from <b>neon-cli</b> and
-        /// <b>neon-desktop</b> to the headend.
+        /// Returns the trace exporter used to relay traces from <b>NeonCLIENT</b> and
+        /// <b>NeonDESKTOP</b> to the headend.
         /// </summary>
         public static OtlpTraceExporter TraceExporter { get; private set; }
 
@@ -66,7 +66,7 @@ namespace Neon.Kube.DesktopService
         static DesktopService()
         {
             // Initialize the log and trace exporters we'll use to relay logs
-            // and traces from neon-desktop and neon-cli to the headend.
+            // and traces from NeonDESKTOP and NeonCLIENT to the headend.
 
             // $note(jefflill):
             //
@@ -75,9 +75,9 @@ namespace Neon.Kube.DesktopService
             // this scenario.
             //
             // It would be easy to add batch processors for this when configuring
-            // logging and tracing in neon-cli and neon-desktop, but I don't
+            // logging and tracing in NeonCLIENT and NeonDESKTOP, but I don't
             // believe those are the right places for doing batching, especially
-            // for neon-cli which will terminate immediately after executing
+            // for NeonCLIENT which will terminate immediately after executing
             // commands.
             //
             // It would probably be relatively easy to do batching here using the
@@ -126,8 +126,8 @@ namespace Neon.Kube.DesktopService
         /// </summary>
         /// <param name="socketPath">
         /// Optionally overrides the path to the Unix domain socket path.  This defaults to 
-        /// <see cref="KubeHelper.WinDesktopServiceSocketPath"/> where <b>neon-desktop</b> 
-        /// and <b>neon-cli</b> expect it to be.
+        /// <see cref="KubeHelper.WinDesktopServiceSocketPath"/> where <b>NeonDESKTOP</b> 
+        /// and <b>NeonCLIENT</b> expect it to be.
         /// </param>
         /// <exception cref="GrpcServiceException">Thrown when the service could not be started.</exception>
         public DesktopService(string socketPath = null)

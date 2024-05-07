@@ -77,7 +77,7 @@ namespace NeonCli
 #endif
 
         /// <summary>
-        /// Returns <c>true</c> if this is the premium <b>neon-cli</b> build.
+        /// Returns <c>true</c> if this is the premium <b>NeonCLIENT</b> build.
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
@@ -115,7 +115,7 @@ namespace NeonCli
         private static readonly string BinaryFolder = NeonHelper.GetApplicationFolder();
 
         /// <summary>
-        /// Returns the path to the standard tool folder when <b>neon-cli</b> has been fully installed.
+        /// Returns the path to the standard tool folder when <b>NeonCLIENT</b> has been fully installed.
         /// </summary>
         private static readonly string InstalledToolFolder = Path.Combine(BinaryFolder, "tools");
 
@@ -131,7 +131,7 @@ namespace NeonCli
 
         /// <summary>
         /// <para>
-        /// The Neon Desktop Service gRPC channel.
+        /// The NeonDESKTOP Service gRPC channel.
         /// </para>
         /// <note>
         /// This will be <c>null</c> when the <b>neon-desktop-service</b> is not running.
@@ -141,7 +141,7 @@ namespace NeonCli
 
         /// <summary>
         /// <para>
-        /// The Neon Desktop Service gRPC client.
+        /// The NeonDESKTOP Service gRPC client.
         /// </para>
         /// <note>
         /// This will be <c>null</c> when the <b>neon-desktop-service</b> isn't running.
@@ -720,14 +720,14 @@ NOTE: Command line arguments and options may include references to
         }
 
         /// <summary>
-        /// Returns the path to <b>helm</b> tool binary to be used by <b>neon-cli</b>.
+        /// Returns the path to <b>helm</b> tool binary to be used by <b>NeonCLIENT</b>.
         /// </summary>
         /// <returns>The fully qualified tool path.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
         /// <remarks>
         /// <para>
-        /// Installed versions of <b>neon-cli</b> expect the <b>helm</b> toolto be located
-        /// in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
+        /// Installed versions of <b>NeonCLIENT</b> expect the <b>helm</b> toolto be located
+        /// in the <b>tools</b> subfolder where <b>NeonCLIENT</b> itself is installed, like:
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\NEONDESKTOP\

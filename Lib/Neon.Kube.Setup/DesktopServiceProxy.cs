@@ -57,7 +57,7 @@ namespace Neon.Kube.Setup
         /// <param name="socketPath">
         /// Optionally overrides the default desktop service unix socket path.  This
         /// is used for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
-        /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
+        /// where <b>NeonDESKTOP</b> and <b>NeonCLIENT</b> expect it to be.
         /// </param>
         public DesktopServiceProxy(bool? isAdminOverride = null, string socketPath = null)
         {

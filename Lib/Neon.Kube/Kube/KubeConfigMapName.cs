@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Identifies the NEONKUBE configmap used to indicate whether the cluster is considered
-        /// to be locked.  <b>neon-desktop</b>, <b>neon-cli</b>, and <b>ClusterFixture</b> use 
+        /// to be locked.  <b>NeonDESKTOP</b>, <b>NeonCLIENT</b>, and <b>ClusterFixture</b> use 
         /// this to block operations like cluster <b>reset</b>, <b>remove</b>, <b>pause</b>, and 
         /// <b>stop</b> when the cluster  is locked in an attempt to avoid harmful operations on
         /// production or otherwise important clusters.

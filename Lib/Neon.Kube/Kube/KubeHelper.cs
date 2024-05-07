@@ -550,7 +550,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the default directory path where neon-cli logs will be written.
+        /// Returns the default directory path where NeonCLIENT logs will be written.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string LogFolder
@@ -571,7 +571,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the default directory path where neon-cli cluster details will be written.
+        /// Returns the default directory path where NeonCLIENT cluster details will be written.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string LogDetailsFolder
@@ -596,7 +596,7 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
-        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
+        /// This folder will exist on developer/operator workstations that have used the <b>NeonCLIENT</b>
         /// to deploy and manage clusters.
         /// </remarks>
         public static string TempFolder
@@ -669,7 +669,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the path the folder used for holding Kubernetes related tools when running
-        /// <b>neon-cli</b> as a developer, creating the folder if it doesn't already exist.
+        /// <b>NeonCLIENT</b> as a developer, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string ToolsFolder
@@ -1006,30 +1006,30 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the path to the neon installation folder.  This is where the either
-        /// <b>neon-cli</b> or <b>neon-desktop</b> are installed.  This is used to determine
+        /// <b>NeonCLIENT</b> or <b>NeonDESKTOP</b> are installed.  This is used to determine
         /// where tools like <b>pwsh</b> and <b>ssh-keygen</b> are located.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// One of <b>neon-cli</b> or <b>neon-desktop</b> are allowed to be installed on
+        /// One of <b>NeonCLIENT</b> or <b>NeonDESKTOP</b> are allowed to be installed on
         /// a user's workstation and the <b>NEON_INSTALL_FOLDER</b> environment variable
         /// will be set during installation to point to the program installation folder.
         /// </para>
         /// <para>
-        /// This folder will be structured like for a <b>neon-cli only</b>installation:
+        /// This folder will be structured like for a <b>NeonCLIENT</b> only installation:
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-cli\
-        ///     .                       # neon-cli binaries
+        ///     .                       # NeonCLIENT binaries
         ///     neon-desktop-service    # neon-desktop-service binaries
         ///     ssh\                    # SSH related tools
         /// </code>
         /// <para>
-        /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
+        /// and this for <b>NeonDESKTOP</b> (which includes <b>NeonCLIENT</b>):
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-desktop\
-        ///     .                       # neon-desktop and neon-cli binaries
+        ///     .                       # NeonDESKTOP and NeonCLIENT binaries
         ///     neon-desktop-service    # neon-desktop-service binaries
         ///     ssh\                    # SSH related tools
         /// </code>
@@ -1365,7 +1365,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This requires Powershell to be installed and this will favor using the version of
-        /// Powershell installed along with the neon-cli, if present.
+        /// Powershell installed along with the NeonCLIENT, if present.
         /// </note>
         /// </summary>
         /// <param name="sourceFolder">Path to the input folder.</param>
@@ -1675,7 +1675,7 @@ exit 0
             // NOTE:
             //
             // that the ISO needs to be created in an unencrypted folder so that Hyper-V 
-            // can mount it to a VM.  By default, [neon-cli] will redirect the [TempFolder] 
+            // can mount it to a VM.  By default, NeonCLIENT will redirect the [TempFolder] 
             // and [TempFile] classes locate their folder and files here:
             //
             //      /USER/.neonkube/...     - which is encrypted on Windows
@@ -2360,7 +2360,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// Returns the path to the a tool binary to be used by <b>NeonCLIENT</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
         /// <param name="toolName">The requested tool name, currently <b>helm</b> is supported.</param>
@@ -2573,7 +2573,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the the <b>Helm</b> to be used by <b>neon-cli</b>.
+        /// Returns the path to the the <b>Helm</b> to be used by <b>NeonCLIENT</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
         /// <param name="userToolsFolder">
@@ -2655,7 +2655,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the the <b>Cilium-CLI</b> to be used by <b>neon-cli</b>.
+        /// Returns the path to the the <b>Cilium-CLI</b> to be used by <b>NeonCLIENT</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
         /// <param name="userToolsFolder">
@@ -3322,8 +3322,8 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Locates the most recent <b>neon-cli</b> executable.  Note that this returns the path
-        /// to our version of <b>kubectl</b> rather than the <b>neon-cli</b> executable that implements
+        /// Locates the most recent <b>NeonCLIENT</b> executable.  Note that this returns the path
+        /// to our version of <b>kubectl</b> rather than the <b>NeonCLIENT</b> executable that implements
         /// our customized subcommands.
         /// </summary>
         /// <returns>The path to the executable.</returns>
@@ -3335,7 +3335,7 @@ TCPKeepAlive yes
         /// execute most recent executable to test/debug recent changes.
         /// </para>
         /// <para>
-        /// If either of <b>neon-cli</b> or <b>neon-desktop</b> is installed on the workstation
+        /// If either of <b>NeonCLIENT</b> or <b>NeonDESKTOP</b> is installed on the workstation
         /// (determined by the presence of the <b>NEON_INSTALL_FOLDER</b> environment variable),
         /// we'll return the path to the executable from the installation folder.  When those are
         /// not installed, we'll return <b>$(NC_ROOT)/Build/neon-cli/neon.exe</b>.
@@ -3381,7 +3381,7 @@ TCPKeepAlive yes
                     }
                     else
                     {
-                        details = "You'll need to install one of [neon-cli] or [neon-desktop] from here:\r\n\r\nhttps://github.com/nforgeio/neonKUBE/releases";
+                        details = "You'll need to install one of NeonCLIENT or NeonDESKTOP from here:\r\n\r\nhttps://github.com/nforgeio/neonKUBE/releases";
                     }
 
                     throw new FileNotFoundException($"[{neonPath}] does not exist.\r\n\r\n{details}");

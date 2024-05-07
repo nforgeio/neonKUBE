@@ -1139,7 +1139,7 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
 
-            // todo(marcusbooyah): Add UI to neon-desktop to show these terms
+            // todo(marcusbooyah): Add UI to NeonDESKTOP to show these terms
             // for now we have docs on how to accept these using the azure cli.
             //controller.AddGlobalStep("accept plan terms", state => AcceptPlanTermsAsync());
 

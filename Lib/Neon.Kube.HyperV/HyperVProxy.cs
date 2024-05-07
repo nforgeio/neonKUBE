@@ -59,7 +59,7 @@ namespace Neon.Kube.Hosting.HyperV
     /// current process doesn't have these rights.
     /// </para>
     /// <para>
-    /// The <b>NeonDESKTOP Service</b> is installed along with <b>neon-desktop</b> and <b>neon-cli</b> and
+    /// The <b>NeonDESKTOP Service</b> is installed along with <b>NeonDESKTOP</b> and <b>NeonCLIENT</b> and
     /// runs as a Windows Service as administrator.
     /// </para>
     /// </summary>
@@ -81,7 +81,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// <param name="socketPath">
         /// Optionally overrides the default desktop service unix socket path.  This
         /// is used for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
-        /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
+        /// where <b>NeonDESKTOP</b> and <b>NeonCLIENT</b> expect it to be.
         /// </param>
         /// <param name="driverType">
         /// Optionally specifies the low-level Hyper-V driver implementation.  This defaults 

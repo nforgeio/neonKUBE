@@ -76,7 +76,7 @@ namespace NeonCli
 
         /// <summary>
         /// Returns the item used to split a command line into two parts with
-        /// the left part having standard <b>neon-cli</b> options and the right
+        /// the left part having standard <b>NeonCLIENT</b> options and the right
         /// part being a command that will be executed remotely.  This returns as
         /// <c>null</c> for commands that don't split.
         /// </summary>

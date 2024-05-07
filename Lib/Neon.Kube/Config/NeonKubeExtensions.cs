@@ -54,7 +54,7 @@ namespace Neon.Kube.Config
         public const string HostingNamePrefix = $"{ExtensionPrefix}hosting-name-prefix";
 
         /// <summary>
-        /// <c>bool</c>: Used to indicate that a cluster belongs to neon-desktop.
+        /// <c>bool</c>: Used to indicate that a cluster belongs to NeonDESKTOP.
         /// </summary>
         public const string IsNeonDesktop = $"{ExtensionPrefix}is-neon-desktop";
 

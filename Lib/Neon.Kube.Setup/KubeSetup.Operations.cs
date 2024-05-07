@@ -671,7 +671,7 @@ mode: {kubeProxyMode}");
             const string folder        = "/usr/share/doc/neonkube/copyright";
             const string copyrightText =
 @"Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
-NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
+NEONKUBE™, NeonDESKTOP™, and NeonCLIENT™ are trademarked by NEONFORGE LLC.
 ";
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 

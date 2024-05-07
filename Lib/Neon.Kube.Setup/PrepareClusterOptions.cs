@@ -106,7 +106,7 @@ namespace Neon.Kube.Setup
         public bool DisableConsoleOutput { get; set; } = false;
 
         /// <summary>
-        /// Optionally indicates that we're building a ready-to-go neon desktop image.
+        /// Optionally indicates that we're building a ready-to-go NeonDESKTOP image.
         /// </summary>
         public bool BuildDesktopImage { get; set; } = false;
 

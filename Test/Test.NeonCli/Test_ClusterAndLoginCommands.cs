@@ -217,7 +217,7 @@ nodes:
         /// </summary>
         public Test_ClusterAndLoginCommands()
         {
-            // Locate the neon-cli binary.
+            // Locate the NeonCLIENT binary.
 
             var thisAssembly            = Assembly.GetExecutingAssembly();
             var assemblyConfigAttribute = thisAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
@@ -272,8 +272,8 @@ nodes:
 
         private async Task Test(HostingEnvironment environment)
         {
-            // Use [neon-cli] to deploy a single-node Hyper-V test cluster and the verify that
-            // common [neon-cli] cluster commands work as expected.  We're doing this all in a
+            // Use [NeonCLIENT] to deploy a single-node Hyper-V test cluster and the verify that
+            // common [NeonCLIENT] cluster commands work as expected.  We're doing this all in a
             // single test method instead of using [ClusterFixture] because we want to test
             // cluster prepare/setup as well as cluster delete commands here.
 
@@ -285,7 +285,7 @@ nodes:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
-            // We're going to exercise the neon-cli output format option by using
+            // We're going to exercise the NeonCLIENT output format option by using
             // "-o=json" for AWS and XenServer hosting environments and "-o=yaml"
             // for Azure and Hyper-V Azure hosting environments.
 
@@ -1046,7 +1046,7 @@ nodes:
         }
 
         /// <summary>
-        /// Executes a <b>neon-cli</b> command/
+        /// Executes a <b>NeonCLIENT</b> command/
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command response.</returns>
