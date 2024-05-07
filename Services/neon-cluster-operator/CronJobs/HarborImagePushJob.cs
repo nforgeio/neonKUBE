@@ -174,8 +174,8 @@ rm -rf {tempDir}
                     patch.Replace(path => path.Status.HarborImagePush, new V1NeonClusterJobConfig.JobStatus());
                     patch.Replace(path => path.Status.HarborImagePush.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
                         name:  clusterOperator.Name());
                 }
                 catch (Exception e)

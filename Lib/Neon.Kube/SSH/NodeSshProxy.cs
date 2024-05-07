@@ -229,7 +229,7 @@ namespace Neon.Kube.SSH
 
             set
             {
-                UploadText(KubeConst.ImageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
+                UploadText(KubeConst.ImageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: KubeConst.SysAdminUser);
             }
         }
 

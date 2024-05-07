@@ -117,19 +117,19 @@ set -euo pipefail
                         }
                     }
 
-                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobs>(KubeService.NeonClusterOperator);
-                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobs>();
+                    var clusterOperator = await k8s.CustomObjects.GetClusterCustomObjectAsync<V1NeonClusterJobConfig>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterJobConfig>();
 
                     if (clusterOperator.Status == null)
                     {
-                        patch.Replace(path => path.Status, new V1NeonClusterJobs.NeonClusterJobsStatus());
+                        patch.Replace(path => path.Status, new V1NeonClusterJobConfig.NeonClusterJobsStatus());
                     }
 
-                    patch.Replace(path => path.Status.LinuxSecurityPatch, new V1NeonClusterJobs.JobStatus());
+                    patch.Replace(path => path.Status.LinuxSecurityPatch, new V1NeonClusterJobConfig.JobStatus());
                     patch.Replace(path => path.Status.LinuxSecurityPatch.LastCompleted, DateTime.UtcNow);
 
-                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobs>(
-                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobs>(patch),
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterJobConfig>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterJobConfig>(patch),
                         name:  clusterOperator.Name());
                 }
                 catch (Exception e)
