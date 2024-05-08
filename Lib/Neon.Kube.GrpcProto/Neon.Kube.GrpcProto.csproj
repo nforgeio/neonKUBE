@@ -31,7 +31,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
         <PackageReference Include="protobuf-net.Grpc" Version="1.1.1" />
     </ItemGroup>
 

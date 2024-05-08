@@ -46,7 +46,7 @@ namespace TestKube
     [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_NeonNodeTask
+    public class Test_NeonNodeTask : IClassFixture<ClusterFixture>
     {
         //---------------------------------------------------------------------
         // Static members

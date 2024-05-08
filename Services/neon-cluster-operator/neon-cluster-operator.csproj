@@ -47,29 +47,29 @@
 
     <ItemGroup>
         <PackageReference Include="DnsClient" Version="1.7.0" />
-        <PackageReference Include="Google.Protobuf" Version="3.24.3" />
-        <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
-        <PackageReference Include="Grpc.Tools" Version="2.58.0">
+        <PackageReference Include="Google.Protobuf" Version="3.26.1" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.63.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0">
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.9.2">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Minio" Version="5.0.0" />
-        <PackageReference Include="NSwag.MSBuild" Version="13.20.0">
+        <PackageReference Include="NSwag.MSBuild" Version="14.0.7">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenTelemetry" Version="1.6.0" />
+        <PackageReference Include="OpenTelemetry" Version="1.8.1" />
         <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
-        <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.0" />
+        <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Quartz" Version="3.7.0" />
+        <PackageReference Include="Quartz" Version="3.8.1" />
     </ItemGroup>
 
     <!-- Local solution project references -->

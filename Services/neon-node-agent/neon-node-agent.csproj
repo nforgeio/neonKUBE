@@ -50,7 +50,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Tomlyn" Version="0.16.2" />
+        <PackageReference Include="Tomlyn" Version="0.17.0" />
     </ItemGroup>
 
     <!-- Local solution project references -->

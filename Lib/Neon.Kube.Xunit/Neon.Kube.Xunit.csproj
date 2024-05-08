@@ -36,7 +36,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.0" />
         <PackageReference Include="xunit.extensibility.core" Version="2.8.0" />
         <PackageReference Include="xunit.extensibility.execution" Version="2.8.0" />
-        <PackageReference Include="YamlDotNet" Version="13.3.1" />
+        <PackageReference Include="YamlDotNet" Version="15.1.2" />
     </ItemGroup>
 
     <!-- Local solution project references -->
