@@ -30,10 +30,10 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.Core" Version="3.7.303.27" />
-        <PackageReference Include="AWSSDK.EC2" Version="3.7.326.2" />
-        <PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.7.302.43" />
-        <PackageReference Include="AWSSDK.ResourceGroups" Version="3.7.301.17" />
+        <PackageReference Include="AWSSDK.Core" Version="3.7.303.28" />
+        <PackageReference Include="AWSSDK.EC2" Version="3.7.327.1" />
+        <PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.7.302.44" />
+        <PackageReference Include="AWSSDK.ResourceGroups" Version="3.7.301.18" />
     </ItemGroup>
 
     <!-- Local solution project references -->

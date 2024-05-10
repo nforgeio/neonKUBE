@@ -69,7 +69,7 @@
         <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Quartz" Version="3.8.1" />
+        <PackageReference Include="Quartz" Version="3.9.0" />
     </ItemGroup>
 
     <!-- Local solution project references -->
