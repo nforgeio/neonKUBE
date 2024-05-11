@@ -148,7 +148,7 @@ namespace Neon.Kube.Hosting.Azure
         //
         // VMs are currently based on the Ubuntu-22.04 Server image provided  
         // published to the marketplace by Canonical.  We use the [neon-image] tool
-        // from the NEONCLOUD repo to create Azure Gen2 base and node images used
+        // from the NeonCLOUD repo to create Azure Gen2 base and node images used
         // to provision the cluster.  Gen2 images work on most Azure VM sizes and offer
         // larger OS disks, improved performance, more memory and support for premium
         // and ultra storage.  There's a decent chance that Azure will deprecate Gen1

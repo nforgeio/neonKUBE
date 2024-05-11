@@ -54,7 +54,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages global cluster CRON jobs including updating node CA certificates, renewing
     /// control-plane certificates, ensuring that required container images are pushed to
-    /// Harbor, sending cluster telemetry to NEONCLOUD, and renewing cluster certificates.
+    /// Harbor, sending cluster telemetry to NeonCLOUD, and renewing cluster certificates.
     /// </summary>
     [RbacRule<V1Namespace>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]

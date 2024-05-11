@@ -27,7 +27,7 @@ using Neon.ModelGen;
 namespace Neon.Kube.Models.Headend
 {
     /// <summary>
-    /// Defines the NEONCLOUD headend cluster setup REST API.
+    /// Defines the NeonCLOUD headend cluster setup REST API.
     /// </summary>
     [Target("all")]
     [Target("headend")]
@@ -108,7 +108,7 @@ namespace Neon.Kube.Models.Headend
         /// <param name="timestampUtc">The timestamp (UTC) when the error occurred.</param>
         /// <param name="version">The NeonKUBE version.</param>
         /// <param name="clientId">The client installation UUID.</param>
-        /// <param name="userId">The user ID or <see cref="Guid.Empty"/> before we implemented NEONCLOUD users.</param>
+        /// <param name="userId">The user ID or <see cref="Guid.Empty"/> before we implemented NeonCLOUD users.</param>
         /// <param name="preparing"><c>true</c> when the failure occured while preparing the cluster, <c>false</c> when setting it up.</param>
         /// <returns>The action result.</returns>
         [HttpPost]

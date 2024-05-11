@@ -1146,7 +1146,7 @@ namespace Neon.Kube.Setup
         // related code is relocated to the [Neon.Kube] library so it can be referenced
         // by different kinds of applications.  This will include [NeonCLIENT] as well
         // as NEONDESKTOP right now and perhaps Temporal based workflows in the future
-        // as part of a NEONCLOUD offering.
+        // as part of a NeonCLOUD offering.
         //
         // The LogProgress() methods update global or node-specific status.  For nodes,
         // this will be set as the node status text.  The Error() methods do the same

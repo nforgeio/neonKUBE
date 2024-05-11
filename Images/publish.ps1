@@ -153,7 +153,7 @@ try
 
     #------------------------------------------------------------------------------
     # Verify that the user has the required environment variables.  These will
-    # be available only for maintainers and are intialized by the NEONCLOUD
+    # be available only for maintainers and are intialized by the NeonCLOUD
     # [buildenv.cmd] script.
 
     if (-not (Test-Path env:NC_ROOT))
@@ -161,7 +161,7 @@ try
         "*** ERROR: This script is intended for use by maintainers only:"
         "           [NC_ROOT] environment variable is not defined."
         ""
-        "           Maintainers should re-run the NEONCLOUD [buildenv.cmd] script."
+        "           Maintainers should re-run the NeonCLOUD [buildenv.cmd] script."
 
         return 1
     }

@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// </item>
         /// </list>
         /// <para>
-        /// The NEONCLOUD stage/publish tools will use this version as is when tagging
+        /// The NeonCLOUD stage/publish tools will use this version as is when tagging
         /// container images as well as node/desktop virtual machine images when publishing
         /// <b>Neon.Kube</b> libraries build from a <b>release-*</b> branch.  Otherwise,
         /// the tool will append the branch name to the release like:

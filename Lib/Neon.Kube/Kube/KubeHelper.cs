@@ -1926,7 +1926,7 @@ exit 0
         {
             // $note(jefflill):
             //
-            // This key was generated using the NEONCLOUD neon-image tool via:
+            // This key was generated using the NeonCLOUD neon-image tool via:
             //
             //      neon-image sshkey neon-desktop sysadmin
             //
@@ -3417,7 +3417,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Executes a <b>neon/kubectl</b> command using the installed executable or the
-        /// executable from the NEONCLOUD build folder.
+        /// executable from the NeonCLOUD build folder.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command exit code.</returns>
@@ -3437,7 +3437,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Executes a <b>neon/kubectl</b> command using the installed executable or the
-        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// executable from the NeonCLOUD build folder, capturing the output streams.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command exit code.</returns>
@@ -3457,7 +3457,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Executes a <b>neon/kubectl</b> command using the installed executable or the
-        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// executable from the NeonCLOUD build folder, capturing the output streams.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command exit code.</returns>

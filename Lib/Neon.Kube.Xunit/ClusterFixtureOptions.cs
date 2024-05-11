@@ -140,7 +140,7 @@ namespace Neon.Kube.Xunit
         public string ImageUriOrPath { get; set; } = null;
 
         /// <summary>
-        /// Optionally overrides the default NEONCLOUD headend URI.  This defaults to <c>null</c>.
+        /// Optionally overrides the default NeonCLOUD headend URI.  This defaults to <c>null</c>.
         /// </summary>
         public string NeonCloudHeadendUri { get; set; } = null;
 

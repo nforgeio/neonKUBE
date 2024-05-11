@@ -394,7 +394,7 @@ namespace Neon.Kube.Setup
             var timestampUtc = DateTime.UtcNow;
             var uploadId     = Guid.NewGuid();
             var clientId     = KubeHelper.ClientId;
-            var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement NEONCLOUD users
+            var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement NeonCLOUD users
 
             using (var tempZipFile = new TempFile(".zip"))
             {

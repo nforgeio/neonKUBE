@@ -17,7 +17,7 @@ required.
    most, if not all, customization is performed by by customizing a values
    file in code when installing the Helm chart.
 
-3. Open the NEONCLOUD solution in Visual Studio and review/edit the **Git Changes**.
+3. Open the NeonCLOUD solution in Visual Studio and review/edit the **Git Changes**.
 
    We're going to try having all values specified as parameters when installing
    the Helm chart rather than editing the chart's **values.yaml** file directly.

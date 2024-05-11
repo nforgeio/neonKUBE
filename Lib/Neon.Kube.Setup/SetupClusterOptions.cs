@@ -87,7 +87,7 @@ namespace Neon.Kube.Setup
         public bool UploadCharts { get; set; } = false;
 
         /// <summary>
-        /// Optionally overrides the NEONCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
+        /// Optionally overrides the NeonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
         /// </summary>
         public string NeonCloudHeadendUri { get; set; } = null;
 
