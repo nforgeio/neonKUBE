@@ -1,4 +1,4 @@
-# NEONKUBE: An open source Kubernetes distribution
+# NeonKUBE: An open source Kubernetes distribution
 
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://communityinviter.com/apps/neonforge/neonforge)
 
@@ -14,14 +14,14 @@
 
 **NEONSDK:** A new home for general purpose libraries.
 
-We're expecting NEONKUBE to be ready for a public preview in jUNE 2023 and one of our TODOs has 
+We're expecting NeonKUBE to be ready for a public preview in jUNE 2023 and one of our TODOs has 
 been to relocate the general purpose Neon libraries to their own GitHub repo since these will be versioned
-independently from NEONKUBE.  We finally relocated the non **Neon.Kube.*** libraries to:
+independently from NeonKUBE.  We finally relocated the non **Neon.Kube.*** libraries to:
 
 [NEONSDK repo](https://github.com/nforgeio/neonSDK)
 ---
 
-NEONKUBE is an open source project released under the Apache-2.0 license.
+NeonKUBE is an open source project released under the Apache-2.0 license.
 
 ### Maintainers:
 

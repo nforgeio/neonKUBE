@@ -19,7 +19,7 @@ spec:
         {{ toYaml .Values.csiNode.podLabels | nindent 8 }}
         {{- end }}
     spec:
-      # NEONKUBE CUSTOM VALUE
+      # NeonKUBE CUSTOM VALUE
       priorityClassName: {{ .Values.csiNode.priorityClassName }}
       serviceAccountName: {{ .Values.serviceAccount.csiNode.name }}
       hostNetwork: true

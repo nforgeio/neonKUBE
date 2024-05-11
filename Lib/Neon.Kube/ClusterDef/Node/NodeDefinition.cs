@@ -163,7 +163,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <note>
         /// If all nodes have <see cref="Ingress"/> set to <c>false</c> and the cluster defines
-        /// one or more <see cref="NetworkOptions.IngressRules"/> then NEONKUBE will choose a
+        /// one or more <see cref="NetworkOptions.IngressRules"/> then NeonKUBE will choose a
         /// reasonable set of nodes to handle inbound traffic.
         /// </note>
         /// </summary>
@@ -179,7 +179,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <note>
         /// When all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> and <see cref="OpenEbsOptions.Engine"/>
-        /// is set to <see cref="OpenEbsEngine.cStor"/> or <see cref="OpenEbsEngine.Mayastor"/>, NEONKUBE 
+        /// is set to <see cref="OpenEbsEngine.cStor"/> or <see cref="OpenEbsEngine.Mayastor"/>, NeonKUBE 
         /// will automatically choose the nodes that will host the cStor/Mayastor block devices by configuring up
         /// to three nodes with <b>openEbsStorage: true</b>, favoring <b>worker</b> nodes over <b>control-plane</b>
         /// nodes when possible.

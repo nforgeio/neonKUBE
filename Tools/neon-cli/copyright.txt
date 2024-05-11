@@ -1,2 +1,2 @@
 Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
-NEONKUBE™, NeonDESKTOP™, and NeonCLIENT™ are trademarked by NEONFORGE LLC.
+NeonKUBE™, NeonDESKTOP™, and NeonCLIENT™ are trademarked by NEONFORGE LLC.

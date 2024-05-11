@@ -63,7 +63,7 @@ namespace Neon.Kube.Proxy
     public delegate NodeSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address);
 
     /// <summary>
-    /// Used to manage a NEONKUBE cluster.
+    /// Used to manage a NeonKUBE cluster.
     /// </summary>
     public class ClusterProxy : IDisposable
     {
@@ -1480,7 +1480,7 @@ namespace Neon.Kube.Proxy
                 progress?.Invoke("Resetting namespaces...");
 
                 // Build a set of the namespaces to be retained.  This includes the internal
-                // NEONKUBE namespaces as well as any explicitly requested to be excluded
+                // NeonKUBE namespaces as well as any explicitly requested to be excluded
                 // by the user.
 
                 // List all of the existing cluster namespaces and then delete the contents
@@ -1555,13 +1555,13 @@ namespace Neon.Kube.Proxy
             }
 
             //-----------------------------------------------------------------
-            // Remove all NEONKUBE custom resources.
+            // Remove all NeonKUBE custom resources.
 
             var neonKubeCrds = (await K8s.ApiextensionsV1.ListCustomResourceDefinitionAsync()).Items
                 .Where(crd => KubeHelper.IsNeonKubeCustomResource(crd))
                 .ToArray();
 
-            // Remove any cluster scoped NEONKUBE resources that are labeled indicating that
+            // Remove any cluster scoped NeonKUBE resources that are labeled indicating that
             // they should be removed on cluster reset.
 
             foreach (var crd in neonKubeCrds)

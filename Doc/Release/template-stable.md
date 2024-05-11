@@ -2,7 +2,7 @@
 
 | Component       | Version                |
 | --------------- | :--------------------- |
-| **NEONKUBE**    | $<neonkube.version>    |
+| **NeonKUBE**    | $<neonkube.version>    |
 | **KUBERNETES**  | $<kubernetes.version>  |
 
 This release is **stable** and is ready for production.

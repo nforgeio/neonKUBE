@@ -82,7 +82,7 @@ OPTIONS:
 
             if (currentContext == null)
             {
-                Console.Error.WriteLine("*** ERROR: No NEONKUBE cluster is selected.");
+                Console.Error.WriteLine("*** ERROR: No NeonKUBE cluster is selected.");
                 Program.Exit(1);
             }
 

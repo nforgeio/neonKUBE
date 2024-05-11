@@ -50,11 +50,11 @@ namespace Neon.Kube.ClusterDef
         /// This defaults to <see cref="AzureHostingOptions.DefaultVmSize"/>.
         /// </para>
         /// <note>
-        /// NEONKUBE clusters cannot be deployed to ARM-based Azure V, sizes at this time.  You must
+        /// NeonKUBE clusters cannot be deployed to ARM-based Azure V, sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// NEONKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// NeonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -82,7 +82,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 64 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -108,7 +108,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 64 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>

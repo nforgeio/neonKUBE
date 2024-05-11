@@ -80,12 +80,12 @@ namespace Neon.Kube.ClusterDef
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The prefix reserved for NEONKUBE specific annotations and labels.
+        /// The prefix reserved for NeonKUBE specific annotations and labels.
         /// </summary>
         public const string ReservedPrefix = "neonkube.io/";
 
         /// <summary>
-        /// The prefix reserved for NEONKUBE specific <b>node</b> annotations and labels.
+        /// The prefix reserved for NeonKUBE specific <b>node</b> annotations and labels.
         /// </summary>
         public const string ReservedNodePrefix = "node." + ReservedPrefix;
 
@@ -336,7 +336,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Returns <c>true</c> for cluster definitions that describe a special NEONKUBE/CLOUD
+        /// Returns <c>true</c> for cluster definitions that describe a special NeonKUBE/CLOUD
         /// cluster like the NEONDESKTOP built-in cluster.  This is used to relax constraints
         /// on user cluster definitions like cluster node names not being able to use the "neon-"
         /// prefix.
@@ -403,7 +403,7 @@ namespace Neon.Kube.ClusterDef
         public string Description { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the semantic version of the NEONKUBE cluster being created.
+        /// Optionally specifies the semantic version of the NeonKUBE cluster being created.
         /// This defaults to <c>null</c> which indicates that the latest supported cluster
         /// version will be created.
         /// </summary>
@@ -415,7 +415,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Optionally specifies cluster annotations.  Label names and values must follow the
         /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
-        /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
+        /// and the <b>neonkube.io/</b> prefix is reserved by NeonKUBE.
         /// </summary>
         [JsonProperty(PropertyName = "Annotations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "annotations", ApplyNamingConventions = false)]

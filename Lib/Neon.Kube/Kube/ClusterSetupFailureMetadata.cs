@@ -40,7 +40,7 @@ namespace Neon.Kube
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// The current NEONKUBE version.
+        /// The current NeonKUBE version.
         /// </summary>
         [JsonProperty(PropertyName = "NeonKubeVersion", Required = Required.Always)]
         [YamlMember(Alias = "neonKubeVersion", ApplyNamingConventions = false)]

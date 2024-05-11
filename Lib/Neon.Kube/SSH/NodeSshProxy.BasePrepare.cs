@@ -620,7 +620,7 @@ mkdir -p {KubeNodeFolder.Bin}
 cat <<EOF > /etc/systemd/system/neon-init.service
 
 [Unit]
-Description=NEONKUBE one-time node preparation service 
+Description=NeonKUBE one-time node preparation service 
 After=systemd-networkd.service
 
 [Service]
@@ -655,10 +655,10 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 # limitations under the License.
 #
 # This script is run early during node boot before the netork is configured
-# as a poor man's way for NEONKUBE cluster setup to configure the network
+# as a poor man's way for NeonKUBE cluster setup to configure the network
 # without requiring DHCP.  Here's how this works:
 #
-#       1. NEONKUBE cluster setup creates a node VM from a template.
+#       1. NeonKUBE cluster setup creates a node VM from a template.
 #
 #       2. Setup creates a temporary ISO (DVD) image with a script named 
 #          [neon-init.sh] on it and uploads this to the Hyper-V
@@ -829,7 +829,7 @@ chmod 740 {KubeNodeFolder.NeonRun}
                 {
                     controller.LogProgress(this, verb: "install", message: "tools (base)");
 
-                    // Upload any tool scripts to the NEONKUBE bin folder, stripping
+                    // Upload any tool scripts to the NeonKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 

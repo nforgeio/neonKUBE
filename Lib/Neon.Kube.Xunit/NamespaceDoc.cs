@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// This namespace includes additional utilties for testing NEONKUBE functionality.
+    /// This namespace includes additional utilties for testing NeonKUBE functionality.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

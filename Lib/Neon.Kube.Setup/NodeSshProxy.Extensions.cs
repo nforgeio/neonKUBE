@@ -16,7 +16,7 @@
 // limitations under the License.
 
 // This file includes node configuration methods executed while setting
-// up a NEONKUBE cluster.
+// up a NeonKUBE cluster.
 
 using System;
 using System.Collections.Generic;
@@ -59,7 +59,7 @@ namespace Neon.Kube.SSH
     {
         /// <summary>
         /// Installs the Helm charts as a single ZIP archive written to the 
-        /// NEONKUBE node's Helm folder.
+        /// NeonKUBE node's Helm folder.
         /// </summary>
         /// <param name="node">The node instance.</param>
         /// <param name="controller">The setup controller.</param>

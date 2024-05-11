@@ -40,7 +40,7 @@ namespace NeonCli
     public class LogoutCommand : CommandBase
     {
         private const string usage = @"
-Logs out of the current NEONKUBE context by selecting no context.
+Logs out of the current NeonKUBE context by selecting no context.
 
 USAGE:
 
@@ -68,7 +68,7 @@ USAGE:
 
             if (KubeHelper.CurrentContext == null)
             {
-                Console.WriteLine($"You are not logged into a NEONKUBE cluster.");
+                Console.WriteLine($"You are not logged into a NeonKUBE cluster.");
                 return;
             }
 

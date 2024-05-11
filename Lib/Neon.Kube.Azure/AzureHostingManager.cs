@@ -83,13 +83,13 @@ namespace Neon.Kube.Hosting.Azure
         // IMPLEMENTATION NOTE:
         // --------------------
         // Here's the original issue covering Azure provisioning and along with 
-        // some discussion about how NEONKUBE thinks about cloud deployments:
+        // some discussion about how NeonKUBE thinks about cloud deployments:
         // 
         //      https://github.com/nforgeio/neonKUBE/issues/908
         //
         // The remainder of this note will outline how Azure provisioning works.
         //
-        // A NEONKUBE Azure cluster will require provisioning these things:
+        // A NeonKUBE Azure cluster will require provisioning these things:
         //
         //      * VNET
         //      * VMs & Disks
@@ -120,7 +120,7 @@ namespace Neon.Kube.Hosting.Azure
         // inbound traffic across a backend pool including the VMs designated to
         // accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
-        // set explicitly.  NEONKUBE will default to reasonable ingress nodes when
+        // set explicitly.  NeonKUBE will default to reasonable ingress nodes when
         // necessary.
         //
         // External load balancer traffic can be enabled for specific ports via 
@@ -152,10 +152,10 @@ namespace Neon.Kube.Hosting.Azure
         // to provision the cluster.  Gen2 images work on most Azure VM sizes and offer
         // larger OS disks, improved performance, more memory and support for premium
         // and ultra storage.  There's a decent chance that Azure will deprecate Gen1
-        // VMs at some point, so NEONKUBE is going to only support Gen2 images to
+        // VMs at some point, so NeonKUBE is going to only support Gen2 images to
         // simplify things.
         //
-        // This hosting manager will support creating VMs from NEONKUBE node
+        // This hosting manager will support creating VMs from NeonKUBE node
         // images published to Azure .  No9de images are preprovisioned with all of
         // the software required, making cluster setup much faster and reliable.
         //
@@ -596,7 +596,7 @@ namespace Neon.Kube.Hosting.Azure
         private const string publicSshRulePrefix = "public-ssh-";
 
         /// <summary>
-        /// The (namespace) prefix used for NEONKUBE related Azure resource tags.
+        /// The (namespace) prefix used for NeonKUBE related Azure resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
 
@@ -1081,7 +1081,7 @@ namespace Neon.Kube.Hosting.Azure
 
             // Connect to Azure and lookup the node instance types to determine the number
             // of vCPUs and memory available for each and then call a common method to
-            // verify that NEONKUBE actually supports those instance types.
+            // verify that NeonKUBE actually supports those instance types.
 
             try
             {
@@ -2982,7 +2982,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
         /// <summary>
         /// Adds public SSH NAT and security rules for every node in the cluster.
-        /// These are used by NEONKUBE tools for provisioning, setting up, and
+        /// These are used by NeonKUBE tools for provisioning, setting up, and
         /// managing cluster nodes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -3133,7 +3133,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
         /// <summary>
         /// Removes public SSH NAT and security rules for every node in the cluster.
-        /// These are used by NEONKUBE related tools for provisioning, setting up, and
+        /// These are used by NeonKUBE related tools for provisioning, setting up, and
         /// managing cluster nodes. 
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -3264,7 +3264,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                         new HostingResourceConstraint()
                         {
                             ResourceType = HostingConstrainedResourceType.VmHost,
-                            Details      = $"VM Size [{vmSize}] [cpu-architecture={vmSku.CpuArchitecture}] is not currently supported by NEONKUBE.",
+                            Details      = $"VM Size [{vmSize}] [cpu-architecture={vmSku.CpuArchitecture}] is not currently supported by NeonKUBE.",
                             Nodes        = cluster.Nodes
                                                .Where(node => node.Metadata.Azure.VmSize == vmSize)
                                                .Select(node => node.Name)

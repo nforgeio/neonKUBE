@@ -30,7 +30,7 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Specifies enhanced Quartz cron schedules for NEONKUBE cluster jobs performed by
+    /// Specifies enhanced Quartz cron schedules for NeonKUBE cluster jobs performed by
     /// cluster operators such as <b>neon-cluster-operator</b>.
     /// </summary>
     public class JobOptions
@@ -57,7 +57,7 @@ namespace Neon.Kube.ClusterDef
         public JobSchedule ClusterCertificateRenewal { get; set; }
 
         /// <summary>
-        /// Schedules the persisting of NEONKUBE cluster container images from
+        /// Schedules the persisting of NeonKUBE cluster container images from
         /// cluster nodes to Harbor as required.  This defaults to a random
         /// time between 12:00am and 1:00am (UTC) on Tuesdays.
         /// </summary>

@@ -100,11 +100,11 @@ namespace Neon.Kube.Config
 
         /// <summary>
         /// <para>
-        /// Specifies the name of the referenced cluster.  NEONKUBE uses this for identifying
+        /// Specifies the name of the referenced cluster.  NeonKUBE uses this for identifying
         /// users to be deleted when related clusters are removed.
         /// </para>
         /// <para>
-        /// This will be <c>null</c> for non-NEONKUBE clusters.
+        /// This will be <c>null</c> for non-NeonKUBE clusters.
         /// </para>
         /// </summary>
         [JsonIgnore]

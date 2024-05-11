@@ -68,7 +68,7 @@ namespace Neon.Kube.Xunit
         /// for on-premise environments.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
-        /// You must be a NEONKUBE maintainer to use private node images.
+        /// You must be a NeonKUBE maintainer to use private node images.
         /// </note>
         /// </summary>
         public bool CloudMarketplace { get; set; } = true;

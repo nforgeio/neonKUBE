@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterPauseCommand : CommandBase
     {
         private const string usage = @"
-Pauses the current NEONKUBE cluster by putting its nodes to sleep.  This may
+Pauses the current NeonKUBE cluster by putting its nodes to sleep.  This may
 not be supported by all hosting environments.
 
 USAGE:

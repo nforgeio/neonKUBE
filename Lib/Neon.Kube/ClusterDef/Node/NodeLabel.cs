@@ -271,7 +271,7 @@ namespace Neon.Kube.ClusterDef
         /// These are used to group VMs together such that only one will be down
         /// for scheduled maintenance at any given moment and also that after a
         /// reboot, there will be a reasonable delay (like 30 minutes) to allow
-        /// the VMs to collectively recover before rebooting the next VM.  NEONKUBE
+        /// the VMs to collectively recover before rebooting the next VM.  NeonKUBE
         /// will provision node VMs that have the same <see cref="PhysicalAvailabilitySet"/> 
         /// into the same cloud availability set (for clouds that support this).
         /// </para>
@@ -313,7 +313,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelOpenEbsStorage = ClusterDefinition.ReservedNodePrefix + "storage.openebs-storage";
 
         /// <summary>
-        /// <b>node.neonkube.io/system.openebs-storage</b> [<c>bool</c>]: Indicates that a NEONKUBE OpenEBS 
+        /// <b>node.neonkube.io/system.openebs-storage</b> [<c>bool</c>]: Indicates that a NeonKUBE OpenEBS 
         /// block device will be deployed on this node.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -323,7 +323,7 @@ namespace Neon.Kube.ClusterDef
         /// This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// If all nodes have <see cref="SystemOpenEbsStorage"/> set to <c>false</c> then most NEONKUBE 
+        /// If all nodes have <see cref="SystemOpenEbsStorage"/> set to <c>false</c> then most NeonKUBE 
         /// hosting managers will automatically choose the nodes that will host the cStor
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
         /// over control-plane nodes when possible.
@@ -341,13 +341,13 @@ namespace Neon.Kube.ClusterDef
         public bool SystemOpenEbsStorage { get; set; } = false;
 
         /// <summary>
-        /// Reserved label name for core NEONKUBE system components.
+        /// Reserved label name for core NeonKUBE system components.
         /// </summary>
         public const string LabelSystemServices = ClusterDefinition.ReservedNodePrefix + "system.services";
 
         /// <summary>
         /// <para>
-        /// <b>node.neonkube.io/system.services</b> [<c>bool</c>]: Indicates that general NEONKUBE 
+        /// <b>node.neonkube.io/system.services</b> [<c>bool</c>]: Indicates that general NeonKUBE 
         /// system services may be scheduled on this node.  This defaults to <c>false</c>.
         /// </para>
         /// <note>
@@ -369,7 +369,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelSystemIstioServices = ClusterDefinition.ReservedNodePrefix + "system.istio-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/system.istio-services,</b> [<c>bool</c>]: Indicates that NEONKUBE
+        /// <b>node.neonkube.io/system.istio-services,</b> [<c>bool</c>]: Indicates that NeonKUBE
         /// Istio services may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemIstioServices", Required = Required.Default)]
@@ -383,7 +383,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelSystemDbServices = ClusterDefinition.ReservedNodePrefix + "system.db-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/neon-system.db-services</b> [<c>bool</c>]: Indicates that the NEONKUBE 
+        /// <b>node.neonkube.io/neon-system.db-services</b> [<c>bool</c>]: Indicates that the NeonKUBE 
         /// Citus/Postgresql database services may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemDbServices", Required = Required.Default)]
@@ -397,7 +397,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelSystemRegistryServices = ClusterDefinition.ReservedNodePrefix + "system.registry-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/system.registry-services</b> [<c>bool</c>]: Indicates that the NEONKUBE 
+        /// <b>node.neonkube.io/system.registry-services</b> [<c>bool</c>]: Indicates that the NeonKUBE 
         /// Harbor registry may be scheduled on this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemRegistryServices", Required = Required.Default)]
@@ -411,7 +411,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelSystemMinioServices = ClusterDefinition.ReservedNodePrefix + "system.minio-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/system.minio-services</b> [<c>bool</c>]: Indicates the NEONKUBE
+        /// <b>node.neonkube.io/system.minio-services</b> [<c>bool</c>]: Indicates the NeonKUBE
         /// that Minio services can be scheduled on the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemMinioServices", Required = Required.Default)]
@@ -443,7 +443,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelSystemMetricServices = ClusterDefinition.ReservedNodePrefix + "saystem.monitor.metric-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.metric-services</b> [<c>bool</c>]: Indicates NEONKUBE
+        /// <b>node.neonkube.io/monitor.metric-services</b> [<c>bool</c>]: Indicates NeonKUBE
         /// Mimir metrics and other services may be scheduled on the labeled node.  This defaults
         /// to <c>false</c>.
         /// </summary>
@@ -458,7 +458,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelTraceServices = ClusterDefinition.ReservedNodePrefix + "system.monitor.trace-services";
 
         /// <summary>
-        /// <b>node.neonkube.io/monitor.trace-services</b> [<c>bool</c>]: Indicates that NEONKUBE
+        /// <b>node.neonkube.io/monitor.trace-services</b> [<c>bool</c>]: Indicates that NeonKUBE
         /// Tempo tracing services may be scheduled on the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "SystemTraceServices", Required = Required.Default)]
@@ -488,7 +488,7 @@ namespace Neon.Kube.ClusterDef
         // Implementation
 
         /// <summary>
-        /// Enumerates the standard Kubernetes/NEONKUBE node labels.
+        /// Enumerates the standard Kubernetes/NeonKUBE node labels.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]

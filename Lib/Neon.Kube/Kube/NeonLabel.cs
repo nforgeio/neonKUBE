@@ -24,7 +24,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Defines the non-node cluster definition labels used to tag objects by NEONKUBE.
+    /// Defines the non-node cluster definition labels used to tag objects by NeonKUBE.
     /// </para>
     /// <note>
     /// Labels specified by the cluster definition and assigned to nodes are defined
@@ -34,7 +34,7 @@ namespace Neon.Kube
     public static class NeonLabel
     {
         /// <summary>
-        /// Used to label custom NEONKUBE resources that should be removed by <b>ClusterFixture</b> or
+        /// Used to label custom NeonKUBE resources that should be removed by <b>ClusterFixture</b> or
         /// <see cref="ClusterProxy"/> when resetting a test cluster.
         /// </summary>
         public const string RemoveOnClusterReset = ClusterDefinition.ReservedPrefix + "remove-on-cluster-reset";

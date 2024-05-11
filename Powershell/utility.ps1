@@ -833,7 +833,7 @@ function Get-KubeVersion
 }
 
 #------------------------------------------------------------------------------
-# Returns the path to the [helm-munger] tool in the NEONKUBE solution, throwing
+# Returns the path to the [helm-munger] tool in the NeonKUBE solution, throwing
 # an exception tool binary does not exist.
 
 function Get-HelmMungerPath
@@ -842,7 +842,7 @@ function Get-HelmMungerPath
 
     if ([String]::IsNullOrEmpty($nkRoot))
     {
-        throw "[NK_ROOT] environment variable does not exist.  NEONKUBE git repo must be cloned locally."
+        throw "[NK_ROOT] environment variable does not exist.  NeonKUBE git repo must be cloned locally."
     }
 
     $helmMungerPath = [System.IO.Path]::Combine($nkRoot, "Tools", "helm-munger", "bin", "Debug", "net8.0", "win-x64", "helm-munger.exe")

@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Performs a clean build of the NEONKUBE solution and publishes binaries
+# Performs a clean build of the NeonKUBE solution and publishes binaries
 # to the [$/build] folder.
 #
 # USAGE: pwsh -f neonkube-builder.ps1 [OPTIONS]

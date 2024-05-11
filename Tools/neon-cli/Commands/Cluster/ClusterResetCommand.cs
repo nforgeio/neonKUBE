@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterResetCommand : CommandBase
     {
         private const string usage = @"
-Resets the current NEONKUBE cluster to its factory new condition.
+Resets the current NeonKUBE cluster to its factory new condition.
 
 USAGE:
 

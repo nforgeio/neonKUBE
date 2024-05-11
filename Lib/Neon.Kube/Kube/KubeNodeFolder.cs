@@ -115,7 +115,7 @@ namespace Neon.Kube
         public const string Tmpfs = "/dev/shm/neonkube";
 
         /// <summary>
-        /// Folder where NEONKUBE related components will maintain runtime state.
+        /// Folder where NeonKUBE related components will maintain runtime state.
         /// </summary>
         public const string NeonRun = "/run/neonkube";
 

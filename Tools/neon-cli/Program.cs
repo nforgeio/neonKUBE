@@ -62,7 +62,7 @@ using ProtoBuf.Grpc.Client;
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure and manage the nodes of a NEONKUBE cluster.
+    /// This tool is used to configure and manage the nodes of a NeonKUBE cluster.
     /// </summary>
     public static class Program
     {
@@ -81,7 +81,7 @@ namespace NeonCli
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// NEONKUBE and NEONCLOUD (premium) GitHub repositories.
+        /// NeonKUBE and NEONCLOUD (premium) GitHub repositories.
         /// </remarks>
         public const bool IsPremium =
 #if PREMIUM

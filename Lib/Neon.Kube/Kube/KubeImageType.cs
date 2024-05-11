@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the NEONKUBE image types.
+    /// Enumerates the NeonKUBE image types.
     /// </summary>
     public enum KubeImageType
     {

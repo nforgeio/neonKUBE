@@ -6,7 +6,7 @@
         <RootNamespace>Neon.Kube.Xunit</RootNamespace>
         <PackageId>Neon.Kube.Xunit</PackageId>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: Xunit extensions for NEONKUBE</Description>
+        <Description>INTERNAL USE ONLY: Xunit extensions for NeonKUBE</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
         <IsPackable>true</IsPackable>

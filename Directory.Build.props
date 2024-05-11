@@ -1,7 +1,7 @@
 <Project>
 
     <PropertyGroup>
-        <Product>NEONKUBE</Product>
+        <Product>NeonKUBE</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
         <Copyright>Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.</Copyright>
@@ -74,16 +74,16 @@
 
     <!-- 
     We have a somewhat complex build environment.  The NEONCLOUD repo is private and
-    our solution there actually includes references to all NEONSDK and NEONKUBE projects
+    our solution there actually includes references to all NEONSDK and NeonKUBE projects
     so we can build everything at once in the NEONCLOUD solution without having the mess
     with publishing private nuget packages like we used to do (and really slowed down the
     inner developer loop).
     
     This is nice for maintainers, but non-maintainers will also need to be able to 
-    build NEONKUBE normally, where NEONKUBE projects reference NEONSDK nuget packages.
+    build NeonKUBE normally, where NeonKUBE projects reference NEONSDK nuget packages.
     
     We handle both the maintainer and non-maintainer scenarios by munging our NEONCLOUD and
-    NEONKUBE [.csproj] files so they can reference either nuget packages from other repos
+    NeonKUBE [.csproj] files so they can reference either nuget packages from other repos
     or reference projects from the other repos via relative project file path references.
     
     We're going to use the NEON_BUILD_USE_NUGETS environment variable to manage this.  This
@@ -93,7 +93,7 @@
     We also need to handle another important scenario: the [neonkube-builder.ps1] and
     [neoncloud-builder.ps1] scripts will need to be able to control whether we're 
     using nuget references or not and eventually be able configure projects to reference
-    specific nuget versions for NEONSDK and NEONKUBE nugets.
+    specific nuget versions for NEONSDK and NeonKUBE nugets.
 
     This is tricky because MSBUILD doesn't initialize the $(SolutionName) variable.
     We're going to handle this by having these scripts pass a custom $(NeonSolutionName)

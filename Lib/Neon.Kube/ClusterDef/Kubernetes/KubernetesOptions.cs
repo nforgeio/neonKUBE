@@ -74,7 +74,7 @@ namespace Neon.Kube.ClusterDef
         /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
         /// </para>
         /// <para>
-        /// NEONKUBE clusters enable specific features by default when you you haven't
+        /// NeonKUBE clusters enable specific features by default when you you haven't
         /// explicitly disabled them via this property.  Note that some features are 
         /// required and cannot be disabled.
         /// </para>
@@ -268,7 +268,7 @@ namespace Neon.Kube.ClusterDef
 
             ApiServer ??= new ApiServerOptions();
 
-            // Add default NEONKUBE feature gates when the user has not already configured them.
+            // Add default NeonKUBE feature gates when the user has not already configured them.
 
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
 

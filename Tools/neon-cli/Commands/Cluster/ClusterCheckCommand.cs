@@ -60,8 +60,8 @@ namespace NeonCli
     public class ClusterCheckCommand : CommandBase
     {
         private const string usage = @"
-Performs various checks on the current NEONKUBE cluster.  These checks are
-used by NEONKUBE maintainers to verify that cluster setup worked correctly.
+Performs various checks on the current NeonKUBE cluster.  These checks are
+used by NeonKUBE maintainers to verify that cluster setup worked correctly.
 This does the same thing as the [neon cluster setup --check] option.
 
 USAGE: 
@@ -121,7 +121,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             if (context == null)
             {
-                Console.Error.WriteLine($"*** ERROR: No NEONKUBE cluster is selected.");
+                Console.Error.WriteLine($"*** ERROR: No NeonKUBE cluster is selected.");
                 Program.Exit(1);
             }
 

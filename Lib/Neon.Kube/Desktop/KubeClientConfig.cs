@@ -40,7 +40,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used by the NEONKUBE client desktop and command line tools to 
+    /// Used by the NeonKUBE client desktop and command line tools to 
     /// manage the client side configuration.
     /// </summary>
     public class KubeClientConfig

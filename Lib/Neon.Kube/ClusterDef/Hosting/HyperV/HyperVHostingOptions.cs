@@ -76,7 +76,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Note that NEONKUBE creates only a single internal Hyper-V switch for the <see cref="HostingEnvironment.HyperV"/>
+        /// Note that NeonKUBE creates only a single internal Hyper-V switch for the <see cref="HostingEnvironment.HyperV"/>
         /// hosting environment for the <see cref="NeonKubeInternalSubnet"/> (<b>100.64.0.0/24</b>).  Some addresses in
         /// this subnet are reserved:
         /// </para>

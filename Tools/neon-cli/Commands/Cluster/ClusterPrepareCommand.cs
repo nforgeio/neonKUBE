@@ -52,7 +52,7 @@ namespace NeonCli
     {
         private const string usage = @"
 MAINTAINER ONLY: Provisions local and/or cloud infrastructure required to host a
-NEONKUBE cluster.  This includes provisioning networks, load balancers, virtual
+NeonKUBE cluster.  This includes provisioning networks, load balancers, virtual
 machines, etc.  Once the infrastructure is ready, you'll use the [neon cluster setup ...]
 command to actually setup the cluster.
 
@@ -60,7 +60,7 @@ NOTE: This command is used by maintainers while debugging cluster setup.
 
 This is the first part of deploying a cluster in two stages, where you first
 prepare the cluster to provision any virtual machines ane network infrastructure
-and then you setup NEONKUBE on that, like:
+and then you setup NeonKUBE on that, like:
 
     neon cluster prepare CLUSTER-DEF
     neon cluster setup sysadmin@CLUSTER-NAME
@@ -127,9 +127,9 @@ OPTIONS:
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
-                                  the staged NEONKUBE node image whose version is a 
-                                  combination of the NEONKUBE version along with the 
-                                  name of the NEONKUBE branch when the libraries were
+                                  the staged NeonKUBE node image whose version is a 
+                                  combination of the NeonKUBE version along with the 
+                                  name of the NeonKUBE branch when the libraries were
                                   built.
 
                                   [--use-staged=branch] allows you to override the branch
@@ -139,7 +139,7 @@ OPTIONS:
 REMARKS:
 
 Most users will use the deploy command that combines both commands.  The two
-stage process is typically used only by NEONKUBE maintainers.
+stage process is typically used only by NeonKUBE maintainers.
 
     neon cluster deploy CLUSTER-DEF
 

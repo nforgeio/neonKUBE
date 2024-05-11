@@ -43,7 +43,7 @@ namespace NeonCli
     public class LoginCommand : CommandBase
     {
         private const string usage = @"
-Manages NEONKUBE contexts for the user on the local workstation.
+Manages NeonKUBE contexts for the user on the local workstation.
 
 USAGE:
 
@@ -62,7 +62,7 @@ USAGE:
 
 ARGUMENTS:
 
-    CONTEXT-NAME    - Specifies the name of an existing NEONKUBE context on
+    CONTEXT-NAME    - Specifies the name of an existing NeonKUBE context on
                       the workstation.  These are typically formatted like:
 
                           USER@CLUSTER-NAME
@@ -90,8 +90,8 @@ One cluster and subcommands are available for other operations.
 Scenarios:
 ----------
 
-Select a NEONKUBE context on the workstation so that subsequent commands
-will operate on the related NEONKUBE cluster.
+Select a NeonKUBE context on the workstation so that subsequent commands
+will operate on the related NeonKUBE cluster.
 
     neon login [OPTIONS] CONFIGREF
 
@@ -105,7 +105,7 @@ can execute the command two ways:
     neon login [OPTIONS] --sso CLUSTER-DOMAIN
 
 You may use the [--namespace=NAMESPACE] or [-n=NAMESPACE] options by
-themselves to switch the namespace for the current NEONKUBE cluster
+themselves to switch the namespace for the current NeonKUBE cluster
 or when switching contexts to set the current namespace afterwards.
 ";
 
@@ -446,7 +446,7 @@ or when switching contexts to set the current namespace afterwards.
 
             if (string.IsNullOrEmpty(config.CurrentContext) && string.IsNullOrEmpty(contextName))
             {
-                Console.Error.WriteLine("*** ERROR: Cannot switch namespace because is no current NEONKUBE cluster.");
+                Console.Error.WriteLine("*** ERROR: Cannot switch namespace because is no current NeonKUBE cluster.");
                 Program.Exit(1);
             }
 
@@ -454,7 +454,7 @@ or when switching contexts to set the current namespace afterwards.
 
             if (context == null)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot find NEONKUBE cluster: {contextName}");
+                Console.Error.WriteLine($"*** ERROR: Cannot find NeonKUBE cluster: {contextName}");
                 Program.Exit(1);
             }
 
@@ -485,7 +485,7 @@ or when switching contexts to set the current namespace afterwards.
                 if (context == null)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"You are not logged into a NEONKUBE cluster");
+                    Console.WriteLine($"You are not logged into a NeonKUBE cluster");
                 }
                 else
                 {

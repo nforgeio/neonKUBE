@@ -60,7 +60,7 @@ namespace NeonCli
     public class ClusterDeleteCommand : CommandBase
     {
         private const string usage = @"
-Permanently deletes a NEONKUBE cluster.
+Permanently deletes a NeonKUBE cluster.
 
 USAGE:
 

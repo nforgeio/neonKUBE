@@ -851,7 +851,7 @@ namespace Neon.Kube.Hosting.XenServer
             // compare the MD5 encoded in the remote template description against
             // the local template MD5.  The remote description should look like:
             //
-            //      NEONKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NeonKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // We'll return immediately if the description MD5 matches otherwise
             // we'll remove the remote template and import a new one.
@@ -912,7 +912,7 @@ namespace Neon.Kube.Hosting.XenServer
             // Install the node template on the XenServer.  Note that we're going to
             // add a description formatted like:
             //
-            //      NEONKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NeonKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // The MD5 is computed for the GZIP compressed node image as downloaded
             // from the source.  We're expecting a file at $"{driveTemplatePath}.gz" 
@@ -947,7 +947,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             var retry = new LinearRetryPolicy(e => true, maxAttempts: 3, retryInterval: TimeSpan.FromSeconds(10));
 
-            retry.Invoke(() => xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]"));
+            retry.Invoke(() => xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NeonKUBE Node Image [MD5:{md5}]"));
 
             xenSshProxy.Status = string.Empty;
             xenController.SetGlobalStepStatus();
@@ -984,7 +984,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (hostInfo.Version < KubeVersion.MinXenServerVersion)
             {
-                throw new NotSupportedException($"NEONKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersion.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+                throw new NotSupportedException($"NeonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersion.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
             }
 
             foreach (var node in GetHostedNodes(xenClient))

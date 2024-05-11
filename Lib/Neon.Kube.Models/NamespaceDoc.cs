@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube.Models
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Data models used to communicate with the NEONKUBE Headend service.
+    /// <b>INTERNAL USE ONLY:</b> Data models used to communicate with the NeonKUBE Headend service.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

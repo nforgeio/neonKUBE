@@ -430,7 +430,7 @@ namespace Neon.Kube.Hosting
             // Ensure that any explicit node IP address assignments are located
             // within the subnet where the nodes will be provisioned and do not 
             // conflict with any of the addresses reserved by the cloud provider
-            // or NEONKUBE.
+            // or NeonKUBE.
 
             var nodeSubnetInfo = clusterDefinition.NodeSubnet;
             var nodeSubnet     = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
@@ -529,7 +529,7 @@ namespace Neon.Kube.Hosting
         /// <param name="readiness">Used to return discovered readiness problems.</param>
         /// <remarks>
         /// <para>
-        /// NEONKUBE clusters supports control-plane nodes with 2+ cores and at least 8GB RAM.
+        /// NeonKUBE clusters supports control-plane nodes with 2+ cores and at least 8GB RAM.
         /// All worker nodes must have at least 4 cores and at least 8GiB RAM.  Clusters that
         /// have control-plane nodes with only 2 cores are required to have at least 1 worker
         /// node.

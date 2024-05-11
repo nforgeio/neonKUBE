@@ -28,7 +28,7 @@ using System.Reflection;
 //
 // See [Directory.Build.props] for more information.
 
-[assembly: AssemblyProduct("NEONKUBE")]
+[assembly: AssemblyProduct("NeonKUBE")]
 [assembly: AssemblyCompany("NEONFORGE LLC")]
 [assembly: AssemblyCopyright("Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.")]
 

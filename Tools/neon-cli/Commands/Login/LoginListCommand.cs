@@ -55,7 +55,7 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Lists the NEONKUBE contexts.
+Lists the NeonKUBE contexts.
 
 USAGE:
 
@@ -137,7 +137,7 @@ USAGE:
             {
                 if (logins.Length == 0)
                 {
-                    Console.Error.WriteLine("No NEONKUBE logins.");
+                    Console.Error.WriteLine("No NeonKUBE logins.");
                     return;
                 }
 

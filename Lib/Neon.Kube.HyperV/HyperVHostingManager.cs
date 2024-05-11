@@ -1066,7 +1066,7 @@ namespace Neon.Kube.Hosting.HyperV
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <summary>
-        /// Parses the NEONKUBE related tags from a virtual machine's notes.
+        /// Parses the NeonKUBE related tags from a virtual machine's notes.
         /// </summary>
         /// <param name="machine"></param>
         /// <returns>The dictionary of tags and values keyed by tag name.</returns>

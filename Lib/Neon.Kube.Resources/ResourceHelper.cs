@@ -30,7 +30,7 @@ namespace Neon.Kube.Resources
     public static class ResourceHelper
     {
         /// <summary>
-        /// Identifies the standard NEONKUBE Kubernetes resource group.
+        /// Identifies the standard NeonKUBE Kubernetes resource group.
         /// </summary>
         public const string NeonKubeResourceGroup = "neonkube.io";
     }

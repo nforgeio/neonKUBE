@@ -68,7 +68,7 @@ namespace Neon.Kube.ClusterDef
         /// defaults to the value specified by <see cref="HypervisorHostingOptions.VCpus"/>.
         /// </para>
         /// <note>
-        /// NEONKUBE requires that each control-plane and worker node have at least 4 CPUs.
+        /// NeonKUBE requires that each control-plane and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VCpus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -84,7 +84,7 @@ namespace Neon.Kube.ClusterDef
         /// <see cref="HypervisorHostingOptions.Memory"/>.
         /// </para>
         /// <note>
-        /// NEONKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
+        /// NeonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines internal NEONKUBE global cluster secret names.
+    /// Defines internal NeonKUBE global cluster secret names.
     /// </summary>
     public static class KubeSecretName
     {

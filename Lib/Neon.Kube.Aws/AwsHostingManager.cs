@@ -96,7 +96,7 @@ namespace Neon.Kube.Hosting.Aws
         //---------------------------------------------------------------------
         // IMPLENTATION NOTE:
         //
-        // A NEONKUBE AWS cluster will require provisioning these things:
+        // A NeonKUBE AWS cluster will require provisioning these things:
         //
         //      * VPC (virtual private cloud, equivilent to an Azure VNET)
         //
@@ -123,7 +123,7 @@ namespace Neon.Kube.Hosting.Aws
         // inbound traffic across a backend target including the instances designated 
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
-        // set explicitly.  NEONKUBE will default to reasonable ingress nodes when
+        // set explicitly.  NeonKUBE will default to reasonable ingress nodes when
         // necessary.  We'll be automatically managing the AWS target groups and
         // network ACLs to make this all work.
         //
@@ -214,7 +214,7 @@ namespace Neon.Kube.Hosting.Aws
         //
         // Regions, Availability Zones and Placement Groups
         // ------------------------------------------------
-        // NEONKUBE clusters are currently deployed to a single AWS region and availability
+        // NeonKUBE clusters are currently deployed to a single AWS region and availability
         // zone within the region to ensure that internode communication will have low
         // latency.  Both of these are specified in the AWS cloud options.
         //
@@ -230,7 +230,7 @@ namespace Neon.Kube.Hosting.Aws
         //
         //      https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html
         //
-        // NEONKUBE will be deployed using two partition placement groups, one for control-plane
+        // NeonKUBE will be deployed using two partition placement groups, one for control-plane
         // nodes and the other for workers.  The number of control-plane placement partitions is
         // controlled by [AwsHostingOptions.ControlPlanePlacementPartitions] which defaults to
         // the number of control-plane nodes in the cluster.  Doing this helps to avoid losing
@@ -598,7 +598,7 @@ namespace Neon.Kube.Hosting.Aws
         private const string nameTagKey = "Name";
 
         /// <summary>
-        /// The (namespace) prefix used for NEONKUBE related AWS resource tags.
+        /// The (namespace) prefix used for NeonKUBE related AWS resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
 
@@ -844,7 +844,7 @@ namespace Neon.Kube.Hosting.Aws
         /// dash characters are allowed and names may be up to 32 characters long.
         /// </para>
         /// <para>
-        /// The problem is that NEONKUBE cluster names may also include periods and underscores.
+        /// The problem is that NeonKUBE cluster names may also include periods and underscores.
         /// This method converts any periods and underscores in the cluster name into dashes,
         /// appends the <paramref name="resourceName"/> with a leading dash and ensures that
         /// the combined name includes 32 characters or fewer.
@@ -1261,7 +1261,7 @@ namespace Neon.Kube.Hosting.Aws
 
             // Connect to AWS and lookup the node instance types to determine the number
             // of vCPUs and memory available for each and then call a common method to
-            // verify that NEONKUBE actually supports those instance types.
+            // verify that NeonKUBE actually supports those instance types.
 
             try
             {
@@ -2381,7 +2381,7 @@ namespace Neon.Kube.Hosting.Aws
             if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
                 groupQuery.ResourceQuery.Query != ResourceGroupQuery)
             {
-                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a NEONKUBE cluster.");
+                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a NeonKUBE cluster.");
             }
         }
 
@@ -2432,7 +2432,7 @@ namespace Neon.Kube.Hosting.Aws
                     new CreateGroupRequest()
                     {
                         Name        = resourceGroupName,
-                        Description = $"Identifies the resources for the {clusterName} NEONKUBE cluster",
+                        Description = $"Identifies the resources for the {clusterName} NeonKUBE cluster",
                         Tags        = new Dictionary<string, string>()
                         {
                             {  neonClusterTagKey, clusterName }
@@ -3596,7 +3596,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// to the base cluster name passed.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
-        /// <param name="ingressTarget">The NEONKUBE target group type.</param>
+        /// <param name="ingressTarget">The NeonKUBE target group type.</param>
         /// <param name="protocol">The ingress protocol.</param>
         /// <param name="port">The ingress port.</param>
         /// <returns>The fully qualified target group name.</returns>

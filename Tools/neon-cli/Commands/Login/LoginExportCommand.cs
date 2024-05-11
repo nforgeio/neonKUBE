@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports a NEONKUBE context to standard output or a file.
+Exports a NeonKUBE context to standard output or a file.
 
 USAGE:
 
@@ -59,10 +59,10 @@ OPTIONS:
 
 REMARKS:
 
-IMPORTANT: Exported NEONKUBE contexts include cluster credentials and
+IMPORTANT: Exported NeonKUBE contexts include cluster credentials and
            should be protected.
 
-This command is used to obtain a NEONKUBE context for a cluster so
+This command is used to obtain a NeonKUBE context for a cluster so
 it can be saved (perhaps in a password manager) and possibly shared with
 other cluster users.  The current context (if there is one) is obtained
 by default, but you can use the [--context=CONTEXT-NAME] option to obtain
@@ -103,7 +103,7 @@ Use the [neon login import] command to import an exported context.
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NeonKUBE context.");
                     Program.Exit(1);
                 }
             }
@@ -113,7 +113,7 @@ Use the [neon login import] command to import an exported context.
 
                 if (contextName == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a NeonKUBE cluster.");
                     Program.Exit(1);
                 }
             }

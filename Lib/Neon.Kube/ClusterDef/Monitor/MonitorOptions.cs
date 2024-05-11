@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Specifies the options for configuring the NEONKUBE integrated monitoring stack.
+    /// Specifies the options for configuring the NeonKUBE integrated monitoring stack.
     /// </summary>
     public class MonitorOptions
     {

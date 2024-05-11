@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes a NEONKUBE context from the local worstation.
+Removes a NeonKUBE context from the local worstation.
 
 USAGE:
 
@@ -95,7 +95,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NeonKUBE context.");
                     Program.Exit(1);
                 }
             }
@@ -126,7 +126,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
                 {
                     if (!force)
                     {
-                        Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
+                        Console.Error.WriteLine($"*** ERROR: You are not logged into a NeonKUBE cluster.");
                         Program.Exit(1);
                     }
                     else

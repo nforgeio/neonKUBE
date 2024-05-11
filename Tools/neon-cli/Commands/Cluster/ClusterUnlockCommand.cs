@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current NEONKUBE cluster, enabling dangerous operations like:
+Unlocks the current NeonKUBE cluster, enabling dangerous operations like:
 
     remove, reset, pause and stop
 

@@ -37,7 +37,7 @@ namespace Neon.Kube
     /// <summary>
     /// <para>
     /// Specifies deployment related component versions for the current
-    /// NEONKUBE release.  Kubernetes release information can be found here:
+    /// NeonKUBE release.  Kubernetes release information can be found here:
     /// https://kubernetes.io/releases/
     /// </para>
     /// <note>
@@ -54,7 +54,7 @@ namespace Neon.Kube
         public const string BuildBranch = BuildInfo.ThisAssembly.Git.Branch;
 
         /// <summary>
-        /// The current NEONKUBE version.
+        /// The current NeonKUBE version.
         /// </summary>
         /// <remarks>
         /// <para><b>RELEASE CONVENTIONS:</b></para>
@@ -151,7 +151,7 @@ namespace Neon.Kube
         public const string NeonKube = "0.12.0-alpha.0";
 
         /// <summary>
-        /// Returns the branch part of the NEONKUBE version.  This will be blank for release
+        /// Returns the branch part of the NeonKUBE version.  This will be blank for release
         /// branches whose names starts with <b>release-</b> and will be <b>.BRANCH</b> for
         /// all other branches.
         /// </summary>
@@ -172,20 +172,20 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the full NEONKUBE release including the <see cref="BranchPart"/>, if any.
+        /// Returns the full NeonKUBE release including the <see cref="BranchPart"/>, if any.
         /// </summary>
         [KubeValue]
         public static readonly string NeonKubeWithBranchPart = $"{NeonKube}{BranchPart}";
 
         /// <summary>
-        /// Returns the prefix used for NEONKUBE container tags.
+        /// Returns the prefix used for NeonKUBE container tags.
         /// </summary>
         [KubeValue]
         public const string NeonKubeContainerImageTagPrefix = "neonkube-";
 
         /// <summary>
         /// <para>
-        /// Returns the container image tag for the current NEONKUBE release.  This adds the
+        /// Returns the container image tag for the current NeonKUBE release.  This adds the
         /// <b>neonkube-</b> prefix to <see cref="NeonKube"/>.
         /// </para>
         /// <note>
@@ -801,7 +801,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Ensures that the XenServer version passed is supported for building
-        /// NEONKUBE virtual machines images.  Currently only <b>8.2.*</b> versions
+        /// NeonKUBE virtual machines images.  Currently only <b>8.2.*</b> versions
         /// are supported.
         /// </summary>
         /// <param name="version">The XenServer version being checked.</param>
@@ -810,7 +810,7 @@ namespace Neon.Kube
         {
             if (version.Major != MinXenServerVersion.Major || version.Minor != MinXenServerVersion.Minor)
             {
-                throw new NotSupportedException($"XenServer version [{version}] is not supported for building NEONKUBE VM images.  Only versions like [{MinXenServerVersion.Major}.{MinXenServerVersion.Minor}.*] are allowed.");
+                throw new NotSupportedException($"XenServer version [{version}] is not supported for building NeonKUBE VM images.  Only versions like [{MinXenServerVersion.Major}.{MinXenServerVersion.Minor}.*] are allowed.");
             }
         }
 

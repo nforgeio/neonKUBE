@@ -72,7 +72,7 @@ namespace Neon.Kube.ClusterDef
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Client/Application ID for the application created to manage Azure access to NEONKUBE provisioning and management tools.
+        /// Client/Application ID for the application created to manage Azure access to NeonKUBE provisioning and management tools.
         /// </summary>
         [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientId", ApplyNamingConventions = false)]
@@ -118,7 +118,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>>
         /// <remarks>
         /// <para>
-        /// NEONKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
+        /// NeonKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
         /// by default.  This ensures the shortest possible network latency between the cluster VMs.
         /// </para>
         /// <note>
@@ -128,7 +128,7 @@ namespace Neon.Kube.ClusterDef
         /// can happen when you first provision a cluster or later on when you try to scale one.
         /// </para>
         /// <para>
-        /// For NEONKUBE clusters the additional risk of an Azure provisioning failure is going
+        /// For NeonKUBE clusters the additional risk of an Azure provisioning failure is going
         /// to be very low due to how we use availability sets, which is as similar deployment
         /// constraint: control-plane nodes are deployed to one availability set and workers to another.
         /// Without a proximity placement group, Azure could deploy the control-plane nodes to one datacenter
@@ -259,7 +259,7 @@ namespace Neon.Kube.ClusterDef
         /// up on any changes that happened while it was offline.
         /// </note>
         /// <note>
-        /// NEONKUBE deploys manager and worker nodes in separate Azure availability zones.
+        /// NeonKUBE deploys manager and worker nodes in separate Azure availability zones.
         /// This means that there will always be a quorum of managers available as any one
         /// update zone is rebooted.
         /// </note>
@@ -279,11 +279,11 @@ namespace Neon.Kube.ClusterDef
         /// You can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
         /// </note>
         /// <note>
-        /// NEONKUBE clusters cannot be deployed to ARM-based Azure VM sizes at this time.  You must
+        /// NeonKUBE clusters cannot be deployed to ARM-based Azure VM sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// NEONKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// NeonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -306,7 +306,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <para>
         /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
-        /// NEONKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// NeonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
         /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
         /// <see cref="AzureStorageType.UltraSSD"/>.
         /// </para>
@@ -336,7 +336,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
         /// upgrade the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -372,7 +372,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>

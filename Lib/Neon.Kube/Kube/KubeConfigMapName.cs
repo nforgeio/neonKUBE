@@ -32,12 +32,12 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines internal NEONKUBE global cluster configmap names.
+    /// Defines internal NeonKUBE global cluster configmap names.
     /// </summary>
     public static class KubeConfigMapName
     {
         /// <summary>
-        /// Identifes the NEONKUBE configmap used to report cluster health.  This configmap is
+        /// Identifes the NeonKUBE configmap used to report cluster health.  This configmap is
         /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
@@ -45,7 +45,7 @@ namespace Neon.Kube
         public const string ClusterHealth = "cluster-health";
 
         /// <summary>
-        /// Identifes the NEONKUBE configmap used to report cluster info.  This configmap is
+        /// Identifes the NeonKUBE configmap used to report cluster info.  This configmap is
         /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
@@ -54,7 +54,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Identifies the NEONKUBE configmap used to indicate whether the cluster is considered
+        /// Identifies the NeonKUBE configmap used to indicate whether the cluster is considered
         /// to be locked.  <b>NeonDESKTOP</b>, <b>NeonCLIENT</b>, and <b>ClusterFixture</b> use 
         /// this to block operations like cluster <b>reset</b>, <b>remove</b>, <b>pause</b>, and 
         /// <b>stop</b> when the cluster  is locked in an attempt to avoid harmful operations on

@@ -81,7 +81,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Optionally specifies the certificate issuer, including any configuration required by the issuer.
-        /// This defaults to <c>null</c> which enables the standard NEONKUBE issuer.
+        /// This defaults to <c>null</c> which enables the standard NeonKUBE issuer.
         /// </summary>
         [JsonProperty(PropertyName = "Issuer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "issuer", ApplyNamingConventions = false)]

@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterStopCommand : CommandBase
     {
         private const string usage = @"
-Stops the current NEONKUBE cluster.
+Stops the current NeonKUBE cluster.
 
 USAGE:
 

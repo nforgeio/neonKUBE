@@ -22,7 +22,7 @@ using Neon.Kube.ClusterDef;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the non-node annotations used to tag objects by NEONKUBE.
+    /// Defines the non-node annotations used to tag objects by NeonKUBE.
     /// </summary>
     public static class NeonAnnotation
     {

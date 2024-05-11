@@ -36,7 +36,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto
 {
     /// <summary>
-    /// Creates clients for NEONKUBE related gRPC services.
+    /// Creates clients for NeonKUBE related gRPC services.
     /// </summary>
     public static class NeonGrpcServices
     {

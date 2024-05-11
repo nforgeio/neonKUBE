@@ -40,7 +40,7 @@ using Quartz.Logging;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook that sets priority classes for NEONKUBE pods.
+    /// Webhook that sets priority classes for NeonKUBE pods.
     /// </summary>
     [Webhook(
         name:                    "pod-policy.neonkube.io",
@@ -92,7 +92,7 @@ namespace NeonClusterOperator
 
                     if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                     {
-                        logger?.LogInformationEx(() => $"Pod not in a NEONKUBE namespace.");
+                        logger?.LogInformationEx(() => $"Pod not in a NeonKUBE namespace.");
 
                         return MutationResult.NoChanges();
                     }
@@ -114,7 +114,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Used to check whether a pod within a NEONKUBE namespace has a priority class
+        /// Used to check whether a pod within a NeonKUBE namespace has a priority class
         /// assigned and sets the priority class and also <see cref="modified"/> when the
         /// pod has no priority class.  For harbor related pods, this sets the priority
         /// class to <see cref="PriorityClass.NeonStorage"/> or <see cref="PriorityClass.NeonMin"/>

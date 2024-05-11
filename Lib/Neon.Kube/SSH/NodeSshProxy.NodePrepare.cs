@@ -16,7 +16,7 @@
 // limitations under the License.
 
 // This file includes node configuration methods executed while setting
-// up a NEONKUBE cluster.
+// up a NeonKUBE cluster.
 
 using System;
 using System.Collections.Generic;
@@ -58,7 +58,7 @@ namespace Neon.Kube.SSH
         }
 
         /// <summary>
-        /// Installs the NEONKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
+        /// Installs the NeonKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         public void NodeInstallTools(ISetupController controller)
@@ -227,7 +227,7 @@ fi
                     const string confPath = "/etc/modules-load.d//xfs.conf";
 
                     var config =
-@"# NEONKUBE: Enable XFS for Mayastor.
+@"# NeonKUBE: Enable XFS for Mayastor.
 
 xfs
 ";
@@ -262,7 +262,7 @@ modprobe -v xfs
                     const string confPath = "/etc/modules-load.d//nvme.conf";
 
                     var config =
-@"# NEONKUBE: Enable NVMe over TCP for Mayastor.
+@"# NeonKUBE: Enable NVMe over TCP for Mayastor.
 
 nvmet
 nvmet-tcp
@@ -348,7 +348,7 @@ systemctl enable --now iscsid
 
                     var filterScript =
 @"
-# NEONKUBE: Filter [rsyslog.service] log events we don't care about.
+# NeonKUBE: Filter [rsyslog.service] log events we don't care about.
 
 cat <<EOF > /etc/rsyslog.d/60-filter.conf
 if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
@@ -814,7 +814,7 @@ cgroup_manager = ""systemd""
 # only the capabilities defined in the containers json file by the user/kube
 # will be added.
 #
-# NEONKUBE NOTE:
+# NeonKUBE NOTE:
 #
 # We added the SYS_CHROOT capability so that containers can host SSHD servers.
 # This is disabled by default for CRI-O but works for Docker and Containerd
@@ -835,7 +835,7 @@ default_capabilities = [
 # List of default sysctls. If it is empty or commented out, only the sysctls
 # defined in the container json file by the user/kube will be added.
 #
-# NEONKUBE NOTE:
+# NeonKUBE NOTE:
 #
 # We added ""net.ipv4.ping_group_range"" so ping will work from inside pods.
 default_sysctls = [
@@ -1192,7 +1192,7 @@ $@"
 #
 # We're going to use an option to force the file overwrite and then ignore any
 # errors for now and hope for the best.  This isn't as bad as it sounds because 
-# for NEONKUBE we're only calling this method while creating node images, so we'll
+# for NeonKUBE we're only calling this method while creating node images, so we'll
 # should be well aware of any problems while completing the node image configuration
 # and then deploying test clusters.
 #

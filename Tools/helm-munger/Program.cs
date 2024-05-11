@@ -53,7 +53,7 @@ namespace HelmMunger
 {Program.Name} v{Program.Version}
 {Build.Copyright}
 
-Used by NEONKUBE Helm chart upgrade scripts to munge cluster Helm charts.
+Used by NeonKUBE Helm chart upgrade scripts to munge cluster Helm charts.
 
 USAGE:
 

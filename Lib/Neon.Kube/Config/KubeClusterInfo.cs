@@ -42,7 +42,7 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Holds extended NEONKUBE related cluster information.
+    /// Holds extended NeonKUBE related cluster information.
     /// </summary>
     public class KubeClusterInfo
     {
@@ -78,7 +78,7 @@ namespace Neon.Kube.Config
         public string ClusterDomain { get; set; } = null;
 
         /// <summary>
-        /// Specifies the NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// Specifies the NeonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]

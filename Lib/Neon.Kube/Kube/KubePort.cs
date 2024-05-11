@@ -27,7 +27,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Defines reserved NEONKUBE node and cluster network ports.
+    /// Defines reserved NeonKUBE node and cluster network ports.
     /// </para>
     /// <note>
     /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can

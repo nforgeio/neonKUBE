@@ -62,7 +62,7 @@ namespace NeonCli
     public class ClusterIsLockedCommand : CommandBase
     {
         private const string usage = @"
-Determines whether the current NEONKUBE cluster is locked.
+Determines whether the current NeonKUBE cluster is locked.
 
 USAGE:
 

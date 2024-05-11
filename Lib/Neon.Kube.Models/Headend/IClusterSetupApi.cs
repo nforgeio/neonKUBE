@@ -46,14 +46,14 @@ namespace Neon.Kube.Models.Headend
         Dictionary<string, string> CreateClusterAsync();
 
         /// <summary>
-        /// Returns the URI of the download manifest for an on-premise NEONKUBE node image.
+        /// Returns the URI of the download manifest for an on-premise NeonKUBE node image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
-        /// <param name="version">Specifies the NEONKUBE version.</param>
+        /// <param name="version">Specifies the NeonKUBE version.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
         /// To obtain the URI for a specific staged node image, pass this as the name of the
-        /// branch from which NEONKUBE libraries were built.  When <c>null</c> is passed, 
+        /// branch from which NeonKUBE libraries were built.  When <c>null</c> is passed, 
         /// the URI for the release image for the current build will be returned when the
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.
@@ -68,14 +68,14 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string stageBranch);
 
         /// <summary>
-        /// Returns the URI of the download manifest for a NEONKUBE desktop image.
+        /// Returns the URI of the download manifest for a NeonKUBE desktop image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
-        /// <param name="version">Specifies the NEONKUBE version.</param>
+        /// <param name="version">Specifies the NeonKUBE version.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
         /// To obtain the URI for a specific staged node image, pass this as the name of the
-        /// branch from which NEONKUBE libraries were built.  When <c>null</c> is passed, 
+        /// branch from which NeonKUBE libraries were built.  When <c>null</c> is passed, 
         /// the URI for the release image for the current build will be returned when the
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.
@@ -92,7 +92,7 @@ namespace Neon.Kube.Models.Headend
         /// <summary>
         /// Returns the Azure reference for a node image.
         /// </summary>
-        /// <param name="version">Specifies the NEONKUBE version.</param>
+        /// <param name="version">Specifies the NeonKUBE version.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <returns>The action result.</returns>
         [HttpGet]
@@ -106,7 +106,7 @@ namespace Neon.Kube.Models.Headend
         /// </summary>
         /// <param name="uploadId">UUID used to name the blob when persisted by the service.</param>
         /// <param name="timestampUtc">The timestamp (UTC) when the error occurred.</param>
-        /// <param name="version">The NEONKUBE version.</param>
+        /// <param name="version">The NeonKUBE version.</param>
         /// <param name="clientId">The client installation UUID.</param>
         /// <param name="userId">The user ID or <see cref="Guid.Empty"/> before we implemented NEONCLOUD users.</param>
         /// <param name="preparing"><c>true</c> when the failure occured while preparing the cluster, <c>false</c> when setting it up.</param>

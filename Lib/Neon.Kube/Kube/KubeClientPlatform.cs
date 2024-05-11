@@ -31,8 +31,8 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the operating systems supported by NEONKUBE client applications
-    /// used on developer or operator workstations to manage remote NEONKUBE clusters.  
+    /// Enumerates the operating systems supported by NeonKUBE client applications
+    /// used on developer or operator workstations to manage remote NeonKUBE clusters.  
     /// </summary>
     public enum KubeClientPlatform
     {

@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterLockCommand : CommandBase
     {
         private const string usage = @"
-Locks the current NEONKUBE cluster, disabling dangerous cluster
+Locks the current NeonKUBE cluster, disabling dangerous cluster
 operations like:
 
     remove, reset, pause and stop

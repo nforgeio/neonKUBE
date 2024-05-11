@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// container registeries.
         /// </para>
         /// <note>
-        /// Source references have their tags set to the NEONKUBE cluster version.
+        /// Source references have their tags set to the NeonKUBE cluster version.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SourceRef", Required = Required.Always)]

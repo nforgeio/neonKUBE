@@ -27,7 +27,7 @@ namespace Neon.Kube.GrpcProto
 {
     /// <summary>
     /// <para>
-    /// <b>INTERNAL USE ONLY:</b> Defines internal GRPC protobuf messages and services used by NEONKUBE applications.
+    /// <b>INTERNAL USE ONLY:</b> Defines internal GRPC protobuf messages and services used by NeonKUBE applications.
     /// </para>
     /// <note>
     /// This is only supported for .NET 6.0 applications.

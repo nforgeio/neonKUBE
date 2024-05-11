@@ -57,38 +57,38 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersion.Helm}-windows-amd64.zip";
 
         /// <summary>
-        /// The GitHub organization hosting NEONKUBE releases container images.
+        /// The GitHub organization hosting NeonKUBE releases container images.
         /// </summary>
         public const string NeonKubeReleasePackageOrg = "neonkube-release";
 
         /// <summary>
-        /// The GitHub organization hosting NEONKUBE staged container images.
+        /// The GitHub organization hosting NeonKUBE staged container images.
         /// </summary>
         public const string NeonKubeStagePackageOrg = "neonkube-stage";
 
         /// <summary>
-        /// The name of the AWS bucket used for published NEONKUBE releases.
+        /// The name of the AWS bucket used for published NeonKUBE releases.
         /// </summary>
         public const string NeonKubeReleaseBucketName = "neonkube-release";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket for public NEONKUBE releases
+        /// The URI for the public AWS S3 bucket for public NeonKUBE releases
         /// </summary>
         public const string NeonKubeReleaseBucketUri = $"https://{NeonKubeReleaseBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
-        /// The name of the AWS bucket used for staged NEONKUBE releases.
+        /// The name of the AWS bucket used for staged NeonKUBE releases.
         /// </summary>
         public const string NeonKubeStageBucketName = "neonkube-stage";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket for public NEONKUBE releases
+        /// The URI for the public AWS S3 bucket for public NeonKUBE releases
         /// </summary>
         public const string NeonKubeStageBucketUri = $"https://{NeonKubeStageBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
-        /// NEONKUBE cluster version.
+        /// NeonKUBE cluster version.
         /// </summary>
         public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersion.NeonKubeWithBranchPart}.json";
 
@@ -126,13 +126,13 @@ namespace Neon.Kube
         }
 
         /// <summary>D
-        /// Returns the URI of the download manifest for a NEONKUBE node image.
+        /// Returns the URI of the download manifest for a NeonKUBE node image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
         /// To obtain the URI for a specific staged node image, pass this as the name of the
-        /// branch from which NEONKUBE libraries were built.  When <c>null</c> is passed, 
+        /// branch from which NeonKUBE libraries were built.  When <c>null</c> is passed, 
         /// the URI for the release image for the current build will be returned when the
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.
@@ -152,13 +152,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the URI of the download manifest for a NEONKUBE desktop image.
+        /// Returns the URI of the download manifest for a NeonKUBE desktop image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
         /// To obtain the URI for a specific staged node image, pass this as the name of the
-        /// branch from which NEONKUBE libraries were built.  When <c>null</c> is passed, 
+        /// branch from which NeonKUBE libraries were built.  When <c>null</c> is passed, 
         /// the URI for the release image for the current build will be returned when they
         /// public release has been published, otherwise this will return the URI for the
         /// staged image.

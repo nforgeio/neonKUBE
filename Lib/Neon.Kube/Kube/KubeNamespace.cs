@@ -33,7 +33,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Defines the namespace names created for NEONKUBE clusters.
+    /// Defines the namespace names created for NeonKUBE clusters.
     /// </para>
     /// <note>
     /// These constants are tagged with <see cref="KubeValueAttribute"/> so they can
@@ -91,7 +91,7 @@ namespace Neon.Kube
         public const string NeonStorage = "neon-storage";
 
         /// <summary>
-        /// Hosts NEONKUBE infrastructure.
+        /// Hosts NeonKUBE infrastructure.
         /// </summary>
         [KubeValue]
         public const string NeonSystem = "neon-system";
@@ -102,17 +102,17 @@ namespace Neon.Kube
         public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of stock NEONKUBE cluster namespaces.
+        /// Returns the set of stock NeonKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all stock Kubernetes and NEONKUBE cluster namespaces.
+        /// Returns the set of all stock Kubernetes and NeonKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and NEONKUBE namespaces but without the <b>default</b> namespace.
+        /// Returns the set of all Kubernetes and NeonKUBE namespaces but without the <b>default</b> namespace.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespacesWithoutDefault { get; private set; }
 

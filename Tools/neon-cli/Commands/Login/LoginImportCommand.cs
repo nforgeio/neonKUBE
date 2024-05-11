@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginImportCommand : CommandBase
     {
         private const string usage = @"
-Imports an exported NEONKUBE context from a file.
+Imports an exported NeonKUBE context from a file.
 
 USAGE:
 

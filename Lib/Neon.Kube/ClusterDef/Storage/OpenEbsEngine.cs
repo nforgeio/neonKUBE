@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Identifies the OpenEBS storage engines supported by NEONKUBE clusters.
+    /// Identifies the OpenEBS storage engines supported by NeonKUBE clusters.
     /// </summary>
     public enum OpenEbsEngine
     {
@@ -62,7 +62,7 @@ namespace Neon.Kube.ClusterDef
         /// <a href="https://docs.openebs.io/v090/docs/next/jiva.html">Jiva Overview</a>
         /// </para>
         /// <note>
-        /// Jiva is not currently supported for NEONKUBE clusters.
+        /// Jiva is not currently supported for NeonKUBE clusters.
         /// </note>
         /// </summary>
         [EnumMember(Value = "jiva")]
@@ -75,7 +75,7 @@ namespace Neon.Kube.ClusterDef
         /// than the old iSCSI protocol which is quite slow.
         /// </para>
         /// <note>
-        /// Mayastor is not currently supported for NEONKUBE clusters, but will be supported in the near future.
+        /// Mayastor is not currently supported for NeonKUBE clusters, but will be supported in the near future.
         /// </note>
         /// </summary>
         [EnumMember(Value = "mayastor")]

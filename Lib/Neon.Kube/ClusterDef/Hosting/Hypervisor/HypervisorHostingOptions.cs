@@ -108,7 +108,7 @@ namespace Neon.Kube.ClusterDef
         /// This defaults to <b>4GiB</b>.
         /// </para>
         /// <note>
-        /// NEONKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
+        /// NeonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -219,7 +219,7 @@ namespace Neon.Kube.ClusterDef
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(KubeConfigCluster configCluster)
         {
-            // We don't add a prefix for non-NEONKUBE clusters or the special neon-desktop cluster.
+            // We don't add a prefix for non-NeonKUBE clusters or the special neon-desktop cluster.
 
             if (!configCluster.IsNeonKube || configCluster.IsNeonDesktop)
             {

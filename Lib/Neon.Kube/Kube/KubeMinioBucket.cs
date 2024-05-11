@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the Minio bucket names used by NEONKUBE applications.
+    /// Defines the Minio bucket names used by NeonKUBE applications.
     /// </summary>
     public static class KubeMinioBucket
     {
@@ -67,7 +67,7 @@ namespace Neon.Kube
         public const string Tempo = "tempo";
 
         /// <summary>
-        /// Returns the list of all internal NEONKUBE Minio bucket names.
+        /// Returns the list of all internal NeonKUBE Minio bucket names.
         /// </summary>
         public static readonly IReadOnlyList<string> All =
             new List<string>()

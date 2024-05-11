@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterStartCommand : CommandBase
     {
         private const string usage = @"
-Starts the current stopped or paused NEONKUBE cluster.
+Starts the current stopped or paused NeonKUBE cluster.
 
 USAGE:
 

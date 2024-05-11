@@ -90,7 +90,7 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="ClusterManifest"/> for the current NEONKUBE build.  This is generated
+        /// Returns the <see cref="ClusterManifest"/> for the current NeonKUBE build.  This is generated
         /// by the internal <b>neon-image prepare node ...</b> tool command which prepares node images.
         /// This manifest describes the container images that will be provisioned into clusters.
         /// </para>
@@ -113,7 +113,7 @@ namespace Neon.Kube.Setup
         /// even when <paramref name="debugMode"/> is passed as <c>false</c>.
         /// </para>
         /// <note>
-        /// Clusters deployed with <b>debug mode</b> will not pin the NEONKUBE related images on cluster
+        /// Clusters deployed with <b>debug mode</b> will not pin the NeonKUBE related images on cluster
         /// nodes, resulting in the possibility that Kubelet may evict these images due to disk pressure.
         /// </note>
         /// </param>

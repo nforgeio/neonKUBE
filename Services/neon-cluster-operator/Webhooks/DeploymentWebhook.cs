@@ -42,7 +42,7 @@ using Octokit;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook to set istio injection on NEONKUBE deployments.
+    /// Webhook to set istio injection on NeonKUBE deployments.
     /// </summary>
     [Webhook(
         name:                    "deployment-policy.neonkube.io",

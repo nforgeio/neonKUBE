@@ -89,7 +89,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <note>
         /// Azure doesn't support using <see cref="PremiumSSDv2"/> disks as virtual machine OS
-        /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
+        /// disks.  NeonKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
         /// </note>
         /// </summary>
         [EnumMember(Value = "premium-ssd-v2")]
@@ -102,7 +102,7 @@ namespace Neon.Kube.ClusterDef
         /// </para>
         /// <note>
         /// Azure doesn't support using <see cref="UltraSSD"/> disks as virtual machine OS
-        /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
+        /// disks.  NeonKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
         /// </note>
         /// </summary>
         [EnumMember(Value = "ultra-ssd")]

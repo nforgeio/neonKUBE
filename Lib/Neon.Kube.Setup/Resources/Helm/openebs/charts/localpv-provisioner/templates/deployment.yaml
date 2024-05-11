@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "localpv.labels" . | nindent 4 }}
 spec:
-  # NEONKUBE CUSTOM VALUE
+  # NeonKUBE CUSTOM VALUE
   priorityClassName: {{ .Values.localpv.priorityClassName }}
   replicas: {{ .Values.localpv.replicas }}
   strategy:

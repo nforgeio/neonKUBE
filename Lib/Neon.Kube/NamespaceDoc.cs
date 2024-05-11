@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// This namespace includes NEONKUBE Kubernetes distribution related types.
+    /// This namespace includes NeonKUBE Kubernetes distribution related types.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

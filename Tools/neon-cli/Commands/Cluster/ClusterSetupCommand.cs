@@ -61,10 +61,10 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-MAINTAINER ONLY: Sets up a NEONKUBE cluster as described in the cluster
+MAINTAINER ONLY: Sets up a NeonKUBE cluster as described in the cluster
 definition file.  This is the second part of deploying a cluster in two
 stages, where you first prepare the cluster to provision any virtual
-machines and network infrastructure and then you setup NEONKUBE, like:
+machines and network infrastructure and then you setup NeonKUBE, like:
 
     neon cluster prepare CLUSTER-DEF
     neon cluster setup sysadmin@CLUSTER-NAME
@@ -126,7 +126,7 @@ OPTIONS:
 REMARKS:
 
 Most users will use the deploy command that combines both commands.  The two
-stage process is typically used only by NEONKUBE maintainers.
+stage process is typically used only by NeonKUBE maintainers.
 
     neon cluster deploy CLUSTER-DEF
 

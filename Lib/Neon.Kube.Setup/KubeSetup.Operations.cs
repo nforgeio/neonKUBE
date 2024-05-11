@@ -671,7 +671,7 @@ mode: {kubeProxyMode}");
             const string folder        = "/usr/share/doc/neonkube/copyright";
             const string copyrightText =
 @"Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
-NEONKUBE™, NeonDESKTOP™, and NeonCLIENT™ are trademarked by NEONFORGE LLC.
+NeonKUBE™, NeonDESKTOP™, and NeonCLIENT™ are trademarked by NEONFORGE LLC.
 ";
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
@@ -1380,7 +1380,7 @@ exit 1
         }
 
         /// <summary>
-        /// Adds the NEONKUBE standard priority classes to the cluster.
+        /// Adds the NeonKUBE standard priority classes to the cluster.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
@@ -1538,7 +1538,7 @@ set -euo pipefail
 #
 # NOTE: The [cilium-cli] appears to select different operator container
 #       images when deployed to cloud native Kubernetes platforms and
-#       a generic image for other environments.  NEONKUBE deploys the
+#       a generic image for other environments.  NeonKUBE deploys the
 #       generic image.  [cilium-cli] appends [-generic] to the
 #       [cilium-operator] container name below for us.
 
@@ -2973,7 +2973,7 @@ istioctl install --verify -y -f manifest.yaml
             values.Add("ndm.enabled", openEbsEngine != OpenEbsEngine.Jiva);
             values.Add("ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
             values.Add("ndm.nodeSelector", ndmAdvice.NodeSelector);
-            values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                   // NEONKUBE CUSTOM VALUE
+            values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                   // NeonKUBE CUSTOM VALUE
             values.Add("ndm.resources", ndmAdvice.Resources);
             values.Add("ndm.tolerations", ndmAdvice.Tolerations);
 
@@ -2986,7 +2986,7 @@ istioctl install --verify -y -f manifest.yaml
 
             values.Add("ndmOperator.enabled", openEbsEngine != OpenEbsEngine.Jiva);
             values.Add("ndmOperator.nodeSelector", ndmOperatorAdvice.NodeSelector);
-            values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                   // NEONKUBE CUSTOM VALUE
+            values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                   // NeonKUBE CUSTOM VALUE
             values.Add("ndmOperator.replicas", ndmOperatorAdvice.Replicas);
             values.Add("ndmOperator.resources", ndmOperatorAdvice.Resources);
             values.Add("ndmOperator.tolerations", ndmOperatorAdvice.Tolerations);
@@ -2999,7 +2999,7 @@ istioctl install --verify -y -f manifest.yaml
             // openebs-localpv-provisioner
 
             values.Add("localpv-provisioner.nodeSelector", localPvProvisionerAdvice.NodeSelector);
-            values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);    // NEONKUBE CUSTOM VALUE
+            values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);    // NeonKUBE CUSTOM VALUE
             values.Add("localpv-provisioner.replicas", localPvProvisionerAdvice.Replicas);
             values.Add("localpv-provisioner.resources", localPvProvisionerAdvice.Resources);
             values.Add("localpv-provisioner.tolerations", localPvProvisionerAdvice.Tolerations);
@@ -3067,7 +3067,7 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-jiva-operator
 
-            values.Add("jiva.jivaOperator.priorityClassName", jivaOperatorAdvice.PriorityClassName);        // NEONKUBE CUSTOM VALUE
+            values.Add("jiva.jivaOperator.priorityClassName", jivaOperatorAdvice.PriorityClassName);        // NeonKUBE CUSTOM VALUE
             values.Add("jiva.jivaOperator.nodeSelector", jivaOperatorAdvice.NodeSelector);
             values.Add("jiva.jivaOperator.resources", jivaOperatorAdvice.Resources);
             values.Add("jiva.jivaOperator.replicas", jivaOperatorAdvice.Replicas);
@@ -3092,7 +3092,7 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-jiva-csi-controller
 
-            values.Add("jiva.csiController.priorityClassName", jivaCsiControllerAdvice.PriorityClassName);  // NEONKUBE CUSTOM VALUE
+            values.Add("jiva.csiController.priorityClassName", jivaCsiControllerAdvice.PriorityClassName);  // NeonKUBE CUSTOM VALUE
             values.Add("jiva.csiController.nodeSelector", jivaCsiControllerAdvice.NodeSelector);
             values.Add("jiva.csiController.replicas", jivaCsiControllerAdvice.Replicas);
             values.Add("jiva.csiController.resources", jivaCsiControllerAdvice.Resources);
@@ -3117,7 +3117,7 @@ istioctl install --verify -y -f manifest.yaml
             //---------------------------------------------
             // openebs-jiva-csi-node
 
-            values.Add("jiva.csiNode.priorityClassName", jivaCsiNodeAdvice.PriorityClassName);              // NEONKUBE CUSTOM VALUE
+            values.Add("jiva.csiNode.priorityClassName", jivaCsiNodeAdvice.PriorityClassName);              // NeonKUBE CUSTOM VALUE
             values.Add("jiva.csiNode.nodeSelector", jivaCsiNodeAdvice.NodeSelector);
             values.Add("jiva.csiNode.resources", jivaCsiNodeAdvice.Resources);
             values.Add("jiva.csiNode.tolerations", jivaCsiNodeAdvice.Tolerations);

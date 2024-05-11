@@ -170,7 +170,7 @@ spec:
 @"
 apiVersion: v2
 name: neon-cluster-operator
-description: Manages NEONKUBE clusters via multiple control loops
+description: Manages NeonKUBE clusters via multiple control loops
 type: application
 version: 0
 appVersion: 0

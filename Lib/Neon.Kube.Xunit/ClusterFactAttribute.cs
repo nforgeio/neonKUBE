@@ -31,7 +31,7 @@ namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// <para>
-    /// Used for marking test cases that access or provision NEONKUBE clusters by
+    /// Used for marking test cases that access or provision NeonKUBE clusters by
     /// extending <see cref="FactAttribute"/> and skipping these tests when they
     /// cannot or should not be executed on the current machine.
     /// </para>

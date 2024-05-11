@@ -60,7 +60,7 @@ namespace NeonCli.Commands.Cluster
     public class ClusterDeployCommand : CommandBase
     {
         private const string usage = @"
-Deploys a NEONKUBE cluster, based on a cluster definition.
+Deploys a NeonKUBE cluster, based on a cluster definition.
 
 USAGE: 
 
@@ -102,9 +102,9 @@ OPTIONS:
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
-                                  the staged NEONKUBE node image whose version is a 
-                                  combination of the NEONKUBE version along with the 
-                                  name of the NEONKUBE branch when the libraries were
+                                  the staged NeonKUBE node image whose version is a 
+                                  combination of the NeonKUBE version along with the 
+                                  name of the NeonKUBE branch when the libraries were
                                   built.
 
                                   [--use-staged=branch] allows you to override the branch
@@ -114,7 +114,7 @@ OPTIONS:
 REMARKS:
 
 Most users will use the deploy command that combines both commands.  The two
-stage process is typically used only by NEONKUBE maintainers.
+stage process is typically used only by NeonKUBE maintainers.
 
     neon cluster deploy CLUSTER-DEF
 

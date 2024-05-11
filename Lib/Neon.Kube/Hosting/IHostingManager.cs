@@ -41,12 +41,12 @@ using Neon.Time;
 namespace Neon.Kube.Hosting
 {
     /// <summary>
-    /// Interface describing NEONKUBE hosting manager implementions for different environments..
+    /// Interface describing NeonKUBE hosting manager implementions for different environments..
     /// </summary>
     /// <remarks>
     /// <para>
     /// <see cref="IHostingManager"/> implementations are used to provision the infrastructure required
-    /// to deploy a NEONKUBE cluster to various environments including on-premise via XenServer or
+    /// to deploy a NeonKUBE cluster to various environments including on-premise via XenServer or
     /// Hyper-V hypervisors or to public clouds like AWS, Azure, and Google.  This infrastructure
     /// includes creating or initializing the servers as well as configuring networking in cloud
     /// environments.

@@ -61,7 +61,7 @@ namespace NeonCli
     public class ClusterHealthCommand : CommandBase
     {
         private const string usage = @"
-Prints the status of the current NEONKUBE cluster.
+Prints the status of the current NeonKUBE cluster.
 
 USAGE: neon cluster health [OPTIONS]
 

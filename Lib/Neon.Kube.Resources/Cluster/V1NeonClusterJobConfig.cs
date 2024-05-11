@@ -198,7 +198,7 @@ namespace Neon.Kube.Resources.Cluster
             public JobSchedule LinuxSecurityPatch { get; set; } = new JobSchedule();
 
             /// <summary>
-            /// CRON schedule for ensuring that the required NEONKUBE container images
+            /// CRON schedule for ensuring that the required NeonKUBE container images
             /// are loaded into Harbor.
             /// </summary>
             public JobSchedule HarborImagePush { get; set; } = new JobSchedule();

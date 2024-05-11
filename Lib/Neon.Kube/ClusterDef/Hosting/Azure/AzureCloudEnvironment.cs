@@ -79,7 +79,7 @@ namespace Neon.Kube.ClusterDef
     /// <para>
     /// Alternatively, you can set <see cref="Name"/> to <b>custom</b> and specify
     /// a custom endpoint URI and audience.  This is useful for deploying a cluster
-    /// to a new Azure environment unknown to the current NEONKUBE release or other
+    /// to a new Azure environment unknown to the current NeonKUBE release or other
     /// private/internal Azure clouds.
     /// </para>
     /// </remarks>

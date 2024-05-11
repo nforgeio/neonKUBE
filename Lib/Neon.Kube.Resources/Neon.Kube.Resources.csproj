@@ -5,7 +5,7 @@
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.Resources</RootNamespace>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: NEONKUBE Kubernetes CRDs and implementations.</Description>
+        <Description>INTERNAL USE ONLY: NeonKUBE Kubernetes CRDs and implementations.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
         <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube.Resources/README.md</PackageProjectUrl>

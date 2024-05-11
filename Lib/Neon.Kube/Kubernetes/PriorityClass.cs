@@ -27,7 +27,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Enumerates the system and NEONKUBE pod <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">PriorityClass</a>
+    /// Enumerates the system and NeonKUBE pod <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">PriorityClass</a>
     /// values.  These are used by Kubernetes when deciding which pod to evict from a node when necessary as well as for ordering how pods will be terminated
     /// when nodes are <a href="https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/">shutdown</a> gracefully.  Each priority property defines
     /// the priority name and value.
@@ -36,7 +36,7 @@ namespace Neon.Kube
     /// Higher priorities have higher values and non-Kubernetes defined priority values must be less than 1 billion.
     /// </note>
     /// <para>
-    /// NEONKUBE priority property names are prefixed by <b>"Neon"</b> and built-in Kubernetes priority property 
+    /// NeonKUBE priority property names are prefixed by <b>"Neon"</b> and built-in Kubernetes priority property 
     /// names are prefixed by <b>"System"</b> and will have <see cref="PriorityClass.PriorityDef.IsSystem"/> set 
     /// to <c>true</c>.
     /// </para>
@@ -62,7 +62,7 @@ namespace Neon.Kube
     /// <item>
     ///     <term><see cref="NeonMax"/> (999999999)</term>
     ///     <description>
-    ///     Idenifies the maximum priority reserved for NEONKUBE applications.
+    ///     Idenifies the maximum priority reserved for NeonKUBE applications.
     ///     You should avoid using priorities in the range of <see cref="NeonMin"/>
     ///     and <see cref="NeonMax"/> (inclusive) for your applications.
     ///     </description>
@@ -70,50 +70,50 @@ namespace Neon.Kube
     /// <item>
     ///     <term><see cref="NeonOperator"/> (900008000)</term>
     ///     <description>
-    ///     Used for critical NEONKUBE operators.
+    ///     Used for critical NeonKUBE operators.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonNetwork"/> (900007000)</term>
     ///     <description>
-    ///     Used for NEONKUBE database deployments.
+    ///     Used for NeonKUBE database deployments.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonStorage"/> (900006000)</term>
     ///     <description>
     ///     Used for critical OpenEBS related storage services that back critical
-    ///     NEONKUBE and user deployments.
+    ///     NeonKUBE and user deployments.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonData"/> (900005000)</term>
     ///     <description>
-    ///     Used for NEONKUBE database deployments.
+    ///     Used for NeonKUBE database deployments.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonApi"/> (900004000)</term>
     ///     <description>
-    ///     Used for NEONKUBE API deployments.
+    ///     Used for NeonKUBE API deployments.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonApp"/> (900003000)</term>
     ///     <description>
-    ///     Used for NEONKUBE application deployments.
+    ///     Used for NeonKUBE application deployments.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonMonitor"/> (900002000)</term>
     ///     <description>
-    ///     Used for NEONKUBE monitoring components.
+    ///     Used for NeonKUBE monitoring components.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="NeonMin"/> (900000000)</term>
     ///     <description>
-    ///     Idenifies the maximum priority reserved for NEONKUBE applications.
+    ///     Idenifies the maximum priority reserved for NeonKUBE applications.
     ///     You should avoid using priorities in the range of <see cref="NeonMin"/>
     ///     and <see cref="NeonMax"/> (inclusive) for your applications.
     ///     </description>
@@ -159,7 +159,7 @@ namespace Neon.Kube
     /// The user priorities defined here are just a starting point and you're free to add
     /// add additional priorities as required or remove or edit the ones you degine.  We
     /// recommend that most user defined priorities be lower than <see cref="NeonApp"/> 
-    /// to avoid conflicts with critical Kubernetes and NEONKUBE pods.
+    /// to avoid conflicts with critical Kubernetes and NeonKUBE pods.
     /// </para>
     /// <note>
     /// <see cref="UserMedium"/> is configured as the global priority class by default.
@@ -244,15 +244,15 @@ namespace Neon.Kube
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical",    2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
 
-            list.Add(NeonMax               = new PriorityDef("neon-max",                 999999999, description: "Maximum priority reserved by NEONKUBE"));
-            list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "Used for critical NEONKUBE operator pods"));
-            list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "Used for critical NEONKUBE networking pods"));
-            list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "Used for critical NEONKUBE low-level storage pods"));
-            list.Add(NeonData              = new PriorityDef("neon-data",                900005000, description: "Used for critical NEONKUBE databases pods"));
-            list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "Used for NEONKUBE API pods"));
-            list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "Used for NEONKUBE application and dashboard pods"));
-            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "Used for NEONKUBE monitoring infrastructure pods"));
-            list.Add(NeonMin               = new PriorityDef("neon-min",                 900000000, description: "Minimum priority reserved by NEONKUBE"));
+            list.Add(NeonMax               = new PriorityDef("neon-max",                 999999999, description: "Maximum priority reserved by NeonKUBE"));
+            list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "Used for critical NeonKUBE operator pods"));
+            list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "Used for critical NeonKUBE networking pods"));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "Used for critical NeonKUBE low-level storage pods"));
+            list.Add(NeonData              = new PriorityDef("neon-data",                900005000, description: "Used for critical NeonKUBE databases pods"));
+            list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "Used for NeonKUBE API pods"));
+            list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "Used for NeonKUBE application and dashboard pods"));
+            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "Used for NeonKUBE monitoring infrastructure pods"));
+            list.Add(NeonMin               = new PriorityDef("neon-min",                 900000000, description: "Minimum priority reserved by NeonKUBE"));
 
             list.Add(UserVeryHigh          = new PriorityDef("user-veryhigh",                 5000, description: "Used for very-high priority user pods"));
             list.Add(UserHigh              = new PriorityDef("user-high",                     4000, description: "Used for high priority user pods"));
@@ -278,19 +278,19 @@ namespace Neon.Kube
         public static PriorityDef SystemClusterCritical { get; private set; }
 
         /// <summary>
-        /// Idenifies the maximum priority reserved for NEONKUBE applications.
+        /// Idenifies the maximum priority reserved for NeonKUBE applications.
         /// You should avoid using priorities in the range of <see cref="NeonMin"/>
         /// and <see cref="NeonMax"/> (inclusive) for your applications.
         /// </summary>
         public static PriorityDef NeonMax { get; private set; }
 
         /// <summary>
-        /// Used for critical NEONKUBE operators. <b>(900008000)</b>
+        /// Used for critical NeonKUBE operators. <b>(900008000)</b>
         /// </summary>
         public static PriorityDef NeonOperator { get; private set; }
 
         /// <summary>
-        /// Used for NEONKUBE database deployments. <b>(900007000)</b>
+        /// Used for NeonKUBE database deployments. <b>(900007000)</b>
         /// </summary>
         public static PriorityDef NeonNetwork { get; private set; }
 
@@ -300,27 +300,27 @@ namespace Neon.Kube
         public static PriorityDef NeonStorage { get; private set; }
 
         /// <summary>
-        /// Used for NEONKUBE database deployments. <b>(900005000)</b>
+        /// Used for NeonKUBE database deployments. <b>(900005000)</b>
         /// </summary>
         public static PriorityDef NeonData { get; private set; }
 
         /// <summary>
-        /// Used for NEONKUBE API deployments. <b>(900004000)</b>
+        /// Used for NeonKUBE API deployments. <b>(900004000)</b>
         /// </summary>
         public static PriorityDef NeonApi { get; private set; }
 
         /// <summary>
-        /// Used for NEONKUBE application deployments.  <b>(900003000)</b>
+        /// Used for NeonKUBE application deployments.  <b>(900003000)</b>
         /// </summary>
         public static PriorityDef NeonApp { get; private set; }
 
         /// <summary>
-        /// Available for NEONKUBE monitoring related components. <b>(900002000)</b>
+        /// Available for NeonKUBE monitoring related components. <b>(900002000)</b>
         /// </summary>
         public static PriorityDef NeonMonitor { get; private set; }
 
         /// <summary>
-        /// Idenifies the minimum priority reserved for NEONKUBE applications.
+        /// Idenifies the minimum priority reserved for NeonKUBE applications.
         /// You should avoid using priorities in the range of <see cref="NeonMin"/>
         /// and <see cref="NeonMax"/> (inclusive) for your applications.
         /// </summary>
@@ -358,7 +358,7 @@ namespace Neon.Kube
         public static IReadOnlyList<PriorityDef> Values { get; private set; }
 
         /// <summary>
-        /// Ensures that a priority class name is a standard NEONKUBE priority class.
+        /// Ensures that a priority class name is a standard NeonKUBE priority class.
         /// </summary>
         /// <param name="priorityClass">The class name to check or <c>null</c>.</param>
         /// <exception cref="KeyNotFoundException">Thrown for unknown priority classes.</exception>
@@ -366,7 +366,7 @@ namespace Neon.Kube
         {
             if (!string.IsNullOrEmpty(priorityClass) && !Values.Any(priorityDef => priorityDef.Name.Equals(priorityClass, StringComparison.InvariantCultureIgnoreCase)))
             {
-                throw new KeyNotFoundException($"[{priorityClass}] is not one of the standard NEONKUBE priority classes.");
+                throw new KeyNotFoundException($"[{priorityClass}] is not one of the standard NeonKUBE priority classes.");
             }
         }
 

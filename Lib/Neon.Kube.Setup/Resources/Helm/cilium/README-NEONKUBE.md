@@ -1,4 +1,4 @@
-# NEONKUBE Helm chart modifications
+# NeonKUBE Helm chart modifications
 
 This documents how we modified the standard Cilium Helm charts and relocated them here.
 

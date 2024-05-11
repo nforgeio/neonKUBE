@@ -62,7 +62,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Specifies the AWS access key ID that identifies the IAM key created for the IAM
-        /// user assigned to NEONKUBE for management activities, including creating
+        /// user assigned to NeonKUBE for management activities, including creating
         /// the cluster.  This combined with <see cref="SecretAccessKey"/> will be
         /// used to confirm the identity.  This is required.
         /// </summary>
@@ -121,7 +121,7 @@ namespace Neon.Kube.ClusterDef
         /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html">AWS Placement groups</a>
         /// </para>
         /// <para>
-        /// NEONKUBE provisions instances using two <b>partition placement groups</b>, one for
+        /// NeonKUBE provisions instances using two <b>partition placement groups</b>, one for
         /// the cluster control-plane nodes and the other for the workers.  The idea is that control-plane
         /// nodes should be deployed on separate hardware for fault tolerance because if the
         /// majority of control-plane nodes go offline, the entire cluster will be dramatically impacted.
@@ -162,7 +162,7 @@ namespace Neon.Kube.ClusterDef
         /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html">AWS Placement groups</a>
         /// </para>
         /// <para>
-        /// NEONKUBE provisions instances using two <b>partition placement groups</b>, one for
+        /// NeonKUBE provisions instances using two <b>partition placement groups</b>, one for
         /// the cluster control-plane nodes and the other for the workers.  The idea is that control-plane
         /// nodes should be deployed on separate hardware for fault tolerance because if the
         /// majority of control-plane nodes go offline, the entire cluster will be dramatically impacted.
@@ -204,11 +204,11 @@ namespace Neon.Kube.ClusterDef
         /// <see cref="AwsNodeOptions.InstanceType"/>.
         /// </para>
         /// <note>
-        /// NEONKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// NeonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
         /// specify an instance type using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// NEONKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// NeonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an AWS instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -278,7 +278,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -305,7 +305,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NEONKUBE.  We'll automatically
+        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>

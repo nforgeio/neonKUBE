@@ -51,7 +51,7 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NEONKUBE clusters deployed to cloud hosting environments include a cloud provided
+    /// NeonKUBE clusters deployed to cloud hosting environments include a cloud provided
     /// load balancer that routes external network traffic to cluster nodes.  Currently,
     /// only TCP routing is supported.  HTTP and HTTPS traffic is routed as TCP because
     /// we don't want to add the complexity of managing TLS certificates at the load balancer

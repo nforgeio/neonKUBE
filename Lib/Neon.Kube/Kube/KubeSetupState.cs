@@ -47,7 +47,7 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NEONKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
+    /// NeonKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
     /// where preparing the cluster involves initializing infrastructure, including configuring
     /// the network and creating the virtual machines that will host the cluster.  Cluster
     /// setup is where we configure Kubernetes, install the necessary components, and then
@@ -235,7 +235,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies the cluster DNS domain.  NEONKUBE generates a domain like <b>GUID.neoncluster.io</b>
+        /// Specifies the cluster DNS domain.  NeonKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
         /// </para>
         /// <note>
@@ -245,7 +245,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The idea here is that NEONKUBE will be use the generated domain to deploy a fully
+        /// The idea here is that NeonKUBE will be use the generated domain to deploy a fully
         /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
         /// This works even for clusters deployed behind a firewall or NEONDESKTOP clusters
         /// running on a workstation or laptop.
@@ -270,7 +270,7 @@ namespace Neon.Kube
         public ClusterDefinition ClusterDefinition { get; set; }
 
         /// <summary>
-        /// Specifies the NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// Specifies the NeonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]

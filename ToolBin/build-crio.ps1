@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Performs a clean build of the NEONKUBE solution and publishes binaries
-# to the [$/build] folder.  This can also optionally build the NEONKUBE
+# Performs a clean build of the NeonKUBE solution and publishes binaries
+# to the [$/build] folder.  This can also optionally build the NeonKUBE
 # Desktop installer.
 #
 # USAGE: pwsh -file ./build-crio.ps1 VERSION [-publish]

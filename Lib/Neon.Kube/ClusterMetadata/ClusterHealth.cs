@@ -60,7 +60,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The NEONKUBE version of the cluster or <b>"0"</b> when the version
+        /// The NeonKUBE version of the cluster or <b>"0"</b> when the version
         /// is not known.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

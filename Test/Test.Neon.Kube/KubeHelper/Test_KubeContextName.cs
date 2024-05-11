@@ -42,7 +42,7 @@ namespace TestKube
         [Fact]
         public void ParseNeonKube()
         {
-            // Verify that the NEONKUBE components are parsed correctly.
+            // Verify that the NeonKUBE components are parsed correctly.
 
             var name = KubeContextName.Parse("user@cluster/namespace");
 
