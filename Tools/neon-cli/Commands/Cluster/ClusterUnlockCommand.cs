@@ -71,7 +71,7 @@ USAGE:
 
 REMARKS:
 
-All clusters besides NEONDESKTOP clusters are locked by default when they're
+All clusters besides NeonDESKTOP clusters are locked by default when they're
 deployed.  You can disable this by setting [IsLocked=false] in your cluster
 definition.
 

@@ -82,7 +82,7 @@ REMARKS:
 This command will not work on a locked clusters as a safety measure.  The idea
 it to add some friction to avoid impacting production clusters by accident.
 
-All clusters besides NEONDESKTOP clusters are locked by default when they're
+All clusters besides NeonDESKTOP clusters are locked by default when they're
 deployed.  You can disable this by setting [IsLocked=false] in your cluster
 definition or by executing this command on your cluster:
 

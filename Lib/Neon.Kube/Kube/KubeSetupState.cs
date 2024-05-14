@@ -247,7 +247,7 @@ namespace Neon.Kube
         /// <para>
         /// The idea here is that NeonKUBE will be use the generated domain to deploy a fully
         /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
-        /// This works even for clusters deployed behind a firewall or NEONDESKTOP clusters
+        /// This works even for clusters deployed behind a firewall or NeonDESKTOP clusters
         /// running on a workstation or laptop.
         /// </para>
         /// <para>

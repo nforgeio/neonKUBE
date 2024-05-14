@@ -325,7 +325,7 @@ namespace Neon.Kube.Setup
 
                         if (desktopReadyToGo || options.Insecure)
                         {
-                            // We're going to configure a fixed password for NEONDESKTOP and insecure clusters.
+                            // We're going to configure a fixed password for NeonDESKTOP and insecure clusters.
 
                             setupState.SshPassword = KubeConst.SysAdminInsecurePassword;
                         }
@@ -344,7 +344,7 @@ namespace Neon.Kube.Setup
                     // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
                     //
-                    // NOTE: All build-in NEONDESKTOP clusters share the same SSH keys.  This isn't really
+                    // NOTE: All build-in NeonDESKTOP clusters share the same SSH keys.  This isn't really
                     //       a security issue because these clusters are not reachable from outside the host
                     //       machine and these are also not intended for production workloads.
 
@@ -365,7 +365,7 @@ namespace Neon.Kube.Setup
                     }
 
                     // We also need to generate the cluster's [sysadmin] SSO password, unless this was specified
-                    // in the cluster definition (typically for NEONDESKTOP clusters).
+                    // in the cluster definition (typically for NeonDESKTOP clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
@@ -505,14 +505,14 @@ namespace Neon.Kube.Setup
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
             //
-            // NOTE: This isn't required for NEONDESKTOP clusters.
+            // NOTE: This isn't required for NeonDESKTOP clusters.
 
             if (!options.DesktopReadyToGo)
             {
                 hostingManager.AddPostProvisioningSteps(controller);
             }
 
-            // NEONDESKTOP cluster preparation.
+            // NeonDESKTOP cluster preparation.
 
             if (options.DesktopReadyToGo)
             {
@@ -543,17 +543,17 @@ namespace Neon.Kube.Setup
                         node.SetPassword(setupState.SshUsername, setupState.SshPassword);
                     });
 
-                // NEONDESKTOP clusters need to configure the workstation login, etc.
+                // NeonDESKTOP clusters need to configure the workstation login, etc.
 
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode);
 
-                // Renew the certificate for NEONDESKTOP because it might have expired
+                // Renew the certificate for NeonDESKTOP because it might have expired
                 // since the desktop image was built.
 
                 controller.AddNodeStep("configure: cluster certificates", KubeSetup.ConfigureDesktopClusterCertificatesAsync, (controller, node) => node == cluster.DeploymentControlNode);
             }
 
-            // Ensure that all pods are ready for NEONDESKTOP clusters.
+            // Ensure that all pods are ready for NeonDESKTOP clusters.
 
             if (options.DesktopReadyToGo)
             {

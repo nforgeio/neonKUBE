@@ -47,7 +47,7 @@ namespace Neon.Kube.ClusterDef
         public readonly IPAddress NeonKubeInternalGateway;
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Returns the internal IP address reserved for the NEONDESKTOP cluster.
+        /// <b>INTERNAL USE ONLY:</b> Returns the internal IP address reserved for the NeonDESKTOP cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -102,7 +102,7 @@ namespace Neon.Kube.ClusterDef
         /// <item>
         ///     <term><b>100.64.0.254</b></term>
         ///     <description>
-        ///     Reserved for the NEONDESKTOP single node cluster
+        ///     Reserved for the NeonDESKTOP single node cluster
         ///     </description>
         /// </item>
         /// <item>
@@ -120,7 +120,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// <b>INTERNAL USE ONLY:</b> Indicates whether this is the special NEONDESKTOP built-in
+        /// <b>INTERNAL USE ONLY:</b> Indicates whether this is the special NeonDESKTOP built-in
         /// single-node cluster and that the node's private address will be overridden by
         /// <see cref="NeonDesktopNodeAddress"/> when this is <c>true</c>.
         /// </para>
@@ -148,14 +148,14 @@ namespace Neon.Kube.ClusterDef
 
             if (NeonDesktopBuiltIn)
             {
-                UseInternalSwitch = true;   // NEONDESKTOP clusters always use the internal switch.
+                UseInternalSwitch = true;   // NeonDESKTOP clusters always use the internal switch.
 
                 // Ensure that cluster has only one control-plane node and set its
                 // address to the reserved IP.
 
                 if (clusterDefinition.NodeDefinitions.Count != 1 || !clusterDefinition.NodeDefinitions.Values.First().IsControlPane)
                 {
-                    throw new ClusterDefinitionException("The NEONDESKTOP cluster must include only one node and that must be a [control-plane].");
+                    throw new ClusterDefinitionException("The NeonDESKTOP cluster must include only one node and that must be a [control-plane].");
                 }
 
                 clusterDefinition.NodeDefinitions.Values.First().Address = NeonDesktopNodeAddress.ToString();
@@ -208,21 +208,21 @@ namespace Neon.Kube.ClusterDef
 
                     if (clusterDefinition.NodeDefinitions.Count != 1)
                     {
-                        throw new ClusterDefinitionException("NEONDESKTOP clusters may only provision a single node.");
+                        throw new ClusterDefinitionException("NeonDESKTOP clusters may only provision a single node.");
                     }
 
                     if (clusterDefinition.NodeDefinitions.First().Value.Address != NeonDesktopNodeAddress.ToString())
                     {
-                        throw new ClusterDefinitionException($"NEONDESKTOP cluster node address must be set to [{NeonKubeInternalSubnet}] (not [{clusterDefinition.NodeDefinitions.First().Value.Address}]).");
+                        throw new ClusterDefinitionException($"NeonDESKTOP cluster node address must be set to [{NeonKubeInternalSubnet}] (not [{clusterDefinition.NodeDefinitions.First().Value.Address}]).");
                     }
                 }
                 else
                 {
-                    // Ensure that no user cluster node definition uses the reserved NEONDESKTOP address.
+                    // Ensure that no user cluster node definition uses the reserved NeonDESKTOP address.
 
                     if (clusterDefinition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.Address == NeonDesktopNodeAddress.ToString()))
                     {
-                        throw new ClusterDefinitionException($"The [{NeonDesktopNodeAddress}] address may not be assigned to a user cluster; that's reserved for NEONDESKTOP.");
+                        throw new ClusterDefinitionException($"The [{NeonDesktopNodeAddress}] address may not be assigned to a user cluster; that's reserved for NeonDESKTOP.");
                     }
                 }
             }

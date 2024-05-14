@@ -7,18 +7,18 @@
 ### Documentation:
 - [Getting Started](https://docs.neonforge.com/docs/installation)
 - [How To Guides](https://docs.neonforge.com/docs/category/how-to-guides)
-- [Operator SDK](https://docs.neonforge.com/docs/operator-sdk)
+- [OperatorSDK](https://docs.neonforge.com/docs/operator-sdk)
 - [API Reference](https://api-docs.neonforge.com/neonkube/api/Neon.Kube.html)
 
 ---
 
-**NEONSDK:** A new home for general purpose libraries.
+**NeonSDK:** A new home for general purpose libraries.
 
 We're expecting NeonKUBE to be ready for a public preview in jUNE 2023 and one of our TODOs has 
 been to relocate the general purpose Neon libraries to their own GitHub repo since these will be versioned
 independently from NeonKUBE.  We finally relocated the non **Neon.Kube.*** libraries to:
 
-[NEONSDK repo](https://github.com/nforgeio/neonSDK)
+[NeonSDK repo](https://github.com/nforgeio/neonSDK)
 ---
 
 NeonKUBE is an open source project released under the Apache-2.0 license.

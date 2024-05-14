@@ -730,7 +730,7 @@ NOTE: Command line arguments and options may include references to
         /// in the <b>tools</b> subfolder where <b>NeonCLIENT</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\NEONFORGE\NEONDESKTOP\
+        /// C:\Program Files\NEONFORGE\NeonDESKTOP\
         ///     neon.exe
         ///     neon-cli.exe
         ///     tools\

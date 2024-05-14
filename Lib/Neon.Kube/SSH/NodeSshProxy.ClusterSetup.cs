@@ -1331,7 +1331,7 @@ EOF
                     // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
                     // OS disk for most nodes and customize this at 93/95% for clusters with OS disks
                     // less than 64GB.  We want higher thesholds for smaller disks to leave more space
-                    // for user images and local volumes, especially for the NEONDESKTOP cluster.
+                    // for user images and local volumes, especially for the NeonDESKTOP cluster.
                     //
                     // We're going to use this command to retrieve the node's disk information:
                     //

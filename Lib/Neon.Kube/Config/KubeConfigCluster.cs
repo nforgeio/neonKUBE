@@ -168,7 +168,7 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Indicates that this is a neon-desktop cluster. This will be <c>false</c> for
+        /// Indicates that this is a NeonDESKTOP cluster. This will be <c>false</c> for
         /// non-NeonKUBE clusters.
         /// </summary>
         [JsonIgnore]

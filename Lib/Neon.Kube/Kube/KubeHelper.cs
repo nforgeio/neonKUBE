@@ -253,7 +253,7 @@ namespace Neon.Kube
         /// <returns>The file text.</returns>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the NEONDESKTOP application or a 
+        /// by another process (e.g. the NeonDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -278,7 +278,7 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the NEONDESKTOP application or a 
+        /// by another process (e.g. the NeonDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -311,7 +311,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Accesses the NEONDESKTOP client configuration.
+        /// Accesses the NeonDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
         {
@@ -765,7 +765,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the NEONDESKTOP state folder.
+        /// Returns the path to the NeonDESKTOP state folder.
         /// </summary>
         public static string DesktopFolder
         {
@@ -785,7 +785,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the NEONDESKTOP log folder.
+        /// Returns path to the NeonDESKTOP log folder.
         /// </summary>
         public static string DesktopLogFolder
         {
@@ -805,7 +805,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the NEONDESKTOP Hyper-V state folder.
+        /// Returns path to the NeonDESKTOP Hyper-V state folder.
         /// </summary>
         public static string DesktopHypervFolder
         {
@@ -885,7 +885,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the path to the global NEONDESKTOP program data folder.  This is used for information
+        /// Returns the path to the global NeonDESKTOP program data folder.  This is used for information
         /// to be shared across all users as well as between the user programs and the neon-desktop-service.
         /// </para>
         /// <note>
@@ -1710,7 +1710,7 @@ exit 0
             // a script or other process.
             //
             // We're going to use a version of this tool deployed with the Git tools for Windows.
-            // This will be installed with NEONDESKTOP and is also available as part of the
+            // This will be installed with NeonDESKTOP and is also available as part of the
             // NeonKUBE Git repo as a fall back for Neon developers that haven't installed 
             // the desktop yet.
 
@@ -1913,12 +1913,12 @@ exit 0
 
         /// <summary>
         /// <para>
-        /// Returns the fixed SSH key shared by all NEONDESKTOP clusters.
+        /// Returns the fixed SSH key shared by all NeonDESKTOP clusters.
         /// </para>
         /// <note>
-        /// This isn't really a security issue because NEONDESKTOP clusters are not
+        /// This isn't really a security issue because NeonDESKTOP clusters are not
         /// reachable from outside the machine they're deployed on and also because
-        /// the NEONDESKTOP cluster is not intended to host production workloads.
+        /// the NeonDESKTOP cluster is not intended to host production workloads.
         /// </note>
         /// </summary>
         /// <returns>The <see cref="KubeSshKey"/>.</returns>

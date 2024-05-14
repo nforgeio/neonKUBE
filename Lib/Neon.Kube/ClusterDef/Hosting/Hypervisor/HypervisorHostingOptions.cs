@@ -187,7 +187,7 @@ namespace Neon.Kube.ClusterDef
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
-            // We don't add a prefix for the special neon-desktop cluster.
+            // We don't add a prefix for the special NeonDESKTOP cluster.
 
             if (clusterDefinition.IsDesktop)
             {
@@ -219,7 +219,7 @@ namespace Neon.Kube.ClusterDef
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(KubeConfigCluster configCluster)
         {
-            // We don't add a prefix for non-NeonKUBE clusters or the special neon-desktop cluster.
+            // We don't add a prefix for non-NeonKUBE clusters or the special NeonDESKTOP cluster.
 
             if (!configCluster.IsNeonKube || configCluster.IsNeonDesktop)
             {

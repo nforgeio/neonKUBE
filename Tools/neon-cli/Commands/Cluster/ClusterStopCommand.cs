@@ -78,7 +78,7 @@ REMARKS:
 NOTE: This command requires that the cluster be unlocked by default as
 a safety measure.
 
-All clusters besides NEONDESKTOP clusters are locked by default when
+All clusters besides NeonDESKTOP clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false]
 in your cluster definition or by executing this command:
 

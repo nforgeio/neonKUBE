@@ -337,7 +337,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Returns <c>true</c> for cluster definitions that describe a special NeonKUBE/CLOUD
-        /// cluster like the NEONDESKTOP built-in cluster.  This is used to relax constraints
+        /// cluster like the NeonDESKTOP built-in cluster.  This is used to relax constraints
         /// on user cluster definitions like cluster node names not being able to use the "neon-"
         /// prefix.
         /// </summary>
@@ -361,8 +361,8 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Indicates that the definition describes a NEONDESKTOP cluster.  This is set to <c>true</c>
-        /// by NEONDESKTOP when it deploys a desktop cluster and isn't typically set by cluster operators.
+        /// Indicates that the definition describes a NeonDESKTOP cluster.  This is set to <c>true</c>
+        /// by NeonDESKTOP when it deploys a desktop cluster and isn't typically set by cluster operators.
         /// </summary>
         [JsonProperty(PropertyName = "IsDesktop", Required = Required.Always)]
         [YamlMember(Alias = "isDesktop", ApplyNamingConventions = false)]

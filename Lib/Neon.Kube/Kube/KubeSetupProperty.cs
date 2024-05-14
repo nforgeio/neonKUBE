@@ -99,7 +99,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Property name for a boolean indicating that the node image has already been downloaded
-        /// (e.g. by NEONDESKTOP) and does not need to be downloaded hosting managers during cluster
+        /// (e.g. by NeonDESKTOP) and does not need to be downloaded hosting managers during cluster
         /// provisioning.  Image downloading should be considered to be enabled when this property
         /// is not present.
         /// </summary>

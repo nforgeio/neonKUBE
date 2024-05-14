@@ -421,23 +421,23 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
-        /// for creating the internal virtual switch where the NEONDESKTOP cluster
+        /// for creating the internal virtual switch where the NeonDESKTOP cluster
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
         public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
-        /// Specifies the NEONDESKTOP cluster name.
+        /// Specifies the NeonDESKTOP cluster name.
         /// </summary>
         public const string NeonDesktopClusterName = "neon-desktop";
 
         /// <summary>
-        /// Identifies the Kubernetes context name for the NEONDESKTOP cluster.
+        /// Identifies the Kubernetes context name for the NeonDESKTOP cluster.
         /// </summary>
         public const string NeonDesktopContextName = $"{SysAdminUser}@{NeonDesktopClusterName}";
 
         /// <summary>
-        /// Identifies the Hyper-V virtual machine used to host the NEONDESKTOP cluster.
+        /// Identifies the Hyper-V virtual machine used to host the NeonDESKTOP cluster.
         /// </summary>
         public const string NeonDesktopHyperVVmName = "neon-desktop";
 

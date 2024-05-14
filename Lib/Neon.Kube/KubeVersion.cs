@@ -227,7 +227,7 @@ namespace Neon.Kube
         public const string KubeAdminPackage = Kubernetes + "-00";
 
         /// <summary>
-        /// Specifies the version of the Kubernetes <b>client tool</b> to be installed with NEONDESKTOP.
+        /// Specifies the version of the Kubernetes <b>client tool</b> to be installed with NeonDESKTOP.
         /// </summary>
         [KubeValue]
         public const string Kubectl = Kubernetes;

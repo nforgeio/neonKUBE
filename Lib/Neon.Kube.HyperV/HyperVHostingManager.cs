@@ -603,7 +603,7 @@ namespace Neon.Kube.Hosting.HyperV
             {
                 // $hack(jefflill):
                 //
-                // neon-desktop installs node VHDX within the [%USERPROFILE%\.neonkube\Desktop] directory
+                // NeonDESKTOP installs node VHDX within the [%USERPROFILE%\.neonkube\Desktop] directory
                 // by default and this should be on the same drive where Hyper-V deploys disk images by
                 // default as well, so we'll check disk constraints on this drive by default.
 
@@ -750,7 +750,7 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Assert(cluster?.SetupState?.ClusterDefinition != null);
             cluster.EnsureSetupMode();
 
-            // Special case the NEONDESKTOP cluster.
+            // Special case the NeonDESKTOP cluster.
 
             if (cluster.SetupState.ClusterDefinition.IsDesktop &&
                 vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase) &&
@@ -1008,7 +1008,7 @@ namespace Neon.Kube.Hosting.HyperV
                     hyperv.StartVm(vmName);
 
                     // Update the node credentials to use the secure password for normal clusters or the
-                    // hardcoded SSH key for ready-to-go NEONDESKTOP clusters and then wait for the node
+                    // hardcoded SSH key for ready-to-go NeonDESKTOP clusters and then wait for the node
                     // to boot.
 
                     controller.ThrowIfCancelledOrFaulted();

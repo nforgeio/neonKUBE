@@ -1281,7 +1281,7 @@ exit 1
             var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
             var kubeConfigPath   = KubeHelper.KubeConfigPath;
 
-            // For NEONDESKTOP clusters, we need to obtain the control plane files from the node
+            // For NeonDESKTOP clusters, we need to obtain the control plane files from the node
             // and add them to the cluster login because we didn't so a full cluster setup when
             // this would normally happen.
 
@@ -2967,7 +2967,7 @@ istioctl install --verify -y -f manifest.yaml
             // Disable NDM for Jiva since we currently only support Jiva PVs deployed
             // on local [HostPath] volumes.  We could add this capability in the
             // future, but this probably won't be a priority since cStor or Mayastor
-            // would probably be more appropriate for customer (non-NEONDESKTOP)
+            // would probably be more appropriate for customer (non-NeonDESKTOP)
             // multi-node clusters.
 
             values.Add("ndm.enabled", openEbsEngine != OpenEbsEngine.Jiva);
@@ -6261,7 +6261,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Waits for a NEONDESKTOP cluster to stabilize.
+        /// Waits for a NeonDESKTOP cluster to stabilize.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

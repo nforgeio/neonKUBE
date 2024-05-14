@@ -148,7 +148,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Returns the cluster definition required to prepare a NEONDESKTOP cluster for 
+        /// Returns the cluster definition required to prepare a NeonDESKTOP cluster for 
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
@@ -189,14 +189,14 @@ namespace Neon.Kube.Setup
                     var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
 
                     clusterDefinition.Validate();
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "NEONDESKTOP cluster definitions must include exactly one node.");
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "NeonDESKTOP cluster definitions must include exactly one node.");
 
                     if (!string.IsNullOrEmpty(deploymentPrefix))
                     {
                         clusterDefinition.Deployment.Prefix = deploymentPrefix;
                     }
 
-                    // We allow the NEONDESKTOP cluster to be deployed on machines with only
+                    // We allow the NeonDESKTOP cluster to be deployed on machines with only
                     // 4 processors.  When we see this, we're going to reduce the number
                     // of processors assigned to the buuilt-in VM to just 3.
 
@@ -204,7 +204,7 @@ namespace Neon.Kube.Setup
 
                     if (processorCount < 4)
                     {
-                        throw new NotSupportedException($"NEONDESKTOP clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
+                        throw new NotSupportedException($"NeonDESKTOP clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
                     }
                     else if (processorCount == 4)
                     {

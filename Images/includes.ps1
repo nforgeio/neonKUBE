@@ -17,7 +17,7 @@
 # limitations under the License.
 
 # This file includes common veriably definitions and functions used while
-# building and publishing NEONSDK nuget packages.
+# building and publishing NeonSDK nuget packages.
 #
 # NOTE: This is script works only for maintainers with proper credentials.
 
@@ -122,7 +122,7 @@ function TagAsLatest
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the target NEONSDK GitHub container 
+# Prefixes the image name passed with the target NeonSDK GitHub container 
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
@@ -138,7 +138,7 @@ function GetSdkRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the NEONSDK registry organization corresponding to the current git branch.
+# Returns the NeonSDK registry organization corresponding to the current git branch.
 
 function SdkRegistryOrg
 {
