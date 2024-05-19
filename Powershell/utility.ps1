@@ -379,12 +379,29 @@ function Invoke-CaptureStreams
     }
     finally
     {
-        [System.Threading.Thread]::Sleep(250)
+        # Delete the temporary output files.
 
-        # Delete the temporary output files
+        # $note(jefflill):
+        #
+        # I've run into situations where STDOUT files are held open by Docker
+        # for some reason and deletion fails.  I'm going to ignore any exceptions
+        # here as a workaround.
 
-        Delete-File($stdoutPath)
-        Delete-File($stderrPath)
+        try
+        {
+            Delete-File($stdoutPath)
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            Delete-File($stderrPath)
+        }
+        catch
+        {
+        }
     }
 
     return $result
