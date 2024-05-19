@@ -279,6 +279,16 @@ function Invoke-CaptureStreams
         [switch]$noOutput = $false
     )
 
+    # $hack(jefflill):
+    #
+    # Docker appears to be buffering output to STDOUT and STDERR
+    # and holds onto these files for a while so we can't read or
+    # delete them.  We're going to workaround this by pausing for
+    # a bit (which seems to release the read-lock) and then ignore
+    # any file delete errors.
+    #
+    #   https://stackoverflow.com/questions/39486327/stdout-being-buffered-in-docker-container
+
     if ([System.String]::IsNullOrEmpty($command))
     {
         throw "Empty command."
@@ -313,6 +323,8 @@ function Invoke-CaptureStreams
 
         try
         {
+            [System.Threading.Thread]::Sleep(250)
+
             # Read the output files.
 
             if ([System.IO.File]::Exists($stdoutPath))
@@ -330,11 +342,7 @@ function Invoke-CaptureStreams
         }
         catch
         {
-            # It appears that something might be holding these files open.
-            # We're going to workaround this by delaying a bit and trying
-            # again.
-
-            [System.Threading.Thread]::Sleep(1000)
+            [System.Threading.Thread]::Sleep(2000)
 
             if ([System.IO.File]::Exists($stdoutPath))
             {
@@ -381,18 +389,13 @@ function Invoke-CaptureStreams
     {
         # Delete the temporary output files.
 
-        # $note(jefflill):
-        #
-        # I've run into situations where STDOUT files are held open by Docker
-        # for some reason and deletion fails.  I'm going to ignore any exceptions
-        # here as a workaround.
-
         try
         {
             Delete-File($stdoutPath)
         }
         catch
         {
+            # Intentionally ignored
         }
 
         try
@@ -401,6 +404,7 @@ function Invoke-CaptureStreams
         }
         catch
         {
+            # Intentionally ignored
         }
     }
 
