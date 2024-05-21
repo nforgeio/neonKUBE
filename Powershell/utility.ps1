@@ -231,9 +231,10 @@ function Invoke-Program
 #
 #   command     - program to run with any arguments
 #   noCheck     - optionally disable non-zero exit code checks
-#   interleave  - optionally combines the STDERR into STDOUT
-#   noOutput    - optionally disables writing STDOUT and STDERR
-#                 to the output
+#   interleave  - optionally combines STDERR into STDOUT
+#   noOutput    - STDOUT/STDERR are written to the host process's
+#                 standard streams by default.  Pass this is TRUE
+#                 to disable this behavior.
 #
 # RETURNS:
 #
@@ -250,20 +251,23 @@ function Invoke-Program
 #
 # It's insane that Powershell doesn't have this capability built-in.  
 # It looks likes Invoke-Expression may have implemented this in the past,
-# but recent versions seem to have deprecated this.  stdout can be captured
-# easily from command executions but not stderr.  Powershell seems to handle
-# stderr specially and it returns as a PSObject rather a string and I 
-# couldn't find what looked like a reasonable way to convert that into agreed
-# string.
+# but recent versions seem to have deprecated this.  STDOUT can be captured
+# easily from command executions but not STDERR.  Powershell seems to handle
+# STDERR specially and it returns as a PSObject rather a string and I
+# couldn't find what looked like a reasonable way to convert that into
+# a string.
 #
 # I did run across a MSFT proposal to make this possible, but they're still
 # debating the details.  This seems like such a basic scripting feature that
 # I'm amazed that this senerio isn't covered cleanly.
 #
-# The solution here is to run the command in CMD.EXE for now (and perhaps
-# Bash for eveything else) while piping stdout/stderr to temporary files
-# and then read and delete those files so the streams can be returned as
-# variables.
+# In addition, PowerShell isn't really setup to handle async process stream
+# callbacks, so we've gone ahead and implemented the [dtee] (double-tee)
+# tool in NeonSDK which was inspired by Linux [tee] but which can handle
+# both the STDOUT and STDERR streams.
+#
+# The [dtee] executable will need to be on the PATH for this to work,
+# which should be the case for maintainers.
 
 function Invoke-CaptureStreams
 {
@@ -279,134 +283,47 @@ function Invoke-CaptureStreams
         [switch]$noOutput = $false
     )
 
-    # $hack(jefflill):
-    #
-    # Docker appears to be buffering output to STDOUT and STDERR
-    # and holds onto these files for a while so we can't read or
-    # delete them.  We're going to workaround this by pausing for
-    # a bit (which seems to release the read-lock) and then ignore
-    # any file delete errors.
-    #
-    #   https://stackoverflow.com/questions/39486327/stdout-being-buffered-in-docker-container
-
     if ([System.String]::IsNullOrEmpty($command))
     {
         throw "Empty command."
     }
 
-    $guid       = [System.Guid]::NewGuid().ToString("d")
-    $stdoutPath = [System.IO.Path]::Combine($env:TMP, "$guid.stdout")
-    $stderrPath = [System.IO.Path]::Combine($env:TMP, "$guid.stderr")
+    $outputGuid = New-Guid
+    $outPath    = [System.IO.Path]::Combine($env:TEMP, "$outputGuid.out")
+    $errPath    = [System.IO.Path]::Combine($env:TEMP, "$outputGuid.err")
+    $bothPath   = [System.IO.Path]::Combine($env:TEMP, "$outputGuid.both")
 
-    try
+    if ($noOutput)
     {
-        if (!$noOutput)
-        {
-            Write-Info
-            Write-Info "RUN: $command"
-            Write-Info
-        }
-
-        if ($interleave)
-        {
-            & cmd /c "$command > `"$stdoutPath`" 2>&1"
-        }
-        else
-        {
-            & cmd /c "$command > `"$stdoutPath`" 2> `"$stderrPath`""
-        }
-
-        $exitCode = $LastExitCode
-
-        $stdout = ""
-        $stderr = ""
-
-        try
-        {
-            [System.Threading.Thread]::Sleep(250)
-
-            # Read the output files.
-
-            if ([System.IO.File]::Exists($stdoutPath))
-            {
-                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
-            }
-
-            if (!$interleave)
-            {
-                if ([System.IO.File]::Exists($stderrPath))
-                {
-                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
-                }
-            }
-        }
-        catch
-        {
-            [System.Threading.Thread]::Sleep(2000)
-
-            if ([System.IO.File]::Exists($stdoutPath))
-            {
-                $stdout = [System.IO.File]::ReadAllText($stdoutPath)
-            }
-
-            if (!$interleave)
-            {
-                if ([System.IO.File]::Exists($stderrPath))
-                {
-                    $stderr = [System.IO.File]::ReadAllText($stderrPath)
-                }
-            }
-        }
-
-        $result          = @{}
-        $result.exitcode = $exitCode
-        $result.stdout   = $stdout
-        $result.stderr   = $stderr
-        $result.alltext  = "$stdout`r`n$stderr"
-
-        if (!$noOutput)
-        {
-            if ($interleave)
-            {
-                Write-Info $result.stdout
-            }
-            else
-            {
-                Write-Info $result.alltext
-            }
-        }
-
-        if (!$noCheck -and $exitCode -ne 0)
-        {
-            $exitcode = $result.exitcode
-            $stdout   = $result.stdout
-            $stderr   = $result.stderr
-
-            throw "FAILED: $command`r`n[exitcode=$exitCode]`r`nSTDERR:`n$stderr`r`nSTDOUT:`r`n$stdout"
-        }
+        $quietOption = "--quiet"
     }
-    finally
+
+    $pInfo = [Diagnostics.ProcessStartInfo]::new()
+    $pInfo = @{
+        FileName        = 'dtee.exe'
+        Arguments       = "$quietOption `"--out=$outPath`" `"--err=$errPath`" `"--both=$bothPath`" -- `"$command`""
+        UseShellExecute = $false
+    }
+
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $pInfo
+    $process.Start()
+    $process.WaitForExit()
+
+    $result          = @{}
+    $result.exitcode = $process.ExitCode
+    $result.stdout   = [System.IO.File]::ReadAllText($outPath)
+    $result.stderr   = [System.IO.File]::ReadAllText($errPath)
+    $result.alltext  = [System.IO.File]::ReadAllText($bothPath)
+
+    if ($interleave)
     {
-        # Delete the temporary output files.
-
-        try
-        {
-            Delete-File($stdoutPath)
-        }
-        catch
-        {
-            # Intentionally ignored
-        }
-
-        try
-        {
-            Delete-File($stderrPath)
-        }
-        catch
-        {
-            # Intentionally ignored
-        }
+        $result.stdout = $result.alltext
     }
+
+    Delete-File $outPath
+    Delete-File $errPath
+    Delete-File $bothPath
 
     return $result
 }
