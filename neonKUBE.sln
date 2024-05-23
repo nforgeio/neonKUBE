@@ -170,8 +170,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Release", "Doc\Release\Rele
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.neon-node-agent", "Test\Test.neon-node-agent\Test.neon-node-agent.csproj", "{AD78F82C-B2F1-4116-B32A-C1682CF05999}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dtee", "Tools\dtee\dtee.csproj", "{2A1EDB89-5C24-4339-996F-DD893FC75BF5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -616,22 +614,6 @@ Global
 		{AD78F82C-B2F1-4116-B32A-C1682CF05999}.Release|x64.Build.0 = Release|Any CPU
 		{AD78F82C-B2F1-4116-B32A-C1682CF05999}.Release|x86.ActiveCfg = Release|Any CPU
 		{AD78F82C-B2F1-4116-B32A-C1682CF05999}.Release|x86.Build.0 = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|arm64.Build.0 = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|x64.Build.0 = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Debug|x86.Build.0 = Debug|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|arm64.ActiveCfg = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|arm64.Build.0 = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|x64.ActiveCfg = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|x64.Build.0 = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|x86.ActiveCfg = Release|Any CPU
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -668,7 +650,6 @@ Global
 		{254872A9-69DC-4079-A90B-CE60C2F03D36} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{D2D030EC-67F5-4188-B708-17C21D1D0B52} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
 		{AD78F82C-B2F1-4116-B32A-C1682CF05999} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
-		{2A1EDB89-5C24-4339-996F-DD893FC75BF5} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
