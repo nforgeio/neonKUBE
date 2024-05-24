@@ -494,9 +494,9 @@ namespace Neon.Kube.Hosting.XenServer
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
-                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
                 // when the VM is initially created, the disk setup scripts executed during prepare
                 // won't be able to distinguish between the two disks.
@@ -527,13 +527,13 @@ namespace Neon.Kube.Hosting.XenServer
 
                             if (xenClient.Machine.DiskCount(vm) < 2)
                             {
-                                // We haven't created the cStor disk yet.
+                                // We haven't created the Mayastor disk yet.
 
                                 var disk = new XenVirtualDisk()
                                 {
                                     Name        = $"{GetVmName(node)}: openebs",
                                     Size        = node.Metadata.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
-                                    Description = "OpenEBS cStor"
+                                    Description = "OpenEBS Mayastor"
                                 };
 
                                 node.Status = "openebs: stop VM";
@@ -1231,7 +1231,6 @@ namespace Neon.Kube.Hosting.XenServer
                 {
                     switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
                     {
-                        case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
                             requiredDiskForNode += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);

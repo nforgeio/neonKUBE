@@ -164,7 +164,7 @@ namespace Neon.Kube.ClusterDef
         public string VolumeSize { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the AWS volume type to be used for the node's OpenEBS cStor disk (if any).  This defaults
+        /// Optionally specifies the AWS volume type to be used for the node's OpenEBS Mayastor disk (if any).  This defaults
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEbsVolumeType"/>
         /// will specify the volume type for the node.
         /// </summary>
@@ -174,7 +174,7 @@ namespace Neon.Kube.ClusterDef
         public AwsVolumeType OpenEbsVolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS cStor/Maystor disk (if any).
+        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS Maystor disk (if any).
         /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
         /// will be used for the node.
         /// </summary>

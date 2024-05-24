@@ -96,7 +96,7 @@ namespace Neon.Kube.ClusterDef
                 }
                 else
                 {
-                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Jiva;
+                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Mayastor;
                 }
             }
 
@@ -109,7 +109,6 @@ namespace Neon.Kube.ClusterDef
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
-                case OpenEbsEngine.cStor:
                 case OpenEbsEngine.Mayastor:
 
                     if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))

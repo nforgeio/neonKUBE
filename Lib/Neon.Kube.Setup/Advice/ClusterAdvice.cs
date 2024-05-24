@@ -1725,7 +1725,6 @@ namespace Neon.Kube.Setup
                     }
                     break;
 
-                case OpenEbsEngine.cStor:
                 case OpenEbsEngine.Mayastor:
 
                     advice.NodeSelector = storageNodeSelector;

@@ -627,7 +627,7 @@ namespace Neon.Kube.Hosting.Azure
         private const int bootDiskLun = 0;
 
         /// <summary>
-        /// Logical unit number for a node's optional OpenEBS cStor disk.
+        /// Logical unit number (LUN) for a node's optional OpenEBS Mayastor disk.
         /// </summary>
         private const int openEbsDiskLun = 1;
 
@@ -1216,9 +1216,9 @@ namespace Neon.Kube.Hosting.Azure
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
-                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
                 // when the VM is initially created, the disk setup scripts executed during prepare
                 // won't be able to distinguish between the two disks.
@@ -1237,7 +1237,7 @@ namespace Neon.Kube.Hosting.Azure
 
                         if (node.Metadata.OpenEbsStorage)    
                         {
-                            node.Status = "openebs: cStor disk";
+                            node.Status = "openebs: Mayastor disk";
 
                             var vmPatch = new VirtualMachinePatch()
                             {

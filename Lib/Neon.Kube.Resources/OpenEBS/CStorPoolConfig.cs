@@ -28,7 +28,7 @@ using k8s.Models;
 namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
-    /// OpenEBS cStor pool configuration.
+    /// OpenEBS Mayastor pool configuration.
     /// </summary>
     public class V1CStorPoolConfig
     {
@@ -47,7 +47,7 @@ namespace Neon.Kube.Resources.OpenEBS
         public string DataRaidGroupType { get; set; }
 
         /// <summary>
-        /// Tolerations to be applied to the CStor Pool pods.
+        /// Tolerations to be applied to the Mayastor Pool pods.
         /// </summary>
         [DefaultValue(null)]
         public List<V1Toleration> Tolerations { get; set; }

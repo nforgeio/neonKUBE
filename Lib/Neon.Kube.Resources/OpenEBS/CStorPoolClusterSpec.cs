@@ -45,13 +45,13 @@ namespace Neon.Kube.Resources.OpenEBS
         public List<V1CStorPoolSpec> Pools { get; set; }
 
         /// <summary>
-        /// Compute resources for the cstor pool containers.
+        /// Compute resources for the Mayastor pool containers.
         /// </summary>
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         public V1ResourceRequirements Resources { get; set; }
 
         /// <summary>
-        /// Compute resources for the cstor sidecar containers.
+        /// Compute resources for the Mayastor sidecar containers.
         /// </summary>
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         public V1ResourceRequirements AuxResources { get; set; }

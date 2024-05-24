@@ -92,7 +92,7 @@ namespace Neon.Kube.ClusterDef
         public string DiskSize { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the Azure storage type to be used for the node's OpenEBS cStor/Mayastor disk (if any).  This defaults
+        /// Optionally specifies the Azure storage type to be used for the node's OpenEBS Mayastor disk (if any).  This defaults
         /// to <see cref="AzureStorageType.Default"/> indicating that <see cref="AzureHostingOptions.DefaultOpenEbsStorageType"/>
         /// will specify the volume type for the node.
         /// </summary>
@@ -102,7 +102,7 @@ namespace Neon.Kube.ClusterDef
         public AzureStorageType OpenEbsStorageType { get; set; } = AzureStorageType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the Azure disk to be used for the node's OpenEBS cStor/Mayastor disk (if any).
+        /// Optionally specifies the size of the Azure disk to be used for the node's OpenEBS Mayastor disk (if any).
         /// This defaults to <c>null</c> indicating that <see cref="AzureHostingOptions.DefaultOpenEbsDiskSize"/>
         /// will be used for the node.
         /// </summary>

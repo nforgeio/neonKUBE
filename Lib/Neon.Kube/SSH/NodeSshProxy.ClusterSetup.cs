@@ -1348,7 +1348,7 @@ EOF
                     // $note(jefflill):
                     //
                     // This assumes that there's only one Linux filesystem for each cluster node which is 
-                    // currently the case for all NeonKUBE clusters.  The cStor disks are managed by OpenEBS
+                    // currently the case for all NeonKUBE clusters.  The Mayastor disks are managed by OpenEBS
                     // and will not be reported as a file system.  I'll add an assert to verify this to
                     // make this easier diagnose in the future if we decide to allow multiple file systems.
                     //

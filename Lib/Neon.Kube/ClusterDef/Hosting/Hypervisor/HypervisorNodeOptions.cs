@@ -168,7 +168,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Returns the size of the OpenEBS cStor disk to be created for this node when
+        /// Returns the size of the OpenEBS Mayastor disk to be created for this node when
         /// hosted on a hypervisor.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -179,7 +179,6 @@ namespace Neon.Kube.ClusterDef
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
-                case OpenEbsEngine.cStor:
                 case OpenEbsEngine.Mayastor:
 
                 if (!string.IsNullOrEmpty(OpenEbsDisk))

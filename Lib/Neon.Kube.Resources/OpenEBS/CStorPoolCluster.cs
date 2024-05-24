@@ -25,7 +25,7 @@ using Neon.Operator.Attributes;
 namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
-    /// OpenEBS cStor pool cluster.
+    /// OpenEBS Mayastor pool cluster.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
@@ -44,7 +44,7 @@ namespace Neon.Kube.Resources.OpenEBS
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "cstor.openebs.io";
+        public const string KubeGroup = "mayastor.openebs.io";
 
         /// <summary>
         /// The plural name of the entity.

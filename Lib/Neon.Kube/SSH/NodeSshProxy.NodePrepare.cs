@@ -307,7 +307,9 @@ set -euo pipefail
         }
 
         /// <summary>
-        /// Installs <b>iSCSI initiator utils</b> required by OpenEBS/cStor.
+        /// Installs <b>iSCSI initiator utils</b>.  NeonKUBE doesn't use this since we
+        /// switched from OpenEBS cStor to Mayastor but we'll continue to install this
+        /// anyway.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         public void PrepareForOpenEbs(ISetupController controller)
@@ -318,8 +320,6 @@ set -euo pipefail
                 () =>
                 {
                     controller.LogProgress(this, verb: "prepare", message: "for OpenEBS");
-
-                    // https://github.com/openebs/cstor-operators/blob/develop/docs/quick.md#prerequisites
 
                     var script =
 $@"

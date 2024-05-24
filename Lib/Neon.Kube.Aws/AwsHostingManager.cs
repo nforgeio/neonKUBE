@@ -699,7 +699,7 @@ namespace Neon.Kube.Hosting.Aws
         private const string dataDeviceName = "/dev/sdb";
 
         /// <summary>
-        /// Identifies the target VM block device for the OpenEBS cStor disk. 
+        /// Identifies the target VM block device for the OpenEBS Mayastor block device. 
         /// </summary>
         private const string openEbsDeviceName = "/dev/sdf";
 
@@ -1375,9 +1375,9 @@ namespace Neon.Kube.Hosting.Aws
 
             var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
-                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
                 // when the VM is initially created, the disk setup scripts executed during prepare
                 // won't be able to distinguish between the two disks.
@@ -1414,7 +1414,7 @@ namespace Neon.Kube.Hosting.Aws
 
                         if (volume == null)
                         {
-                            node.Status = "openebs: create cStor volume";
+                            node.Status = "openebs: create Mayastor volume";
 
                             var volumeResponse = await ec2Client.CreateVolumeAsync(
                                 new CreateVolumeRequest()
@@ -1434,7 +1434,7 @@ namespace Neon.Kube.Hosting.Aws
                         await NeonHelper.WaitForAsync(
                             async () =>
                             {
-                                node.Status = "openebs: waiting for cStor volume...";
+                                node.Status = "openebs: waiting for Mayastor volume...";
 
                                 var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
 
@@ -1468,7 +1468,7 @@ namespace Neon.Kube.Hosting.Aws
 
                         // AWS defaults to deleting volumes on termination only for the
                         // volumes created along with the new instance.  We want the 
-                        // OpenEBS cStor volume to be deleted as well.
+                        // OpenEBS Mayastor volume to be deleted as well.
 
                         await ec2Client.ModifyInstanceAttributeAsync(
                             new ModifyInstanceAttributeRequest()

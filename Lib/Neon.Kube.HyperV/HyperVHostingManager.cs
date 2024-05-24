@@ -428,9 +428,9 @@ namespace Neon.Kube.Hosting.HyperV
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
-                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
                 // at the same time when the VM is initially created, the disk setup scripts executed
                 // during prepare won't be able to distinguish between the two disks.
@@ -451,7 +451,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                         if (hyperv.ListVmDrives(vmName).Count() < 2)
                         {
-                            // The cStor disk doesn't already exist.
+                            // The Mayastor disk doesn't already exist.
 
                             node.Status = "openebs: stop VM";
                             hyperv.StopVm(vmName);
@@ -581,7 +581,6 @@ namespace Neon.Kube.Hosting.HyperV
                 {
                     switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
                     {
-                        case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
                             requiredDisk += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);

@@ -28,8 +28,8 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Selects a reasonable default storage engine for the cluster.  Currently, this 
-        /// selects <see cref="HostPath"/> for single-node clusters or <see cref="Jiva"/> for
-        /// multi-node clusters.
+        /// selects <see cref="HostPath"/> for single-node clusters and <see cref="Mayastor"/>
+        /// for multi-node clusters.
         /// </para>
         /// <para>
         /// You can override this behavior be selecting one of the other engines.
@@ -39,43 +39,47 @@ namespace Neon.Kube.ClusterDef
         Default = 0,
 
         /// <summary>
+        /// <para>
         /// Provisions persistent volumes on the host node's disk.  This will result in the
         /// best possible I/O performance but at the cost of requiring that containers mounting
-        /// the volume be scheduled on the same node as well as losing volume replication.
+        /// volumes be scheduled on the same node where the volume is provisioned.
+        /// </para>
+        /// <note>
+        /// Volume data is <b>not replicated</b> by this engine.
+        /// </note>
         /// </summary>
         [EnumMember(Value = "hostpath")]
         HostPath,
 
         /// <summary>
-        /// The currently recommended OpenEBS storage engine.  This is very feature rich but
-        /// requires one or more raw block devices and quite a bit of RAM.  See: 
-        /// <a href="https://docs.openebs.io/v090/docs/next/cstor.html">cStor Overview</a>
-        /// </summary>
-        [EnumMember(Value = "cstor")]
-        cStor,
-
-        /// <summary>
         /// <para>
-        /// This was the original OpenEBS storage engine and hosts the data in a Linux
-        /// sparse file rather than requiring raw block devices.  This is suitable
-        /// for smaller clusters running workloads with lower I/O requirements.  See:
-        /// <a href="https://docs.openebs.io/v090/docs/next/jiva.html">Jiva Overview</a>
+        /// This will be [Mayastor](https://openebs.io/docs/concepts/data-engines/replicated-storage)
+        /// using  the [NVMe-oF](https://nvmexpress.org/developers/nvme-of-specification/) protocol
+        /// for better performance.
         /// </para>
         /// <note>
-        /// Jiva is not currently supported for NeonKUBE clusters.
-        /// </note>
-        /// </summary>
-        [EnumMember(Value = "jiva")]
-        Jiva,
-
-        /// <summary>
         /// <para>
-        /// This will be [Mayadata's premier storage engine](https://docs.openebs.io/docs/next/mayastor.html) using 
-        /// the [NVMe-oF](https://nvmexpress.org/developers/nvme-of-specification/) protocol for accessing data rather
-        /// than the old iSCSI protocol which is quite slow.
+        /// By default, NeonKUBE will select up to three nodes to host the Mayastor disks from
+        /// the nodes being deployed for the cluster.  If the cluster has only control-plane
+        /// nodes, up to three of those will be selected to host the Mayastor engine along with
+        /// the necessary block devices.  If the cluster has worker nodes, NeonKUBE will select
+        /// up to three worker nodes for Mayastor and leave the control-plane nodes alone.
         /// </para>
-        /// <note>
-        /// Mayastor is not currently supported for NeonKUBE clusters, but will be supported in the near future.
+        /// <para>
+        /// You can explicitly control which nodes will host Mayastor by setting this for the
+        /// node in your cluster definition:
+        /// </para>
+        /// <code language="yaml">
+        /// name: jeff-aws-large
+        /// hosting:
+        ///   environment: hyperv
+        /// nodes:
+        ///   control-0:
+        ///     role: control-plane
+        ///   worker-0:
+        ///     role: worker
+        ///     systemOpenEbsStorage: true    &lt;--- Hosts Mayastor storage
+        /// </code>
         /// </note>
         /// </summary>
         [EnumMember(Value = "mayastor")]

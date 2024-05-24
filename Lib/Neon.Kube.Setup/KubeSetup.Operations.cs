@@ -2800,14 +2800,9 @@ istioctl install --verify -y -f manifest.yaml
 
                             switch (openEbsEngine)
                             {
-                                case OpenEbsEngine.cStor:
+                                case OpenEbsEngine.Mayastor:
 
                                     AddOpenEbsCstorHelmValues(controller, values);
-                                    break;
-
-                                case OpenEbsEngine.Jiva:
-
-                                    AddOpenEbsJivaHelmValues(controller, values);
                                     break;
 
                                 case OpenEbsEngine.HostPath:
@@ -2816,7 +2811,6 @@ istioctl install --verify -y -f manifest.yaml
                                     // installed as a common component.
                                     break;
 
-                                case OpenEbsEngine.Mayastor:
                                 default:
 
                                     throw new NotImplementedException();
@@ -2866,29 +2860,11 @@ istioctl install --verify -y -f manifest.yaml
                         {
                             switch (openEbsEngine)
                             {
-                                case OpenEbsEngine.cStor:
+                                case OpenEbsEngine.Mayastor:
 
                                     throw new NotImplementedException();
                                     break;
 
-                                case OpenEbsEngine.Jiva:
-
-                                    controller.LogProgress(controlNode, verb: "wait for", message: "openebs-jiva");
-                                    await NeonHelper.WaitAllAsync(
-                                        new List<Task>()
-                                        {
-                                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-jiva-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                                        },
-                                        timeoutMessage:    "Timeout waiting for: openebs-localpv-provisioner",
-                                        cancellationToken: controller.CancellationToken);
-                                    break;
-
-                                case OpenEbsEngine.HostPath:
-
-                                    break;  // NOP because we already checked for common component readiness above.
-
-                                case OpenEbsEngine.Mayastor:
                                 default:
 
                                     throw new NotImplementedException();
@@ -2966,7 +2942,7 @@ istioctl install --verify -y -f manifest.yaml
 
             // Disable NDM for Jiva since we currently only support Jiva PVs deployed
             // on local [HostPath] volumes.  We could add this capability in the
-            // future, but this probably won't be a priority since cStor or Mayastor
+            // future, but this probably won't be a priority since Mayastor
             // would probably be more appropriate for customer (non-NeonDESKTOP)
             // multi-node clusters.
 
@@ -3021,7 +2997,7 @@ istioctl install --verify -y -f manifest.yaml
         }
 
         /// <summary>
-        /// Adds the Helm values required for deploying the cStor engine.
+        /// Adds the Helm values required for deploying the Mayastor engine.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="values">Specifies the target Helm values dictionary.</param>
@@ -3045,321 +3021,6 @@ istioctl install --verify -y -f manifest.yaml
             //values.Add("admissionServer.image.registry", "");
             //values.Add("admissionServer.image.repository", "");
             //values.Add("admissionServer.image.tag", "");
-        }
-
-        /// <summary>
-        /// Adds the Helm values required for deploying the Jiva engine.
-        /// </summary>
-        /// <param name="controller">Specifies the setup controller.</param>
-        /// <param name="values">Specifies the target Helm values dictionary.</param>
-        private static void AddOpenEbsJivaHelmValues(ISetupController controller, Dictionary<string, object> values)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(values != null, nameof(values));
-
-            var clusterAdvice           = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var jivaOperatorAdvice      = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJivaOperator);
-            var jivaCsiControllerAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsJivaCsiController);
-            var jivaCsiNodeAdvice       = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorCsiNode);
-
-            values.Add("jiva.enabled", true);
-
-            //---------------------------------------------
-            // openebs-jiva-operator
-
-            values.Add("jiva.jivaOperator.priorityClassName", jivaOperatorAdvice.PriorityClassName);        // NeonKUBE CUSTOM VALUE
-            values.Add("jiva.jivaOperator.nodeSelector", jivaOperatorAdvice.NodeSelector);
-            values.Add("jiva.jivaOperator.resources", jivaOperatorAdvice.Resources);
-            values.Add("jiva.jivaOperator.replicas", jivaOperatorAdvice.Replicas);
-            values.Add("jiva.jivaOperator.tolerations", jivaOperatorAdvice.Tolerations);
-
-            //values.Add("jiva.jivaOperator.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.jivaOperator.image.repository", "openebs-jiva-operator");
-            //values.Add("jiva.jivaOperator.image.tag", KubeVersion.OpenEbsJiva);
-
-            //values.Add("jiva.jivaOperator.controller.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.jivaOperator.controller.image.repository", "openebs-jiva");
-            //values.Add("jiva.jivaOperator.controller.image.tag", KubeVersion.OpenEbsJiva);
-
-            //values.Add("jiva.jivaOperator.replica.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.jivaOperator.replica.image.repository", "openebs-jiva-operator");
-            //values.Add("jiva.jivaOperator.replica.image.tag", KubeVersion.OpenEbsJiva);
-
-            //values.Add("jiva.jivaOperator.exporter.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.jivaOperator.exporter.image.repository", "openebs-m-exporter");
-            //values.Add("jiva.jivaOperator.exporter.image.tag", KubeVersion.OpenEbsJiva);
-
-            //---------------------------------------------
-            // openebs-jiva-csi-controller
-
-            values.Add("jiva.csiController.priorityClassName", jivaCsiControllerAdvice.PriorityClassName);  // NeonKUBE CUSTOM VALUE
-            values.Add("jiva.csiController.nodeSelector", jivaCsiControllerAdvice.NodeSelector);
-            values.Add("jiva.csiController.replicas", jivaCsiControllerAdvice.Replicas);
-            values.Add("jiva.csiController.resources", jivaCsiControllerAdvice.Resources);
-            values.Add("jiva.csiController.tolerations", jivaCsiControllerAdvice.Tolerations);
-
-            //values.Add("jiva.csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.attacher.image.repository", "k8scsi-csi-attacher");
-            //values.Add("jiva.csiController.attacher.image.tag", KubeVersion.K8sCsiAttacher);
-
-            //values.Add("jiva.csiController.livenessprobe.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.livenessprobe.image.repository", "k8scsi-livenessprobe");
-            //values.Add("jiva.csiController.livenessprobe.image.tag", KubeVersion.K8sCsiLivenessProbe);
-
-            //values.Add("jiva.csiController.csi-provisioner.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.csi-provisioner.image.repository", "k8scsi-csi-provisioner");
-            //values.Add("jiva.csiController.csi-provisioner.image.tag", KubeVersion.K8sCsiProvisioner);
-
-            //values.Add("jiva.csiController.csi-resizer.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiController.csi-resizer.image.repository", "k8scsi-csi-resizer");
-            //values.Add("jiva.csiController.csi-resizer.image.tag", KubeVersion.K8sCsiResizer);
-
-            //---------------------------------------------
-            // openebs-jiva-csi-node
-
-            values.Add("jiva.csiNode.priorityClassName", jivaCsiNodeAdvice.PriorityClassName);              // NeonKUBE CUSTOM VALUE
-            values.Add("jiva.csiNode.nodeSelector", jivaCsiNodeAdvice.NodeSelector);
-            values.Add("jiva.csiNode.resources", jivaCsiNodeAdvice.Resources);
-            values.Add("jiva.csiNode.tolerations", jivaCsiNodeAdvice.Tolerations);
-
-            //values.Add("jiva.csiNode.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiNode.driverRegistrar.image.repository", "k8scsi-csi-node-driver-registrar");
-            //values.Add("jiva.csiNode.driverRegistrar.image.tag", KubeVersion.OpenEbsDriverRegistrar);
-
-            //values.Add("jiva.jivaCSIPlugin.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.jivaCSIPlugin.image.repository", "k8scsi-csi-resizer");
-            //values.Add("jiva.jivaCSIPlugin.image.tag", KubeVersion.K8sCsiResizer);
-
-            //values.Add("jiva.csiNode.livenessprobe.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("jiva.csiNode.livenessprobe.image.repository", "k8scsi-livenessprobe");
-            //values.Add("jiva.csiNode.livenessprobe.image.tag", KubeVersion.K8sCsiLivenessProbe);
-
-            // $todo(jefflill): MORE IMAGES?
-        }
-
-#if TODO
-        /// <summary>
-        /// Deploys OpenEBS using the cStor engine.
-        /// </summary>
-        /// <param name="controller">Specifies the setup controller.</param>
-        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task DeployOpenEbsWithcStor(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
-        {
-            await SyncContext.Clear;
-
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice      = controller.Get<ClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var k8s                = GetK8sClient(controller);
-            var cstorPoolAdvice    = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorPool);
-            var cstorPoolAuxAdvice = clusterAdvice.GetServiceAdvice(ClusterAdvice.OpenEbsCstorPoolAux);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/openebs-cstor",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "configure", message: "openebs-cstor");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add("cspcOperator.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.poolManager.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.cstorPool.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.cstorPoolExporter.image.registry", KubeConst.LocalClusterRegistry);
-
-                    values.Add("cvcOperator.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.target.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.volumeMgmt.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.volumeExporter.image.registry", KubeConst.LocalClusterRegistry);
-
-                    values.Add("csiController.resizer.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.snapshotter.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.snapshotController.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.provisioner.image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
-
-                    values.Add("cstorCSIPlugin.image.registry", KubeConst.LocalClusterRegistry);
-
-                    values.Add("csiNode.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
-
-                    values.Add("admissionServer.image.registry", KubeConst.LocalClusterRegistry);
-
-                    await controlNode.InstallHelmChartAsync(controller, "openebs-cstor-operator",
-                        releaseName: "openebs-cstor",
-                        values:      values,
-                        @namespace:  KubeNamespace.NeonStorage);
-                });
-
-            controller.LogProgress(controlNode, verb: "configure", message: "openebs-pool");
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/openebs-pool",
-                async () =>
-                {
-                    var cStorPoolCluster = new V1CStorPoolCluster()
-                    {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name              = "cspc-stripe",
-                            NamespaceProperty = KubeNamespace.NeonStorage
-                        },
-                        Spec = new V1CStorPoolClusterSpec()
-                        {
-                            Pools     = new List<V1CStorPoolSpec>(),
-                            Resources = new V1ResourceRequirements()
-                            {
-                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
-                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAdvice.PodMemoryRequest)) } },
-                            },
-                            AuxResources = new V1ResourceRequirements()
-                            {
-                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAuxAdvice.PodMemoryLimit)) } },
-                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(KubeHelper.ToSiString(cstorPoolAuxAdvice.PodMemoryRequest)) } },
-                            }
-                        }
-                    };
-
-                    var blockDevices = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
-
-                    foreach (var node in cluster.SetupState.ClusterDefinition.Nodes.Where(n => n.OpenEbsStorage))
-                    {
-                        var disk = cluster.HostingManager.GetDataDisk(cluster.Nodes.Where(n => n.Name == node.Name).FirstOrDefault());
-
-                        var pool = new V1CStorPoolSpec()
-                        {
-                            NodeSelector = new Dictionary<string, string>()
-                            {
-                                { "kubernetes.io/hostname", node.Name }
-                            },
-                            DataRaidGroups = new List<V1CStorDataRaidGroup>()
-                            {
-                                new V1CStorDataRaidGroup()
-                                {
-                                    BlockDevices = new List<V1CStorBlockDeviceRef>()
-                                }
-                            },
-                            PoolConfig = new V1CStorPoolConfig()
-                            {
-                                DataRaidGroupType = DataRaidGroupTypes.Stripe,
-                                Tolerations       = new List<V1Toleration>()
-                                {
-                                    { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                    { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                }
-                            }
-                        };
-
-                        var device = blockDevices.Items.Where(
-                            device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name
-                            && device.Spec.Path == disk).FirstOrDefault();
-
-                        pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
-                            new V1CStorBlockDeviceRef()
-                            {
-                                BlockDeviceName = device.Metadata.Name
-                            });
-
-                        cStorPoolCluster.Spec.Pools.Add(pool);
-                    }
-
-                    await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(
-                        body:               cStorPoolCluster,
-                        name:               cStorPoolCluster.Name(),
-                        namespaceParameter: cStorPoolCluster.Namespace());
-                });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/openebs-cstor-ready",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "openebs cstor");
-
-                    await NeonHelper.WaitAllAsync(
-                        new List<Task>()
-                        {
-                            k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-cstor-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cvc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cspc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
-                        },
-                        timeoutMessage:    "Timeout waiting for: openebs cstor",
-                        cancellationToken: controller.CancellationToken);
-                });
-
-            var replicas = 3;
-
-            if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicas)
-            {
-                replicas = cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
-            }
-
-            controller.ThrowIfCancelled();
-            await CreateCstorStorageClass(controller, controlNode, "openebs-cstor", replicaCount: replicas);
-        }
-#endif
-
-        /// <summary>
-        /// Creates a Kubernetes Storage Class.
-        /// </summary>
-        /// <param name="controller">Specifies the setup controller.</param>
-        /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
-        /// <param name="name">Specifies the new <see cref="V1StorageClass"/> name.</param>
-        /// <param name="replicaCount">Specifies the data replication factor.</param>
-        /// <param name="storagePool">Specifies the OpenEBS storage pool.</param>
-        /// <param name="isDefault">Optionally indicates that this is the default storage class.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateJivaStorageClass(
-            ISetupController                controller,
-            NodeSshProxy<NodeDefinition>    controlNode,
-            string                          name,
-            int                             replicaCount = 3,
-            string                          storagePool  = "default",
-            bool                            isDefault    = false)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-            Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
-
-            var k8s = GetK8sClient(controller);
-
-            controller.ThrowIfCancelledOrFaulted();
-            await controlNode.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
-                async () =>
-                {
-                    if (controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Count() < replicaCount)
-                    {
-                        replicaCount = controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Count();
-                    }
-
-                    var storageClass = new V1StorageClass()
-                    {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name        = name
-                        },
-                        Parameters        = new Dictionary<string, string>()
-                        {
-                            {"cas-type", "jiva" },
-                            {"policy", "openebs-jiva-default-policy" },
-                        },
-                        Provisioner       = "jiva.csi.openebs.io",
-                        ReclaimPolicy     = "Delete",
-                        VolumeBindingMode = "WaitForFirstConsumer"
-                    };
-
-                    if (isDefault)
-                    {
-                        storageClass.Metadata.Annotations = new Dictionary<string, string>()
-                        {
-                            { "storageclass.kubernetes.io/is-default-class", "true" }
-                        };
-                    }
-
-                    await k8s.StorageV1.CreateStorageClassAsync(storageClass);
-                });
         }
 
         /// <summary>
@@ -3512,7 +3173,7 @@ $@"- name: StorageType
 
             switch (storageOptions.OpenEbs.Engine)
             {
-                case OpenEbsEngine.cStor:
+                case OpenEbsEngine.Mayastor:
 
                     await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
@@ -3522,16 +3183,6 @@ $@"- name: StorageType
                     Covenant.Assert(false, $"[{nameof(OpenEbsEngine.Default)}] is not valid here.  This must be set to one of the other storage engines in [{nameof(OpenEbsOptions)}.Validate()].");
                     break;
 
-                case OpenEbsEngine.HostPath:
-
-                    break;  // NOP: This is always installed by: InstallOpenEbsAsync()
-
-                case OpenEbsEngine.Jiva:
-
-                    await CreateJivaStorageClass(controller, controlNode, name, isDefault: isDefault);
-                    break;
-
-                case OpenEbsEngine.Mayastor:
                 default:
 
                     await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);

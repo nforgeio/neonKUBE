@@ -26,7 +26,7 @@ using k8s.Models;
 namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
-    /// OpenEBS cStor pool specification.
+    /// OpenEBS Mayastor pool specification.
     /// </summary>
     public class V1CStorPoolSpec
     {
@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources.OpenEBS
         }
 
         /// <summary>
-        /// Selector identifying the nodes holding the targeted cStor block devices.
+        /// Selector identifying the nodes holding the targeted Mayastor block devices.
         /// </summary>
         public Dictionary<string, string> NodeSelector { get; set; }
 

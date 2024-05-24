@@ -308,7 +308,7 @@ namespace Neon.Kube.ClusterDef
         // Define the neon-system related labels.
 
         /// <summary>
-        /// Reserved label that an OpenEBS cStor/Mayastor block device should be deployed on the node.
+        /// Reserved label that an OpenEBS Mayastor block device should be deployed on the node.
         /// </summary>
         public const string LabelOpenEbsStorage = ClusterDefinition.ReservedNodePrefix + "storage.openebs-storage";
 
@@ -318,21 +318,21 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This indicates that this node will provide a cStor block device for the cStorPool
-        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
-        /// This defaults to <c>false</c>
+        /// This indicates that this node will provide a Marastor block device for the storage pool
+        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.  This
+        /// defaults to <c>false</c>
         /// </para>
         /// <note>
         /// If all nodes have <see cref="SystemOpenEbsStorage"/> set to <c>false</c> then most NeonKUBE 
-        /// hosting managers will automatically choose the nodes that will host the cStor
-        /// block devices by configuring up to three nodes to do this, favoring worker nodes
+        /// hosting managers will automatically choose the nodes that will host the Mayastor
+        /// block devices by configuring up to three nodes to host these, favoring worker nodes
         /// over control-plane nodes when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
         /// from the others.  It requires that at least one node have <see cref="NodeLabel.SystemOpenEbsStorage"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
-        /// as an cStor.
+        /// as an Mayastor server.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "SystemOpenEbsStorage", Required = Required.Default)]

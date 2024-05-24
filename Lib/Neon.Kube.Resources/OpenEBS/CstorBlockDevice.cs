@@ -25,7 +25,7 @@ using Neon.Operator.Attributes;
 namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
-    /// Describes an OpenEBS cStor block device.
+    /// Describes an OpenEBS Mayastor block device.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
