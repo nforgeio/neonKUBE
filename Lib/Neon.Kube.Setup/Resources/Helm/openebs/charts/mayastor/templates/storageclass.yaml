@@ -8,6 +8,7 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
   {{- end }}
+allowVolumeExpansion: {{ .Values.storageClass.allowVolumeExpansion }}
 parameters:
 {{/*
   Set StorageClass parameters by adding to the values.yaml 'storageClass.parameters' map.

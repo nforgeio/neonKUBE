@@ -64,6 +64,14 @@ rules:
   resources: ["events"]
   verbs: ["list", "watch", "create", "update", "patch"]
 
+  # external-resizer
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims/status"]
+  verbs: ["patch"]
+
   # external snapshotter and snapshot-controller
 - apiGroups: ["snapshot.storage.k8s.io"]
   resources: ["volumesnapshotclasses"]

@@ -50,13 +50,13 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        args:
-        - "-p{{ .Values.base.metrics.pollingInterval }}"
-        - "--api-versions={{ .Values.io_engine.api }}"
         ports:
           - containerPort: 9502
             protocol: TCP
             name: metrics
+        args:
+          - "--fmt-style={{ include "logFormat" . }}"
+          - "--ansi-colors={{ .Values.base.logging.color }}"
       {{- end }}
       - name: io-engine
         image: "{{ .Values.image.registry }}/{{ .Values.image.repo }}/{{ .Chart.Name }}-io-engine:{{ default .Values.image.tag .Values.image.repoTags.dataPlane }}"
@@ -64,6 +64,8 @@ spec:
         env:
         - name: RUST_LOG
           value: {{ .Values.io_engine.logLevel }}
+        - name: NVMF_TCP_MAX_QPAIRS_PER_CTRL
+          value: "{{ .Values.io_engine.nvme.tcp.maxQpairsPerCtrl }}"
         - name: NVMF_TCP_MAX_QUEUE_DEPTH
           value: "{{ .Values.io_engine.nvme.tcp.maxQueueDepth }}"
         - name: NVME_TIMEOUT

@@ -51,12 +51,14 @@ spec:
             - "--request-timeout={{ .Values.base.default_req_timeout }}"
             - "--interval={{ .Values.base.cache_poll_period }}"{{ if .Values.base.jaeger.enabled }}
             - "--jaeger={{ .Values.base.jaeger.agent.name }}:{{ .Values.base.jaeger.agent.port }}"{{ end }}
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--fmt-style={{ include "logFormat" . }}"
           env:
             - name: RUST_LOG
               value: {{ .Values.operators.pool.logLevel }}
-            {{- if default .Values.base.logSilenceLevel .Values.operators.pool.logSilenceLevel }}
+            {{- if default .Values.base.logging.silenceLevel .Values.operators.pool.logSilenceLevel }}
             - name: RUST_LOG_SILENCE
-              value: {{ default .Values.base.logSilenceLevel .Values.operators.pool.logSilenceLevel }}
+              value: {{ default .Values.base.logging.silenceLevel .Values.operators.pool.logSilenceLevel }}
             {{- end }}
             - name: MY_POD_NAME
               valueFrom:

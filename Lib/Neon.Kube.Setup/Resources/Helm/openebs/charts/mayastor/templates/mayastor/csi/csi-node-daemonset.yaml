@@ -29,6 +29,7 @@ spec:
     spec:
       serviceAccount: {{ .Release.Name }}-service-account
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       imagePullSecrets:
         {{- include "base_pull_secrets" . }}
       {{- if $pcName := include "priority_class" (dict "template" . "localPriorityClass" .Values.csi.node.priorityClassName) }}
@@ -46,6 +47,8 @@ spec:
       {{- if $tolerations := include "tolerations" (dict "template" . "localTolerations" .Values.csi.node.tolerations) }}
       tolerations: {{ $tolerations }}
       {{- end }}
+      initContainers:
+        {{- include "csi_node_init_containers" . }}
       # NOTE: Each container must have mem/cpu limits defined in order to
       # belong to Guaranteed QoS class, hence can never get evicted in case of
       # pressure unless they exceed those limits. limits and requests must be
@@ -60,9 +63,9 @@ spec:
         env:
         - name: RUST_LOG
           value: {{ .Values.csi.node.logLevel }}
-        {{- if default .Values.base.logSilenceLevel .Values.csi.node.logSilenceLevel }}
+        {{- if default .Values.base.logging.silenceLevel .Values.csi.node.logSilenceLevel }}
         - name: RUST_LOG_SILENCE
-          value: {{ default .Values.base.logSilenceLevel .Values.csi.node.logSilenceLevel }}
+          value: {{ default .Values.base.logging.silenceLevel .Values.csi.node.logSilenceLevel }}
         {{- end }}
         - name: MY_NODE_NAME
           valueFrom:
@@ -74,9 +77,15 @@ spec:
               fieldPath: status.podIP
         - name: RUST_BACKTRACE
           value: "1"
+        {{- if (.Values.csi.node.mkfs_args).xfs }}
+        - name: MKFS_XFS_ARGS
+          value: {{ .Values.csi.node.mkfs_args.xfs | quote }}
+        {{- end }}
         args:
-        - "--csi-socket={{ .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
+        - "--csi-socket={{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
         - "--node-name=$(MY_NODE_NAME)"
+        - "--rest-endpoint=http://{{ .Release.Name }}-api-rest:8081"
+        - "--enable-registration"
         - "--grpc-endpoint=$(MY_POD_IP):10199"{{ if .Values.csi.node.nvme.io_timeout }}
         - "--nvme-io-timeout={{ .Values.csi.node.nvme.io_timeout }}"
         - "--nvme-core-io-timeout={{ .Values.csi.node.nvme.io_timeout }}"{{ else }}
@@ -88,6 +97,8 @@ spec:
         {{- range $key, $val := .Values.csi.node.topology.segments }}
         - "--node-selector={{ $key }}={{ $val }}"
         {{- end }}
+        - "--fmt-style={{ include "logFormat" . }}"
+        - "--ansi-colors={{ .Values.base.logging.color }}"
         command:
         - csi-node
         volumeMounts:
@@ -98,7 +109,7 @@ spec:
         - name: run-udev
           mountPath: /run/udev
         - name: plugin-dir
-          mountPath: {{ .Values.csi.node.pluginMounthPath }}
+          mountPath: {{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}
         - name: kubelet-dir
           mountPath: {{ .Values.csi.node.kubeletDir }}
           mountPropagation: "Bidirectional"
@@ -113,11 +124,11 @@ spec:
         image: "{{ .Values.csi.image.registry }}/{{ .Values.csi.image.repo }}/csi-node-driver-registrar:{{ .Values.csi.image.registrarTag }}"
         imagePullPolicy: {{ .Values.csi.image.pullPolicy }}
         args:
-        - "--csi-address={{ .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
+        - "--csi-address={{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
         - "--kubelet-registration-path={{ .Values.csi.node.kubeletDir }}/plugins/io.openebs.mayastor/csi.sock"
         volumeMounts:
         - name: plugin-dir
-          mountPath: {{ .Values.csi.node.pluginMounthPath }}
+          mountPath: {{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}
         - name: registration-dir
           mountPath: /registration
         resources:

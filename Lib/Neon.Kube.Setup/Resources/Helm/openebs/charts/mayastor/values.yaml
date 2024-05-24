@@ -1,10 +1,18 @@
+crds:
+  # -- Disables the installation of all CRDs if set to false
+  enabled: true
+  csi:
+    volumeSnapshots:
+      # -- Install Volume Snapshot CRDs
+      enabled: true
+
 image:
   # -- Image registry to pull our product images
   registry: docker.io
   # -- Image registry's namespace
   repo: openebs
   # -- Release tag for our images
-  tag: v2.5.0
+  tag: v2.6.0
   repoTags:
     # Note: Below image tag configuration is optional and typically should never be
     #       used. Setting specific image tags for the different repositories proves useful
@@ -51,8 +59,13 @@ base:
   default_req_timeout: 5s
   # -- Cache timeout for core agent & diskpool deployment
   cache_poll_period: 30s
-  # -- Silence specific module components
-  logSilenceLevel:
+  logging:
+    # -- Valid values for format are pretty, json and compact
+    format: pretty
+    # -- Enable ansi color code for Pod StdOut/StdErr
+    color: true
+    # -- Silence specific module components
+    silenceLevel:
   initContainers:
     enabled: true
     containers:
@@ -85,12 +98,11 @@ base:
   metrics:
     # -- Enable the metrics exporter
     enabled: true
-    # metrics refresh time
-    # WARNING: Lowering pollingInterval value will affect performance adversely
-    pollingInterval: "5m"
 
   jaeger:
-    # -- Enable jaeger tracing
+    # Enable jaeger tracing (for development only).
+    # Since version 1.31 the Jaeger Operator uses webhooks to validate Jaeger custom resources (CRs).
+    # This requires an installed version of the cert-manager.
     enabled: false
     initContainer: true
     agent:
@@ -130,9 +142,6 @@ operators:
 jaeger-operator:
   # Name of jaeger operator
   name: "{{ .Release.Name }}"
-  crd:
-    # Install jaeger CRDs
-    install: false
   jaeger:
     # Install jaeger-operator
     create: false
@@ -165,6 +174,21 @@ agents:
         # Example: if this value is 40, the pool has 40GiB free, then the max volume size allowed
         # to be snapped on the pool is 100GiB.
         snapshotCommitment: "40%"
+    rebuild:
+      # -- The maximum number of system-wide rebuilds permitted at any given time.
+      # If set to an empty string, there are no limits.
+      maxConcurrent: ""
+      partial:
+        # -- Partial rebuild uses a log of missed IO to rebuild replicas which have become temporarily faulted,
+        # hence a bit faster, depending on the log size.
+        enabled: true
+        # -- If a faulted replica comes back online within this time period then it will be
+        # rebuilt using the partial rebuild capability. Otherwise, the replica will be fully rebuilt.
+        # A blank value "" means internally derived value will be used.
+        waitPeriod: ""
+    # The maximum number of concurrent create volume requests.
+    maxCreateVolume: 10
+
     resources:
       limits:
         # -- Cpu limits for core agents
@@ -176,11 +200,6 @@ agents:
         cpu: "500m"
         # -- Memory requests for core agents
         memory: "32Mi"
-    # -- If a faulted replica comes back online within this time period then it will be
-    # rebuilt using the partial rebuild capability (using a log of missed IO), hence a bit
-    # faster depending on the log size. Otherwise, the replica will be fully rebuilt.
-    # A blank value "" means internally derived value will be used.
-    partialRebuildWaitPeriod: ""
     # -- Set tolerations, overrides global
     tolerations: []
     # -- Set PriorityClass, overrides global.
@@ -269,15 +288,19 @@ csi:
     # -- csi-attacher image release tag
     attacherTag: v4.3.0
     # -- csi-snapshotter image release tag
-    snapshotterTag: v6.3.1
+    snapshotterTag: v6.3.3
     # -- csi-snapshot-controller image release tag
-    snapshotControllerTag: v6.3.1
+    snapshotControllerTag: v6.3.3
     # -- csi-node-driver-registrar image release tag
-    registrarTag: v2.9.0
+    registrarTag: v2.10.0
+    # -- csi-resizer image release tag
+    resizerTag: v1.9.3
 
   controller:
     # -- Log level for the csi controller
     logLevel: info
+    # The maximum number of concurrent create volume requests.
+    maxCreateVolume: 10
     resources:
       limits:
         # -- Cpu limits for csi controller
@@ -300,7 +323,7 @@ csi:
     topology:
       segments:
         openebs.io/csi-node: mayastor
-      # -- Add topology segments to the csi-node daemonset node selector
+      # -- Add topology segments to the csi-node and agent-ha-node daemonset node selector
       nodeSelector: false
     resources:
       limits:
@@ -324,12 +347,21 @@ csi:
       keep_alive_tmo: ""
     # -- The kubeletDir directory for the csi-node plugin
     kubeletDir: /var/lib/kubelet
-    pluginMounthPath: /csi
+    pluginMountPath: /csi
     socketPath: csi.sock
+    # Additional arguments when creating filesystems
+    mkfs_args:
+      xfs: ""
     # -- Set tolerations, overrides global
     tolerations: []
     # -- Set PriorityClass, overrides global
     priorityClassName: ""
+    initContainers:
+      enabled: false
+      containers:
+        - name: nvme-tcp-probe
+          image: busybox:latest
+          command: ['sh', '-c', 'trap "exit 1" TERM; until $(lsmod | grep nvme_tcp &>/dev/null); do [ -z "$WARNED" ] && echo "nvme_tcp module not loaded..."; WARNED=1; sleep 60; done;']
 
 io_engine:
   # -- Log level for the io-engine service
@@ -347,10 +379,8 @@ io_engine:
         crdt1: 30
   nvme:
     # -- Timeout for IOs
-    # The default here is exaggerated for local disks but we've observed that in
+    # The default here is exaggerated for local disks, but we've observed that in
     # shared virtual environments having a higher timeout value is beneficial.
-    # In certain cases, you may have to set this to an even higher value. For example,
-    # in Hetzner we've had better results setting it to 300s.
     # Please adjust this according to your hardware and needs.
     ioTimeout: "110s"
     # Timeout for admin commands
@@ -361,6 +391,9 @@ io_engine:
       # -- Max size setting (both initiator and target) for an NVMe queue
       # -- You may need to increase this for a higher outstanding IOs per volume
       maxQueueDepth: "32"
+      # Max qpairs per controller.
+      maxQpairsPerCtrl: "32"
+
 
   # -- Pass additional arguments to the Environment Abstraction Layer.
   # Example: --set {product}.envcontext=iova-mode=pa
@@ -401,6 +434,7 @@ io_engine:
 etcd:
   # Configuration for etcd's localpv hostpath storage class.
   localpvScConfig:
+    enabled: true
     # Name of etcd's localpv hostpath storage class.
     name: "mayastor-etcd-localpv"
     # -- Host path where local etcd data is stored in.
@@ -501,6 +535,7 @@ loki-stack:
   enabled: true
   # Configuration for loki's localpv hostpath storage class.
   localpvScConfig:
+    enabled: true
     # Name of loki's localpv hostpath storage class.
     name: "mayastor-loki-localpv"
     # -- Host path where local etcd data is stored in.
@@ -594,8 +629,9 @@ loki-stack:
     tolerations: []
     priorityClassName: ""
     config:
-      # -- The Loki address to post logs to
-      lokiAddress: http://{{ .Release.Name }}-loki:3100/loki/api/v1/push
+      clients:
+        # -- The Loki address to post logs to
+        - url: http://{{ .Release.Name }}-loki:3100/loki/api/v1/push
       snippets:
         # Promtail will export logs to loki only based on based on below
         # configuration, below scrape config will export only our services
@@ -647,6 +683,9 @@ loki-stack:
               - __meta_kubernetes_pod_uid
               - __meta_kubernetes_pod_container_name
               target_label: __path__
+        # Ignore readiness check if no logs are found on nodes without Mayastor components.
+        extraServerConfigs: |-
+          health_check_target: false
 
 # Eventing which enables or disables eventing-related components.
 eventing:
@@ -671,6 +710,11 @@ nats:
   cluster:
     enabled: true
     replicas: 3
+  # Define if NATS is using FQDN name for clustering (i.e. nats-0.nats.default.svc.cluster.local) or short name (i.e. nats-0.nats.default).
+  useFQDN: false
+  statefulSetPodLabels:
+    app: nats
+    openebs.io/logging: "true"
   # The nats box can be installed for debugging, by default its enabled.
   natsbox:
     enabled: false
@@ -727,18 +771,15 @@ storageClass:
   enabled: true
   nameSuffix: single-replica
   default: false
+  # -- Enable volume expansion for the default StorageClass.
+  allowVolumeExpansion: true
   parameters:
     protocol: nvmf
     repl: 1
 
 localpv-provisioner:
-  # -- Enables the openebs dynamic-localpv provisioner. If disabled, modify etcd and loki-stack storage class accordingly.
+  # -- Enables the openebs dynamic-localpv-provisioner. If disabled, modify etcd and loki-stack storage class accordingly.
   enabled: true
-  # Enable/disable the openebs NDM sub-chart. It's recommended to keep this disabled.
-  openebsNDM:
-    enabled: false
-  # Enable/disable the creation of the openebs-device StorageClass. It's recommended to keep this disabled.
-  deviceClass:
-    enabled: false
   hostpathClass:
+    # -- Enable default hostpath localpv StorageClass.
     enabled: false

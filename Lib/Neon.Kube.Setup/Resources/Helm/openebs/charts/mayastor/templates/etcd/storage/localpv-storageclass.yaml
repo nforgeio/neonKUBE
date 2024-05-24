@@ -1,4 +1,4 @@
-{{ if and (index .Values "localpv-provisioner" "enabled") .Values.etcd.persistence.enabled }}
+{{ if and .Values.etcd.localpvScConfig.enabled .Values.etcd.persistence.enabled }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:

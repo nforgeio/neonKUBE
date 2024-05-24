@@ -1,4 +1,4 @@
-{{ if and (index .Values "localpv-provisioner" "enabled") (index .Values "loki-stack" "loki" "persistence" "enabled") (index .Values "loki-stack" "enabled") }}
+{{ if and (index .Values "loki-stack" "localpvScConfig" "enabled") (index .Values "loki-stack" "loki" "persistence" "enabled") (index .Values "loki-stack" "enabled") }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:

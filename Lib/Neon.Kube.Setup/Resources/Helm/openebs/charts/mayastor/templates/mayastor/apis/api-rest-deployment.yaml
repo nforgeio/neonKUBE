@@ -51,13 +51,15 @@ spec:
             - "--request-timeout={{ .Values.base.default_req_timeout }}"{{ if .Values.base.jaeger.enabled }}
             - "--jaeger={{ .Values.base.jaeger.agent.name }}:{{ .Values.base.jaeger.agent.port }}"{{ end }}
             - "--core-grpc=https://{{ .Release.Name }}-agent-core:50051"
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--fmt-style={{ include "logFormat" . }}"
           ports:
             - containerPort: 8080
             - containerPort: 8081
           env:
             - name: RUST_LOG
               value: {{ .Values.apis.rest.logLevel }}
-            {{- if default .Values.base.logSilenceLevel .Values.apis.rest.logSilenceLevel }}
+            {{- if default .Values.base.logging.silenceLevel .Values.apis.rest.logSilenceLevel }}
             - name: RUST_LOG_SILENCE
-              value: {{ default .Values.base.logSilenceLevel .Values.apis.rest.logSilenceLevel }}
+              value: {{ default .Values.base.logging.silenceLevel .Values.apis.rest.logSilenceLevel }}
             {{- end }}

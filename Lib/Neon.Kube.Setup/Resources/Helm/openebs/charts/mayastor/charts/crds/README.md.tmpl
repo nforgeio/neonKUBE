@@ -1,0 +1,16 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.valuesHeader" . }}
+
+| Key | Description | Default |
+|:----|:------------|:--------|
+{{ range .Values }}
+{{- if or .Description .AutoDescription -}}
+{{ if eq .Type "object" -}}
+| {{ .Key | replace "." ".&ZeroWidthSpace;" }} | {{ .Description | default .AutoDescription }} | <pre>{{ replace "}" "<br>}" (replace "{" "{<br>" (replace "," ",<br>" (toJson (fromJson (trimAll "`" (.Default | default .AutoDefault)))))) }}</pre> |
+{{ else -}}
+| {{ .Key | replace "." ".&ZeroWidthSpace;" }} | {{ .Description | default .AutoDescription }} | {{ .Default | default .AutoDefault }} |
+{{ end -}}
+{{ end }}
+{{- end }}

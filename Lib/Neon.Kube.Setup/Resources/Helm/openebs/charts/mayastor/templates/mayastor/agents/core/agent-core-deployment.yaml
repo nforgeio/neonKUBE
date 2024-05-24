@@ -54,19 +54,26 @@ spec:
             - "--pool-commitment={{ .Values.agents.core.capacity.thin.poolCommitment }}"
             - "--snapshot-commitment={{ .Values.agents.core.capacity.thin.snapshotCommitment }}"
             - "--volume-commitment-initial={{ .Values.agents.core.capacity.thin.volumeCommitmentInitial }}"
-            - "--volume-commitment={{ .Values.agents.core.capacity.thin.volumeCommitment }}"{{ if .Values.agents.core.partialRebuildWaitPeriod }}
-            - "--faulted-child-wait-period={{ .Values.agents.core.partialRebuildWaitPeriod }}"{{ end }}{{ if .Values.eventing.enabled }}
-            - "--events-url=nats://{{ .Release.Name }}-nats:4222"{{ end }}
-            {{- if not .Values.agents.ha.enabled }}
+            - "--volume-commitment={{ .Values.agents.core.capacity.thin.volumeCommitment }}"{{ if .Values.eventing.enabled }}
+            - "--events-url=nats://{{ .Release.Name }}-nats:4222"{{ end }}{{ if not .Values.agents.ha.enabled }}
             - "--disable-ha"{{ end }}
+            - "--fmt-style={{ include "logFormat" . }}"
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--create-volume-limit={{ .Values.agents.core.maxCreateVolume }}"
+            {{- if $wait := default ((.Values.agents.core.rebuild).partial).waitPeriod .Values.agents.core.partialRebuildWaitPeriod }}
+            - "--faulted-child-wait-period={{ $wait }}"{{ end }}
+            {{- if (.Values.agents.core.rebuild).maxConcurrent }}
+            - "--max-rebuilds={{ .Values.agents.core.rebuild.maxConcurrent }}"{{ end }}
+            {{- if eq ((.Values.agents.core.rebuild).partial).enabled false }}
+            - "--disable-partial-rebuild"{{ end }}
           ports:
             - containerPort: 50051
           env:
             - name: RUST_LOG
               value: {{ .Values.agents.core.logLevel }}
-            {{- if default .Values.base.logSilenceLevel .Values.agents.core.logSilenceLevel }}
+            {{- if default .Values.base.logging.silenceLevel .Values.agents.core.logSilenceLevel }}
             - name: RUST_LOG_SILENCE
-              value: {{ default .Values.base.logSilenceLevel .Values.agents.core.logSilenceLevel }}
+              value: {{ default .Values.base.logging.silenceLevel .Values.agents.core.logSilenceLevel }}
             {{- end }}
             - name: MY_POD_NAME
               valueFrom:
@@ -92,14 +99,16 @@ spec:
             - "--core-grpc=https://{{ .Release.Name }}-agent-core:50051"{{ if .Values.base.jaeger.enabled }}
             - "--jaeger={{ .Values.base.jaeger.agent.name }}:{{ .Values.base.jaeger.agent.port }}"{{ end }}{{ if .Values.eventing.enabled }}
             - "--events-url=nats://{{ .Release.Name }}-nats:4222"{{ end }}
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--fmt-style={{ include "logFormat" . }}"
           ports:
             - containerPort: 50052
           env:
             - name: RUST_LOG
               value: {{ .Values.agents.core.logLevel }}
-            {{- if default .Values.base.logSilenceLevel .Values.agents.core.logSilenceLevel }}
+            {{- if default .Values.base.logging.silenceLevel .Values.agents.core.logSilenceLevel }}
             - name: RUST_LOG_SILENCE
-              value: {{ default .Values.base.logSilenceLevel .Values.agents.core.logSilenceLevel }}
+              value: {{ default .Values.logging.silenceLevel .Values.agents.core.logSilenceLevel }}
             {{- end }}
             - name: MY_POD_NAME
               valueFrom:

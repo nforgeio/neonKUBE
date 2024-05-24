@@ -32,12 +32,22 @@ $ helm install mayastor . -n <mayastor-namespace>
 
 ### Installing the Chart via Helm Registry
 
-To install the chart with the release name `my-release`:
+To install the chart with the release name `mymayastor`:
 
 ```console
-$ helm repo add openebs https://openebs.github.io/mayastor-extensions/
-$ helm install my-release openebs/{{ template "chart.name" . }}
+$ helm repo add mayastor https://openebs.github.io/mayastor-extensions/
+$ helm install mymayastor mayastor/{{ template "chart.name" . }}
 ```
+
+### Uninstall Helm Chart
+
+```console
+$ helm uninstall [RELEASE_NAME] 
+```
+
+This removes all the Kubernetes components associated with the chart and deletes the release.
+
+*See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command documentation.*
 
 ## Chart Dependencies
 
@@ -46,7 +56,7 @@ $ helm install my-release openebs/{{ template "chart.name" . }}
 {{ template "chart.valuesHeader" . }}
 
 | Key | Description | Default |
-|-----|-------------|:-------:|
+|:----|:------------|:--------|
 {{ range .Values }}
 {{- if or .Description .AutoDescription -}}
 {{ if eq .Type "object" -}}

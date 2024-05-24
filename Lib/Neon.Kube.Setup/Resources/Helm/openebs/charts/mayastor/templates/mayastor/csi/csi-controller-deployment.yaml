@@ -48,7 +48,7 @@ spec:
             - "--default-fstype=ext4"
             - "--extra-create-metadata" # This is needed for volume group feature to work
             - "--timeout=36s"
-            - "--worker-threads=10" # 10 for create and 10 for delete
+            - "--worker-threads={{ .Values.csi.controller.maxCreateVolume }}" # 10 for create and 10 for delete
             {{- if default .Values.csi.controller.preventVolumeModeConversion }}
             - "--prevent-volume-mode-conversion"
             {{- end }}
@@ -92,6 +92,18 @@ spec:
             {{- end }}
           image: "{{ .Values.csi.image.registry }}/{{ .Values.csi.image.repo }}/snapshot-controller:{{ .Values.csi.image.snapshotControllerTag }}"
           imagePullPolicy: {{ .Values.csi.image.pullPolicy }}
+        - name: csi-resizer
+          args:
+            - "--v=2"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          image: "{{ .Values.csi.image.registry }}/{{ .Values.csi.image.repo }}/csi-resizer:{{ .Values.csi.image.resizerTag }}"
+          imagePullPolicy: {{ .Values.csi.image.pullPolicy }}
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-controller
           resources:
             limits:
@@ -109,12 +121,15 @@ spec:
             {{- range $key, $val := .Values.csi.node.topology.segments }}
             - "--node-selector={{ $key }}={{ $val }}"
             {{- end }}
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--fmt-style={{ include "logFormat" . }}"
+            - "--create-volume-limit={{ .Values.csi.controller.maxCreateVolume }}"
           env:
             - name: RUST_LOG
               value: {{ .Values.csi.controller.logLevel }}
-            {{- if default .Values.base.logSilenceLevel .Values.csi.controller.logSilenceLevel }}
+            {{- if default .Values.base.logging.silenceLevel .Values.csi.controller.logSilenceLevel }}
             - name: RUST_LOG_SILENCE
-              value: {{ default .Values.base.logSilenceLevel .Values.csi.controller.logSilenceLevel }}
+              value: {{ default .Values.base.logging.silenceLevel .Values.csi.controller.logSilenceLevel }}
             {{- end }}
           volumeMounts:
             - name: socket-dir

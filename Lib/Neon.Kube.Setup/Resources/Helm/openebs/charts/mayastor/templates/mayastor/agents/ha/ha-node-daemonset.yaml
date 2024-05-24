@@ -55,9 +55,9 @@ spec:
         env:
         - name: RUST_LOG
           value: {{ .Values.agents.ha.node.logLevel }}
-        {{- if default .Values.base.logSilenceLevel .Values.agents.ha.node.logSilenceLevel }}
+        {{- if default .Values.base.logging.silenceLevel .Values.agents.ha.node.logSilenceLevel }}
         - name: RUST_LOG_SILENCE
-          value: {{ default .Values.base.logSilenceLevel .Values.agents.ha.node.logSilenceLevel }}
+          value: {{ default .Values.base.logging.silenceLevel .Values.agents.ha.node.logSilenceLevel }}
         {{- end }}
         - name: MY_NODE_NAME
           valueFrom:
@@ -71,11 +71,13 @@ spec:
           value: "1"
         args:
         - "--node-name=$(MY_NODE_NAME)"
-        - "--csi-socket={{ .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
+        - "--csi-socket={{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}/{{ .Values.csi.node.socketPath }}"
         - "--grpc-endpoint=$(MY_POD_IP):50053"
         - "--cluster-agent=https://{{ .Release.Name }}-agent-core:50052"{{ if .Values.base.jaeger.enabled }}
         - "--jaeger={{ .Values.base.jaeger.agent.name }}:{{ .Values.base.jaeger.agent.port }}"{{ end }}{{ if .Values.eventing.enabled }}
         - "--events-url=nats://{{ .Release.Name }}-nats:4222"{{ end }}
+        - "--ansi-colors={{ .Values.base.logging.color }}"
+        - "--fmt-style={{ include "logFormat" . }}"
         volumeMounts:
         - name: device
           mountPath: /dev
@@ -84,7 +86,7 @@ spec:
         - name: run-udev
           mountPath: /run/udev
         - name: plugin-dir
-          mountPath: {{ .Values.csi.node.pluginMounthPath }}
+          mountPath: {{ default .Values.csi.node.pluginMountPath .Values.csi.node.pluginMounthPath }}
         resources:
           limits:
             cpu: {{ .Values.agents.ha.node.resources.limits.cpu | quote }}

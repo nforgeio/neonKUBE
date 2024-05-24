@@ -570,12 +570,6 @@ namespace Neon.Kube
         public const string K8sCsiAttacher = "v4.5.0";
 
         /// <summary>
-        /// Specifies the version of <b>k8scsi-livenessprobe</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string K8sCsiLivenessProbe = "v2.12.0";
-
-        /// <summary>
         /// Specifies the version of <b>k8scsi-csi-node-driver-registrar</b> to be installed.
         /// </summary>
         [KubeValue]
@@ -654,58 +648,28 @@ namespace Neon.Kube
         public const string OliverRedisExporter = "v1.13.1";
 
         /// <summary>
-        /// Specifies the version of <b>OpenEbs</b> to be installed.
+        /// Specifies the version of <b>OpenEBS</b> plugin to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbs = "3.10.0";
+        public const string OpenEbs = "4.0.0";
 
         /// <summary>
-        /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
+        /// Specifies the version of <b>OpenEBS Mayastor</b> plugin to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbsCvcOperator = "3.6.0";
+        public const string OpenEbsMayastor = "v2.6.0";
 
         /// <summary>
-        /// Specifies the version of <b>openebs-jiva</b> to be installed.
+        /// Specifies the version of <b>OpenEBS LVM Driver</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbsJiva = "3.6.0";
+        public const string OpenEbsLvmDriver = "1.5.0";
 
         /// <summary>
-        /// Specifies the version of <b>openebs-nfs-server-alpine</b> to be installed.
+        /// Specifies the version of <b>OpenEBS LVM Driver</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbsNfsServerAlpine = "0.9.0";
-
-        /// <summary>
-        /// Specifies the version of <b>openebs-node-disk-exporter</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsNodeDiskExporter = "1.9.0";
-
-        /// <summary>
-        /// Specifies the version of <b>openebs-node-disk-manager</b> o be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsNodeDiskManager = "1.9.0";
-
-        /// <summary>
-        /// Specifies the version of <b>openebs-node-disk-operator</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsNodeDiskOperator = "1.9.0";
-
-        /// <summary>
-        /// Specifies the version of <b>openebs-provisioner-localpv</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsProvisionerLocalPV = "3.5.0";
-
-        /// <summary>
-        /// Specifies the version of <b>openebs-cstor-admission-server</b> to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string OpenEbsCstorWebHook = "3.6.0";
+        public const string OpenEbsZfsDriver = "2.5.0";
 
         /// <summary>
         /// Specifies the version of <b>prom-blackbox-exporter</b> to be installed.

@@ -61,6 +61,8 @@ spec:
             - "--namespace={{ .Release.Namespace }}"
             - "--release-name={{ .Release.Name }}"
             - "--mbus-url=nats://{{ .Release.Name }}-nats:4222"
+            - "--ansi-colors={{ .Values.base.logging.color }}"
+            - "--fmt-style={{ include "logFormat" . }}"
           ports:
             - containerPort: 9090
               protocol: TCP

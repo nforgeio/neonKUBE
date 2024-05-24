@@ -2,8 +2,10 @@
 
 The basic idea here is to download the Helm chart for the version of
 OpenEBS being installed, replace all of the existing chart files (except
-for these instructions), and then edit the **values.yaml** file as
-required.
+for these instructions and the upgrade script), and then edit the
+**values.yaml** file as required.
+
+Here's how this is accomplished:
 
 1. Set **KubeVersion.OpenEbs** to the desired version.
 
@@ -33,8 +35,8 @@ required.
 
    **Limits/Requests:** Add any required limits/requests to the values override string.
 
-5. Deploy clusters with various configuration options (Jiva, cStor,...), breaking
-   into the debugger after the OpenEBS Helm chart has been installed.
+5. Deploy clusters with various configuration options, breaking into the 
+   debugger after the OpenEBS Helm chart has been installed.
 
    a. Fix any container image reference failures
    b. Run `neon cluster check --container-images`, looking for container
