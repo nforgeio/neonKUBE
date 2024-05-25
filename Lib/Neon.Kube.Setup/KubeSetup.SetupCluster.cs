@@ -189,7 +189,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
-            controller.Add(KubeSetupProperty.ClusterAdvice, ClusterAdvice.Compute(clusterDefinition));
+            controller.Add(KubeSetupProperty.ClusterAdvisor, ClusterAdvisor.Compute(clusterDefinition));
 
             // Configure the setup steps.
 

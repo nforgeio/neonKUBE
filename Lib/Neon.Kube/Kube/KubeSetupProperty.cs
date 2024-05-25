@@ -87,10 +87,10 @@ namespace Neon.Kube
         public const string K8sClient = "k8sclient";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <b>cluster advice</b> with
-        /// information used to configure cluster components.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <b>cluster advisor</b> with
+        /// information used to configure cluster nodes and components.
         /// </summary>
-        public const string ClusterAdvice = "cluster-advice";
+        public const string ClusterAdvisor = "cluster-advisor";
 
         /// <summary>
         /// Property name for accessing the NeonCLOUD headend service client.

@@ -190,6 +190,24 @@ namespace Neon.Kube.ClusterDef
         public bool OpenEbsStorage { get; set; } = false;
 
         /// <summary>
+        /// <para>
+        /// Specifies the number of application related <b>2 MiB</b> sized
+        /// [huge pages](https://www.netdata.cloud/blog/understanding-huge-pages/)
+        /// to be allocated on the node.  Huge pages are used by some applications
+        /// (typically databases) to improve memory access efficiency.
+        /// </para>
+        /// <note>
+        /// OpenEBS Mayastor requires 2 GiB worth of 2 MiB huge pages for nodes
+        /// hosting the Mayastor engine.  NeonKUBE deployment will allocate those
+        /// pages in addition to this setting as required.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "HugePages2MiB", Required = Required.Default)]
+        [YamlMember(Alias = "hugePages2MiB", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int HugePages2MiB { get; set; } = 0;
+
+        /// <summary>
         /// Optionally specifies the labels to be assigned to the cluster node.  These can describe
         /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabel"/>
         /// for more information.
@@ -397,6 +415,13 @@ namespace Neon.Kube.ClusterDef
                 {
                     throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid IP address [{Address}].");
                 }
+            }
+
+            // Huge pages.
+
+            if (HugePages2MiB < 0)
+            {
+                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages2MiB)}={HugePages2MiB} cannot be negative.");
             }
 
             // Validate hosting environment options.

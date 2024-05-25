@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        ServiceAdvice.cs
+// FILE:        ClusterAdvisor.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,6 +34,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.SSH;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
@@ -45,7 +46,7 @@ namespace Neon.Kube.Setup
     /// is used to centralize the decisions about things like resource limitations and 
     /// node taints/affinity based on the overall resources available to the cluster.
     /// </summary>
-    public class ClusterAdvice
+    public class ClusterAdvisor
     {
         /// <summary>
         /// Identifies the NeonKUBE cluster <b>AlertManager</b> service.
@@ -484,8 +485,8 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// <para>
-        /// Computes the cluster deployment advice for the cluster specified by the
-        /// cluster definition passed.
+        /// Computes the cluster deployment advice for the cluster that will be deployed
+        /// using the cluster definition passed.
         /// </para>
         /// <note>
         /// This method may modify the cluster definition in some ways to reflect
@@ -494,17 +495,18 @@ namespace Neon.Kube.Setup
         /// </summary>
         /// <param name="clusterDefinition">Spoecifies the target cluster definition.</param>
         /// <returns></returns>
-        public static ClusterAdvice Compute(ClusterDefinition clusterDefinition)
+        public static ClusterAdvisor Compute(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            return new ClusterAdvice(clusterDefinition);
+            return new ClusterAdvisor(clusterDefinition);
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         private Dictionary<string, ServiceAdvice>   services   = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
+        private Dictionary<string, NodeAdvice>      nodes      = new Dictionary<string, NodeAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                isReadOnly = false;
         private ClusterDefinition                   clusterDefinition;
         private int                                 nodeCount;
@@ -520,7 +522,7 @@ namespace Neon.Kube.Setup
         /// public constructor.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        private ClusterAdvice(ClusterDefinition clusterDefinition)
+        private ClusterAdvisor(ClusterDefinition clusterDefinition)
         {
             this.clusterDefinition   = clusterDefinition;
             this.nodeCount           = clusterDefinition.Nodes.Count();
@@ -595,7 +597,7 @@ namespace Neon.Kube.Setup
             {
                 if (!value && isReadOnly)
                 {
-                    throw new InvalidOperationException($"[{nameof(ClusterAdvice)}] cannot be made read/write after being set to read-only.");
+                    throw new InvalidOperationException($"[{nameof(ClusterAdvisor)}] cannot be made read/write after being set to read-only.");
                 }
 
                 isReadOnly = value;
@@ -608,39 +610,10 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Returns the <see cref="ServiceAdvice"/> for the specified service.
-        /// </summary>
-        /// <param name="serviceName">Identifies the service (one of the constants defined by this class).</param>
-        /// <returns>The <see cref="ServiceAdvice"/> instance for the service.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public ServiceAdvice GetServiceAdvice(string serviceName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
-
-            return services[serviceName];
-        }
-
-        /// <summary>
-        /// Adds the <see cref="ServiceAdvice"/> for the specified service.
-        /// </summary>
-        /// <param name="serviceName">Identifies the service (one of the constants defined by this class).</param>
-        /// <param name="advice">The <see cref="ServiceAdvice"/> instance for the service</param>
-        public void AddServiceAdvice(string serviceName, ServiceAdvice advice)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
-            Covenant.Requires<ArgumentNullException>(advice != null);
-
-            services.Add(serviceName, advice);
-        }
-
-        /// <summary>
         /// Determines whether we should consider the cluster to be small.
         /// </summary>
         /// <returns><c>true</c> for small clusters.</returns>
-        private bool IsSmallCluster =>
-            clusterDefinition.IsDesktop ||
-            controlNodeCount == 1 ||
-            nodeCount <= 10;
+        private bool IsSmallCluster => clusterDefinition.IsDesktop || controlNodeCount == 1 || nodeCount <= 10;
 
         /// <summary>
         /// Converts a name/value pair into single line YAML object.
@@ -680,7 +653,8 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// Determines resource and other recommendations for the cluster globally as well
-        /// as for cluster components based on the cluster definition passed to the constructor.
+        /// as for cluster components and nodes based on the cluster definition passed to
+        /// the constructor.
         /// </summary>
         private void Compute()
         {
@@ -780,11 +754,62 @@ namespace Neon.Kube.Setup
             CalculateTempoRulerAdvice();
             CalculateTempoStoreGatewayAdvice();
 
+            // Initialize node advice.
+
+            foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+            {
+                AddNodeAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
+            }
+
+            CalculateNodeAdvice();
+
             // Since advice related classes cannot handle updates performed on multiple threads 
-            // and cluster setup is multi-threaded, we're going to mark the advice as read-only
+            // and cluster setup is multi-threaded, we're going to mark the advisor as read-only
             // to prevent any changes in subsequent steps.
 
             IsReadOnly = true;
+        }
+
+        //---------------------------------------------------------------------
+        // Service advice
+
+        /// <summary>
+        /// Adds the <see cref="ServiceAdvice"/> for the named service.
+        /// </summary>
+        /// <param name="serviceName">Identifies the service (one of the constants defined by this class).</param>
+        /// <param name="serviceAdvice">Specifies the <see cref="ServiceAdvice"/> instance for the service</param>
+        private void AddServiceAdvice(string serviceName, ServiceAdvice serviceAdvice)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
+            Covenant.Requires<ArgumentNullException>(serviceAdvice != null);
+
+            services.Add(serviceName, serviceAdvice);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="ServiceAdvice"/> for the specified service.
+        /// </summary>
+        /// <param name="serviceName">Identifies the service (one of the service constants defined by this class).</param>
+        /// <returns>The <see cref="ServiceAdvice"/> instance for the service.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
+        public ServiceAdvice GetServiceAdvice(string serviceName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
+
+            return services[serviceName];
+        }
+
+        /// <summary>
+        /// Returns the <see cref="NodeAdvice"/> for the specified node.
+        /// </summary>
+        /// <param name="node">Identifies the node.</param>
+        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
+        public NodeAdvice GetNodeAdvice(NodeSshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            return nodes[node.Name];
         }
 
         private void CalculateAlertManagerAdvice()
@@ -1604,7 +1629,7 @@ namespace Neon.Kube.Setup
             // We're going to schedule the CSI controller on the storage
             // nodes for cStor.
 
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
             {
                 advice.NodeSelector = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
             }
@@ -1715,7 +1740,6 @@ namespace Neon.Kube.Setup
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
-                case OpenEbsEngine.Jiva:
                 case OpenEbsEngine.HostPath:
 
                     if (workerNodeCount > 0)
@@ -1911,6 +1935,44 @@ namespace Neon.Kube.Setup
             advice.Replicas         = 1;
 
             AddServiceAdvice(advice.ServiceName, advice);
+        }
+
+        //---------------------------------------------------------------------
+        // Node advice
+
+        /// <summary>
+        /// Adds the <see cref="NodeAdvice"/> for the specified node.
+        /// </summary>
+        /// <param name="nodeDefinition">Identifies the target node definition.</param>
+        /// <param name="nodeAdvice">Specifies the <see cref="NodeAdvice"/> instance for the node</param>
+        private void AddNodeAdvice(NodeDefinition nodeDefinition, NodeAdvice nodeAdvice)
+        {
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            Covenant.Requires<ArgumentNullException>(nodeAdvice != null, nameof(nodeAdvice));
+            Covenant.Assert(object.ReferenceEquals(nodeDefinition, nodeAdvice.NodeDefinition), "Node definition references must be the same.");
+
+            nodes.Add(nodeAdvice.NodeDefinition.Name, nodeAdvice);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="NodeAdvice"/> for the specified node name.
+        /// </summary>
+        /// <param name="nodeName">Identifies the node.</param>
+        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
+        public NodeAdvice GetNodeAdvice(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            return nodes[nodeName];
+        }
+
+        /// <summary>
+        /// Calculates node advice for the cluster.
+        /// </summary>
+        private void CalculateNodeAdvice()
+        {
+            // $todo(jefflill): IMPLEMENT THIS!
         }
     }
 }

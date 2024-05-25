@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        KubeServiceAdvice.cs
+// FILE:        ServiceAdvice.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -43,25 +43,25 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Used by <see cref="ClusterAdvice"/> to record configuration advice for a specific
-    /// Kurbernetes service being deployed.
+    /// Used by <see cref="ClusterAdvisor"/> to record configuration advice for a specific
+    /// cluster service being deployed.
     /// </summary>
     public class ServiceAdvice
     {
-        private ClusterAdvice   clusterAdvice;
+        private ClusterAdvisor   clusterAdvisor;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="clusterAdvice">Specifies the parent <see cref="ClusterAdvice"/>.</param>
+        /// <param name="clusterAdvisor">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
         /// <param name="serviceName">Identifies the service.</param>
-        public ServiceAdvice(ClusterAdvice clusterAdvice, string serviceName)
+        public ServiceAdvice(ClusterAdvisor clusterAdvisor, string serviceName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterAdvice != null, nameof(clusterAdvice));
+            Covenant.Requires<ArgumentNullException>(clusterAdvisor != null, nameof(clusterAdvisor));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName), nameof(serviceName));
 
-            this.clusterAdvice = clusterAdvice;
-            this.ServiceName   = serviceName;
+            this.clusterAdvisor = clusterAdvisor;
+            this.ServiceName    = serviceName;
         }
 
         /// <summary>
@@ -215,13 +215,13 @@ namespace Neon.Kube.Setup
         /// Specifies whether metrics should be collected for the service.
         /// </para>
         /// <note>
-        /// <see cref="ClusterAdvice.MetricsEnabled"/> will be returned when this
+        /// <see cref="ClusterAdvisor.MetricsEnabled"/> will be returned when this
         /// property isn't set explicitly.
         /// </note>
         /// </summary>
         public bool MetricsEnabled
         {
-            get { return metricsEnabled ?? clusterAdvice.MetricsEnabled; }
+            get { return metricsEnabled ?? clusterAdvisor.MetricsEnabled; }
             set { EnsureNotReadOnly(); metricsEnabled = value; }
         }
 
@@ -232,13 +232,13 @@ namespace Neon.Kube.Setup
         /// Specifies the metrics scrape interval or <c>null</c> when this property is not set.
         /// </para>
         /// <note>
-        /// <see cref="ClusterAdvice.MetricsInterval"/> will be returned when this
+        /// <see cref="ClusterAdvisor.MetricsInterval"/> will be returned when this
         /// property isn't set explicitly.
         /// </note>
         /// </summary>
         public string MetricsInterval
         {
-            get { return metricsInterval ?? clusterAdvice.MetricsInterval; }
+            get { return metricsInterval ?? clusterAdvisor.MetricsInterval; }
             set { EnsureNotReadOnly(); metricsInterval = value; }
         }
 

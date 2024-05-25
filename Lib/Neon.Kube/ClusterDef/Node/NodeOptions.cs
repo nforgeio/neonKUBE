@@ -73,6 +73,10 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
+            if (PackageManagerRetries < 0)
+            {
+                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(PackageManagerRetries)}={PackageManagerRetries} cannot be negative.");
+            }
         }
     }
 }

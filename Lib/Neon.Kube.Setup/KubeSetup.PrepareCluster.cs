@@ -99,6 +99,8 @@ namespace Neon.Kube.Setup
 
             clusterDefinition.Validate();
 
+            // Ensure that the node image file exists.
+
             if (!string.IsNullOrEmpty(options.NodeImagePath))
             {
                 if (!File.Exists(options.NodeImagePath))
@@ -238,6 +240,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
             controller.Add(KubeSetupProperty.Insecure, options.Insecure);
+            controller.Add(KubeSetupProperty.ClusterAdvisor, ClusterAdvisor.Compute(clusterDefinition));
 
             // Configure the cluster preparation steps.
 
@@ -480,6 +483,73 @@ namespace Neon.Kube.Setup
                     }
                 });
 
+            controller.AddNodeStep("configure hugepages",
+                (controller, node) =>
+                {
+                    // Allocate any required RAM hugepages as required.  Note that
+                    // no reboot is required because this is happening during cluster
+                    // provisioning and Kubelet hasn't been deployed yet.
+
+                    var clusterAdvisor = controller.Get<ClusterAdvisor>(KubeSetupProperty.ClusterAdvisor);
+                    var nodeAdvice     = clusterAdvisor.GetNodeAdvice(node);
+
+                    if (nodeAdvice.TotalHugePages2MiB > 0)
+                    {
+                        // Verify that the node CPU supports 2 GiB hugepages and that
+                        // there's enough RAM available to allocate these pages.
+                        //
+                        // NOTE: We're going to reserve 2 GiB for the system and apps.
+
+                        const int systemReservedGiB = 2;
+
+                        var systemReservedBytes = ByteUnits.GibiBytes * systemReservedGiB;
+                        var memInfoRaw          = node.SudoCommand("cat /proc/meminfo").OutputText;
+                        var memInfo             = new Dictionary<string, string>();
+
+                        foreach (var line in new StringReader(memInfoRaw).Lines())
+                        {
+                            var colonPos = line.IndexOf(':');
+
+                            if (colonPos == -1)
+                            {
+                                continue;
+                            }
+
+                            var name  = line.Substring(0, colonPos).Trim();
+                            var value = line.Substring(colonPos + 1).Trim();
+
+                            memInfo.Add(name, value);
+                        }
+
+                        if (!memInfo.TryGetValue("Hugepagesize", out var hugepageSize) || hugepageSize != "2048 kB")
+                        {
+                            node.Fault("Node CPU does not support 2 MiB huge pages.");
+                            return;
+                        }
+
+                        var memTotalRaw    = memInfo["MemTotal"];
+                        var memTotalString = memTotalRaw.Replace("kB", string.Empty).Trim();
+                        var memTotal       = long.Parse(memTotalString) * 1024;
+
+                        if (memTotal - (systemReservedBytes + nodeAdvice.TotalHugePages2MiB * 2048) < 0)
+                        {
+                            node.Fault($"Node does not have enough RAM to support [{nodeAdvice.TotalHugePages2MiB * 2048}] bytes of hugepages while reserving [{systemReservedGiB} GiB] for the system.");
+                            return;
+                        }
+
+                        // Update the node's hugepage config.
+
+                        var script =
+$@"
+set -euo pipefail
+
+echo {nodeAdvice.TotalHugePages2MiB} > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+echo vm.nr_hugepages = {nodeAdvice.TotalHugePages2MiB} >> /etc/sysctl.conf
+";
+                        node.SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+                    }
+                });
+
             controller.AddNodeStep("node credentials",
                 (controller, node) =>
                 {
@@ -503,7 +573,7 @@ namespace Neon.Kube.Setup
             }
 
             // Some hosting managers may have to do some additional work after
-            // the cluster has been otherwise prepared.
+            // the cluster has otherwise been prepared.
             //
             // NOTE: This isn't required for NeonDESKTOP clusters.
 
