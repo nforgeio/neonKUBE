@@ -520,6 +520,9 @@ namespace Neon.Kube.ClusterDef
         /// not at all.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Latitude", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "latitude", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public double? Latitude { get; set; } = null;
 
         /// <summary>
@@ -532,6 +535,9 @@ namespace Neon.Kube.ClusterDef
         /// not at all.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Longitude", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "longitude", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public double? Longitude { get; set; } = null;
 
         /// <summary>
