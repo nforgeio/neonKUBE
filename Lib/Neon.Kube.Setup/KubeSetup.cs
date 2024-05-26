@@ -68,9 +68,11 @@ namespace Neon.Kube.Setup
         private static readonly IRetryPolicy    podExecRetry            = new ExponentialRetryPolicy(e => e is ExecuteException, maxAttempts: 10, maxRetryInterval: TimeSpan.FromSeconds(5));
         private static IStaticDirectory         cachedResources;
         private static ClusterManifest          cachedClusterManifest;
+        private static ClusterAdvisor           clusterAdvisor;
 
         //---------------------------------------------------------------------
         // Implementation
+
 
         /// <summary>
         /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.

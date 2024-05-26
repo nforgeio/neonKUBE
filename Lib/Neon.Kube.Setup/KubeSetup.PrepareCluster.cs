@@ -128,6 +128,9 @@ namespace Neon.Kube.Setup
                 setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
             }
 
+            clusterAdvisor            =
+            setupState.ClusterAdvisor = ClusterAdvisor.Create(clusterDefinition);
+
             var cluster = ClusterProxy.Create(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
@@ -214,8 +217,7 @@ namespace Neon.Kube.Setup
 
             setupState.ClusterDefinition = clusterDefinition;
             setupState.SshUsername       = KubeConst.SysAdminUser;
-
-            cluster.SetupState = setupState;
+            cluster.SetupState           = setupState;
 
             setupState.Save();
 
@@ -240,7 +242,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
             controller.Add(KubeSetupProperty.Insecure, options.Insecure);
-            controller.Add(KubeSetupProperty.ClusterAdvisor, ClusterAdvisor.Compute(clusterDefinition));
+            controller.Add(KubeSetupProperty.ClusterAdvisor, clusterAdvisor);
 
             // Configure the cluster preparation steps.
 

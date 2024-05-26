@@ -47,7 +47,7 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NeonKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
+    /// NeonKUBE cluster provisioning includes two major phases, <b>prepare</b>> and <b>setup</b>>,
     /// where preparing the cluster involves initializing infrastructure, including configuring
     /// the network and creating the virtual machines that will host the cluster.  Cluster
     /// setup is where we configure Kubernetes, install the necessary components, and then
@@ -396,6 +396,15 @@ namespace Neon.Kube
                 }
             }
         }
+
+        /// <summary>
+        /// Holds the cluster setup advisor state computed during the cluster
+        /// prepare stage.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterAdvisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterAdvisor", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public ClusterAdvisor ClusterAdvisor { get; set; }
 
         /// <summary>
         /// Persists the details to its associated file.

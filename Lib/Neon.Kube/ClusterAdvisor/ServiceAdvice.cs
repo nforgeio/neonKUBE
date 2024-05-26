@@ -40,7 +40,7 @@ using Neon.Tasks;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Setup
+namespace Neon.Kube
 {
     /// <summary>
     /// Used by <see cref="ClusterAdvisor"/> to record configuration advice for a specific

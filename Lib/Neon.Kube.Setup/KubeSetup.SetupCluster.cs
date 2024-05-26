@@ -105,7 +105,8 @@ namespace Neon.Kube.Setup
 
             try
             {
-                setupState = KubeSetupState.Load((string)contextName);
+                setupState     = KubeSetupState.Load((string)contextName);
+                clusterAdvisor = setupState.ClusterAdvisor;
             }
             catch (Exception e)
             {
@@ -189,7 +190,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
-            controller.Add(KubeSetupProperty.ClusterAdvisor, ClusterAdvisor.Compute(clusterDefinition));
+            controller.Add(KubeSetupProperty.ClusterAdvisor, clusterAdvisor);
 
             // Configure the setup steps.
 
