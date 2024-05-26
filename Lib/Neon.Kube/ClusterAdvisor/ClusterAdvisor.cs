@@ -668,91 +668,91 @@ namespace Neon.Kube
 
             // Initialize service advice.
 
-            InitializeAlertManagerServiceAdvice();
-            InitializeBlackboxExporterServiceAdvice();
-            InitializeCiliumServiceAdvice();
-            InitializeCertManagerServiceAdvice();
-            InitializeCoreDnsServiceAdvice();
-            InitializeDexServiceAdvice();
-            InitializeGlauthServiceAdvice();
-            InitializeGrafanaServiceAdvice();
-            InitializeGrafanaAgentServiceAdvice();
-            InitializeGrafanaAgentNodeServiceAdvice();
-            InitializeGrafanaAgentOperatorServiceAdvice();
-            InitializeHarborServiceAdvice();
-            InitializeHarborChartmuseumServiceAdvice();
-            InitializeHarborClairServiceAdvice();
-            InitializeHarborCoreServiceAdvice();
-            InitializeHarborJobserviceServiceAdvice();
-            InitializeHarborNotaryServerServiceAdvice();
-            InitializeHarborNotarySignerServiceAdvice();
-            InitializeHarborPortalServiceAdvice();
-            InitializeRedisServiceAdvice();
-            InitializeHarborRegistryServiceAdvice();
-            InitializeIstioIngressGatewayServiceAdvice();
-            InitializeIstioProxyServiceAdvice();
-            InitializeIstioPilotServiceAdvice();
-            InitializeKialiServiceAdvice();
-            InitializeKubernetesDashboardServiceAdvice();
-            InitializeKubeStateMetricsServiceAdvice();
-            InitializeLokiServiceAdvice();
-            InitializeLokiCompactorServiceAdvice();
-            InitializeLokiDistributorServiceAdvice();
-            InitializeLokiIndexGatewayServiceAdvice();
-            InitializeLokiIngesterServiceAdvice();
-            InitializeLokiQuerierServiceAdvice();
-            InitializeLokiQueryFrontendServiceAdvice();
-            InitializeLokiRulerServiceAdvice();
-            InitializeLokiTableManagerServiceAdvice();
-            InitializeMemcachedServiceAdvice();
-            InitializeMetricsServerServiceAdvice();
-            InitializeMimirServiceAdvice();
-            InitializeMimirAlertmanagerServiceAdvice();
-            InitializeMimirCompactorServiceAdvice();
-            InitializeMimirDistributorServiceAdvice();
-            InitializeMimirIngesterServiceAdvice();
-            InitializeMimirOverridesExporterServiceAdvice();
-            InitializeMimirQuerierServiceAdvice();
-            InitializeMimirQueryFrontendServiceAdvice();
-            InitializeMimirRulerServiceAdvice();
-            InitializeMimirStoreGatewayServiceAdvice();
-            InitializeMinioServiceAdvice();
-            InitializeMinioOperatorServiceAdvice();
-            InitializeNeonAcmeServiceAdvice();
-            InitializeNeonClusterOperatorServiceAdvice();
-            InitializeNeonNodeAgentServiceAdvice();
-            InitializeNeonSsoSessionProxyServiceAdvice();
-            InitializeNeonSystemDbServiceAdvice();
-            InitializeNeonSystemDbOperatorServiceAdvice();
-            InitializeNeonSystemDbMetricsServiceAdvice();
-            InitializeNeonSystemDbPoolerServiceAdvice();
-            InitializeNodeProblemDetectorServiceAdvice();
-            InitializeOauth2ProxyServiceAdvice();
-            InitializeOpenEbsCstorServiceAdvice();
-            InitializeOpenEbsCstorAdmissionServerServiceAdvice();
-            InitializeOpenEbsCstorCsiControllerServiceAdvice();
-            InitializeOpenEbsCstorCsiNodeServiceAdvice();
-            InitializeOpenEbsCstorCspcOperatorServiceAdvice();
-            InitializeOpenEbsCstorCvcOperatorServiceAdvice();
-            InitializeOpenEbsJivaCsiControllerServiceAdvice();
-            InitializeOpenEbsJivaOperatorServiceAdvice();
-            InitializeOpenEbsLocalPvProvisionerServiceAdvice();
-            InitializeOpenEbsNdmServiceAdvice();
-            InitializeOpenEbsNdmOperatorServiceAdvice();
-            InitializeOpenEbsNfsProvisionerServiceAdvice();
-            InitializePrometheusServiceAdvice();
-            InitializePrometheusOperatorServiceAdvice();
-            InitializeReloaderServiceAdvice();
-            InitializeTempoServiceAdvice();
-            InitializeTempoAlertmanagerServiceAdvice();
-            InitializeTempoCompactorServiceAdvice();
-            InitializeTempoDistributorServiceAdvice();
-            InitializeTempoIngesterServiceAdvice();
-            InitializeTempoOverridesExporterServiceAdvice();
-            InitializeTempoQuerierServiceAdvice();
-            InitializeTempoQueryFrontendServiceAdvice();
-            InitializeTempoRulerServiceAdvice();
-            InitializeTempoStoreGatewayServiceAdvice();
+            SetAlertManagerServiceAdvice();
+            SetBlackboxExporterServiceAdvice();
+            SetCiliumServiceAdvice();
+            SetCertManagerServiceAdvice();
+            SetCoreDnsServiceAdvice();
+            SetDexServiceAdvice();
+            SetGlauthServiceAdvice();
+            SetGrafanaServiceAdvice();
+            SetGrafanaAgentServiceAdvice();
+            SetGrafanaAgentNodeServiceAdvice();
+            SetGrafanaAgentOperatorServiceAdvice();
+            SetHarborServiceAdvice();
+            SetHarborChartmuseumServiceAdvice();
+            SetHarborClairServiceAdvice();
+            SetHarborCoreServiceAdvice();
+            SetHarborJobserviceServiceAdvice();
+            SetHarborNotaryServerServiceAdvice();
+            SetHarborNotarySignerServiceAdvice();
+            SetHarborPortalServiceAdvice();
+            SetRedisServiceAdvice();
+            SetHarborRegistryServiceAdvice();
+            SetIstioIngressGatewayServiceAdvice();
+            SetIstioProxyServiceAdvice();
+            SetIstioPilotServiceAdvice();
+            SetKialiServiceAdvice();
+            SetKubernetesDashboardServiceAdvice();
+            SetKubeStateMetricsServiceAdvice();
+            SetLokiServiceAdvice();
+            SetLokiCompactorServiceAdvice();
+            SetLokiDistributorServiceAdvice();
+            SetLokiIndexGatewayServiceAdvice();
+            SetLokiIngesterServiceAdvice();
+            SetLokiQuerierServiceAdvice();
+            SetLokiQueryFrontendServiceAdvice();
+            SetLokiRulerServiceAdvice();
+            SetLokiTableManagerServiceAdvice();
+            SetMemcachedServiceAdvice();
+            SetMetricsServerServiceAdvice();
+            SetMimirServiceAdvice();
+            SetMimirAlertmanagerServiceAdvice();
+            SetMimirCompactorServiceAdvice();
+            SetMimirDistributorServiceAdvice();
+            SetMimirIngesterServiceAdvice();
+            SetMimirOverridesExporterServiceAdvice();
+            SetMimirQuerierServiceAdvice();
+            SetMimirQueryFrontendServiceAdvice();
+            SetMimirRulerServiceAdvice();
+            SetMimirStoreGatewayServiceAdvice();
+            SetMinioServiceAdvice();
+            SetMinioOperatorServiceAdvice();
+            SetNeonAcmeServiceAdvice();
+            SetNeonClusterOperatorServiceAdvice();
+            SetNeonNodeAgentServiceAdvice();
+            SetNeonSsoSessionProxyServiceAdvice();
+            SetNeonSystemDbServiceAdvice();
+            SetNeonSystemDbOperatorServiceAdvice();
+            SetNeonSystemDbMetricsServiceAdvice();
+            SetNeonSystemDbPoolerServiceAdvice();
+            SetNodeProblemDetectorServiceAdvice();
+            SetOauth2ProxyServiceAdvice();
+            SetOpenEbsCstorServiceAdvice();
+            SetOpenEbsCstorAdmissionServerServiceAdvice();
+            SetOpenEbsCstorCsiControllerServiceAdvice();
+            SetOpenEbsCstorCsiNodeServiceAdvice();
+            SetOpenEbsCstorCspcOperatorServiceAdvice();
+            SetOpenEbsCstorCvcOperatorServiceAdvice();
+            SetOpenEbsJivaCsiControllerServiceAdvice();
+            SetOpenEbsJivaOperatorServiceAdvice();
+            SetOpenEbsLocalPvProvisionerServiceAdvice();
+            SetOpenEbsNdmServiceAdvice();
+            SetOpenEbsNdmOperatorServiceAdvice();
+            SetOpenEbsNfsProvisionerServiceAdvice();
+            SetPrometheusServiceAdvice();
+            SetPrometheusOperatorServiceAdvice();
+            SetReloaderServiceAdvice();
+            SetTempoServiceAdvice();
+            SetTempoAlertmanagerServiceAdvice();
+            SetTempoCompactorServiceAdvice();
+            SetTempoDistributorServiceAdvice();
+            SetTempoIngesterServiceAdvice();
+            SetTempoOverridesExporterServiceAdvice();
+            SetTempoQuerierServiceAdvice();
+            SetTempoQueryFrontendServiceAdvice();
+            SetTempoRulerServiceAdvice();
+            SetTempoStoreGatewayServiceAdvice();
 
             // Initialize node advice.
 
@@ -761,7 +761,7 @@ namespace Neon.Kube
                 AddNodeServiceAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
             }
 
-            InitializeNodeServiceAdvice();
+            SetNodeAdvice();
 
             // Since advice related classes cannot handle updates performed on multiple threads 
             // and cluster setup is multi-threaded, we're going to mark the advisor as read-only
@@ -812,14 +812,14 @@ namespace Neon.Kube
             return nodes[node.Name];
         }
 
-        private void InitializeAlertManagerServiceAdvice()
+        private void SetAlertManagerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, AlertManager);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeBlackboxExporterServiceAdvice()
+        private void SetBlackboxExporterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, BlackboxExporter);
 
@@ -829,7 +829,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeCiliumServiceAdvice()
+        private void SetCiliumServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Cilium);
 
@@ -838,7 +838,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeCertManagerServiceAdvice()
+        private void SetCertManagerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, CertManager);
 
@@ -854,7 +854,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonSystemDbServiceAdvice()
+        private void SetNeonSystemDbServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonSystemDb);
 
@@ -871,7 +871,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonSystemDbOperatorServiceAdvice()
+        private void SetNeonSystemDbOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonSystemDbOperator);
 
@@ -888,7 +888,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonSystemDbMetricsServiceAdvice()
+        private void SetNeonSystemDbMetricsServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonSystemDbMetrics);
 
@@ -905,7 +905,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonSystemDbPoolerServiceAdvice()
+        private void SetNeonSystemDbPoolerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonSystemDbPooler);
 
@@ -922,7 +922,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeCoreDnsServiceAdvice()
+        private void SetCoreDnsServiceAdvice()
         {
             var advice = new ServiceAdvice(this, CoreDns);
 
@@ -932,7 +932,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeGrafanaServiceAdvice()
+        private void SetGrafanaServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Grafana);
 
@@ -953,7 +953,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeGrafanaAgentServiceAdvice()
+        private void SetGrafanaAgentServiceAdvice()
         {
             var advice = new ServiceAdvice(this, GrafanaAgent);
 
@@ -973,7 +973,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeGrafanaAgentNodeServiceAdvice()
+        private void SetGrafanaAgentNodeServiceAdvice()
         {
             var advice = new ServiceAdvice(this, GrafanaAgentNode);
 
@@ -993,7 +993,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeGrafanaAgentOperatorServiceAdvice()
+        private void SetGrafanaAgentOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, GrafanaAgentOperator);
 
@@ -1008,7 +1008,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborServiceAdvice()
+        private void SetHarborServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Harbor);
 
@@ -1022,56 +1022,56 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborChartmuseumServiceAdvice()
+        private void SetHarborChartmuseumServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborChartmuseum);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborClairServiceAdvice()
+        private void SetHarborClairServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborClair);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborCoreServiceAdvice()
+        private void SetHarborCoreServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborCore);
             
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborJobserviceServiceAdvice()
+        private void SetHarborJobserviceServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborJobservice);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborNotaryServerServiceAdvice()
+        private void SetHarborNotaryServerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborNotaryServer);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborNotarySignerServiceAdvice()
+        private void SetHarborNotarySignerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborNotarySigner);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborPortalServiceAdvice()
+        private void SetHarborPortalServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborPortal);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeRedisServiceAdvice()
+        private void SetRedisServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Redis);
 
@@ -1081,14 +1081,14 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeHarborRegistryServiceAdvice()
+        private void SetHarborRegistryServiceAdvice()
         {
             var advice = new ServiceAdvice(this, HarborRegistry);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeIstioIngressGatewayServiceAdvice()
+        private void SetIstioIngressGatewayServiceAdvice()
         {
             var advice = new ServiceAdvice(this, IstioIngressGateway);
 
@@ -1100,7 +1100,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeIstioProxyServiceAdvice()
+        private void SetIstioProxyServiceAdvice()
         {
             var advice = new ServiceAdvice(this, IstioProxy);
 
@@ -1112,7 +1112,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeIstioPilotServiceAdvice()
+        private void SetIstioPilotServiceAdvice()
         {
             var advice = new ServiceAdvice(this, IstioPilot);
 
@@ -1124,7 +1124,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeDexServiceAdvice()
+        private void SetDexServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Dex);
 
@@ -1135,7 +1135,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeGlauthServiceAdvice()
+        private void SetGlauthServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Glauth);
 
@@ -1146,7 +1146,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeKialiServiceAdvice()
+        private void SetKialiServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Kiali);
 
@@ -1155,7 +1155,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeKubernetesDashboardServiceAdvice()
+        private void SetKubernetesDashboardServiceAdvice()
         {
             var advice = new ServiceAdvice(this, KubernetesDashboard);
 
@@ -1172,7 +1172,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeKubeStateMetricsServiceAdvice()
+        private void SetKubeStateMetricsServiceAdvice()
         {
             var advice = new ServiceAdvice(this, KubeStateMetrics);
 
@@ -1188,7 +1188,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMemcachedServiceAdvice()
+        private void SetMemcachedServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Memcached);
 
@@ -1200,7 +1200,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMetricsServerServiceAdvice()
+        private void SetMetricsServerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MetricsServer);
 
@@ -1209,7 +1209,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirServiceAdvice()
+        private void SetMimirServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Mimir);
 
@@ -1218,7 +1218,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirAlertmanagerServiceAdvice()
+        private void SetMimirAlertmanagerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirAlertmanager);
 
@@ -1230,7 +1230,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirCompactorServiceAdvice()
+        private void SetMimirCompactorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirCompactor);
 
@@ -1242,7 +1242,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirDistributorServiceAdvice()
+        private void SetMimirDistributorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirDistributor);
 
@@ -1266,7 +1266,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirIngesterServiceAdvice()
+        private void SetMimirIngesterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirIngester);
 
@@ -1289,7 +1289,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirOverridesExporterServiceAdvice()
+        private void SetMimirOverridesExporterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirOverridesExporter);
 
@@ -1301,7 +1301,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirQuerierServiceAdvice()
+        private void SetMimirQuerierServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirQuerier);
 
@@ -1323,7 +1323,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirQueryFrontendServiceAdvice()
+        private void SetMimirQueryFrontendServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirQueryFrontend);
 
@@ -1335,7 +1335,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirRulerServiceAdvice()
+        private void SetMimirRulerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirRuler);
 
@@ -1347,7 +1347,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMimirStoreGatewayServiceAdvice()
+        private void SetMimirStoreGatewayServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MimirStoreGateway);
 
@@ -1358,7 +1358,7 @@ namespace Neon.Kube
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
-        private void InitializeLokiServiceAdvice()
+        private void SetLokiServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Loki);
 
@@ -1366,7 +1366,7 @@ namespace Neon.Kube
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
-        private void InitializeLokiCompactorServiceAdvice()
+        private void SetLokiCompactorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiCompactor);
 
@@ -1378,7 +1378,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiDistributorServiceAdvice()
+        private void SetLokiDistributorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiDistributor);
 
@@ -1390,7 +1390,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiIndexGatewayServiceAdvice()
+        private void SetLokiIndexGatewayServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiIndexGateway);
 
@@ -1402,7 +1402,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiIngesterServiceAdvice()
+        private void SetLokiIngesterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiIngester);
 
@@ -1424,7 +1424,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiQuerierServiceAdvice()
+        private void SetLokiQuerierServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiQuerier);
 
@@ -1446,7 +1446,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiQueryFrontendServiceAdvice()
+        private void SetLokiQueryFrontendServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiQueryFrontend);
 
@@ -1458,7 +1458,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiRulerServiceAdvice()
+        private void SetLokiRulerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiRuler);
 
@@ -1469,7 +1469,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeLokiTableManagerServiceAdvice()
+        private void SetLokiTableManagerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, LokiTableManager);
 
@@ -1480,7 +1480,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMinioServiceAdvice()
+        private void SetMinioServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Minio);
 
@@ -1515,7 +1515,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeMinioOperatorServiceAdvice()
+        private void SetMinioOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, MinioOperator);
 
@@ -1525,7 +1525,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonClusterOperatorServiceAdvice()
+        private void SetNeonClusterOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonClusterOperator);
 
@@ -1536,7 +1536,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonAcmeServiceAdvice()
+        private void SetNeonAcmeServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonAcme);
 
@@ -1551,7 +1551,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNeonNodeAgentServiceAdvice()
+        private void SetNeonNodeAgentServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonNodeAgent);
 
@@ -1566,7 +1566,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
         
-        private void InitializeNeonSsoSessionProxyServiceAdvice()
+        private void SetNeonSsoSessionProxyServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NeonSsoSessionProxy);
 
@@ -1581,7 +1581,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeNodeProblemDetectorServiceAdvice()
+        private void SetNodeProblemDetectorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, NodeProblemDetector);
 
@@ -1590,7 +1590,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOauth2ProxyServiceAdvice()
+        private void SetOauth2ProxyServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Oauth2Proxy);
 
@@ -1602,7 +1602,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorServiceAdvice()
+        private void SetOpenEbsCstorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstor);
 
@@ -1611,7 +1611,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorAdmissionServerServiceAdvice()
+        private void SetOpenEbsCstorAdmissionServerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstorAdmissionServer);
 
@@ -1622,7 +1622,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorCsiControllerServiceAdvice()
+        private void SetOpenEbsCstorCsiControllerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstorCsiController);
 
@@ -1639,7 +1639,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorCsiNodeServiceAdvice()
+        private void SetOpenEbsCstorCsiNodeServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstorCsiNode);
 
@@ -1648,7 +1648,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorCspcOperatorServiceAdvice()
+        private void SetOpenEbsCstorCspcOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstorCspcOperator);
 
@@ -1657,7 +1657,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsCstorCvcOperatorServiceAdvice()
+        private void SetOpenEbsCstorCvcOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsCstorCvcOperator);
 
@@ -1666,7 +1666,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsJivaCsiControllerServiceAdvice()
+        private void SetOpenEbsJivaCsiControllerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsJivaCsiController);
 
@@ -1687,7 +1687,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsJivaOperatorServiceAdvice()
+        private void SetOpenEbsJivaOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsJivaOperator);
 
@@ -1708,7 +1708,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsLocalPvProvisionerServiceAdvice()
+        private void SetOpenEbsLocalPvProvisionerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsLocalPvProvisioner);
 
@@ -1718,7 +1718,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsNdmServiceAdvice()
+        private void SetOpenEbsNdmServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsNdm);
 
@@ -1729,7 +1729,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsNdmOperatorServiceAdvice()
+        private void SetOpenEbsNdmOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsNdmOperator);
 
@@ -1763,7 +1763,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeOpenEbsNfsProvisionerServiceAdvice()
+        private void SetOpenEbsNfsProvisionerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, OpenEbsNfsProvisioner);
 
@@ -1776,21 +1776,21 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializePrometheusServiceAdvice()
+        private void SetPrometheusServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Prometheus);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializePrometheusOperatorServiceAdvice()
+        private void SetPrometheusOperatorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, PrometheusOperator);
 
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeReloaderServiceAdvice()
+        private void SetReloaderServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Reloader);
 
@@ -1807,7 +1807,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoServiceAdvice()
+        private void SetTempoServiceAdvice()
         {
             var advice = new ServiceAdvice(this, Tempo);
 
@@ -1816,7 +1816,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoAlertmanagerServiceAdvice()
+        private void SetTempoAlertmanagerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoAlertmanager);
 
@@ -1827,7 +1827,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoCompactorServiceAdvice()
+        private void SetTempoCompactorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoCompactor);
 
@@ -1838,7 +1838,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoDistributorServiceAdvice()
+        private void SetTempoDistributorServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoDistributor);
 
@@ -1849,7 +1849,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoIngesterServiceAdvice()
+        private void SetTempoIngesterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoIngester);
 
@@ -1871,7 +1871,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoOverridesExporterServiceAdvice()
+        private void SetTempoOverridesExporterServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoOverridesExporter);
 
@@ -1882,7 +1882,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoQuerierServiceAdvice()
+        private void SetTempoQuerierServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoQuerier);
 
@@ -1904,7 +1904,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoQueryFrontendServiceAdvice()
+        private void SetTempoQueryFrontendServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoQueryFrontend);
 
@@ -1915,7 +1915,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoRulerServiceAdvice()
+        private void SetTempoRulerServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoRuler);
 
@@ -1926,7 +1926,7 @@ namespace Neon.Kube
             AddServiceAdvice(advice.ServiceName, advice);
         }
 
-        private void InitializeTempoStoreGatewayServiceAdvice()
+        private void SetTempoStoreGatewayServiceAdvice()
         {
             var advice = new ServiceAdvice(this, TempoStoreGateway);
 
@@ -1970,7 +1970,7 @@ namespace Neon.Kube
         /// <summary>
         /// Initializes node advice for the cluster.
         /// </summary>
-        private void InitializeNodeServiceAdvice()
+        private void SetNodeAdvice()
         {
             // $todo(jefflill): IMPLEMENT THIS!
         }
