@@ -128,8 +128,7 @@ namespace Neon.Kube.Setup
                 setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
             }
 
-            clusterAdvisor            =
-            setupState.ClusterAdvisor = ClusterAdvisor.Create(clusterDefinition);
+            clusterAdvisor = ClusterAdvisor.Create(clusterDefinition);
 
             var cluster = ClusterProxy.Create(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
@@ -214,6 +213,8 @@ namespace Neon.Kube.Setup
             {
                 setupState = KubeSetupState.Create(contextName);
             }
+
+            setupState.ClusterAdvisor = clusterAdvisor;
 
             setupState.ClusterDefinition = clusterDefinition;
             setupState.SshUsername       = KubeConst.SysAdminUser;

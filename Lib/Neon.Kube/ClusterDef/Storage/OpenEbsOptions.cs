@@ -81,11 +81,6 @@ namespace Neon.Kube.ClusterDef
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            if (Engine == OpenEbsEngine.Mayastor)
-            {
-                throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented yet.");
-            }
-
             // Choose an actual engine when [Default] is specified.
 
             if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Default)

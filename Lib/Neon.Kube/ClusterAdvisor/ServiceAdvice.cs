@@ -225,7 +225,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "PriorityClassName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "priorityClassName", ApplyNamingConventions = false)]
-        [DefaultValue("{}")]
+        [DefaultValue(null)]
         public string PriorityClassName { get; set; }
 
         /// <summary>

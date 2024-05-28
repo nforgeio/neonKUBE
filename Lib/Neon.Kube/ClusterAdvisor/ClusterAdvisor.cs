@@ -523,7 +523,14 @@ namespace Neon.Kube
         private string              storageNodeSelector;
 
         /// <summary>
-        /// public constructor.
+        /// Default constructor used for deserialization only.
+        /// </summary>
+        public ClusterAdvisor()
+        {
+        }
+
+        /// <summary>
+        /// Parameterized constructor.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private ClusterAdvisor(ClusterDefinition clusterDefinition)
