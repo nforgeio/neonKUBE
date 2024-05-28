@@ -41,6 +41,8 @@ using Neon.Tasks;
 
 using Newtonsoft.Json;
 
+using YamlDotNet.Serialization;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -52,7 +54,14 @@ namespace Neon.Kube
         private ClusterAdvisor   clusterAdvisor;
 
         /// <summary>
-        /// Constructor.
+        /// Default constructor for deserialization only.
+        /// </summary>
+        public NodeAdvice()
+        {
+        }
+
+        /// <summary>
+        /// Parameterized constructor.
         /// </summary>
         /// <param name="clusterAdvisor">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
         /// <param name="nodeDefinition">target node for this advice instance.</param>
@@ -66,53 +75,43 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the target node definition for this advice instance.
+        /// Called after deserialization to rehydrate the cluster advisor and related node definition
+        /// so we don't have to serialize those multiple times because we already serialize the
+        /// cluster definition in the cluster setup state.
         /// </summary>
-        public NodeDefinition NodeDefinition { get; private set; }
-
-        /// <summary>
-        /// <para>
-        /// Cluster advice is designed to be configured once during cluster setup and then be
-        /// considered to be <b>read-only</b> thereafter.  This property should be set to 
-        /// <c>true</c> after the advice is intialized to prevent it from being modified
-        /// again.
-        /// </para>
-        /// <note>
-        /// This is necessary because setup is performed on multiple threads and this class
-        /// is not inheritly thread-safe.  This also fits with the idea that the logic behind
-        /// this advice is to be centralized.
-        /// </note>
-        /// </summary>
-        public bool IsReadOnly { get; internal set; }
-
-        /// <summary>
-        /// Ensures that <see cref="IsReadOnly"/> isn't <c>true.</c>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown then <see cref="IsReadOnly"/> is <c>true</c>.</exception>
-        private void EnsureNotReadOnly()
+        /// <param name="clusterAdvisor">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
+        /// <param name="nodeDefinition">target node for this advice instance.</param>
+        public void Rehydrate(ClusterAdvisor clusterAdvisor, NodeDefinition nodeDefinition)
         {
-            if (IsReadOnly)
-            {
-                throw new InvalidOperationException("Cluster advice is read-only.");
-            }
+            Covenant.Requires<ArgumentNullException>(clusterAdvisor != null, nameof(clusterAdvisor));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+
+            this.clusterAdvisor = clusterAdvisor;
+            this.NodeDefinition = nodeDefinition;
         }
 
-        private long openEbsHugePages2MiB = 0;
+        /// <summary>
+        /// Returns the target node definition for this advice instance.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public NodeDefinition NodeDefinition { get; private set; }
 
         /// <summary>
         /// Specifies the number of <b>2 MiB</b> sized huge pages required by
         /// OpenEBS for this node.  This is computed by the cluster advisor
         /// for nodes hosting the Mayastor engine.
         /// </summary>
-        public long OpenEbsHugePages2MiB
-        {
-            get { return openEbsHugePages2MiB; }
-            set { EnsureNotReadOnly(); openEbsHugePages2MiB = value; }
-        }
+        [JsonProperty(PropertyName = "OpenEbsHugePages2MiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsHugePages2MiB", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public long OpenEbsHugePages2MiB { get; set; } = 0;
 
         /// <summary>
         /// Returns the total number of <b>2 MiB</b> hugepages required for the node.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public long TotalHugePages2MiB => NodeDefinition.HugePages2MiB + OpenEbsHugePages2MiB;
     }
 }

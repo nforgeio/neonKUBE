@@ -879,7 +879,7 @@ namespace Neon.Kube.ClusterDef
             Deployment         = Deployment ?? new DeploymentOptions();
             Storage            = Storage ?? new StorageOptions();
             Security           = Security ?? new SecurityOptions();
-            Kubernetes            = Kubernetes ?? new KubernetesOptions();
+            Kubernetes         = Kubernetes ?? new KubernetesOptions();
             Monitor            = Monitor ?? new MonitorOptions();
             Hosting            = Hosting ?? new HostingOptions();
             Hosting.Hypervisor = Hosting.Hypervisor ?? new HypervisorHostingOptions();
@@ -1104,7 +1104,7 @@ namespace Neon.Kube.ClusterDef
             if (!string.IsNullOrEmpty(PackageProxy))
             {
                 // Ensure that this is set to zero or more network endpoints
-                // formatted like:
+                // formatted like on of:
                 //
                 //      HOSTNAME:PORT
                 //      ADDRESS:PORT

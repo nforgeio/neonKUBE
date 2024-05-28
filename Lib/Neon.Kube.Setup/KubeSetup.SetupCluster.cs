@@ -107,6 +107,11 @@ namespace Neon.Kube.Setup
             {
                 setupState     = KubeSetupState.Load((string)contextName);
                 clusterAdvisor = setupState.ClusterAdvisor;
+
+                // We need to do some additional initialization of the cluster advisor
+                // to wire up references to the cluster node definintions, etc.
+
+                clusterAdvisor.Rehydrate(setupState.ClusterDefinition);
             }
             catch (Exception e)
             {

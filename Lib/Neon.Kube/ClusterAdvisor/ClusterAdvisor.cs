@@ -39,6 +39,10 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -48,6 +52,9 @@ namespace Neon.Kube
     /// </summary>
     public class ClusterAdvisor
     {
+        //---------------------------------------------------------------------
+        // Service name constants.
+
         /// <summary>
         /// Identifies the NeonKUBE cluster <b>AlertManager</b> service.
         /// </summary>
@@ -485,16 +492,16 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Computes the cluster deployment advice for the cluster that will be deployed
+        /// Creates and initializes the cluster deployment advice for the cluster that will be deployed
         /// using the cluster definition passed.
         /// </para>
         /// <note>
         /// This method may modify the cluster definition in some ways to reflect
-        /// advice computed for the cluster.
+        /// the advice computed for the cluster.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinition">Spoecifies the target cluster definition.</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="ClusterAdvisor"/>.</returns>
         public static ClusterAdvisor Create(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -505,18 +512,15 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private Dictionary<string, ServiceAdvice>   services   = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
-        private Dictionary<string, NodeAdvice>      nodes      = new Dictionary<string, NodeAdvice>(StringComparer.CurrentCultureIgnoreCase);
-        private bool                                isReadOnly = false;
-        private ClusterDefinition                   clusterDefinition;
-        private int                                 nodeCount;
-        private int                                 controlNodeCount;
-        private int                                 workerNodeCount;
-        private int                                 storageNodeCount;
-        private int                                 metricsNodeCount;
-        private string                              controlNodeSelector;
-        private string                              workerNodeSelector;
-        private string                              storageNodeSelector;
+        private ClusterDefinition   clusterDefinition;
+        private int                 nodeCount;
+        private int                 controlNodeCount;
+        private int                 workerNodeCount;
+        private int                 storageNodeCount;
+        private int                 metricsNodeCount;
+        private string              controlNodeSelector;
+        private string              workerNodeSelector;
+        private string              storageNodeSelector;
 
         /// <summary>
         /// public constructor.
@@ -542,78 +546,88 @@ namespace Neon.Kube
                 this.storageNodeSelector = ToObjectYaml(NodeLabel.LabelRole, NodeRole.Worker);
             }
 
-            Compute();
+            InitializeAdvice();
         }
 
         /// <summary>
         /// Specifies whether cluster metrics are enabled by default.
         /// </summary>
+        [JsonProperty(PropertyName = "MetricsEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsEnabled", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
         public bool MetricsEnabled { get; set; } = true;
 
         /// <summary>
         /// Specifies the cluster default Metrics scrape interval.
         /// </summary>
+        [JsonProperty(PropertyName = "MetricsInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsInterval", ApplyNamingConventions = false)]
+        [DefaultValue("60s")]
         public string MetricsInterval { get; set; } = "60s";
 
         /// <summary>
-        /// Specifies the cluster default Metrics quota.
+        /// Specifies the cluster default metrics quota.
         /// </summary>
+        [JsonProperty(PropertyName = "MetricsQuota", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsQuota", ApplyNamingConventions = false)]
+        [DefaultValue("10Gi")]
         public string MetricsQuota { get; set; } = "10Gi";
 
         /// <summary>
-        /// Specifies the cluster default Logs quota.
+        /// Specifies the cluster default logs quota.
         /// </summary>
+        [JsonProperty(PropertyName = "LogsQuota", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logsQuota", ApplyNamingConventions = false)]
+        [DefaultValue("10Gi")]
         public string LogsQuota { get; set; } = "10Gi";
 
         /// <summary>
-        /// Specifies the cluster default Traces quota.
+        /// Specifies the cluster default traces quota.
         /// </summary>
+        [JsonProperty(PropertyName = "TracesQuota", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tracesQuota", ApplyNamingConventions = false)]
+        [DefaultValue("10Gi")]
         public string TracesQuota { get; set; } = "10Gi";
 
         /// <summary>
         /// Specifies the default watch cache size for the Kubernetes API Server.
         /// </summary>
+        [JsonProperty(PropertyName = "KubeApiServerWatchCacheSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "kubeApiServerWatchCacheSize", ApplyNamingConventions = false)]
+        [DefaultValue(5)]
         public int KubeApiServerWatchCacheSize { get; set; } = 5;
-
-        /// <summary>
-        /// <para>
-        /// Cluster advice is designed to be configured once during cluster setup and then be
-        /// considered to be <b>read-only</b> thereafter.  This property should be set to 
-        /// <c>true</c> after the advice is intialized to prevent it from being modified
-        /// again.
-        /// </para>
-        /// <note>
-        /// This is necessary because setup is performed on multiple threads and this class
-        /// is not inheritly thread-safe.  This also fits with the idea that the logic behind
-        /// this advice is to be centralized.
-        /// </note>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when attempting to make the instance read/write aftyer being set to read-only.</exception>
-        public bool IsReadOnly
-        {
-            get => isReadOnly;
-
-            set
-            {
-                if (!value && isReadOnly)
-                {
-                    throw new InvalidOperationException($"[{nameof(ClusterAdvisor)}] cannot be made read/write after being set to read-only.");
-                }
-
-                isReadOnly = value;
-
-                foreach (var serviceAdvice in services.Values)
-                {
-                    serviceAdvice.IsReadOnly = value;
-                }
-            }
-        }
 
         /// <summary>
         /// Determines whether we should consider the cluster to be small.
         /// </summary>
         /// <returns><c>true</c> for small clusters.</returns>
-        private bool IsSmallCluster => clusterDefinition.IsDesktop || controlNodeCount == 1 || nodeCount <= 10;
+        [JsonProperty(PropertyName = "IsSmallCluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "isSmallCluster", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool IsSmallCluster { get; set; } = false;
+
+        /// <summary>
+        /// Called after deserialization to rehydrate any referenced cluster and node definitions
+        /// so we don't have to serialize those multiple times because we already serialize the
+        /// cluster definition in the setup state.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
+        public void Rehydrate(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            this.clusterDefinition = clusterDefinition;
+
+            foreach (var serviceAdvice in ServicesAdvice.Values)
+            {
+                serviceAdvice.Rehydrate(this);
+            }
+
+            foreach (var nodeDefinition in clusterDefinition.Nodes)
+            {
+                NodesAdvice[nodeDefinition.Name].Rehydrate(this, nodeDefinition);
+            }
+        }
 
         /// <summary>
         /// Converts a name/value pair into single line YAML object.
@@ -630,33 +644,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Converts a collection of key/value pairs into single line YAML object.
-        /// </summary>
-        /// <param name="items"></param>
-        /// <returns>The single-line YAML.</returns>
-        private string ToObjectYaml(params KeyValuePair<string, string>[] items)
-        {
-            if (items == null || items.Count() > 1)
-            {
-                return "{}";
-            }
-
-            var sb = new StringBuilder();
-
-            foreach (var item in items)
-            {
-                sb.AppendWithSeparator($"{item.Key}: {item.Value}", ", ");
-            }
-
-            return $"{{ {sb} }}";
-        }
-
-        /// <summary>
         /// Determines resource and other recommendations for the cluster globally as well
         /// as for cluster components and nodes based on the cluster definition passed to
         /// the constructor.
         /// </summary>
-        private void Compute()
+        private void InitializeAdvice()
         {
             // Initialize global cluster advice.
 
@@ -665,8 +657,9 @@ namespace Neon.Kube
             MetricsQuota    = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             LogsQuota       = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             TracesQuota     = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
+            IsSmallCluster  = clusterDefinition.IsDesktop || controlNodeCount == 1 || nodeCount <= 10;
 
-            // Initialize service advice.
+            // Initialize the service advice.
 
             SetAlertManagerServiceAdvice();
             SetBlackboxExporterServiceAdvice();
@@ -754,24 +747,23 @@ namespace Neon.Kube
             SetTempoRulerServiceAdvice();
             SetTempoStoreGatewayServiceAdvice();
 
-            // Initialize node advice.
+            // Initialize the node advice.
 
             foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
             {
-                AddNodeServiceAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
+                AddNodeAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
             }
-
-            SetNodeAdvice();
-
-            // Since advice related classes cannot handle updates performed on multiple threads 
-            // and cluster setup is multi-threaded, we're going to mark the advisor as read-only
-            // to prevent any changes in subsequent steps.
-
-            IsReadOnly = true;
         }
 
         //---------------------------------------------------------------------
         // Service advice
+
+        /// <summary>
+        /// Holds the advice for the cluster services.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServicesAdvice", Required = Required.Always)]
+        [YamlMember(Alias = "servicesAdvice", ApplyNamingConventions = false)]
+        public Dictionary<string, ServiceAdvice> ServicesAdvice { get; set; } = new Dictionary<string, ServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
 
         /// <summary>
         /// Adds the <see cref="ServiceAdvice"/> for the named service.
@@ -783,7 +775,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
             Covenant.Requires<ArgumentNullException>(serviceAdvice != null);
 
-            services.Add(serviceName, serviceAdvice);
+            ServicesAdvice.Add(serviceName, serviceAdvice);
         }
 
         /// <summary>
@@ -796,7 +788,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
 
-            return services[serviceName];
+            return ServicesAdvice[serviceName];
         }
 
         /// <summary>
@@ -809,7 +801,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return nodes[node.Name];
+            return NodesAdvice[node.Name];
         }
 
         private void SetAlertManagerServiceAdvice()
@@ -1941,17 +1933,24 @@ namespace Neon.Kube
         // Node advice
 
         /// <summary>
+        /// Holds the advice for the cluster nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodesAdvice", Required = Required.Always)]
+        [YamlMember(Alias = "nodesAdvice", ApplyNamingConventions = false)]
+        public Dictionary<string, NodeAdvice> NodesAdvice { get; set; }  = new Dictionary<string, NodeAdvice>(StringComparer.CurrentCultureIgnoreCase);
+
+        /// <summary>
         /// Adds the <see cref="NodeAdvice"/> for the specified node.
         /// </summary>
         /// <param name="nodeDefinition">Identifies the target node definition.</param>
         /// <param name="nodeAdvice">Specifies the <see cref="NodeAdvice"/> instance for the node</param>
-        private void AddNodeServiceAdvice(NodeDefinition nodeDefinition, NodeAdvice nodeAdvice)
+        private void AddNodeAdvice(NodeDefinition nodeDefinition, NodeAdvice nodeAdvice)
         {
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
             Covenant.Requires<ArgumentNullException>(nodeAdvice != null, nameof(nodeAdvice));
             Covenant.Assert(object.ReferenceEquals(nodeDefinition, nodeAdvice.NodeDefinition), "Node definition references must be the same.");
 
-            nodes.Add(nodeAdvice.NodeDefinition.Name, nodeAdvice);
+            NodesAdvice.Add(nodeAdvice.NodeDefinition.Name, nodeAdvice);
         }
 
         /// <summary>
@@ -1960,19 +1959,24 @@ namespace Neon.Kube
         /// <param name="nodeName">Identifies the node.</param>
         /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
         /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public NodeAdvice GetNodeServiceAdvice(string nodeName)
+        public NodeAdvice GetNodeAdvice(string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-            return nodes[nodeName];
+            return NodesAdvice[nodeName];
         }
 
         /// <summary>
-        /// Initializes node advice for the cluster.
+        /// Returns the <see cref="NodeAdvice"/> for the specified node name.
         /// </summary>
-        private void SetNodeAdvice()
+        /// <param name="node">Identifies the node.</param>
+        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
+        public NodeAdvice GetNodeAdvice(NodeSshProxy<NodeDefinition> node)
         {
-            // $todo(jefflill): IMPLEMENT THIS!
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            return NodesAdvice[node.Name];
         }
     }
 }

@@ -40,6 +40,8 @@ using Neon.Tasks;
 
 using Newtonsoft.Json;
 
+using YamlDotNet.Serialization;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -51,7 +53,14 @@ namespace Neon.Kube
         private ClusterAdvisor   clusterAdvisor;
 
         /// <summary>
-        /// Constructor.
+        /// Default constructor for deserialization only.
+        /// </summary>
+        public ServiceAdvice()
+        {
+        }
+
+        /// <summary>
+        /// Parameterized constructor.
         /// </summary>
         /// <param name="clusterAdvisor">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
         /// <param name="serviceName">Identifies the service.</param>
@@ -65,84 +74,61 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the service name.
+        /// Called after deserialization to rehydrate the cluster advisor so we don't have to
+        /// serialize the cluster advisor multiple times since it's already serialized in the
+        /// cluster setup state.
         /// </summary>
-        public string ServiceName { get; private set; }
-
-        /// <summary>
-        /// <para>
-        /// Cluster advice is designed to be configured once during cluster setup and then be
-        /// considered to be <b>read-only</b> thereafter.  This property should be set to 
-        /// <c>true</c> after the advice is intialized to prevent it from being modified
-        /// again.
-        /// </para>
-        /// <note>
-        /// This is necessary because setup is performed on multiple threads and this class
-        /// is not inheritly thread-safe.  This also fits with the idea that the logic behind
-        /// this advice is to be centralized.
-        /// </note>
-        /// </summary>
-        public bool IsReadOnly { get; internal set; }
-
-        /// <summary>
-        /// Ensures that <see cref="IsReadOnly"/> isn't <c>true.</c>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown then <see cref="IsReadOnly"/> is <c>true</c>.</exception>
-        private void EnsureNotReadOnly()
+        /// <param name="clusterAdvisor">Specifies the parent <see cref="ClusterAdvisor"/>.</param>
+        public void Rehydrate(ClusterAdvisor clusterAdvisor)
         {
-            if (IsReadOnly)
-            {
-                throw new InvalidOperationException("Cluster advice is read-only.");
-            }
+            this.clusterAdvisor = clusterAdvisor;
         }
 
-        private double? podCpuLimit;
+        /// <summary>
+        /// Specifies the service name.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServiceName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "serviceName", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ServiceName { get; set; }
 
         /// <summary>
         /// Specifies the CPU limit for each service pod or <c>null</c> when this property is not set.
         /// </summary>
-        public double? PodCpuLimit
-        {
-            get { return podCpuLimit; }
-            set { EnsureNotReadOnly(); podCpuLimit = value; }
-        }
-
-        private double? podCpuRequest;
+        [JsonProperty(PropertyName = "PodCpuLimit", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "podCpuLimit", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public double? PodCpuLimit { get; set; }
 
         /// <summary>
         /// Specifies the CPU request for each service pod or <c>null</c> when this property is not set.
         /// </summary>
-        public double? PodCpuRequest
-        {
-            get { return podCpuRequest; }
-            set { EnsureNotReadOnly(); podCpuRequest = value; }
-        }
-
-        private decimal? podMemoryLimit;
+        [JsonProperty(PropertyName = "PodCpuRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "podCpuRequest", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public double? PodCpuRequest { get; set; }
 
         /// <summary>
         /// Specifies the memory limit for each service pod or <c>null</c> when this property is not set.
         /// </summary>
-        public decimal? PodMemoryLimit
-        {
-            get { return podMemoryLimit; }
-            set { EnsureNotReadOnly(); podMemoryLimit = value; }
-        }
-
-        private decimal? podMemoryRequest;
+        [JsonProperty(PropertyName = "PodMemoryLimit", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "podMemoryLimit", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public decimal? PodMemoryLimit { get; set; }
 
         /// <summary>
         /// Specifies the memory request for each service pod or <c>null</c> when this property is not set.
         /// </summary>
-        public decimal? PodMemoryRequest
-        {
-            get { return podMemoryRequest;  }
-            set { EnsureNotReadOnly(); podMemoryRequest = value; }
-        }
+        [JsonProperty(PropertyName = "PodMemoryRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "podMemoryRequest", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public decimal? PodMemoryRequest { get; set; }
 
         /// <summary>
         /// Returns the pod resource requests and limits as a map.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public StructuredHelmValue Resources
         {
             get
@@ -163,14 +149,14 @@ namespace Neon.Kube
                 {
                     sb.AppendLine($"  limits:");
 
-                    if (podCpuLimit != null)
+                    if (PodCpuLimit != null)
                     {
-                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(podCpuLimit)}");
+                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(PodCpuLimit)}");
                     }
 
-                    if (podMemoryLimit != null)
+                    if (PodMemoryLimit != null)
                     {
-                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(podMemoryLimit)}");
+                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(PodMemoryLimit)}");
                     }
                 }
 
@@ -178,14 +164,14 @@ namespace Neon.Kube
                 {
                     sb.AppendLine($"  requests:");
 
-                    if (podCpuRequest != null)
+                    if (PodCpuRequest != null)
                     {
-                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(podCpuLimit)}");
+                        sb.AppendLine($"    cpu: {KubeHelper.ToSiString(PodCpuLimit)}");
                     }
 
-                    if (podMemoryRequest != null)
+                    if (PodMemoryRequest != null)
                     {
-                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(podMemoryLimit)}");
+                        sb.AppendLine($"    memory: {KubeHelper.ToSiString(PodMemoryLimit)}");
                     }
                 }
 
@@ -197,18 +183,13 @@ namespace Neon.Kube
             }
         }
 
-        private int replicas = 1;
-
         /// <summary>
         /// Specifies the number of pods to be seployed for the service or <b>1</b> when this property is not set.
         /// </summary>
-        public int Replicas
-        {
-            get { return replicas; }
-            set { EnsureNotReadOnly(); replicas = value; }
-        }
-
-        private bool? metricsEnabled;
+        [JsonProperty(PropertyName = "Replicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "replicas", ApplyNamingConventions = false)]
+        [DefaultValue(1)]
+        public int Replicas { get; set; } = 1;
 
         /// <summary>
         /// <para>
@@ -219,13 +200,10 @@ namespace Neon.Kube
         /// property isn't set explicitly.
         /// </note>
         /// </summary>
-        public bool MetricsEnabled
-        {
-            get { return metricsEnabled ?? clusterAdvisor.MetricsEnabled; }
-            set { EnsureNotReadOnly(); metricsEnabled = value; }
-        }
-
-        private string metricsInterval = null;
+        [JsonProperty(PropertyName = "MetricsEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsEnabled", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool MetricsEnabled { get; set; }
 
         /// <summary>
         /// <para>
@@ -236,44 +214,34 @@ namespace Neon.Kube
         /// property isn't set explicitly.
         /// </note>
         /// </summary>
-        public string MetricsInterval
-        {
-            get { return metricsInterval ?? clusterAdvisor.MetricsInterval; }
-            set { EnsureNotReadOnly(); metricsInterval = value; }
-        }
-
-        private StructuredHelmValue nodeSelector ="{}";
-
-        /// <summary>
-        /// Specifies the <b>nodeSelector</b> object for the service.
-        /// </summary>
-        public StructuredHelmValue NodeSelector
-        {
-            get { return nodeSelector; }
-            set { EnsureNotReadOnly(); nodeSelector = value; }
-        }
-
-        private string priorityClassName = PriorityClass.NeonMin.Name;
+        [JsonProperty(PropertyName = "MetricsInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "metricsInterval", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string MetricsInterval { get; set; }
 
         /// <summary>
         /// Returns the priority class name for the service.  This defaults to
         /// <see cref="PriorityClass.NeonMin"/>.
         /// </summary>
-        public string PriorityClassName
-        {
-            get { return priorityClassName; }
-            set { EnsureNotReadOnly(); priorityClassName = value; }
-        }
+        [JsonProperty(PropertyName = "PriorityClassName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "priorityClassName", ApplyNamingConventions = false)]
+        [DefaultValue("{}")]
+        public string PriorityClassName { get; set; }
 
-        private StructuredHelmValue tolerations = "[]";
+        /// <summary>
+        /// Specifies the <b>nodeSelector</b> object for the service.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeSelector", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "nodeSelector", ApplyNamingConventions = false)]
+        [DefaultValue("{}")]
+        public StructuredHelmValue NodeSelector { get; set; } = "{}";
 
         /// <summary>
         /// Specifies the the <b>tolerations</b> array for the service.
         /// </summary>
-        public StructuredHelmValue Tolerations
-        {
-            get { return tolerations; }
-            set { EnsureNotReadOnly(); tolerations = value; }
-        }
+        [JsonProperty(PropertyName = "Tolerations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tolerations", ApplyNamingConventions = false)]
+        [DefaultValue("[]")]
+        public StructuredHelmValue Tolerations { get; set; } = "[]";
     }
 }
