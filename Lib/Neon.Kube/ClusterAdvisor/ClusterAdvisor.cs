@@ -657,7 +657,7 @@ namespace Neon.Kube
         /// </summary>
         private void InitializeAdvice()
         {
-            // Initialize global cluster advice.
+            // Initialize global cluster advisor properties.
 
             MetricsEnabled  = true;
             MetricsInterval = nodeCount > 6 ? "60s" : "5m";
@@ -665,6 +665,52 @@ namespace Neon.Kube
             LogsQuota       = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             TracesQuota     = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             IsSmallCluster  = clusterDefinition.IsDesktop || controlNodeCount == 1 || nodeCount <= 10;
+
+            // Initialize the node advice.
+
+            foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+            {
+                AddNodeAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
+            }
+
+            // Clusters require that at least one node has [OpenEbsStorage=true] set for the
+            // Mayastor engine.   We'll do this here when the user hasn't already done so.
+            //
+            // We're going to favor deploying Mayastor engines on up to three workers when
+            // there are any workers, otherwise we're going to deploy this to all control-plane
+            // nodes when there are no workers.
+
+            switch (clusterDefinition.Storage.OpenEbs.Engine)
+            {
+                case OpenEbsEngine.Mayastor:
+
+                    if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+                    {
+                        if (clusterDefinition.Workers.Count() > 0)
+                        {
+                            foreach (var worker in clusterDefinition.Workers.TakeUpTo(3))
+                            {
+                                worker.OpenEbsStorage = true;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var controlNode in clusterDefinition.ControlNodes)
+                            {
+                                controlNode.OpenEbsStorage = true;
+                            }
+                        }
+                    }
+                    break;
+
+                case OpenEbsEngine.HostPath:
+
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
 
             // Initialize the service advice.
 
@@ -753,13 +799,6 @@ namespace Neon.Kube
             SetTempoQueryFrontendServiceAdvice();
             SetTempoRulerServiceAdvice();
             SetTempoStoreGatewayServiceAdvice();
-
-            // Initialize the node advice.
-
-            foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
-            {
-                AddNodeAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
-            }
         }
 
         //---------------------------------------------------------------------

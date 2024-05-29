@@ -79,35 +79,6 @@ namespace Neon.Kube.ClusterDef
                     clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Mayastor;
                 }
             }
-
-            // $todo(jefflill): This logic should probably be relocated to cluster advice.
-
-            // Clusters require that at least one node has [OpenEbsStorage=true] for the Mayastor engine.
-            // We'll set this automatically when the user hasn't already done this.
-
-            switch (clusterDefinition.Storage.OpenEbs.Engine)
-            {
-                case OpenEbsEngine.Mayastor:
-
-                    if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
-                    {
-                        if (clusterDefinition.Workers.Count() > 0)
-                        {
-                            foreach (var worker in clusterDefinition.Workers)
-                            {
-                                worker.OpenEbsStorage = true;
-                            }
-                        }
-                        else
-                        {
-                            foreach (var controlNode in clusterDefinition.ControlNodes)
-                            {
-                                controlNode.OpenEbsStorage = true;
-                            }
-                        }
-                    }
-                    break;
-            }
         }
     }
 }
