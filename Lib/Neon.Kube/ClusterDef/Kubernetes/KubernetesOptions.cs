@@ -264,7 +264,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
 
             ApiServer ??= new ApiServerOptions();
 
@@ -295,17 +295,17 @@ namespace Neon.Kube.ClusterDef
 
             if (ShutdownGracePeriodSeconds < 30)
             {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}] cannot be less than 30 seconds.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}] cannot be less than 30 seconds.");
             }
 
             if (ShutdownGracePeriodCriticalPodsSeconds < 30)
             {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] cannot be less than 30 seconds.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] cannot be less than 30 seconds.");
             }
 
             if (ShutdownGracePeriodCriticalPodsSeconds >= ShutdownGracePeriodSeconds)
             {
-                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] must be less than [{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}].");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] must be less than [{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}].");
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
@@ -317,12 +317,12 @@ namespace Neon.Kube.ClusterDef
                 var maxPodsPerNode = maxPods / clusterDefinition.Nodes.Count();
                 var maxNodes       = maxPods / MaxPodsPerNode;
 
-                throw new ClusterDefinitionException(@$"[{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}={MaxPodsPerNode}] is not valid.
+                throw new ClusterDefinitionException(@$"[{optionsPrefix}.{nameof(MaxPodsPerNode)}={MaxPodsPerNode}] is not valid.
 
-[{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}={clusterDefinition.Network.PodSubnet}] supports a maximum of {maxPods} pods.
+[{optionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}={clusterDefinition.Network.PodSubnet}] supports a maximum of {maxPods} pods.
 
-Either expand: [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
-or decrease:   [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
+Either expand: [{optionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{optionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
+or decrease:   [{optionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
 ");
             }
 

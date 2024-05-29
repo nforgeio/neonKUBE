@@ -62,11 +62,11 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            var logOptionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Logs)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Logs)}";
 
             if (LogRetentionDays < 1)
             {
-                throw new ClusterDefinitionException($"[{logOptionsPrefix}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
             }
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemLogServices))

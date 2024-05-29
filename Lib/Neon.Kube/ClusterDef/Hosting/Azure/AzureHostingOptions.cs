@@ -395,7 +395,7 @@ namespace Neon.Kube.ClusterDef
 
             Network.Validate(clusterDefinition);
 
-            var azureHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
 
             foreach (var ch in clusterDefinition.Name)
             {
@@ -409,27 +409,27 @@ namespace Neon.Kube.ClusterDef
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(SubscriptionId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(SubscriptionId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(TenantId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(TenantId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(ClientId))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ClientId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(ClientSecret))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientSecret)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ClientSecret)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(Region)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(Region)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
@@ -448,24 +448,24 @@ namespace Neon.Kube.ClusterDef
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -492,7 +492,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }
 
             // Verify [DefaultOpenEBSDiskSize].
@@ -504,7 +504,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!ByteUnits.TryParse(DefaultOpenEbsDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultOpenEbsDiskSize)}={DefaultOpenEbsDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(DefaultOpenEbsDiskSize)}={DefaultOpenEbsDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.

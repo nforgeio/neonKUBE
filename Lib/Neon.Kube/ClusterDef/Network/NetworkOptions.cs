@@ -344,11 +344,11 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var networkOptionsPrefix = $"{nameof(ClusterDefinition.Network)}";
-            var isCloud              = clusterDefinition.Hosting.IsCloudProvider;
-            var subnets              = new List<SubnetDefinition>();
-            var gateway              = (IPAddress)null;
-            var premiseSubnet        = (NetworkCidr)null;
+            var optionsPrefix = $"{nameof(ClusterDefinition.Network)}";
+            var isCloud       = clusterDefinition.Hosting.IsCloudProvider;
+            var subnets       = new List<SubnetDefinition>();
+            var gateway       = (IPAddress)null;
+            var premiseSubnet = (NetworkCidr)null;
 
             // Nameservers:
             //
@@ -370,7 +370,7 @@ namespace Neon.Kube.ClusterDef
             {
                 if (!NetHelper.TryParseIPv4Address(nameserver, out var address))
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ClusterDefinition.Network.Nameservers)}={nameserver}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ClusterDefinition.Network.Nameservers)}={nameserver}] is not a valid IPv4 address.");
                 }
             }
 
@@ -383,7 +383,7 @@ namespace Neon.Kube.ClusterDef
 
                 if (!NetworkCidr.TryParse(PremiseSubnet, out premiseSubnet))
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 // Verify [Gateway]
@@ -398,12 +398,12 @@ namespace Neon.Kube.ClusterDef
 
                 if (!NetHelper.TryParseIPv4Address(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseSubnet.Contains(gateway))
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] address is not within the [{networkOptionsPrefix}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(Gateway)}={Gateway}] address is not within the [{optionsPrefix}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
                 }
             }
 
@@ -411,7 +411,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!NetworkCidr.TryParse(PodSubnet, out var podSubnet))
             {
-                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PodSubnet), podSubnet));
@@ -420,7 +420,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!NetworkCidr.TryParse(ServiceSubnet, out var serviceSubnet))
             {
-                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(ServiceSubnet), serviceSubnet));
@@ -438,7 +438,7 @@ namespace Neon.Kube.ClusterDef
 
                     if (subnet.Cidr.Overlaps(next.Cidr))
                     {
-                        throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{optionsPrefix}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
                     }
                 }
             }
@@ -498,7 +498,7 @@ namespace Neon.Kube.ClusterDef
 
                 if (ingressRuleNames.Contains(rule.Name))
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}]");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}]");
                 }
 
                 ingressRuleNames.Add(rule.Name);
@@ -512,7 +512,7 @@ namespace Neon.Kube.ClusterDef
             {
                 if (externalPorts.Contains(rule.ExternalPort))
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules use the same external port: [{rule.ExternalPort}]");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}]: Ingress Rule Conflict: Multiple rules use the same external port: [{rule.ExternalPort}]");
                 }
 
                 externalPorts.Add(rule.ExternalPort);
@@ -550,7 +550,7 @@ namespace Neon.Kube.ClusterDef
             {
                 if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
                 {
-                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
+                    throw new ClusterDefinitionException($"[{optionsPrefix}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
                 }
             }
 
@@ -559,7 +559,7 @@ namespace Neon.Kube.ClusterDef
 
             if (NodeMtu != 0 && (NodeMtu < 512 || NodeMtu > 9000))
             {
-                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(NodeMtu)}={NodeMtu}] is invalid.  Specify [0] or a value between [512-9000].");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(NodeMtu)}={NodeMtu}] is invalid.  Specify [0] or a value between [512-9000].");
             }
 
             // Validate/initialize the public addresses.

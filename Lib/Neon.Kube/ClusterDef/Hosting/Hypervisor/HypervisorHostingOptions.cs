@@ -254,7 +254,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var vmHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Hosting)}";
 
             // Validate the VM name prefix.
 
@@ -278,9 +278,9 @@ namespace Neon.Kube.ClusterDef
             Memory ??= DefaultMemory;
             OsDisk ??= DefaultOsDisk;
 
-            ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(Memory)}");
-            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(OsDisk)}");
-            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(OpenEbsDisk)}");
+            ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{optionsPrefix}.{nameof(Memory)}");
+            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{optionsPrefix}.{nameof(OsDisk)}");
+            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{optionsPrefix}.{nameof(OpenEbsDisk)}");
 
             // Verify that the hypervisor host machines have unique names and addresses.
 

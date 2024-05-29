@@ -128,7 +128,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var azureNodeOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
 
             // Set the cluster default storage types if necessary.
 
@@ -172,7 +172,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{optionsPrefix}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
@@ -188,7 +188,7 @@ namespace Neon.Kube.ClusterDef
 
             if (!ByteUnits.TryParse(this.OpenEbsDiskSize, out var openEbsDiskSizeBytes) || openEbsDiskSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(OpenEbsDiskSize)}={OpenEbsDiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{optionsPrefix}.{nameof(OpenEbsDiskSize)}={OpenEbsDiskSize}] which is not valid.");
             }
 
             var openEbsDiskSizeGiB = AzureHelper.GetDiskSizeGiB(OpenEbsStorageType, openEbsDiskSizeBytes);

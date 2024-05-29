@@ -98,7 +98,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var acmeOptionsPrefix = $"{nameof(ClusterDefinition.Network.AcmeOptions)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Network.AcmeOptions)}";
 
             Issuer = Issuer ?? new AcmeIssuer();
             Issuer.Validate();
@@ -110,27 +110,27 @@ namespace Neon.Kube.ClusterDef
 
             if (!GoDuration.TryParse(CertificateDuration, out var duration))
             {
-                throw new ClusterDefinitionException($"[{acmeOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
             }
 
             if (!GoDuration.TryParse(CertificateRenewBefore, out var renewBefore))
             {
-                throw new ClusterDefinitionException($"[{acmeOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
             }
 
             if (duration.TimeSpan < TimeSpan.FromSeconds(1))
             {
-                throw new ClusterDefinitionException($"[{acmeOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
             }
 
             if (renewBefore.TimeSpan < TimeSpan.FromSeconds(1))
             {
-                throw new ClusterDefinitionException($"[{acmeOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
             }
 
             if (duration.TimeSpan < renewBefore.TimeSpan)
             {
-                throw new ClusterDefinitionException($"[{acmeOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{acmeOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{optionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
             }
         }
     }

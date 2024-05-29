@@ -137,11 +137,11 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            var traceOptionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Trace)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Trace)}";
 
             if (RetentionDays < 1)
             {
-                throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{nameof(RetentionDays)}={RetentionDays}] is invalid.  This must be at least one day.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(RetentionDays)}={RetentionDays}] is invalid.  This must be at least one day.");
             }
 
             Action<string, double> CheckSampleRate =
@@ -149,7 +149,7 @@ namespace Neon.Kube.ClusterDef
                 {
                     if (sampleRate < 0 || sampleRate > 100)
                     {
-                        throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{propertyName}={sampleRate}] is invalid.  This must be between [0.0 ... 100.0] inclusive.");
+                        throw new ClusterDefinitionException($"[{optionsPrefix}.{propertyName}={sampleRate}] is invalid.  This must be between [0.0 ... 100.0] inclusive.");
                     }
                 };
 

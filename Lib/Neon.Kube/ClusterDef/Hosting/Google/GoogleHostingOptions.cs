@@ -81,23 +81,23 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var googleHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Google)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Google)}";
 
             // Verify subnets
 
             if (!NetworkCidr.TryParse(VnetSubnet, out var vnetSubnet))
             {
-                throw new ClusterDefinitionException($"[{googleHostingOptionsPrefix}.{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
             }
 
             if (!NetworkCidr.TryParse(NodeSubnet, out var nodeSubnet))
             {
-                throw new ClusterDefinitionException($"[{googleHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
             }
 
             if (!vnetSubnet.Contains(nodeSubnet))
             {
-                throw new ClusterDefinitionException($"[{googleHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
 

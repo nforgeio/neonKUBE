@@ -73,7 +73,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.SystemMinioServices))
             {
@@ -97,7 +97,7 @@ namespace Neon.Kube.ClusterDef
 
             if (serverCount * VolumesPerNode < 4)
             {
-                throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster.  Increase [{minioOptionsPrefix}.{nameof(MinioOptions.VolumesPerNode)}] so the number of nodes hosting Minio times [{VolumesPerNode}] is at least [4].");
+                throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster.  Increase [{optionsPrefix}.{nameof(MinioOptions.VolumesPerNode)}] so the number of nodes hosting Minio times [{VolumesPerNode}] is at least [4].");
             }
 
             var minOsDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumOsDiskAfterMinio);
