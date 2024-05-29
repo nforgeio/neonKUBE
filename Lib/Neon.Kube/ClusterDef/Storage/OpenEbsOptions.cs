@@ -43,8 +43,6 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     public class OpenEbsOptions
     {
-        private const string minNfsSize = "10 GiB";
-
         /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
@@ -58,15 +56,6 @@ namespace Neon.Kube.ClusterDef
         public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
-        /// Specifies the size of the NFS file system to be created for the cluster.
-        /// This defaults to <b>10 GiB</b> and cannot be any smaller.
-        /// </summary>
-        [JsonProperty(PropertyName = "NfsSize", Required = Required.Default)]
-        [YamlMember(Alias = "nfsSize", ApplyNamingConventions = false)]
-        [DefaultValue(minNfsSize)]
-        public string NfsSize { get; set; } = minNfsSize;
-
-        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -76,10 +65,6 @@ namespace Neon.Kube.ClusterDef
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var openEbsOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
-
-            NfsSize ??= minNfsSize;
-
-            ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
             // Choose an actual engine when [Default] is specified.
 
@@ -97,10 +82,8 @@ namespace Neon.Kube.ClusterDef
 
             // $todo(jefflill): This logic should probably be relocated to cluster advice.
 
-            // Clusters require that at least one node has [OpenEbsStorage=true] for cStor or Mayastor.
-            // engines.  We'll set this automatically when the user hasn't already done this.  All workers
-            // will have this set to true when there are workers, otherwise we'll set this to true for all
-            // control-plane nodes.
+            // Clusters require that at least one node has [OpenEbsStorage=true] for the Mayastor engine.
+            // We'll set this automatically when the user hasn't already done this.
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
