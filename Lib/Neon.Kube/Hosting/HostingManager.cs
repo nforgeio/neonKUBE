@@ -376,7 +376,7 @@ namespace Neon.Kube.Hosting
         /// Used by cloud and potentially other hosting manager implementations to verify the
         /// node address assignments and/or to automatically assign these addresses.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <remarks>
         /// <note>
         /// This method verifies that node addresses for on-premise environments are located

@@ -263,7 +263,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the size of the operating system boot disk as a string with optional
         /// <see cref="ByteUnits"/> unit suffix.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The disk size.</returns>
         public string GetOsDiskSize(ClusterDefinition clusterDefinition)
         {
@@ -301,7 +301,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Returns the size of the data disk as a string with optional <see cref="ByteUnits"/> unit suffix.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The disk size or <c>null</c> when the node has no data disk.</returns>
         public string GetDataDiskSize(ClusterDefinition clusterDefinition)
         {
@@ -339,7 +339,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Validates the node definition.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {

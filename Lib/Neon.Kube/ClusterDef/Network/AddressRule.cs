@@ -149,7 +149,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Validates the address rule.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="context">Indicates where the address rule is specified, like: <b>ingress-rule-address</b> or <b>egress-address</b>.</param>
         /// <exception cref="ClusterDefinitionException">Thrown for an invalid rule.</exception>
         public void Validate(ClusterDefinition clusterDefinition, string context)

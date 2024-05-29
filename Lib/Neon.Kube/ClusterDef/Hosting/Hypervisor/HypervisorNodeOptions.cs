@@ -117,7 +117,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the maximum number CPU cores to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The number of cores.</returns>
         public int GetVCpus(ClusterDefinition clusterDefinition)
         {
@@ -135,7 +135,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the maximum number of bytes of memory allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The size in bytes.</returns>
         public long GetMemory(ClusterDefinition clusterDefinition)
         {
@@ -153,7 +153,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the size of the operating system disk to be created for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The size in bytes.</returns>
         public long GetOsDisk(ClusterDefinition clusterDefinition)
         {
@@ -171,7 +171,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the size of the OpenEBS Mayastor disk to be created for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The size in bytes.</returns>
         public long GetOpenEbsDiskSizeBytes(ClusterDefinition clusterDefinition)
         {
@@ -199,7 +199,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Validates the node definition.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="nodeName">The node name.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)

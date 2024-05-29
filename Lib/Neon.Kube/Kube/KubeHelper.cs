@@ -1435,7 +1435,7 @@ namespace Neon.Kube
         /// and <see cref="NodeDefinition"/>.
         /// </para>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="nodeDefinition">The node definition.</param>
         /// <param name="nodeMtu">
         /// Optionally specifies the MTU to be configured for the node's network interface.
@@ -2032,7 +2032,7 @@ passphrase:
         /// will receive traffic, otherwise all nodes will receive traffic.
         /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         public static void EnsureIngressNodes(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Nodes.Any(node => node.Ingress))

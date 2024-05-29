@@ -128,7 +128,7 @@ namespace Neon.Kube.Hosting
         /// <summary>
         /// Ensures that that a cluster definition has valid hosting options.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         public void Validate(ClusterDefinition clusterDefinition)
         {
             CheckInitialized();

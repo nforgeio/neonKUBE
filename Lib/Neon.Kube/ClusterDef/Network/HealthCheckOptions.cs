@@ -99,7 +99,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Verifies the health settings.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="name">Used to identify where the health check property being checked originated when reporting errors.</param>
         /// <exception cref="ClusterDefinitionException">Thrown for invalid settings.</exception>
         public void Validate(ClusterDefinition clusterDefinition, string name)

@@ -560,7 +560,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Validates the node labels.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {

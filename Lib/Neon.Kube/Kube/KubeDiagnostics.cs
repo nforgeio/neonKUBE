@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// Verifies that a cluster control-plane node is healthy.
         /// </summary>
         /// <param name="node">The control-plane node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         public static void CheckControlNode(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -85,7 +85,7 @@ namespace Neon.Kube
         /// Verifies that a cluster worker node is healthy.
         /// </summary>
         /// <param name="node">The server node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         public static void CheckWorker(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -104,7 +104,7 @@ namespace Neon.Kube
         /// Verifies that a control-plane node's NTP health.
         /// </summary>
         /// <param name="node">The control-plane node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private static void CheckControlNodeNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
@@ -196,7 +196,7 @@ namespace Neon.Kube
         /// Verifies that a worker node's NTP health.
         /// </summary>
         /// <param name="node">The worker node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private static void CheckWorkerNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.

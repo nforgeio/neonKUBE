@@ -59,7 +59,7 @@ namespace Neon.Kube.Setup
         /// <summary>
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="cloudMarketplace">
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned

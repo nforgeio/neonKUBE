@@ -183,7 +183,7 @@ namespace Neon.Kube.ClusterDef
         /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments
         /// during cluster deployment.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
@@ -246,9 +246,9 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
-        /// initialized to their default values.
+        /// initialized to their default values, as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {

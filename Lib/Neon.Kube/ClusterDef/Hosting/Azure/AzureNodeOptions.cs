@@ -119,9 +119,9 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
-        /// initialized to their default values.
+        /// initialized to their default values, as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="nodeName">The associated node name.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)
