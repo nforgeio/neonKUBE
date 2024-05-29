@@ -193,7 +193,7 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// Specifies the number of application related <b>2 MiB</b> sized
         /// [huge pages](https://www.netdata.cloud/blog/understanding-huge-pages/)
-        /// to be allocated on the node.  Huge pages are used by some applications
+        /// to be allocated on the node.  Hugepages are used by some applications
         /// (typically databases) to improve memory access efficiency.
         /// </para>
         /// <note>
@@ -202,10 +202,20 @@ namespace Neon.Kube.ClusterDef
         /// pages in addition to this setting as required.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "HugePages2MiB", Required = Required.Default)]
-        [YamlMember(Alias = "hugePages2MiB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "HugePages", Required = Required.Default)]
+        [YamlMember(Alias = "hugePages", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int HugePages2MiB { get; set; } = 0;
+        public int HugePages { get; set; } = 0;
+
+        /// <summary>
+        /// Overrides the global cluster <see cref="OpenEbsOptions.DefaultHugepages"/>.  This
+        /// must be at least <b>1024 pages</b> and is equivalant to <b>2 GiB RAM</b>
+        /// and is the minimum required by Mayastor.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbsHugePages", Required = Required.Default)]
+        [YamlMember(Alias = "openEbsHugePages", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public int? OpenEbsHugePages { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the labels to be assigned to the cluster node.  These can describe
@@ -417,11 +427,16 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
-            // Huge pages.
+            // Vaidate the hugepage counts.
 
-            if (HugePages2MiB < 0)
+            if (HugePages < 0)
             {
-                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages2MiB)}={HugePages2MiB} cannot be negative.");
+                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages)}={HugePages} cannot be negative.");
+            }
+
+            if (OpenEbsHugePages.HasValue && OpenEbsHugePages < OpenEbsOptions.MinHugepages)
+            {
+                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages)}={HugePages} cannot be less than [{OpenEbsOptions.MinHugepages}].");
             }
 
             // Validate hosting environment options.

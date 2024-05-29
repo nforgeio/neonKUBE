@@ -666,6 +666,7 @@ namespace Neon.Kube
             TracesQuota     = clusterDefinition.IsDesktop ? "1Gi" : "10Gi";
             IsSmallCluster  = clusterDefinition.IsDesktop || controlNodeCount == 1 || nodeCount <= 10;
 
+            //-----------------------------------------------------------------
             // Initialize the node advice.
 
             foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
@@ -673,12 +674,18 @@ namespace Neon.Kube
                 AddNodeAdvice(nodeDefinition, new NodeAdvice(this, nodeDefinition));
             }
 
+            //-----------------------------------------------------------------
+            // OpenEBS node configuration.
+
             // Clusters require that at least one node has [OpenEbsStorage=true] set for the
             // Mayastor engine.   We'll do this here when the user hasn't already done so.
             //
             // We're going to favor deploying Mayastor engines on up to three workers when
             // there are any workers, otherwise we're going to deploy this to all control-plane
             // nodes when there are no workers.
+            //
+            // We're also going to set [NodeAdvice.OpenEbsHugePages2MiB] for the nodes that
+            // will be hosting the Mayastor engine.
 
             switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
@@ -701,6 +708,16 @@ namespace Neon.Kube
                             }
                         }
                     }
+
+                    // Mayastor hugepage configuration.
+
+                    foreach (var nodeDefinition in clusterDefinition.Nodes.Where(nodeDefinition => nodeDefinition.OpenEbsStorage))
+                    {
+                        var nodeAdvice = GetNodeAdvice(nodeDefinition.Name);
+
+                        nodeAdvice.OpenEbsHugePages = nodeDefinition.OpenEbsHugePages ?? clusterDefinition.Storage.OpenEbs.DefaultHugepages;
+                    }
+
                     break;
 
                 case OpenEbsEngine.HostPath:
@@ -712,6 +729,7 @@ namespace Neon.Kube
                     throw new NotImplementedException();
             }
 
+            //-----------------------------------------------------------------
             // Initialize the service advice.
 
             SetAlertManagerServiceAdvice();
@@ -838,12 +856,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the <see cref="NodeAdvice"/> for the named node.
+        /// </summary>
+        /// <param name="nodeName">Specifies the node name.</param>
+        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
+        public NodeAdvice GetNodeAdvice(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            return NodesAdvice[nodeName];
+        }
+
+        /// <summary>
         /// Returns the <see cref="NodeAdvice"/> for the specified node.
         /// </summary>
         /// <param name="node">Identifies the node.</param>
         /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
         /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public NodeAdvice GetNodeServiceAdvice(NodeSshProxy<NodeDefinition> node)
+        public NodeAdvice GetNodeAdvice(NodeSshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1997,32 +2028,6 @@ namespace Neon.Kube
             Covenant.Assert(object.ReferenceEquals(nodeDefinition, nodeAdvice.NodeDefinition), "Node definition references must be the same.");
 
             NodesAdvice.Add(nodeAdvice.NodeDefinition.Name, nodeAdvice);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="NodeAdvice"/> for the specified node name.
-        /// </summary>
-        /// <param name="nodeName">Identifies the node.</param>
-        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public NodeAdvice GetNodeAdvice(string nodeName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            return NodesAdvice[nodeName];
-        }
-
-        /// <summary>
-        /// Returns the <see cref="NodeAdvice"/> for the specified node name.
-        /// </summary>
-        /// <param name="node">Identifies the node.</param>
-        /// <returns>The <see cref="NodeAdvice"/> instance for the service.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public NodeAdvice GetNodeAdvice(NodeSshProxy<NodeDefinition> node)
-        {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-
-            return NodesAdvice[node.Name];
         }
     }
 }

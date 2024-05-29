@@ -44,6 +44,12 @@ namespace Neon.Kube.ClusterDef
     public class OpenEbsOptions
     {
         /// <summary>
+        /// Specifies the minimum number of <b>2 MiB</b> (or <b>2 GiB RAM)</b> hugepages required by
+        /// Mayastor on the nodes where it is deployed.
+        /// </summary>
+        public const int MinHugepages = 1024;
+
+        /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
         /// to <see cref="OpenEbsEngine.Default"/> which selects the <see cref="OpenEbsEngine.HostPath"/>
@@ -56,6 +62,22 @@ namespace Neon.Kube.ClusterDef
         public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
+        /// <para>
+        /// Specifies the number of <b>2 MiB</b> required to be dedicated to the OpenEBS
+        /// Mayastor engine deployed on OpenEBS nodes.  This defaults to <b>1024 pages</b>
+        /// which is equivalant to <b>2 GiB RAM</b> and is the minimum required by Mayastor.
+        /// </para>
+        /// <note>
+        /// This may be overridden for specific nodes in their definitions via their
+        /// <see cref="NodeDefinition.OpenEbsHugePages"/> property.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultHugepages", Required = Required.Default)]
+        [YamlMember(Alias = "defaultHugepages", ApplyNamingConventions = false)]
+        [DefaultValue(MinHugepages)]
+        public int DefaultHugepages { get; set; } = MinHugepages;
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -64,9 +86,10 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var openEbsOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
+            var optionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
 
-            // Choose an actual engine when [Default] is specified.
+            // Choose an actual engine when [OpenEbsEngine.Default] is specified, based
+            // on the number cluster nodes.
 
             if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Default)
             {
@@ -78,6 +101,13 @@ namespace Neon.Kube.ClusterDef
                 {
                     clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Mayastor;
                 }
+            }
+
+            // Validate the Mayastor hugepage count.
+
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor && DefaultHugepages < MinHugepages)
+            {
+                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(DefaultHugepages)}={DefaultHugepages} must be at least [{MinHugepages}].");
             }
         }
     }

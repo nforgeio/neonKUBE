@@ -412,7 +412,6 @@ namespace Neon.Kube.Setup
             // Add the provisioning steps.
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("check operating system", (controller, node) => node.VerifyNodeOS());
 
             controller.AddNodeStep("delete boot script",
                 (controller, node) =>
@@ -441,9 +440,22 @@ namespace Neon.Kube.Setup
                     }
                 });
 
+            controller.AddNodeStep("node credentials",
+                (controller, node) =>
+                {
+                    var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
+
+                    node.ConfigureSshKey(controller);
+                    node.AllowSshPasswordLogin(desktopReadyToGo || options.Insecure);
+                    node.SetPassword(KubeConst.SysAdminUser, setupState.SshPassword);
+                    node.UpdateCredentials(setupState.SshCredentials);
+                });
+
             controller.AddNodeStep("node check",
                 (controller, node) =>
                 {
+                    node.VerifyNodeOS();
+
                     // Ensure that the node image type and version matches the current NeonKUBE version.
 
                     var imageType = node.ImageType;
@@ -496,7 +508,7 @@ namespace Neon.Kube.Setup
                     var clusterAdvisor = controller.Get<ClusterAdvisor>(KubeSetupProperty.ClusterAdvisor);
                     var nodeAdvice     = clusterAdvisor.GetNodeAdvice(node);
 
-                    if (nodeAdvice.TotalHugePages2MiB > 0)
+                    if (nodeAdvice.TotalHugePages > 0)
                     {
                         // Verify that the node CPU supports 2 GiB hugepages and that
                         // there's enough RAM available to allocate these pages.
@@ -530,13 +542,16 @@ namespace Neon.Kube.Setup
                             return;
                         }
 
-                        var memTotalRaw    = memInfo["MemTotal"];
+                        var memTotalRaw = memInfo["MemTotal"];
+
+                        Covenant.Assert(memTotalRaw.Contains("kB"), $"We're assuming that [MemTotal={memTotalRaw}] is always reported as [kB].");
+
                         var memTotalString = memTotalRaw.Replace("kB", string.Empty).Trim();
                         var memTotal       = long.Parse(memTotalString) * 1024;
 
-                        if (memTotal - (systemReservedBytes + nodeAdvice.TotalHugePages2MiB * 2048) < 0)
+                        if (memTotal - (systemReservedBytes + nodeAdvice.TotalHugePages * 2048) < 0)
                         {
-                            node.Fault($"Node does not have enough RAM to support [{nodeAdvice.TotalHugePages2MiB * 2048}] bytes of hugepages while reserving [{systemReservedGiB} GiB] for the system.");
+                            node.Fault($"Node does not have enough RAM to support [{nodeAdvice.TotalHugePages * 2048}] bytes of hugepages while reserving [{systemReservedGiB} GiB] for the system.");
                             return;
                         }
 
@@ -546,24 +561,11 @@ namespace Neon.Kube.Setup
 $@"
 set -euo pipefail
 
-echo {nodeAdvice.TotalHugePages2MiB} > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-echo vm.nr_hugepages = {nodeAdvice.TotalHugePages2MiB} >> /etc/sysctl.conf
+echo {nodeAdvice.TotalHugePages} > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+echo vm.nr_hugepages = {nodeAdvice.TotalHugePages} >> /etc/sysctl.conf
 ";
                         node.SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
                     }
-                });
-
-            controller.AddNodeStep("node credentials",
-                (controller, node) =>
-                {
-                    var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
-
-                    node.ConfigureSshKey(controller);
-                    node.AllowSshPasswordLogin(desktopReadyToGo || options.Insecure);
-
-                    // Update node proxies with the generated SSH credentials.
-
-                    node.UpdateCredentials(setupState.SshCredentials);
                 });
 
             if (!options.DesktopReadyToGo)

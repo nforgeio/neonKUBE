@@ -102,16 +102,16 @@ namespace Neon.Kube
         /// OpenEBS for this node.  This is computed by the cluster advisor
         /// for nodes hosting the Mayastor engine.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsHugePages2MiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbsHugePages2MiB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbsHugePages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsHugePages", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public long OpenEbsHugePages2MiB { get; set; } = 0;
+        public long OpenEbsHugePages { get; set; } = 0;
 
         /// <summary>
         /// Returns the total number of <b>2 MiB</b> hugepages required for the node.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public long TotalHugePages2MiB => NodeDefinition.HugePages2MiB + OpenEbsHugePages2MiB;
+        public long TotalHugePages => NodeDefinition.HugePages + OpenEbsHugePages;
     }
 }
