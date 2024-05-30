@@ -197,8 +197,8 @@ namespace Neon.Kube.ClusterDef
             //-----------------------------------------------------------------
             // Network subnets
 
-            VpcSubnet = VpcSubnet ?? defaultVpcSubnet;
-            NodeSubnet = NodeSubnet ?? defaultPrivateSubnet;
+            VpcSubnet    = VpcSubnet ?? defaultVpcSubnet;
+            NodeSubnet   = NodeSubnet ?? defaultPrivateSubnet;
             PublicSubnet = PublicSubnet ?? defaultPublicSubnet;
 
             const int minAwsPrefix = 16;

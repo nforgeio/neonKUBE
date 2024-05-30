@@ -73,16 +73,16 @@ namespace Neon.Kube.ClusterDef
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.SystemLogServices = true;
+                        node.Labels.SystemLogServices = true;
                     }
                 }
                 else
                 {
-                    foreach (var n in clusterDefinition.Workers)
+                    foreach (var node in clusterDefinition.Workers)
                     {
-                        n.Labels.SystemLogServices = true;
+                        node.Labels.SystemLogServices = true;
                     }
                 }
             }

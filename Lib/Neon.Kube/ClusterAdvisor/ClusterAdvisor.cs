@@ -46,9 +46,9 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds cluster configuration advice initialized early during cluster setup.  This
-    /// is used to centralize the decisions about things like resource limitations and 
-    /// node taints/affinity based on the overall resources available to the cluster.
+    /// Holds cluster configuration advice initialized early during cluster deployment.
+    /// This is used to centralize the decisions about things like resource limitations
+    /// and node taints/affinity based on the overall resources available to the cluster.
     /// </summary>
     public class ClusterAdvisor
     {
@@ -66,7 +66,7 @@ namespace Neon.Kube
         public const string BlackboxExporter = "blackbox-exporter";
 
         /// <summary>
-        /// Identifies the NeonKUBE cluster <b>Calico</b> service.
+        /// Identifies the NeonKUBE cluster <b>Cilium</b> service.
         /// </summary>
         public const string Cilium = "cilium";
 

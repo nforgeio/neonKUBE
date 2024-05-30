@@ -64,11 +64,11 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         internal void Validate(ClusterDefinition clusterDefinition)
         {
-            OpenEbs = OpenEbs ?? new OpenEbsOptions();
             Minio   = Minio   ?? new MinioOptions();
+            OpenEbs = OpenEbs ?? new OpenEbsOptions();
 
-            OpenEbs.Validate(clusterDefinition);
             Minio.Validate(clusterDefinition);
+            OpenEbs.Validate(clusterDefinition);
         }
     }
 }

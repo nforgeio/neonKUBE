@@ -272,9 +272,7 @@ namespace Neon.Kube.ClusterDef
 
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
 
-            var requiredFeatures = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase)
-            {
-            };
+            var requiredFeatures = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var feature in requiredFeatures)
             {
