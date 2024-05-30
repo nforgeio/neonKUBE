@@ -76,26 +76,6 @@ namespace Neon.Kube
         public const string CertManager = "cert-manager";
 
         /// <summary>
-        /// Identifies the NeonKUBE cluster system database.
-        /// </summary>
-        public const string NeonSystemDb = "neon-system-db";
-
-        /// <summary>
-        /// Identifies the NeonKUBE cluster system database operator.
-        /// </summary>
-        public const string NeonSystemDbOperator = "neon-system-db-operator";
-
-        /// <summary>
-        /// Identifies the NeonKUBE cluster system database pooler.
-        /// </summary>
-        public const string NeonSystemDbPooler = "neon-system-db-pooler";
-
-        /// <summary>
-        /// Identifies the NeonKUBE cluster system database metrics sidecar.
-        /// </summary>
-        public const string NeonSystemDbMetrics = "neon-system-db-metrics";
-
-        /// <summary>
         /// Identifies the NeonKUBE cluster <b>CoreDNS</b> service.
         /// </summary>
         public const string CoreDns = "coredns";
@@ -179,11 +159,6 @@ namespace Neon.Kube
         /// Identifies the NeonKUBE cluster <b>Harbor Registry</b> service.
         /// </summary>
         public const string HarborRegistry = "harbor-registry";
-
-        /// <summary>
-        /// Identifies the NeonKUBE cluster <b>Redis</b> service.
-        /// </summary>
-        public const string Redis = "redis";
 
         /// <summary>
         /// Identifies the NeonKUBE cluster <b>Istio Proxy</b> service.
@@ -351,6 +326,26 @@ namespace Neon.Kube
         public const string NeonSsoSessionProxy = "neon-sso-session-proxy";
 
         /// <summary>
+        /// Identifies the NeonKUBE cluster system database.
+        /// </summary>
+        public const string NeonSystemDb = "neon-system-db";
+
+        /// <summary>
+        /// Identifies the NeonKUBE cluster system database metrics sidecar.
+        /// </summary>
+        public const string NeonSystemDbMetrics = "neon-system-db-metrics";
+
+        /// <summary>
+        /// Identifies the NeonKUBE cluster system database operator.
+        /// </summary>
+        public const string NeonSystemDbOperator = "neon-system-db-operator";
+
+        /// <summary>
+        /// Identifies the NeonKUBE cluster system database pooler.
+        /// </summary>
+        public const string NeonSystemDbPooler = "neon-system-db-pooler";
+
+        /// <summary>
         /// Identifies the NeonKUBE cluster <b>Node Problem Detector</b> service.
         /// </summary>
         public const string NodeProblemDetector = "node-problem-detector";
@@ -431,6 +426,16 @@ namespace Neon.Kube
         public const string PrometheusOperator = "prometheus-operator";
 
         /// <summary>
+        /// Identifies the NeonKUBE cluster <b>Redis</b> service.
+        /// </summary>
+        public const string Redis = "redis";
+
+        /// <summary>
+        /// Identifies the NeonKUBE cluster <b>Redis HA</b> service.
+        /// </summary>
+        public const string RedisHA = "redis-ha";
+
+        /// <summary>
         /// Identifies the NeonKUBE cluster <b>Reloader</b> service.
         /// </summary>
         public const string Reloader = "reloader";
@@ -484,11 +489,6 @@ namespace Neon.Kube
         /// Identifies the NeonKUBE cluster <b>Tempo Alertmanager</b> service.
         /// </summary>
         public const string TempoStoreGateway = "tempo-store-gateway";
-
-        /// <summary>
-        /// Identifies the NeonKUBE cluster <b>Redis HA</b> service.
-        /// </summary>
-        public const string RedisHA = "redis-ha";
 
         /// <summary>
         /// <para>

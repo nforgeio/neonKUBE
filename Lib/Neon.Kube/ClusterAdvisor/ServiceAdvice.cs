@@ -125,6 +125,15 @@ namespace Neon.Kube
         public decimal? PodMemoryRequest { get; set; }
 
         /// <summary>
+        /// Specifies the number of <b>2 MiB</b> hugepage requested by the service.  This will be provisioned
+        /// as both the pod request and limit when specified.
+        /// </summary>
+        [JsonProperty(PropertyName = "Hugepages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hugepages", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public int? Hugepages { get; set; }
+
+        /// <summary>
         /// Returns the pod resource requests and limits as a map.
         /// </summary>
         [JsonIgnore]
@@ -133,8 +142,15 @@ namespace Neon.Kube
         {
             get
             {
-                var hasLimits   = PodCpuLimit != null || PodMemoryLimit != null;
-                var hasRequests = PodCpuRequest != null || PodMemoryRequest != null;
+                var hasLimits    = PodCpuLimit != null || PodMemoryLimit != null;
+                var hasRequests  = PodCpuRequest != null || PodMemoryRequest != null;
+                var hasHugepages = Hugepages != null;
+
+                if (hasHugepages)
+                {
+                    hasLimits   = true;
+                    hasRequests = true;
+                }
 
                 if (!hasRequests && !hasLimits)
                 {
@@ -158,6 +174,11 @@ namespace Neon.Kube
                     {
                         sb.AppendLine($"    memory: {KubeHelper.ToSiString(PodMemoryLimit)}");
                     }
+
+                    if (hasHugepages)
+                    {
+                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages)}");
+                    }
                 }
 
                 if (hasRequests)
@@ -172,6 +193,11 @@ namespace Neon.Kube
                     if (PodMemoryRequest != null)
                     {
                         sb.AppendLine($"    memory: {KubeHelper.ToSiString(PodMemoryLimit)}");
+                    }
+
+                    if (hasHugepages)
+                    {
+                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages)}");
                     }
                 }
 
