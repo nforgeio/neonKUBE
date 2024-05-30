@@ -208,16 +208,6 @@ namespace Neon.Kube.ClusterDef
         public int HugePages { get; set; } = 0;
 
         /// <summary>
-        /// Overrides the global cluster <see cref="OpenEbsOptions.DefaultHugepages"/>.  This
-        /// must be at least <b>1024 pages</b> and is equivalant to <b>2 GiB RAM</b>
-        /// and is the minimum required by Mayastor.
-        /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsHugePages", Required = Required.Default)]
-        [YamlMember(Alias = "openEbsHugePages", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public int? OpenEbsHugePages { get; set; } = null;
-
-        /// <summary>
         /// Optionally specifies the labels to be assigned to the cluster node.  These can describe
         /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabel"/>
         /// for more information.
@@ -427,16 +417,11 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
-            // Vaidate the hugepage counts.
+            // Vaidate the hugepage count.
 
             if (HugePages < 0)
             {
                 throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages)}={HugePages} cannot be negative.");
-            }
-
-            if (OpenEbsHugePages.HasValue && OpenEbsHugePages < OpenEbsOptions.MinHugepages)
-            {
-                throw new ClusterDefinitionException($"{nameof(NodeOptions)}.{nameof(HugePages)}={HugePages} cannot be less than [{OpenEbsOptions.MinHugepages}].");
             }
 
             // Validate hosting environment options.

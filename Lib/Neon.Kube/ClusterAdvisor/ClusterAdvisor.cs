@@ -715,7 +715,7 @@ namespace Neon.Kube
                     {
                         var nodeAdvice = GetNodeAdvice(nodeDefinition.Name);
 
-                        nodeAdvice.OpenEbsHugePages = nodeDefinition.OpenEbsHugePages ?? clusterDefinition.Storage.OpenEbs.DefaultHugepages;
+                        nodeAdvice.OpenEbsHugePages = clusterDefinition.Storage.OpenEbs.Hugepages;
                     }
 
                     break;

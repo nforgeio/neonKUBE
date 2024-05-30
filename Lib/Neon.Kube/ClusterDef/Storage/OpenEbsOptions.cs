@@ -62,20 +62,14 @@ namespace Neon.Kube.ClusterDef
         public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
-        /// <para>
         /// Specifies the number of <b>2 MiB</b> required to be dedicated to the OpenEBS
         /// Mayastor engine deployed on OpenEBS nodes.  This defaults to <b>1024 pages</b>
         /// which is equivalant to <b>2 GiB RAM</b> and is the minimum required by Mayastor.
-        /// </para>
-        /// <note>
-        /// This may be overridden for specific nodes in their definitions via their
-        /// <see cref="NodeDefinition.OpenEbsHugePages"/> property.
-        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "DefaultHugepages", Required = Required.Default)]
-        [YamlMember(Alias = "defaultHugepages", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hugepages", Required = Required.Default)]
+        [YamlMember(Alias = "hugepages", ApplyNamingConventions = false)]
         [DefaultValue(MinHugepages)]
-        public int DefaultHugepages { get; set; } = MinHugepages;
+        public int Hugepages { get; set; } = MinHugepages;
 
         /// <summary>
         /// Validates the options.
@@ -105,9 +99,9 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the Mayastor hugepage count.
 
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor && DefaultHugepages < MinHugepages)
+            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor && Hugepages < MinHugepages)
             {
-                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(DefaultHugepages)}={DefaultHugepages} must be at least [{MinHugepages}].");
+                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(Hugepages)}={Hugepages} must be at least [{MinHugepages}].");
             }
         }
     }
