@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
-# CONTRIBUTOR:  Marcus Bowyer
+# CONTRIBUTOR:  NEONFORGE Team
 # COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

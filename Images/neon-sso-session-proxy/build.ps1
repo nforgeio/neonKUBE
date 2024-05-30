@@ -1,7 +1,7 @@
 #Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
-# CONTRIBUTOR:  Marcus Bowyer
+# CONTRIBUTOR:  NEONFORGE Team
 # COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 
 # Builds the container image.

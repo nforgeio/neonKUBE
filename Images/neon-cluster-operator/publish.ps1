@@ -1,7 +1,7 @@
 #Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Marcus Bowyer
+# CONTRIBUTOR:  NEONFORGE Team
 # COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
