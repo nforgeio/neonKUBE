@@ -259,6 +259,20 @@ modprobe -v xfs
                 {
                     controller.LogProgress(this, verb: "configure", message: "nvme");
 
+                    // It looks like cloud environments like AWS and Azure already
+                    // have NVMe drivers installed because they use NVMe for doing
+                    // I/O on attached cloud disks.
+                    //
+                    // We're going to check before trying to install the drivers.
+
+                    var response = SudoCommand("ls /sys/module/ | grep nvme")
+                        .EnsureSuccess();
+
+                    if (response.OutputText.Contains("nvmet\n") && response.OutputText.Contains("nvmet_tcp\n"))
+                    {
+                        return;
+                    }
+
                     const string confPath = "/etc/modules-load.d//nvme.conf";
 
                     var config =
