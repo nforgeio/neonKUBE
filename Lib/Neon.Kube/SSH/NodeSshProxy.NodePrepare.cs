@@ -279,11 +279,6 @@ cat modules.txt
                     var         hasNvmet     = false;
                     var         hasNvmet_tcp = false;
 
-                    //###############################
-                    // $debug(jefflill): DELETE THIS!
-                    File.WriteAllText(@"C:\Temp\nvme.log", response.OutputText);
-                    //###############################
-
                     foreach (var line in reader.Lines())
                     {
                         switch (line)
