@@ -265,31 +265,68 @@ modprobe -v xfs
                     //
                     // We're going to check before trying to install the drivers.
 
-                    var response = SudoCommand("ls /sys/module/ | grep nvme")
+                    var script =
+@"# Check for installed NVMe related drivers.
+
+ls /sys/module/ | grep nvmet > modules.txt
+cat modules.txt
+";
+
+                    var response = SudoCommand(CommandBundle.FromScript(script))
                         .EnsureSuccess();
 
-                    if (response.OutputText.Contains("nvmet\n") && response.OutputText.Contains("nvmet_tcp\n"))
+                    using var   reader       = new StringReader(response.OutputText);
+                    var         hasNvmet     = false;
+                    var         hasNvmet_tcp = false;
+
+                    //###############################
+                    // $debug(jefflill): DELETE THIS!
+                    File.WriteAllText(@"C:\Temp\nvme.log", response.OutputText);
+                    //###############################
+
+                    foreach (var line in reader.Lines())
+                    {
+                        switch (line)
+                        {
+                            case "nvme":
+
+                                hasNvmet = true;
+                                break;
+
+                            case "nvme_tcp":
+
+                                hasNvmet_tcp = true;
+                                break;
+                        }
+                    }
+
+                    if (hasNvmet && hasNvmet_tcp)
                     {
                         return;
                     }
 
-                    const string confPath = "/etc/modules-load.d//nvme.conf";
+                    const string confPath = "/etc/modules-load.d/nvme.conf";
 
-                    var config =
-@"# NeonKUBE: Enable NVMe over TCP for Mayastor.
+                    script  =
+@"# Install NVMe drivers.
 
-nvmet
-nvmet-tcp
-";
-                    UploadText(confPath, config, permissions: "660");
+set -euo pipefail
 
-                    var script  =
-@"set -euo pipefail
+apt-get update -y
+apt install -y linux-modules-extra-$(uname -r)
 
-modprobe -v nvmet
-modprobe -v nvmet-tcp
+modprobe -v nvme
+modprobe -v nvme-tcp
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+
+                    var config =
+@"# Enable NVMe over TCP for Mayastor.
+
+nvme
+nvme-tcp
+";
+                    UploadText(confPath, config, permissions: "660");
                 });
         }
 
