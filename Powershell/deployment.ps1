@@ -572,7 +572,7 @@ function Remove-FromS3
 #          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
 #          allow only a very limited number of signing attempts with invalid passwords.
 #
-# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# This method uses the Windows version of <b>SignTool.exe</b> embedded into the
 # the <b>Neon.Deployment</b> library and to perform the code signing and this 
 # tool runs only on Windows.
 #
@@ -619,9 +619,8 @@ function Sign-IsReady-WithUsbToken
 #          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
 #          allow only a very limited number of signing attempts with invalid passwords.
 #
-# This method uses the Windows version of <b>signtool.exe</b> embedded into the
-# the <b>Neon.Deployment</b> library and to perform the code signing and this 
-# tool runs only on Windows.
+# This downloads and caches the Windows version of <b>SignTool.exe</b> and then uses that
+# perform the code signining.
 
 function Sign-WithUsbToken
 {
