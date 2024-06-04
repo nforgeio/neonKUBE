@@ -211,7 +211,8 @@ namespace Neon.Kube.SSH
         public string Role { get; set; }
 
         /// <summary>
-        /// Indicates the type of node image type.  This is stored in the <b>/etc/neonkube/image-type</b> file.
+        /// Indicates the type of node image type.  This is stored in the <see cref="KubeConst.ImageTypePath"/> file.
+        /// This returns <see cref="KubeImageType.Unknown"/> when this file doesn't exist or can't be parsed.
         /// </summary>
         public KubeImageType ImageType
         {
@@ -239,7 +240,7 @@ namespace Neon.Kube.SSH
         /// This can be used to ensure that the node image is compatible with the code configuring the cluster.
         /// </para>
         /// <node>
-        /// This returns <c>null</c> when the <b>/etc/neonkube/image-version</b> file doesn't exist.
+        /// This returns <c>null</c> when the <see cref="KubeConst.ImageVersionPath"/> file doesn't exist.
         /// </node>
         /// </summary>
         /// <exception cref="FormatException">Thrown when the version file could not be parsed.</exception>
@@ -266,7 +267,7 @@ namespace Neon.Kube.SSH
                 }
                 else
                 {
-                    UploadText(KubeConst.ImageVersionPath, value.ToString());
+                    UploadText(KubeConst.ImageVersionPath, value.ToString(), permissions: "664", owner: KubeConst.SysAdminUser);
                 }
             }
         }
