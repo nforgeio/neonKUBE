@@ -63,7 +63,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Specifies the number of <b>2 MiB</b> required to be dedicated to the OpenEBS
-        /// Mayastor engine deployed on OpenEBS nodes.  This defaults to <b>1024 pages</b>
+        /// Mayastor engine deployed on storage nodes.  This defaults to <b>1024 pages</b>
         /// which is equivalant to <b>2 GiB RAM</b> and is the minimum required by Mayastor.
         /// </summary>
         [JsonProperty(PropertyName = "Hugepages", Required = Required.Default)]
@@ -87,7 +87,7 @@ namespace Neon.Kube.ClusterDef
 
             if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Default)
             {
-                if (clusterDefinition.Nodes.Count() == 1)
+                if (clusterDefinition.ControlNodes.Count() < 3 && clusterDefinition.Workers.Count() < 3)
                 {
                     clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.HostPath;
                 }

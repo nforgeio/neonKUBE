@@ -86,6 +86,24 @@ namespace Neon.Kube
         public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
 
         /// <summary>
+        /// Specifies the port exposed by the Mayastor gRPC API server running on storage nodes.
+        /// </summary>
+        [KubeValue]
+        public const int MayastorApi = 10124;
+
+        /// <summary>
+        /// Specifies a port exposed by Mayastor as an NVMe TCP target on storage nodes.
+        /// </summary>
+        [KubeValue]
+        public const int MayastorNvme1 = 4421;
+
+        /// <summary>
+        /// Specifies a port exposed by Mayastor as an NVMe TCP target on storage nodes.
+        /// </summary>
+        [KubeValue]
+        public const int MayastorNvme2 = 8420;
+
+        /// <summary>
         /// Specifies the first port reserved by NeonKUBE SSO redirects.
         /// </summary>
         [KubeValue]
