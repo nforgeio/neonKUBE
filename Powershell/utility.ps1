@@ -565,8 +565,7 @@ function Push-ContainerImage
 
 		if ($exitCode -eq 0)
 		{																																		  
-			# Add the base version tag if requested.  I don't believe it'll
-			# be necessary to retry this operation.
+			# Add the base version tag.
 
 			if (![System.String]::IsNullOrEmpty($baseTag))
 			{
@@ -575,7 +574,7 @@ function Push-ContainerImage
 				$fields    = $image -split ':'
 				$baseImage = $fields[0] + ":" + $baseTag
 
-				Write-Info "tag image: $image --> $baseImage"
+				Write-Info "tag image: $baseImage --> $image"
 				Invoke-CaptureStreams "docker tag $image $baseImage" -interleave | Out-Null
 			}
 
