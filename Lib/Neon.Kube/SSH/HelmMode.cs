@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace Neon.Kube.SSH
 {
     /// <summary>
-    /// Specifies the mode used for <see cref="NodeSshProxy{TMetadata}.InstallHelmChartAsync(Setup.ISetupController, string, string, string, string, string, Dictionary{string, object}, string, TimeSpan, HelmMode)"/>,
+    /// Specifies the mode used for <see cref="NodeSshProxy{TMetadata}.InstallHelmChartAsync(Setup.ISetupController, string, string, string, string, string, Dictionary{string, object}, string, string, TimeSpan, HelmMode)"/>,
     /// controlling whether the chart is installed, performs a dry-run, or just generates manifest without
     /// validating Kubernetes objects.
     /// </summary>

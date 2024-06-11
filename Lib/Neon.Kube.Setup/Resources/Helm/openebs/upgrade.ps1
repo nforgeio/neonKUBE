@@ -43,13 +43,13 @@ cp $helmFolder\upgrade.ps1 $tempFolder
 # of the [v2] [chart.yaml] files within the temporary chart folder.  We need
 # to do this to prevent Helm from downloading Helm charts from the Internet.
 
-# Remove-HelmRepositories $tempFolder
+Remove-HelmRepositories $tempFolder
 
 # $hack(jefflill):
 #
-# We're having trouble with the [mayastor] dependency: Helm complains abouta
+# We're having trouble with the [mayastor] dependency: Helm complains about
 # its [loki-stack] subchart which doesn't make a lot of sense (something
-# about a missing [Makefile] or something).
+# about a missing [Makefile]).
 #
 # It looks like [loki-stack] might have been deprecated so we're going to remove
 # this subchart from the [mayastor] chart since we don't want to use it anyway
@@ -57,15 +57,15 @@ cp $helmFolder\upgrade.ps1 $tempFolder
 #
 #       https://github.com/alexellis/arkade/issues/620
 
-# Remove-HelmDependency $tempFolder\charts\mayastor loki-stack
+Remove-HelmDependency $tempFolder\charts\mayastor loki-stack
 
 # We need to remove the [priority-class.yaml] templates because they
 # create priority classes prefixed by "openebs-" when we pass our
 # NeonKUBE standard priority class names.
 
-# rm $tempFolder\charts\cstor\templates\priority-class.yaml
-# rm $tempFolder\charts\jiva\templates\priority-class.yaml
 # rm $tempFolder\charts\lvm-localpv\templates\priority-class.yaml
+# rm $tempFolder\charts\mayastor\templates\mayastor\priority-class\priority-class.yaml
+# rm $tempFolder\charts\zfs-localpv\templates\priority-class.yaml
 # rm $tempFolder\charts\mayastor\templates\mayastor\priority-class\priority-class.yaml
 # rm $tempFolder\charts\zfs-localpv\templates\priority-class.yaml
 

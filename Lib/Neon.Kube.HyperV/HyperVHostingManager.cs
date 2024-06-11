@@ -428,7 +428,7 @@ namespace Neon.Kube.Hosting.HyperV
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
             {
                 // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -577,19 +577,9 @@ namespace Neon.Kube.Hosting.HyperV
             {
                 requiredDisk += node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
-                if (node.OpenEbsStorage)
+                if (node.OpenEbsStorage && cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
                 {
-                    switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
-                    {
-                        case OpenEbsEngine.Mayastor:
-
-                            requiredDisk += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
-                            break;
-
-                        default:
-
-                            break;  // The other engines don't provision an extra drive.
-                    }
+                    requiredDisk += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
                 }
             }
 

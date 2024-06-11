@@ -687,46 +687,34 @@ namespace Neon.Kube
             // We're also going to set [NodeAdvice.OpenEbsHugePages2MiB] for the nodes that
             // will be hosting the Mayastor engine.
 
-            switch (clusterDefinition.Storage.OpenEbs.Engine)
+            if (clusterDefinition.Storage.OpenEbs.Mayastor)
             {
-                case OpenEbsEngine.Mayastor:
-
-                    if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+                if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+                {
+                    if (clusterDefinition.Workers.Count() > 0)
                     {
-                        if (clusterDefinition.Workers.Count() > 0)
+                        foreach (var worker in clusterDefinition.Workers.TakeUpTo(3))
                         {
-                            foreach (var worker in clusterDefinition.Workers.TakeUpTo(3))
-                            {
-                                worker.OpenEbsStorage = true;
-                            }
-                        }
-                        else
-                        {
-                            foreach (var controlNode in clusterDefinition.ControlNodes)
-                            {
-                                controlNode.OpenEbsStorage = true;
-                            }
+                            worker.OpenEbsStorage = true;
                         }
                     }
-
-                    // Mayastor hugepage configuration.
-
-                    foreach (var nodeDefinition in clusterDefinition.Nodes.Where(nodeDefinition => nodeDefinition.OpenEbsStorage))
+                    else
                     {
-                        var nodeAdvice = GetNodeAdvice(nodeDefinition.Name);
-
-                        nodeAdvice.OpenEbsHugePages = clusterDefinition.Storage.OpenEbs.Hugepages;
+                        foreach (var controlNode in clusterDefinition.ControlNodes)
+                        {
+                            controlNode.OpenEbsStorage = true;
+                        }
                     }
+                }
 
-                    break;
+                // Mayastor hugepage configuration.
 
-                case OpenEbsEngine.HostPath:
+                foreach (var nodeDefinition in clusterDefinition.Nodes.Where(nodeDefinition => nodeDefinition.OpenEbsStorage))
+                {
+                    var nodeAdvice = GetNodeAdvice(nodeDefinition.Name);
 
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
+                    nodeAdvice.OpenEbsHugePages = clusterDefinition.Storage.OpenEbs.Hugepages2Gi;
+                }
             }
 
             //-----------------------------------------------------------------
@@ -1698,7 +1686,7 @@ namespace Neon.Kube
             // We're going to schedule the CSI controller on the storage
             // nodes for cStor.
 
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
+            if (clusterDefinition.Storage.OpenEbs.Mayastor)
             {
                 advice.NodeSelector = ToObjectYaml(NodeLabel.LabelOpenEbsStorage, "true");
             }
@@ -1807,26 +1795,10 @@ namespace Neon.Kube
             // We're going to schedule the node operator on the storage
             // nodes for cStor or Mayastor engines with up to three replicas.
 
-            switch (clusterDefinition.Storage.OpenEbs.Engine)
+            if (clusterDefinition.Storage.OpenEbs.Mayastor)
             {
-                case OpenEbsEngine.HostPath:
-
-                    if (workerNodeCount > 0)
-                    {
-                        advice.NodeSelector = storageNodeSelector;
-                        advice.Replicas     = Math.Min(3, workerNodeCount);
-                    }
-                    break;
-
-                case OpenEbsEngine.Mayastor:
-
-                    advice.NodeSelector = storageNodeSelector;
-                    advice.Replicas     = Math.Min(3, storageNodeCount);
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
+                advice.NodeSelector = storageNodeSelector;
+                advice.Replicas     = Math.Min(3, storageNodeCount);
             }
 
             AddServiceAdvice(advice.ServiceName, advice);

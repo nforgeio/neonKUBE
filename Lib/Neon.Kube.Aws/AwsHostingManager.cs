@@ -1375,7 +1375,7 @@ namespace Neon.Kube.Hosting.Aws
 
             var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
             {
                 // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks

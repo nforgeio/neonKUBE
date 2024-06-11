@@ -125,13 +125,17 @@ namespace Neon.Kube
         public decimal? PodMemoryRequest { get; set; }
 
         /// <summary>
-        /// Specifies the number of <b>2 MiB</b> hugepage requested by the service.  This will be provisioned
-        /// as both the pod request and limit when specified.
+        /// <para>
+        /// Specifies the number of <b>2 MiB</b> hugepage requested by the service.
+        /// </para>
+        /// <note>
+        /// This will be provisioned as both the pod <b>hugepages-2Mi</b>request and limit when specified.
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Hugepages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hugepages", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hugepages2Mi", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hugepages2Mi", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public int? Hugepages { get; set; }
+        public int? Hugepages2Mi { get; set; }
 
         /// <summary>
         /// Returns the pod resource requests and limits as a map.
@@ -144,7 +148,7 @@ namespace Neon.Kube
             {
                 var hasLimits    = PodCpuLimit != null || PodMemoryLimit != null;
                 var hasRequests  = PodCpuRequest != null || PodMemoryRequest != null;
-                var hasHugepages = Hugepages != null;
+                var hasHugepages = Hugepages2Mi != null;
 
                 if (hasHugepages)
                 {
@@ -177,7 +181,7 @@ namespace Neon.Kube
 
                     if (hasHugepages)
                     {
-                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages)}");
+                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages2Mi)}");
                     }
                 }
 
@@ -197,7 +201,7 @@ namespace Neon.Kube
 
                     if (hasHugepages)
                     {
-                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages)}");
+                        sb.AppendLine($"    hugepages-2Mi: {KubeHelper.ToSiString(2 * ByteUnits.MebiBytes * Hugepages2Mi)}");
                     }
                 }
 

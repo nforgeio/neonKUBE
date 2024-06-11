@@ -2555,7 +2555,7 @@ istioctl install --verify -y -f manifest.yaml
                     controller.LogProgress(controlNode, verb: "Install", message: "Cluster CRDs");
 
                     await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
-                        @namespace:  KubeNamespace.NeonSystem);
+                        @namespace: KubeNamespace.NeonSystem);
                 });
         }
 
@@ -2753,257 +2753,173 @@ istioctl install --verify -y -f manifest.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var k8s                      = GetK8sClient(controller);
-            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
-            var openEbsEngine            = clusterDefinition.Storage.OpenEbs.Engine;
-            var ndmAdvice                = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsNdm);
-            var ndmOperatorAdvice        = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsNdmOperator);
-            var provisionerLocalPvAdvice = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsLocalPvProvisioner);
-            var ndmEnabled               = false;
-
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor)
-            {
-                throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
-            }
+            var k8s               = GetK8sClient(controller);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var openEbsOptions    = clusterDefinition.Storage.OpenEbs;
 
             controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    controller.LogProgress(controlNode, verb: "configure", message: "openebs");
+                    // The combined OpenEBS Helm chart doesn't seem to work right now.
+                    // The problem is that the subcharts seem to ne independent because
+                    // they don't honor the root [values.yaml].  For example, setting
+                    // [mayastor.test_pod.enabled=false] still installs etcd, NATs,...
+                    //
+                    // We're going to workaround this by installing the subcharts
+                    // individually as required.
+
+                    //---------------------------------------------------------
+                    // We always install [localpv]
 
                     controller.ThrowIfCancelledOrFaulted();
-                    await controlNode.InvokeIdempotentAsync("setup/openebs",
+                    await controlNode.InvokeIdempotentAsync("setup/openebs-localpv-provisioner",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-base");
+                            controller.LogProgress(controlNode, verb: "configure", message: "openebs: localpv-provisioner");
 
                             var values = new Dictionary<string, object>();
 
-                            AddOpenEbsCommonHelmValues(controller, values);
+                            values.Add("analytics.enabled", false);
+                            values.Add("analytics.pingInterval", "24h");
 
-                            ndmEnabled = (bool)values["ndm.enabled"];
+                            values.Add("localpv.basePath", KubeNodeFolder.OpenEbsHostPathBase);
+                            values.Add("localpv.enabled", true);
 
-                            switch (openEbsEngine)
-                            {
-                                case OpenEbsEngine.Mayastor:
+                            values.Add("helperPod.image.registry", KubeConst.LocalClusterRegistryWithSlash);
+                            values.Add("helperPod.image.repository", "openebs-linux-utils");
+                            values.Add("helperPod.image.tag", KubeVersion.OpenEbs);
 
-                                    AddOpenEbsCstorHelmValues(controller, values);
-                                    break;
+                            values.Add("hostpathClass.enabled", true);
+                            values.Add("hostpathClass.isDefaultClass", false);
+                            values.Add("hostpathClass.basePath", KubeNodeFolder.OpenEbsHostPathBase);
 
-                                case OpenEbsEngine.HostPath:
+                            values.Add("localpv.image.registry", KubeConst.LocalClusterRegistryWithSlash);
+                            values.Add("localpv.image.repository", "openebs-provisioner-localpv");
+                            values.Add("localpv.image.tag", KubeVersion.OpenEbsHostPathDriver);
 
-                                    // This is a NOP because [localpv-provisioner] is always
-                                    // installed as a common component.
-                                    break;
-
-                                default:
-
-                                    throw new NotImplementedException();
-                            }
-
-                            await controlNode.InstallHelmChartAsync(controller, "openebs",
+                            await controlNode.InstallHelmChartAsync(controller, "openebs-localpv-provisioner",
                                 @namespace: KubeNamespace.NeonStorage,
-                                values:     values);
+                                values:     values,
+                                folder:     "openebs/charts/localpv_provisioner");
                         });
 
-                    // Create the storage classes.
+                    // Wait for the OpenEBS services to start.
 
-                    await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath", isDefault: openEbsEngine == OpenEbsEngine.HostPath);
-                    await CreateEngineStorageClass(controller, controlNode, "default", isDefault: true);
-                    await CreateEngineStorageClass(controller, controlNode, "neon-internal-nfs");
-
-                    // Wait for common components to be installed.
-
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-common-ready",
+                    await controlNode.InvokeIdempotentAsync("setup/openebs-wait",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "wait for", message: "openebs-localpv-provisioner");
+                            controller.ThrowIfCancelledOrFaulted();
+                            controller.LogProgress(controlNode, verb: "wait", message: "for openebs services");
 
-                            var waitTasks =
-                                new List<Task>()
-                                {
-                                    k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                                };
+                            var daemonSets  = new List<string>();
+                            var deployments = new List<string>();
 
-                            if (ndmEnabled)
+                            daemonSets.Add("openebs-localpv-provisioner");
+
+                            if (openEbsOptions.Mayastor)
                             {
-                                waitTasks.Add(k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
-                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
-                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                                daemonSets.Add("openebs-agent-core");
+                                daemonSets.Add("openebs-csi-controller");
+                                daemonSets.Add("openebs-operator-diskpool");
+                                daemonSets.Add("openebs-api-rest");
+
+                                deployments.Add("openebs-agent-ha-node");
+                                deployments.Add("openebs-csi-node");
+                                deployments.Add("openebs-etcd-0");
+                                deployments.Add("openebs-etcd-1");
+                                deployments.Add("openebs-etcd-2");
+                                deployments.Add("openebs-io-engine");
+                                deployments.Add("openebs-lvm-localpv-node");
+                                deployments.Add("openebs-nats-0");
+                                deployments.Add("openebs-nats-1");
+                                deployments.Add("openebs-nats-2");
+                            }
+
+                            var waitTasks = new List<Task>();
+
+                            foreach (var daemonsetName in daemonSets)
+                            {
+                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, daemonsetName, timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                            }
+
+                            foreach (var deploymentName in deployments)
+                            {
+                                waitTasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, deploymentName, timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                             }
 
                             await NeonHelper.WaitAllAsync(
                                 tasks:             waitTasks,
-                                timeoutMessage:    "Timeout waiting for: openebs localpv, ndm, and nfs",
+                                timeoutMessage:    "Timeout waiting for: openebs daemonsets and deployments",
                                 cancellationToken: controller.CancellationToken);
                         });
 
-                    // Wait for the engine specific components to be deployed.
+                    // Create the storage classes.
 
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-engine-ready",
+                    await controlNode.InvokeIdempotentAsync("setup/openebs-wait",
                         async () =>
                         {
-                            switch (openEbsEngine)
-                            {
-                                case OpenEbsEngine.Mayastor:
+                            controller.ThrowIfCancelledOrFaulted();
+                            controller.LogProgress(controlNode, verb: "create", message: "openebs storage classes");
 
-                                    throw new NotImplementedException();
-                                    break;
-
-                                default:
-
-                                    throw new NotImplementedException();
-                            }
-                        });
-
-                    // Install NFS support.
-
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
-                        async () =>
-                        {
-                            controller.LogProgress(controlNode, verb: "configure", message: "openebs-nfs");
-
-                            var values = new Dictionary<string, object>();
-
-                            values.Add("nfsStorageClass.backendStorageClass", "neon-internal-nfs");
-
-                            await controlNode.InstallHelmChartAsync(controller, "openebs-nfs-provisioner",
-                                @namespace:   KubeNamespace.NeonStorage,
-                                prioritySpec: PriorityClass.NeonStorage.Name,
-                                values:       values);
-                        });
-
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-nfs-ready",
-                        async () =>
-                        {
-                            controller.LogProgress(controlNode, verb: "wait for", message: "openebs-nfs");
-
-                            await NeonHelper.WaitAllAsync(
-                                new List<Task>()
-                                {
-                                    k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                                },
-                                timeoutMessage:    "Timeout waiting for: openebs-nfs",
-                                cancellationToken: controller.CancellationToken);
+                            await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath", isDefault: true);
+                            await CreateEngineStorageClass(controller, controlNode, "default", isDefault: true);
                         });
                 });
         }
 
         /// <summary>
-        /// Adds the Helm values required for deploying common OpenEBS components
-        /// required by all engines.
+        /// Adds the Helm values required for deploying OpenEBS components.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="values">Specifies the target Helm values dictionary.</param>
-        private static void AddOpenEbsCommonHelmValues(ISetupController controller, Dictionary<string, object> values)
+        private static void AddOpenEbsHelmValues(ISetupController controller, Dictionary<string, object> values)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(values != null, nameof(values));
 
-            var cluster                  = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition        = cluster.SetupState.ClusterDefinition;
-            var openEbsEngine            = clusterDefinition.Storage.OpenEbs.Engine;
-            var ndmAdvice                = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsNdm);
-            var ndmOperatorAdvice        = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsNdmOperator);
-            var localPvProvisionerAdvice = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsLocalPvProvisioner);
-            var nfsProvisionerAdvice     = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsNfsProvisioner);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var openEbsOptions    = clusterDefinition.Storage.OpenEbs;
 
-            //---------------------------------------------
-            // Google Analytics: OpenEBS can send usage data to Google.  We're disabling this.
+            //-----------------------------------------------------------------
+            // HostPath settings.
 
             values.Add("analytics.enabled", false);
+            values.Add("analytics.pingInterval", "24h");
+            values.Add("lvm-localpv.basePath", "/var/openebs/local");
+            values.Add("lvm-localpv.crds.csi.volumeSnapshots.enabled", false);
+            values.Add("lvm-localpv.crds.lvmLocalPv.enabled", true);
+            values.Add("lvm-localpv.enabled", true);
+            values.Add("lvm-localpv.helperPod.image.registry", KubeConst.LocalClusterRegistry);
+            values.Add("lvm-localpv.helperPod.image.repository", "openebs-linux-utils");
+            values.Add("lvm-localpv.helperPod.image.tag", KubeVersion.OpenEbs);
+            values.Add("lvm-localpv.hostpathClass.enabled", true);
+            values.Add("lvm-localpv.localpv.image.registry", KubeConst.LocalClusterRegistry);
+            values.Add("lvm-localpv.localpv.image.repository", "openebs-localpv-provisioner");
+            values.Add("lvm-localpv.localpv.image.image.tag", KubeVersion.OpenEbs);
 
-            //---------------------------------------------
-            // Disable StorageClass creation because we create our own.
+            // We don't support LVM and ZFS PVs at this time.
 
-            values.Add("localprovisioner.deviceClass.enabled", false);
-            values.Add("localprovisioner.hostpathClass.enabled", false);
-            values.Add("nfsStorageClass.enabled", false);
-            values.Add("jiva.storageClass.enabled", false);
+            values.Add("engines.local.lvm.enabled", false);
+            values.Add("engines.local.zfs.enabled", false);
 
-            //---------------------------------------------
-            // openebs-ndm
+            //-----------------------------------------------------------------
+            // Disable loki-stack.
 
-            // Disable NDM for Jiva since we currently only support Jiva PVs deployed
-            // on local [HostPath] volumes.  We could add this capability in the
-            // future, but this probably won't be a priority since Mayastor
-            // would probably be more appropriate for customer (non-NeonDESKTOP)
-            // multi-node clusters.
+            values.Add("mayastor.test_pod.enabled", false);
+            values.Add("mayastor.loki.enabled", false);
+            values.Add("mayastor.promtail.enabled", false);
+            values.Add("mayastor.fluent-bit.enabled", false);
+            values.Add("mayastor.grafana.enabled", false);
+            values.Add("mayastor.prometheus.enabled", false);
+            values.Add("mayastor.logstash.enabled", false);
 
-            values.Add("ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda,/dev/xvda");
-            values.Add("ndm.nodeSelector", ndmAdvice.NodeSelector);
-            values.Add("ndm.priorityClassName", ndmAdvice.PriorityClassName);                                   // NeonKUBE CUSTOM VALUE
-            values.Add("ndm.resources", ndmAdvice.Resources);
-            values.Add("ndm.tolerations", ndmAdvice.Tolerations);
+            //-----------------------------------------------------------------
+            // Mayastor settings.
 
-            //values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("ndm.image.repository", "openebs-node-disk-manager");
-            //values.Add("ndm.image.tag", KubeVersion.OpenEbsNodeDiskManager);
-
-            //---------------------------------------------
-            // openebs-ndm-operator
-
-            values.Add("ndmOperator.nodeSelector", ndmOperatorAdvice.NodeSelector);
-            values.Add("ndmOperator.priorityClassName", ndmOperatorAdvice.PriorityClassName);                   // NeonKUBE CUSTOM VALUE
-            values.Add("ndmOperator.replicas", ndmOperatorAdvice.Replicas);
-            values.Add("ndmOperator.resources", ndmOperatorAdvice.Resources);
-            values.Add("ndmOperator.tolerations", ndmOperatorAdvice.Tolerations);
-
-            //values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("ndmOperator.image.repository", "openebs-node-disk-operator");
-            //values.Add("ndmOperator.image.tag", KubeVersion.OpenEbsNodeDiskOperator);
-
-            //---------------------------------------------
-            // openebs-localpv-provisioner
-
-            values.Add("localpv-provisioner.nodeSelector", localPvProvisionerAdvice.NodeSelector);
-            values.Add("localpv-provisioner.priorityClassName", localPvProvisionerAdvice.PriorityClassName);    // NeonKUBE CUSTOM VALUE
-            values.Add("localpv-provisioner.replicas", localPvProvisionerAdvice.Replicas);
-            values.Add("localpv-provisioner.resources", localPvProvisionerAdvice.Resources);
-            values.Add("localpv-provisioner.tolerations", localPvProvisionerAdvice.Tolerations);
-
-            //values.Add("localpv-provisioner.image.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("localpv-provisioner.image.repository", "openebs-provisioner-localpv");
-            //values.Add("localpv-provisioner.image.tag", KubeVersion.OpenEbsProvisionerLocalPV);
-
-            //---------------------------------------------
-            // openebs-nfs-provisioner
-
-            // $note(jefflill): replicas is not currently being honored.
-
-            values.Add("nfs-provisioner.enabled", true);
-
-            //values.Add("nfs-provisioner.nfsServerAlpineImage.registry", KubeConst.LocalClusterRegistry);
-            //values.Add("nfs-provisioner.nfsServerAlpineImage.repository", "openebs-nfs-server-alpine");
-            //values.Add("nfs-provisioner.nfsServerAlpineImage.tag", KubeVersion.OpenEbsNfsServerAlpine);
-        }
-
-        /// <summary>
-        /// Adds the Helm values required for deploying the Mayastor engine.
-        /// </summary>
-        /// <param name="controller">Specifies the setup controller.</param>
-        /// <param name="values">Specifies the target Helm values dictionary.</param>
-        private static void AddOpenEbsCstorHelmValues(ISetupController controller, Dictionary<string, object> values)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(values != null, nameof(values));
-
-            var cluster                    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var cStorAdvice                = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsCstor);
-            var cStorAdmissionServerAdvice = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsCstorAdmissionServer);
-            var cstorCsiControllerAdvice   = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsCstorCsiController);
-            var cstorCsiCspOperatorAdvice  = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsCstorCvcOperator);
-            var cstorCsiNodeAdvice         = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.OpenEbsCstorCsiNode);
-
-            values.Add("cstor.enabled", true);
-
-            //values.Add("admissionServer.nodeSelector", cStorAdmissionServerAdvice.NodeSelector);
-
-            //values.Add("admissionServer.image.registry", "");
-            //values.Add("admissionServer.image.repository", "");
-            //values.Add("admissionServer.image.tag", "");
+            values.Add("engines.replicated.mayastor.enabled", openEbsOptions.Mayastor);
         }
 
         /// <summary>
@@ -3024,6 +2940,8 @@ istioctl install --verify -y -f manifest.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            throw new NotImplementedException("$todo(jefflill)");
 
             var k8s = GetK8sClient(controller);
 
@@ -3062,7 +2980,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Creates an OpenEBS cStor Kubernetes Storage Class.
+        /// Creates an OpenEBS Mayastor Kubernetes Storage Class.
         /// </summary>
         /// <param name="controller">Specifies the setup controller.</param>
         /// <param name="controlNode">Specifies the control-plane node where the operation will be performed.</param>
@@ -3071,7 +2989,7 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateCstorStorageClass(
+        public static async Task CreateMayastorStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
@@ -3084,6 +3002,8 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
+
+            throw new NotImplementedException("$todo(jefflill)");
 
             var k8s = GetK8sClient(controller);
 
@@ -3150,27 +3070,14 @@ $@"- name: StorageType
 
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterDefinition = cluster.SetupState.ClusterDefinition;
-            var storageOptions    = clusterDefinition.Storage;
+            var openEbsOptions    = clusterDefinition.Storage.OpenEbs;
 
             controller.ThrowIfCancelledOrFaulted();
 
-            switch (storageOptions.OpenEbs.Engine)
+            if (openEbsOptions.Mayastor)
             {
-                case OpenEbsEngine.Mayastor:
-
-                    await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
-                    break;
-
-                case OpenEbsEngine.Default:
-
-                    Covenant.Assert(false, $"[{nameof(OpenEbsEngine.Default)}] is not valid here.  This must be set to one of the other storage engines in [{nameof(OpenEbsOptions)}.Validate()].");
-                    break;
-
-                default:
-
-                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: false);
-                    throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not supported yet.");
-            };
+                await CreateMayastorStorageClass(controller, controlNode, name, isDefault: isDefault);
+            }
         }
 
         /// <summary>

@@ -657,7 +657,13 @@ namespace Neon.Kube
         /// Specifies the version of <b>OpenEBS Mayastor</b> plugin to be installed.
         /// </summary>
         [KubeValue]
-        public const string OpenEbsMayastor = "v2.6.0";
+        public const string OpenEbsMayastor = "v2.6.1";
+
+        /// <summary>
+        /// Specifies the version of <b>OpenEBS HostPath Driver</b> to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string OpenEbsHostPathDriver = "4.0.0";
 
         /// <summary>
         /// Specifies the version of <b>OpenEBS LVM Driver</b> to be installed.

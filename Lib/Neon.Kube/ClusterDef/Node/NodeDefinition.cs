@@ -178,10 +178,15 @@ namespace Neon.Kube.ClusterDef
         /// node for persistant container storage.  This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// When all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> and <see cref="OpenEbsOptions.Engine"/>
-        /// is set to <see cref="OpenEbsEngine.Mayastor"/>, NeonKUBE  will automatically choose the nodes that will
-        /// host the Mayastor block devices by configuring up to three nodes with <b>openEbsStorage: true</b>,
-        /// favoring <b>worker</b> nodes over <b>control-plane</b> nodes when possible.
+        /// <para>
+        /// When all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> and <see cref="OpenEbsOptions.Mayastor"/>
+        /// is set to <c>true</c>, NeonKUBE  will automatically choose the nodes that will host the Mayastor block devices
+        /// by configuring up to three nodes with <b>openEbsStorage: true</b>, favoring <b>worker</b> nodes over <b>control-plane</b>
+        /// nodes when possible.
+        /// </para>
+        /// <para>
+        /// At least 3 worker or control plane-nodes are required.
+        /// </para>
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbsStorage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

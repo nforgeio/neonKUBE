@@ -274,6 +274,13 @@ namespace Neon.Kube
         public const string LocalClusterRegistry = $"{LocalClusterRegistryHostName}/{LocalClusterRegistryProject}";
 
         /// <summary>
+        /// Hostname used to reference the local Harbor registry within the cluster
+        /// with a trailing forward slash.
+        /// </summary>
+        [KubeValue]
+        public const string LocalClusterRegistryWithSlash = $"{LocalClusterRegistry}/";
+
+        /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local
         /// Harbor registry via <b>podman</b>.
         /// </summary>

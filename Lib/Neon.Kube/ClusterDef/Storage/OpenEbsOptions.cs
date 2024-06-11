@@ -47,19 +47,16 @@ namespace Neon.Kube.ClusterDef
         /// Specifies the minimum number of <b>2 MiB</b> (or <b>2 GiB RAM)</b> hugepages required by
         /// Mayastor on the nodes where it is deployed.
         /// </summary>
-        public const int MinHugepages = 1024;
+        public const int MinHugepages2Gi = 1024;
 
         /// <summary>
-        /// <para>
-        /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
-        /// to <see cref="OpenEbsEngine.Default"/> which selects the <see cref="OpenEbsEngine.HostPath"/>
-        /// engine for single node clusters, <see cref="OpenEbsEngine.Mayastor"/> otherwise.
-        /// </para>
+        /// Optionally enables the Mayastor replicated storage engine for the cluster.  This
+        /// defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
-        [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
-        [DefaultValue(OpenEbsEngine.Default)]
-        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
+        [JsonProperty(PropertyName = "Mayastor", Required = Required.Default)]
+        [YamlMember(Alias = "mayastor", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Mayastor { get; set; } = false;
 
         /// <summary>
         /// Specifies the number of <b>2 MiB</b> required to be dedicated to the OpenEBS
@@ -68,8 +65,8 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         [JsonProperty(PropertyName = "Hugepages", Required = Required.Default)]
         [YamlMember(Alias = "hugepages", ApplyNamingConventions = false)]
-        [DefaultValue(MinHugepages)]
-        public int Hugepages { get; set; } = MinHugepages;
+        [DefaultValue(MinHugepages2Gi)]
+        public int Hugepages2Gi { get; set; } = MinHugepages2Gi;
 
         /// <summary>
         /// Validates the options.
@@ -80,28 +77,22 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var optionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
+            var openEbsOptions = clusterDefinition.Storage.OpenEbs;
+            var optionsPrefix  = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
 
-            // Choose an actual engine when [OpenEbsEngine.Default] is specified, based
-            // on the number cluster nodes.
+            // The cluster needs at least three workers or three control-plane nodes
+            // to support Mayastor.
 
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Default)
+            if (openEbsOptions.Mayastor && clusterDefinition.Workers.Count() < 3 && clusterDefinition.ControlNodes.Count() < 3)
             {
-                if (clusterDefinition.ControlNodes.Count() < 3 && clusterDefinition.Workers.Count() < 3)
-                {
-                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.HostPath;
-                }
-                else
-                {
-                    clusterDefinition.Storage.OpenEbs.Engine = OpenEbsEngine.Mayastor;
-                }
+                throw new ClusterDefinitionException("OpenEBS Mayastor engine requires at least 3 cluster worker or control-plane nodes.");
             }
 
             // Validate the Mayastor hugepage count.
 
-            if (clusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.Mayastor && Hugepages < MinHugepages)
+            if (openEbsOptions.Mayastor && Hugepages2Gi < MinHugepages2Gi)
             {
-                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(Hugepages)}={Hugepages} must be at least [{MinHugepages}].");
+                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(Hugepages2Gi)}={Hugepages2Gi} must be at least [{MinHugepages2Gi}].");
             }
         }
     }

@@ -73,9 +73,9 @@ namespace Neon.Kube
         public static string Download(string username) => $"{NeonHome(username)}/download";
 
         /// <summary>
-        /// The user folder where cluster tools can upload, unpack, and then
-        /// execute <see cref="CommandBundle"/>s as well as store temporary
-        /// command output files.
+        /// Path to the user folder where cluster tools can upload, unpack,
+        /// and then execute <see cref="CommandBundle"/>s as well as store
+        /// temporary command output files.
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
@@ -87,11 +87,22 @@ namespace Neon.Kube
         public const string Helm = "/lib/neonkube/helm";
 
         /// <summary>
-        /// Path to a user archive directory.
+        /// Path to the user archive directory.
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
         public static string Home(string username) => $"/home/{username}";
+
+        /// <summary>
+        /// Path where NeonKUBE related components will maintain runtime state.
+        /// </summary>
+        public const string NeonRun = "/run/neonkube";
+
+        /// <summary>
+        /// Path to the root folder where local OpenEBS persistent volumes
+        /// will be deployed.
+        /// </summary>
+        public const string OpenEbsHostPathBase = "/var/openebs/local";
 
         /// <summary>
         /// Path to the cluster management scripts directory.
@@ -109,15 +120,10 @@ namespace Neon.Kube
         public const string State = "/var/local/neonkube";
 
         /// <summary>
-        /// Root folder on the local tmpfs (shared memory) folder where 
-        /// cluster will persist misc temporary files.
+        /// Path to the root folder on the local tmpfs (shared memory)
+        /// folder where cluster will persist misc temporary files.
         /// </summary>
         public const string Tmpfs = "/dev/shm/neonkube";
-
-        /// <summary>
-        /// Folder where NeonKUBE related components will maintain runtime state.
-        /// </summary>
-        public const string NeonRun = "/run/neonkube";
 
         /// <summary>
         /// Path to a user upload directory.

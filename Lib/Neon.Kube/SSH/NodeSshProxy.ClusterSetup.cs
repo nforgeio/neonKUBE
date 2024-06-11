@@ -1502,6 +1502,7 @@ systemctl enable kubelet
         /// the chart before applying any <paramref name="values"/>.
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
+        /// <param name="folder">Optionally specifies an alternate path to the Helm chart folder relative to the <see cref="KubeNodeFolder.Helm"/> folder.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
         /// <param name="mode">
@@ -1561,6 +1562,7 @@ systemctl enable kubelet
             string                      prioritySpec     = null,
             string                      valuesFile       = null,
             Dictionary<string, object>  values           = null,
+            string                      folder           = null,
             string                      progressMessage  = null,
             TimeSpan                    timeout          = default,
             HelmMode                    mode             = HelmMode.Install)
@@ -1568,6 +1570,11 @@ systemctl enable kubelet
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
+
+            if (!string.IsNullOrEmpty(folder) && folder[0] != '.')
+            {
+                folder = '/' + folder;
+            }
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -1653,7 +1660,15 @@ systemctl enable kubelet
                     }
 
                     sbScript.AppendLine($"    --namespace {@namespace} \\");
-                    sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
+
+                    if (string.IsNullOrEmpty(folder))
+                    {
+                        sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{chartName}/values.yaml \\");
+                    }
+                    else
+                    {
+                        sbScript.AppendLine($"    -f {KubeNodeFolder.Helm}/{folder}/values.yaml \\");
+                    }
 
                     if (valuesFile != null)
                     {
@@ -1714,7 +1729,14 @@ systemctl enable kubelet
                         dryRunRedirect = $" > {debugManifestPath}";
                     }
 
-                    sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
+                    if (string.IsNullOrEmpty(folder))
+                    {
+                        sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{chartName}{dryRunRedirect}");
+                    }
+                    else
+                    {
+                        sbScript.AppendLine($"    {KubeNodeFolder.Helm}/{folder}{dryRunRedirect}");
+                    }
 
                     var bundle = CommandBundle.FromScript(sbScript);
 
@@ -1735,8 +1757,9 @@ systemctl enable kubelet
                         bundle.AddFile($"structured-values.yaml", sbStructuredValues.ToString(), linuxCompatible: true);
                     }
 
-                    SudoCommand(bundle)
-                        .EnsureSuccess();
+                    var response = SudoCommand(bundle);
+
+                    response.EnsureSuccess();
 
                     if (mode == HelmMode.Install)
                     {

@@ -177,10 +177,8 @@ namespace Neon.Kube.ClusterDef
         {
             const string minOpenEbsSize = "32 GiB";
 
-            switch (clusterDefinition.Storage.OpenEbs.Engine)
+            if (clusterDefinition.Storage.OpenEbs.Mayastor)
             {
-                case OpenEbsEngine.Mayastor:
-
                 if (!string.IsNullOrEmpty(OpenEbsDisk))
                 {
                     return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk), minimum: minOpenEbsSize);
@@ -189,10 +187,10 @@ namespace Neon.Kube.ClusterDef
                 {
                     return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk), minimum: minOpenEbsSize);
                 }
-
-                default:
-
-                    return 0;
+            }
+            else
+            {
+                return 0;
             }
         }
 
