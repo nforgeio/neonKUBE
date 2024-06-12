@@ -102,7 +102,7 @@ namespace Neon.Kube
         /// Path to the root folder where local OpenEBS persistent volumes
         /// will be deployed.
         /// </summary>
-        public const string OpenEbsHostPathBase = "/var/openebs/local";
+        public const string OpenEbsLocalPvBase = "/var/openebs/local";
 
         /// <summary>
         /// Path to the cluster management scripts directory.

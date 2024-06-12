@@ -2762,47 +2762,86 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    // The combined OpenEBS Helm chart doesn't seem to work right now.
-                    // The problem is that the subcharts seem to ne independent because
-                    // they don't honor the root [values.yaml].  For example, setting
-                    // [mayastor.test_pod.enabled=false] still installs etcd, NATs,...
-                    //
-                    // We're going to workaround this by installing the subcharts
-                    // individually as required.
-
-                    //---------------------------------------------------------
-                    // We always install [localpv]
-
                     controller.ThrowIfCancelledOrFaulted();
-                    await controlNode.InvokeIdempotentAsync("setup/openebs-localpv-provisioner",
+                    await controlNode.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "configure", message: "openebs: localpv-provisioner");
+                            controller.LogProgress(controlNode, verb: "configure", message: "openebs");
 
                             var values = new Dictionary<string, object>();
 
-                            values.Add("analytics.enabled", false);
-                            values.Add("analytics.pingInterval", "24h");
-
-                            values.Add("localpv.basePath", KubeNodeFolder.OpenEbsHostPathBase);
-                            values.Add("localpv.enabled", true);
+                            // localpv-provisioner and mayastor require the helper pod image.
 
                             values.Add("helperPod.image.registry", KubeConst.LocalClusterRegistryWithSlash);
                             values.Add("helperPod.image.repository", "openebs-linux-utils");
                             values.Add("helperPod.image.tag", KubeVersion.OpenEbs);
 
-                            values.Add("hostpathClass.enabled", true);
-                            values.Add("hostpathClass.isDefaultClass", false);
-                            values.Add("hostpathClass.basePath", KubeNodeFolder.OpenEbsHostPathBase);
+                            // Configure the local hostpath storage.
 
-                            values.Add("localpv.image.registry", KubeConst.LocalClusterRegistryWithSlash);
-                            values.Add("localpv.image.repository", "openebs-provisioner-localpv");
-                            values.Add("localpv.image.tag", KubeVersion.OpenEbsHostPathDriver);
+                            values.Add("localpv-provisioner.analytics.enabled", false);
+                            values.Add("localpv-provisioner.analytics.pingInterval", "24h");
+                            values.Add("localpv-provisioner.localpv.basePath", KubeNodeFolder.OpenEbsLocalPvBase);
+                            values.Add("localpv-provisioner.localpv.enabled", true);
+                            values.Add("localpv-provisioner.localpv.image.registry", KubeConst.LocalClusterRegistryWithSlash);
+                            values.Add("localpv-provisioner.localpv.image.repository", "openebs-provisioner-localpv");
+                            values.Add("localpv-provisioner.localpv.image.tag", KubeVersion.OpenEbsHostPathDriver);
+                            values.Add("localpv-provisioner.hostpathClass.basePath", KubeNodeFolder.OpenEbsLocalPvBase);
+                            values.Add("localpv-provisioner.hostpathClass.enabled", true);
+                            values.Add("localpv-provisioner.hostpathClass.isDefaultClass", false);
 
-                            await controlNode.InstallHelmChartAsync(controller, "openebs-localpv-provisioner",
+                            // We currently disable both the LVM and ZFS local storage.
+
+                            values.Add("engines.local.lvm.enabled", false);
+                            values.Add("engines.local.zfs.enabled", false);
+
+                            // Configure Mayastor if enabled.
+
+                            if (openEbsOptions.Mayastor)
+                            {
+                                values.Add("engines.replicated.mayastor.enabled", true);
+
+                                values.Add("mayastor.crds.enabled", true);
+                                values.Add("mayastor.csi.volumeSnapshots.enabled", true);
+                                values.Add("mayastor.image.repo", "openebs-mayastor");
+                                values.Add("mayastor.image.tag", KubeVersion.OpenEbsMayastor);
+                            }
+                            else
+                            {
+                                values.Add("engines.replicated.mayastor.enabled", false);
+                            }
+
+                            //#################################################
+                            // DEBUG ONLY!  BE SURE TO COMMENT THIS OUT FOR PROD!
+                            //
+                            // When debugging Helm this Helm chart, it's handy
+                            // to allow CRDs to be removed when uninstalling the
+                            // chart so we can reinstall it after making changes.
+                            // If we don't do this, Helm will complain during
+                            // the subsequent install.
+                            //#################################################
+
+                            controller.LogGlobal("WARNING: OpenEBS CRDs will NOT be removed on uninstall!");
+                            await Task.Delay(TimeSpan.FromSeconds(10));
+
+                            values.Add("mayastor.csi.volumeSnapshots.keep", false);
+
+                            values.Add("lvmLocalPv.keep", false);
+                            values.Add("lvmLocalPv.csi.volumeSnapshots.keep", false);
+                            values.Add("crds.lvmLocalPv.keep", false);
+                            values.Add("crds.csi.volumeSnapshots.lvmLocalPv.keep", false);
+
+                            values.Add("openebs-crds.volumeSnapshots.keep", false);
+
+                            values.Add("zfs-localpv.crds.zfsLocalPv.keep", false);
+                            values.Add("zfs-localpv.csi.volumeSnapshots.keep", false);
+
+                            //#################################################
+
+                            // Install the chart.
+
+                            await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 @namespace: KubeNamespace.NeonStorage,
-                                values:     values,
-                                folder:     "openebs/charts/localpv_provisioner");
+                                values:     values);
                         });
 
                     // Wait for the OpenEBS services to start.

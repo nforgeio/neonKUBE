@@ -498,7 +498,7 @@ namespace Neon.Kube.Setup
                     }
                 });
 
-            controller.AddNodeStep("configure hugepages",
+            controller.AddNodeStep("configure node hugepages",
                 (controller, node) =>
                 {
                     // Allocate any required RAM hugepages as required.  Note that
