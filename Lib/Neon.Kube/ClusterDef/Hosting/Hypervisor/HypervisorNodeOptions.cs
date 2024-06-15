@@ -93,25 +93,14 @@ namespace Neon.Kube.ClusterDef
         public string Memory { get; set; } = null;
 
         /// <summary>
-        /// The size of operating system disk for this node when when provisioned on a hypervisor.  This is specified 
+        /// Specifies the size of boot disk for this node when when provisioned on a hypervisor.  This is specified 
         /// as a string that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This 
-        /// defaults to the value specified by <see cref="HypervisorHostingOptions.OsDisk"/>.
+        /// defaults to the value specified by <see cref="HypervisorHostingOptions.BootDiskSize"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "BootDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "bootDiskSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string OsDisk { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the size of the second block device to be created for this node when it is
-        /// enabled for OpenEBS.  This is specified as a string that can be a byte count or a number with 
-        /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
-        /// to the value specified by <see cref="HypervisorHostingOptions.OpenEbsDisk"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string OpenEbsDisk { get; set; } = null;
+        public string BootDiskSize { get; set; } = null;
 
         /// <summary>
         /// Returns the maximum number CPU cores to allocate for this node when
@@ -155,42 +144,15 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetOsDisk(ClusterDefinition clusterDefinition)
+        public long GetBootDiskSizeBytes(ClusterDefinition clusterDefinition)
         {
-            if (!string.IsNullOrEmpty(OsDisk))
+            if (!string.IsNullOrEmpty(BootDiskSize))
             {
-                return ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
+                return ClusterDefinition.ValidateSize(BootDiskSize, this.GetType(), nameof(BootDiskSize));
             }
             else
             {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.OsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.OsDisk));
-            }
-        }
-
-        /// <summary>
-        /// Returns the size of the OpenEBS Mayastor disk to be created for this node when
-        /// hosted on a hypervisor.
-        /// </summary>
-        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        /// <returns>The size in bytes.</returns>
-        public long GetOpenEbsDiskSizeBytes(ClusterDefinition clusterDefinition)
-        {
-            const string minOpenEbsSize = "32 GiB";
-
-            if (clusterDefinition.Storage.OpenEbs.Mayastor)
-            {
-                if (!string.IsNullOrEmpty(OpenEbsDisk))
-                {
-                    return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk), minimum: minOpenEbsSize);
-                }
-                else
-                {
-                    return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk), minimum: minOpenEbsSize);
-                }
-            }
-            else
-            {
-                return 0;
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.BootDiskSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.BootDiskSize));
             }
         }
 
@@ -223,14 +185,9 @@ namespace Neon.Kube.ClusterDef
                 ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(Memory)}");
             }
 
-            if (OsDisk != null)
+            if (BootDiskSize != null)
             {
-                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OsDisk)}");
-            }
-
-            if (OpenEbsDisk != null)
-            {
-                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OpenEbsDisk)}");
+                ClusterDefinition.ValidateSize(BootDiskSize, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(BootDiskSize)}");
             }
         }
     }

@@ -150,7 +150,7 @@ namespace Neon.Kube.Hosting.Azure
         // published to the marketplace by Canonical.  We use the [neon-image] tool
         // from the NeonCLOUD repo to create Azure Gen2 base and node images used
         // to provision the cluster.  Gen2 images work on most Azure VM sizes and offer
-        // larger OS disks, improved performance, more memory and support for premium
+        // larger boot disks, improved performance, more memory and support for premium
         // and ultra storage.  There's a decent chance that Azure will deprecate Gen1
         // VMs at some point, so NeonKUBE is going to only support Gen2 images to
         // simplify things.
@@ -536,7 +536,7 @@ namespace Neon.Kube.Hosting.Azure
             public bool PremiumIO { get; }
 
             /// <summary>
-            /// Indicates whether the SKU supports ephemeral OS disks.
+            /// Indicates whether the SKU supports ephemeral boot disks.
             /// </summary>
             public bool EphemeralOSDiskSupported { get; }
 
@@ -629,7 +629,7 @@ namespace Neon.Kube.Hosting.Azure
         /// <summary>
         /// Logical unit number (LUN) for a node's optional OpenEBS Mayastor disk.
         /// </summary>
-        private const int openEbsDiskLun = 1;
+        private const int mayastorDiskLun = 1;
 
         /// <summary>
         /// Minimum Azure supported TCP reset idle timeout in minutes.
@@ -701,23 +701,23 @@ namespace Neon.Kube.Hosting.Azure
         /// Converts a <see cref="AzureStorageType"/> to the underlying Azure storage type.
         /// </summary>
         /// <param name="azureStorageType">The input storage type.</param>
-        /// <param name="osDisk">Optionally indicates that the target disk will be used as the operating system boot disk.</param>
+        /// <param name="isBootDisk">Optionally indicates that the target disk will be used as the operating system boot disk.</param>
         /// <returns>The underlying Azure storage type.</returns>
         /// <remarks>
         /// Azure does not currently support booting the virtual machine operating system from
-        /// a <see cref="AzureStorageType.UltraSSD"/> disk.  Pass <paramref name="osDisk"/> as <c>true</c>
-        /// for OS disks and then this method will return the next best storage type <see cref="AzureStorageType.PremiumSSD"/>
+        /// a <see cref="AzureStorageType.UltraSSD"/> disk.  Pass <paramref name="isBootDisk"/> as <c>true</c>
+        /// for boot disks and then this method will return the next best storage type <see cref="AzureStorageType.PremiumSSD"/>
         /// for this case.
         /// </remarks>
-        private static StorageAccountType ToAzureStorageType(AzureStorageType azureStorageType, bool osDisk = false)
+        private static StorageAccountType ToAzureStorageType(AzureStorageType azureStorageType, bool isBootDisk = false)
         {
             switch (azureStorageType)
             {
                 case AzureStorageType.PremiumSSD:   return StorageAccountType.PremiumLrs;
                 case AzureStorageType.StandardHDD:  return StorageAccountType.StandardLrs;
                 case AzureStorageType.StandardSSD:  return StorageAccountType.StandardSsdLrs;
-                case AzureStorageType.PremiumSSDv2: return osDisk ? StorageAccountType.PremiumV2Lrs : StorageAccountType.UltraSsdLrs;
-                case AzureStorageType.UltraSSD:     return osDisk ? StorageAccountType.PremiumLrs : StorageAccountType.UltraSsdLrs;
+                case AzureStorageType.PremiumSSDv2: return isBootDisk ? StorageAccountType.PremiumV2Lrs : StorageAccountType.UltraSsdLrs;
+                case AzureStorageType.UltraSSD:     return isBootDisk ? StorageAccountType.PremiumLrs : StorageAccountType.UltraSsdLrs;
                 default:                            throw new NotImplementedException();
             }
         }
@@ -1158,6 +1158,7 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("virtual network", state => CreateVirtualNetworkAsync());
             controller.AddGlobalStep("ssh config", ConfigureNodeSsh, quiet: true);
             controller.AddGlobalStep("load balancer", state => CreateLoadBalancerAsync());
+
             controller.AddGlobalStep("listing virtual machines",
                 async state =>
                 {
@@ -1199,6 +1200,7 @@ namespace Neon.Kube.Hosting.Azure
                     }
                 },
                 quiet: true);
+
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
@@ -1207,6 +1209,7 @@ namespace Neon.Kube.Hosting.Azure
                     node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupState.SshKey.PrivatePEM));
                 },
                 quiet: true);
+
             controller.AddNodeStep("virtual machines", CreateVmAsync);
             controller.AddGlobalStep("internet access", state => UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.AllowNodeSsh));
         }
@@ -1214,9 +1217,12 @@ namespace Neon.Kube.Hosting.Azure
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster               = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition     = cluster.SetupState.ClusterDefinition;
+            var openEbsOptions        = clusterDefinition.Storage.OpenEbs;
+            var openEbsHostingOptions = clusterDefinition.Hosting.Azure;
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
+            if (openEbsOptions.Mayastor)
             {
                 // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -1229,9 +1235,9 @@ namespace Neon.Kube.Hosting.Azure
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
-                        var azureVm            = nodeNameToVm[node.Name];
-                        var vm                 = azureVm.Vm;
-                        var openEbsStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEbsStorageType);
+                        var azureVm             = nodeNameToVm[node.Name];
+                        var vm                  = azureVm.Vm;
+                        var mayastorStorageType = ToAzureStorageType(openEbsHostingOptions.MayastorStorageType);
 
                         node.Status = "openebs: checking";
 
@@ -1244,16 +1250,16 @@ namespace Neon.Kube.Hosting.Azure
                                 StorageProfile = vm.Data.StorageProfile
                             };
 
-                            var openEbsDiskSize = ByteUnits.Parse(node.Metadata.Azure.OpenEbsDiskSize);
+                            var mayastorDiskSize = ByteUnits.Parse(openEbsHostingOptions.MayastorDiskSize);
 
                             vmPatch.StorageProfile.DataDisks.Add(
-                                new VirtualMachineDataDisk(openEbsDiskLun, DiskCreateOptionType.Empty)
+                                new VirtualMachineDataDisk(mayastorDiskLun, DiskCreateOptionType.Empty)
                                 {
-                                    DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.NodeProxy.Metadata.Azure.StorageType, openEbsDiskSize),
+                                    DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.NodeProxy.Metadata.Azure.StorageType, mayastorDiskSize),
                                     Caching      = CachingType.None,
                                     ManagedDisk  = new VirtualMachineManagedDisk()
                                     {
-                                        StorageAccountType = openEbsStorageType
+                                        StorageAccountType = mayastorStorageType
                                     },
                                     DeleteOption = DiskDeleteOptionType.Delete,
                                 });
@@ -2035,11 +2041,11 @@ namespace Neon.Kube.Hosting.Azure
 
                 // Update the node labels to match the actual VM capabilities.
 
-                node.Metadata.Labels.StorageOSDiskSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
-                node.Metadata.Labels.StorageOSDiskHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
-                node.Metadata.Labels.StorageOSDiskEphemeral = false;
-                node.Metadata.Labels.StorageOSDiskLocal     = false;
-                node.Metadata.Labels.StorageOSDiskRedundant = true;
+                node.Metadata.Labels.StorageBootDiskSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.BootDiskSize))} GiB";
+                node.Metadata.Labels.StorageBootDiskHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
+                node.Metadata.Labels.StorageBootDiskEphemeral = false;
+                node.Metadata.Labels.StorageBootDiskLocal     = false;
+                node.Metadata.Labels.StorageBootDiskRedundant = true;
             }
         }
 
@@ -2570,9 +2576,9 @@ namespace Neon.Kube.Hosting.Azure
             node.Status = "create: virtual machine";
 
             var azureNodeOptions     = azureVm.NodeProxy.Metadata.Azure;
-            var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
+            var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, isBootDisk: true);
             var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
-            var diskSize             = ByteUnits.Parse(node.Metadata.Azure.DiskSize);
+            var diskSize             = ByteUnits.Parse(node.Metadata.Azure.BootDiskSize);
 
             //-----------------------------------------------------------------
             // We need deploy a script that runs when the VM boots to: 

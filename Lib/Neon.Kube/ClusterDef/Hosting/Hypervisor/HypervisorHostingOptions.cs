@@ -46,9 +46,8 @@ namespace Neon.Kube.ClusterDef
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultMemory      = "16 GiB";
-        internal const string DefaultOsDisk      = "128 GiB";
-        internal const string DefaultOpenEbsDisk = "128 GiB";
+        internal const string DefaultMemory       = "16 GiB";
+        internal const string DefaultBootDiskSize = "128 GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -117,25 +116,23 @@ namespace Neon.Kube.ClusterDef
         public string Memory { get; set; } = DefaultMemory;
 
         /// <summary>
-        /// Specifies the default size of the operating system disk for cluster virtual machines.  This is specified as a string
+        /// Specifies the default size of the boot disk for cluster virtual machines.  This is specified as a string
         /// that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-        /// or <b>1TiB</b>.  This defaults to <b>128GiB</b>.
+        /// or <b>1TiB</b>.  This defaults to <b>128GiB</b> and can be overriden for specific nodes via <see cref="HypervisorNodeOptions.BootDiskSize"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
-        [DefaultValue(DefaultOsDisk)]
-        public string OsDisk { get; set; } = DefaultOsDisk;
+        [JsonProperty(PropertyName = "BootDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "bootDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(DefaultBootDiskSize)]
+        public string BootDiskSize { get; set; } = DefaultBootDiskSize;
 
         /// <summary>
-        /// Specifies the default size of the second block device to be created for nodes enabled for
-        /// OpenEBS.  This is specified as a string that can be a byte count or a number with 
-        /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
-        /// to <b>128GiB</b>.
+        /// Optionally specifies the size for cluster node secondary data disks used for OpenEBS
+        /// Mayastor storage. This defaults to <b>10 GiB</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
-        [DefaultValue(DefaultOpenEbsDisk)]
-        public string OpenEbsDisk { get; set; } = DefaultOpenEbsDisk;
+        [JsonProperty(PropertyName = "MayastorDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mayastorDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.DefaultMayastorDiskSize)]
+        public string MayastorDiskSize { get; set; } = KubeConst.DefaultMayastorDiskSize;
 
         /// <summary>
         /// <para>
@@ -275,12 +272,20 @@ namespace Neon.Kube.ClusterDef
 
             // Check memory and disk sizes.
 
-            Memory ??= DefaultMemory;
-            OsDisk ??= DefaultOsDisk;
+            Memory       ??= DefaultMemory;
+            BootDiskSize ??= DefaultBootDiskSize;
 
             ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{optionsPrefix}.{nameof(Memory)}");
-            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{optionsPrefix}.{nameof(OsDisk)}");
-            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{optionsPrefix}.{nameof(OpenEbsDisk)}");
+            ClusterDefinition.ValidateSize(BootDiskSize, this.GetType(), $"{optionsPrefix}.{nameof(BootDiskSize)}");
+
+            // Verify [MayastorDiskSize].
+
+            MayastorDiskSize ??= KubeConst.DefaultMayastorDiskSize;
+
+            if (!ByteUnits.TryParse(MayastorDiskSize, out var mayastorDiskSize) || mayastorDiskSize <= KubeConst.MinMayastorDiskSizeGib)
+            {
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(MayastorDiskSize)}={MayastorDiskSize}] must be >= {KubeConst.MinMayastorDiskSizeGib} GiB.");
+            }
 
             // Verify that the hypervisor host machines have unique names and addresses.
 

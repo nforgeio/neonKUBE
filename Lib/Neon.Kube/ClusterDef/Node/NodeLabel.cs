@@ -115,78 +115,78 @@ namespace Neon.Kube.ClusterDef
         // Define the node storage related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageOSDiskSize"/>.
+        /// Reserved label name for <see cref="StorageBootDiskSize"/>.
         /// </summary>
-        public const string LabelStorageOSDiskSize = ClusterDefinition.ReservedNodePrefix + "storage.osdisk.size";
+        public const string LabelStorageBootDiskSize = ClusterDefinition.ReservedNodePrefix + "storage.bootdisk.size";
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageOSDiskLocal"/>.
+        /// Reserved label name for <see cref="StorageBootDiskLocal"/>.
         /// </summary>
-        public const string LabelStorageOSDiskLocal = ClusterDefinition.ReservedNodePrefix + "storage.osdisk.local";
+        public const string LabelStorageBootDiskLocal = ClusterDefinition.ReservedNodePrefix + "storage.bootdisk.local";
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageOSDiskHDD"/>.
+        /// Reserved label name for <see cref="StorageBootDiskHDD"/>.
         /// </summary>
-        public const string LabelStorageOSDiskHDD = ClusterDefinition.ReservedNodePrefix + "storage.osdisk.hdd";
+        public const string LabelStorageBootDiskHDD = ClusterDefinition.ReservedNodePrefix + "storage.bootdisk.hdd";
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageOSDiskRedundant"/>.
+        /// Reserved label name for <see cref="StorageBootDiskRedundant"/>.
         /// </summary>
-        public const string LabelStorageOSDiskRedundant = ClusterDefinition.ReservedNodePrefix + "storage.osdisk.redundant";
+        public const string LabelStorageBootDiskRedundant = ClusterDefinition.ReservedNodePrefix + "storage.bootdisk.redundant";
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageOSDiskEphemeral"/>.
+        /// Reserved label name for <see cref="StorageBootDiskEphemeral"/>.
         /// </summary>
-        public const string LabelStorageOSDiskEphemeral = ClusterDefinition.ReservedNodePrefix + "storage.osdisk.ephemeral";
+        public const string LabelStorageBootDiskEphemeral = ClusterDefinition.ReservedNodePrefix + "storage.bootdisk.ephemeral";
 
         /// <summary>
-        /// <b>node.neonkube.io/storage.osdisk.size</b> [<c>string</c>]: Specifies the node OS drive 
+        /// <b>node.neonkube.io/storage.bootdisk.size</b> [<c>string</c>]: Specifies the node boot disk 
         /// storage capacity in bytes.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageOSDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "storageOSDiskSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageBootDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "storageBootDiskSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string StorageOSDiskSize { get; set; }
+        public string StorageBootDiskSize { get; set; }
 
         /// <summary>
-        /// <b>node.neonkube.io/storage.osdisklocal</b> [<c>bool</c>]: Specifies whether the node storage is hosted
+        /// <b>node.neonkube.io/storage.bootdisk.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
         /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageOSDiskLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "storageOSDiskLocal", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageBootDiskLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "storageBootDiskLocal", ApplyNamingConventions = false)]
         [DefaultValue(true)]
-        public bool StorageOSDiskLocal { get; set; } = true;
+        public bool StorageBootDiskLocal { get; set; } = true;
 
         /// <summary>
-        /// <b>node.neonkube.io/storage.osdisk.hdd</b> [<c>bool</c>]: Indicates that the storage
+        /// <b>node.neonkube.io/storage.bootdisk.hdd</b> [<c>bool</c>]: Indicates that the storage
         /// is backed by a spinning drive as opposed to a SSD.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageOSDiskHDD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "storageOSDiskHDD", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageBootDiskHDD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "storageBootDiskHDD", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool StorageOSDiskHDD { get; set; } = false;
+        public bool StorageBootDiskHDD { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/storage.osdisk.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
+        /// <b>node.neonkube.io/storage.bootdisk.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
         /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageOSDiskRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "storageOSDiskRedundant", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageBootDiskRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "storageBootDiskRedundant", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool StorageOSDiskRedundant { get; set; } = false;
+        public bool StorageBootDiskRedundant { get; set; } = false;
 
         /// <summary>
-        /// <b>node.neonkube.io/storage.osdisk.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
+        /// <b>node.neonkube.io/storage.bootdisk.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageOSDiskEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "storageOSDiskEphemeral", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageBootDiskEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "storageBootDiskEphemeral", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool StorageOSDiskEphemeral { get; set; } = false;
+        public bool StorageBootDiskEphemeral { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Define physical host labels.
@@ -507,13 +507,13 @@ namespace Neon.Kube.ClusterDef
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelOpenEbsStorage, NeonHelper.ToBoolString(SystemOpenEbsStorage)));
+                list.Add(new KeyValuePair<string, object>(LabelOpenEbsStorage,              NeonHelper.ToBoolString(SystemOpenEbsStorage)));
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskSize, ByteUnits.Parse(StorageOSDiskSize)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskLocal,          NeonHelper.ToBoolString(StorageOSDiskLocal)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskHDD,            NeonHelper.ToBoolString(StorageOSDiskHDD)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskRedundant,      NeonHelper.ToBoolString(StorageOSDiskRedundant)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageOSDiskEphemeral,      NeonHelper.ToBoolString(StorageOSDiskEphemeral)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageBootDiskSize,         ByteUnits.Parse(StorageBootDiskSize)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageBootDiskLocal,        NeonHelper.ToBoolString(StorageBootDiskLocal)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageBootDiskHDD,          NeonHelper.ToBoolString(StorageBootDiskHDD)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageBootDiskRedundant,    NeonHelper.ToBoolString(StorageBootDiskRedundant)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageBootDiskEphemeral,    NeonHelper.ToBoolString(StorageBootDiskEphemeral)));
 
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,            PhysicalLocation));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,             PhysicalMachine));

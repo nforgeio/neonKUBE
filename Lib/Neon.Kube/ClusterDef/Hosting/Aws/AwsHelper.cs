@@ -59,7 +59,7 @@ namespace Neon.Kube.ClusterDef
         /// <param name="driveSizeBytes">The requested size in bytes.</param>
         /// <returns>The actual AWS volume size in GiB.</returns>
         /// <remarks>
-        /// We're not going to allow volumes smaller than <see cref="KubeConst.MinNodeDiskSizeGiB"/>
+        /// We're not going to allow volumes smaller than <see cref="KubeConst.MinNodeBootDiskSizeGiB"/>
         /// or larger than 16 TiB, the current AWS limit for volumes with 4 KiB blocks.  We're also
         /// going to round up to the nearest GiB.
         /// </remarks>
@@ -67,13 +67,13 @@ namespace Neon.Kube.ClusterDef
         {
             var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
 
-            if (driveSizeGiB < KubeConst.MinNodeDiskSizeGiB)
+            if (driveSizeGiB < KubeConst.MinNodeBootDiskSizeGiB)
             {
-                driveSizeGiB = KubeConst.MinNodeDiskSizeGiB;
+                driveSizeGiB = KubeConst.MinNodeBootDiskSizeGiB;
             }
-            else if (driveSizeGiB > KubeConst.MaxNodeDiskSizeGiB)
+            else if (driveSizeGiB > KubeConst.MaxNodeBootDiskSizeGiB)
             {
-                driveSizeGiB = KubeConst.MaxNodeDiskSizeGiB;
+                driveSizeGiB = KubeConst.MaxNodeBootDiskSizeGiB;
             }
 
             return Math.Ceiling(driveSizeGiB);

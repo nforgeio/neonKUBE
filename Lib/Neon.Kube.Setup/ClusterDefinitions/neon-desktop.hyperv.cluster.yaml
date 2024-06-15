@@ -15,7 +15,7 @@ hosting:
   hypervisor:
     vcpus: 4
     memory: 16 GiB
-    osDisk: 48 GiB
+    bootDiskSize: 48 GiB
 network:
   premiseSubnet: 100.64.0.0/24
   gateway: 100.64.0.1

@@ -398,8 +398,8 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine   = node.Hypervisor.Host;
-                node.Labels.StorageOSDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine     = node.Hypervisor.Host;
+                node.Labels.StorageBootDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetBootDiskSizeBytes(cluster.SetupState.ClusterDefinition));
             }
 
             // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.
@@ -492,7 +492,8 @@ namespace Neon.Kube.Hosting.XenServer
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
             {
@@ -532,7 +533,7 @@ namespace Neon.Kube.Hosting.XenServer
                                 var disk = new XenVirtualDisk()
                                 {
                                     Name        = $"{GetVmName(node)}: openebs",
-                                    Size        = node.Metadata.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
+                                    Size        = ByteUnits.Parse(clusterDefinition.Hosting.Hypervisor.MayastorDiskSize),
                                     Description = "OpenEBS Mayastor"
                                 };
 
@@ -989,10 +990,10 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in GetHostedNodes(xenClient))
             {
-                var vmName      = GetVmName(node);
-                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
-                var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
-                var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var vmName        = GetVmName(node);
+                var vcpus         = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
+                var memoryBytes   = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
+                var bootDiskBytes = node.Metadata.Hypervisor.GetBootDiskSizeBytes(cluster.SetupState.ClusterDefinition);
 
                 var tags = new string[]
                 {
@@ -1005,7 +1006,7 @@ namespace Neon.Kube.Hosting.XenServer
                 var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersion.NeonKubeWithBranchPart}",
                     vcpus:                      vcpus,
                     memoryBytes:                memoryBytes,
-                    diskBytes:                  osDiskBytes,
+                    diskBytes:                  bootDiskBytes,
                     snapshot:                   cluster.Hosting.XenServer.Snapshot,
                     primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository,
                     description:                $"NeonKUBE Cluster: {cluster.Name}",
@@ -1053,14 +1054,14 @@ namespace Neon.Kube.Hosting.XenServer
                     // the virtual disk.
                     //
                     // Note that there should only be one unpartitioned disk
-                    // at this point: the OS disk.
+                    // at this point: the boot disk.
 
                     var partitionedDisks = node.ListPartitionedDisks();
-                    var osDisk           = partitionedDisks.Single();
+                    var bootDisk         = partitionedDisks.Single();
 
-                    node.Status = $"resize: OS disk";
+                    node.Status = $"resize: boot disk";
 
-                    var response = node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
+                    var response = node.SudoCommand($"growpart {bootDisk} 2", RunOptions.None);
 
                     // Ignore errors reported when the partition is already at its
                     // maximum size and cannot be grown:
@@ -1072,7 +1073,7 @@ namespace Neon.Kube.Hosting.XenServer
                         response.EnsureSuccess();
                     }
 
-                    node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
+                    node.SudoCommand($"resize2fs {bootDisk}2", RunOptions.FaultOnError);
                 }
                 finally
                 {
@@ -1139,7 +1140,8 @@ namespace Neon.Kube.Hosting.XenServer
             // NOTE: We're going to allow CPUs to be over subscribed but not RAM or disk.
             //       We will honor the memory and disk reservations for XenServer.
 
-            var availability = new HostingResourceAvailability();
+            var availability      = new HostingResourceAvailability();
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             //-----------------------------------------------------------------
             // Create a dictionary mapping the XenServer host name to a record
@@ -1195,7 +1197,7 @@ namespace Neon.Kube.Hosting.XenServer
                         {
                             ResourceType = HostingConstrainedResourceType.VmHost,
                             Details      = "XenServer host is offline",
-                            Nodes        = cluster.SetupState.ClusterDefinition.Nodes
+                            Nodes        = clusterDefinition.Nodes
                                                .Where(node => node.Hypervisor.Host.Equals(offlineHostname, StringComparison.InvariantCultureIgnoreCase))
                                                .OrderBy(node => node.Name)
                                                .Select(node => node.Name)
@@ -1219,17 +1221,17 @@ namespace Neon.Kube.Hosting.XenServer
                 hostnameToRequiredDisk.Add(xenClient.Name, 0);
             }
 
-            foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
+            foreach (var node in clusterDefinition.Nodes)
             {
                 var hostname = node.Hypervisor.Host;
 
-                hostnameToRequiredMemory[hostname] += node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
+                hostnameToRequiredMemory[hostname] += node.Hypervisor.GetMemory(clusterDefinition);
 
-                var requiredDiskForNode = node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var requiredDiskForNode = node.Hypervisor.GetBootDiskSizeBytes(clusterDefinition);
 
-                if (node.OpenEbsStorage && cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
+                if (node.OpenEbsStorage && clusterDefinition.Storage.OpenEbs.Mayastor)
                 {
-                    requiredDiskForNode += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
+                    requiredDiskForNode += (long)ByteUnits.Parse(clusterDefinition.Hosting.Hypervisor.MayastorDiskSize);
                 }
 
                 hostnameToRequiredDisk[hostname] += requiredDiskForNode;
@@ -1238,7 +1240,7 @@ namespace Neon.Kube.Hosting.XenServer
             //-----------------------------------------------------------------
             // Construct and return the resource availability.
 
-            var hostNodes = cluster.SetupState.ClusterDefinition.Nodes.ToLookup(node => node.Hypervisor.Host, node => node);
+            var hostNodes = clusterDefinition.Nodes.ToLookup(node => node.Hypervisor.Host, node => node);
 
             foreach (var hostNodeGroup in hostNodes)
             {

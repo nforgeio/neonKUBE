@@ -74,8 +74,8 @@ hosting:
     namePrefix: test-tiny
     vcpus: 4
     memory: 16 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     hosts:
     - name: XEN-TEST
       address: $<profile:xen-test.host>
@@ -123,8 +123,8 @@ hosting:
     namePrefix: test-small
     vcpus: 4
     memory: 8 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     hosts:
     - name: XEN-TEST
       address: $<profile:xen-test.host>
@@ -187,8 +187,8 @@ hosting:
     namePrefix: test-large
     vcpus: 4
     memory: 8 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     hosts:
     - name: XEN-TEST
       address: $<profile:xen-test.host>

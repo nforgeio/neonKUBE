@@ -47,7 +47,7 @@ namespace Neon.Kube.ClusterDef
         /// Specifies the minimum number of <b>2 MiB</b> (or <b>2 GiB RAM)</b> hugepages required by
         /// Mayastor on the nodes where it is deployed.
         /// </summary>
-        public const int MinHugepages2Gi = 1024;
+        public const int MinMayastorHugepages2Gi = 1024;
 
         /// <summary>
         /// Optionally enables the Mayastor replicated storage engine for the cluster.  This
@@ -63,10 +63,10 @@ namespace Neon.Kube.ClusterDef
         /// Mayastor engine deployed on storage nodes.  This defaults to <b>1024 pages</b>
         /// which is equivalant to <b>2 GiB RAM</b> and is the minimum required by Mayastor.
         /// </summary>
-        [JsonProperty(PropertyName = "Hugepages", Required = Required.Default)]
-        [YamlMember(Alias = "hugepages", ApplyNamingConventions = false)]
-        [DefaultValue(MinHugepages2Gi)]
-        public int Hugepages2Gi { get; set; } = MinHugepages2Gi;
+        [JsonProperty(PropertyName = "MayastorHugepages2Gi", Required = Required.Default)]
+        [YamlMember(Alias = "mayastorHugepages2Gi", ApplyNamingConventions = false)]
+        [DefaultValue(MinMayastorHugepages2Gi)]
+        public int MayastorHugepages2Gi { get; set; } = MinMayastorHugepages2Gi;
 
         /// <summary>
         /// Validates the options.
@@ -88,11 +88,14 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException("OpenEBS Mayastor engine requires at least 3 cluster worker or control-plane nodes.");
             }
 
-            // Validate the Mayastor hugepage count.
+            // Validate the Mayastor properties.
 
-            if (openEbsOptions.Mayastor && Hugepages2Gi < MinHugepages2Gi)
+            if (openEbsOptions.Mayastor)
             {
-                throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(Hugepages2Gi)}={Hugepages2Gi} must be at least [{MinHugepages2Gi}].");
+                if (MayastorHugepages2Gi < MinMayastorHugepages2Gi)
+                {
+                    throw new ClusterDefinitionException($"{optionsPrefix}.{nameof(MayastorHugepages2Gi)}={MayastorHugepages2Gi} must be at least [{MinMayastorHugepages2Gi}].");
+                }
             }
         }
     }

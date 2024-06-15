@@ -215,7 +215,7 @@ namespace Neon.Kube.Hosting
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 
-        /// name when an uninitialized data disk exists or "PRIMARY" when the  OS disk
+        /// name when an uninitialized data disk exists or "PRIMARY" when the boot disk
         /// will be used for data.
         /// </summary>
         /// <returns>The disk device name or "PRIMARY".</returns>

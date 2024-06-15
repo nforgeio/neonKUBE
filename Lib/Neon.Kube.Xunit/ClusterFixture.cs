@@ -98,7 +98,7 @@ namespace Neon.Kube.Xunit
     ///     namePrefix: "test"
     ///     vcpus: 4
     ///     memory: 8 GiB
-    ///     osDisk: 64 GiB
+    ///     bootDisk: 64 GiB
     /// network:
     ///   premiseSubnet: 100.64.0.0/24
     ///   gateway: 100.64.0.1
