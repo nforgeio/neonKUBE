@@ -114,7 +114,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PodMemoryLimit", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "podMemoryLimit", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public decimal? PodMemoryLimit { get; set; }
+        public long? PodMemoryLimit { get; set; }
 
         /// <summary>
         /// Specifies the memory request for each service pod or <c>null</c> when this property is not set.
@@ -122,7 +122,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PodMemoryRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "podMemoryRequest", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public decimal? PodMemoryRequest { get; set; }
+        public long? PodMemoryRequest { get; set; }
 
         /// <summary>
         /// <para>
