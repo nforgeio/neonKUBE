@@ -307,8 +307,6 @@ namespace Neon.Kube.Setup
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            k8s.KubeConfigModels.K8SConfiguration v;    // $debug(jefflill): DELETE THIS!
-
             if (controller.ContainsKey(KubeSetupProperty.K8sClient))
             {
                 return;     // Already connected

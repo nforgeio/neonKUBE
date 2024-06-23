@@ -704,7 +704,6 @@ echo vm.nr_hugepages = {nodeAdvice.TotalHugePages} >> /etc/sysctl.conf
                 cluster.Id               =
                 setupState.ClusterId     = KubeConst.DesktopClusterId;
                 setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
-                setupState.ClusterName   = clusterDefinition.Name;
             }
             else
             {
