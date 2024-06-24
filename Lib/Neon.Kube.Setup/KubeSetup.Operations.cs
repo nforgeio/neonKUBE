@@ -303,6 +303,11 @@ spec:
                         controller.SetGlobalStepStatus(error);
                     }
 
+                    // We'll report the failure by setting the faulting
+                    // the control-plane node we're using.
+
+                    controlNode.IsFaulted = true;
+
                     return true;
                 },
                 maxAttempts:   maxRetries,
@@ -1212,6 +1217,8 @@ exit 1
                                     }
                                 },
                                 cancellationToken: controller.CancellationToken);
+
+                            // We don't need the [dnsutils] pod any more.
 
                             await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });

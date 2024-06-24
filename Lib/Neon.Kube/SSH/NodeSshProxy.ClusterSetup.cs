@@ -1051,7 +1051,7 @@ service ntp restart
             {
                 sb.AppendLine($"NEON_NODE_ROLE={nodeDefinition.Role}");
                 sb.AppendLine($"NEON_NODE_IP={nodeDefinition.Address}");
-                sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageOSDiskHDD.ToString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageBootDiskHDD.ToString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolder.Bin}");
@@ -1329,7 +1329,7 @@ EOF
                     controller.LogProgress(this, verb: "install", message: "kubelet");
 
                     // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
-                    // OS disk for most nodes and customize this at 93/95% for clusters with OS disks
+                    // boot disk for most nodes and customize this at 93/95% for clusters with boot disks
                     // less than 64GB.  We want higher thesholds for smaller disks to leave more space
                     // for user images and local volumes, especially for the NeonDESKTOP cluster.
                     //

@@ -61,9 +61,9 @@ namespace Neon.Kube.ClusterDef
         {
             var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
 
-            if (driveSizeGiB < KubeConst.MinNodeDiskSizeGiB)
+            if (driveSizeGiB < KubeConst.MinNodeBootDiskSizeGiB)
             {
-                driveSizeGiB = KubeConst.MinNodeDiskSizeGiB;
+                driveSizeGiB = KubeConst.MinNodeBootDiskSizeGiB;
             }
 
             switch (storageType)
@@ -181,9 +181,9 @@ namespace Neon.Kube.ClusterDef
                     throw new NotImplementedException();
             }
 
-            if (driveSizeGiB < KubeConst.MinNodeDiskSizeGiB)
+            if (driveSizeGiB < KubeConst.MinNodeBootDiskSizeGiB)
             {
-                driveSizeGiB = KubeConst.MinNodeDiskSizeGiB;
+                driveSizeGiB = KubeConst.MinNodeBootDiskSizeGiB;
             }
 
             return driveSizeGiB;

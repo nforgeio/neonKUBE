@@ -100,16 +100,16 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster.  Increase [{optionsPrefix}.{nameof(MinioOptions.VolumesPerNode)}] so the number of nodes hosting Minio times [{VolumesPerNode}] is at least [4].");
             }
 
-            var minOsDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumOsDiskAfterMinio);
+            var minBootDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumBootSizeDiskAfterMinio);
 
             foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.SystemMinioServices))
             {
-                var osDisk       = ByteUnits.Parse(node.GetOsDiskSize(clusterDefinition));
+                var bootDisk     = ByteUnits.Parse(node.GetBootDiskSize(clusterDefinition));
                 var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;
 
-                if (osDisk - minioVolumes < minOsDiskAfterMinio)
+                if (bootDisk - minioVolumes < minBootDiskAfterMinio)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] Operating System (boot) disk is too small.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true, spaceBeforeUnit: false)}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] Operating System (boot) disk is too small.  Increase this to at least [{ByteUnits.Humanize(minBootDiskAfterMinio + minioVolumes, powerOfTwo: true, spaceBeforeUnit: false)}].");
                 }
             }
         }

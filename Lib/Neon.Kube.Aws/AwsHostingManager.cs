@@ -689,19 +689,14 @@ namespace Neon.Kube.Hosting.Aws
         private const int firstEgressAclRuleNumber = 2000;
 
         /// <summary>
-        /// Identifies the instance VM block device for the OS disk. 
+        /// Identifies the instance VM block device for the boot disk. 
         /// </summary>
-        private const string osDeviceName = "/dev/sda1";
-
-        /// <summary>
-        /// Identifies the instance VM block device for the data disk. 
-        /// </summary>
-        private const string dataDeviceName = "/dev/sdb";
+        private const string bootDeviceName = "/dev/sda1";
 
         /// <summary>
         /// Identifies the target VM block device for the OpenEBS Mayastor block device. 
         /// </summary>
-        private const string openEbsDeviceName = "/dev/sdf";
+        private const string mayastorDeviceName = "/dev/sdf";
 
         /// <summary>
         /// Some AWS operations (like creating a NAT gateway or waiting for a load balancer
@@ -1373,9 +1368,12 @@ namespace Neon.Kube.Hosting.Aws
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(object.ReferenceEquals(controller, this.controller));
 
-            var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster               = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition     = cluster.SetupState.ClusterDefinition;
+            var openEbsOptions        = clusterDefinition.Storage.OpenEbs;
+            var openEbsHostingOptions = clusterDefinition.Hosting.Aws;
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
+            if (openEbsOptions.Mayastor)
             {
                 // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -1390,11 +1388,11 @@ namespace Neon.Kube.Hosting.Aws
                     {
                         node.Status = "openebs: checking";
 
-                        var volumeName        = GetResourceName($"{node.Name}-openebs");
-                        var awsInstance       = nodeNameToAwsInstance[node.Name];
-                        var openEbsVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEbsVolumeType);
-                        var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-                        var volume            = (Volume)null;
+                        var volumeName         = GetResourceName($"{node.Name}-openebs");
+                        var awsInstance        = nodeNameToAwsInstance[node.Name];
+                        var mayastorVolumeType = ToEc2VolumeType(hostingOptions.Aws.MayastorVolumeType);
+                        var volumePagenator    = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+                        var volume             = (Volume)null;
 
                         // Check if we've already created the volume.
 
@@ -1420,8 +1418,8 @@ namespace Neon.Kube.Hosting.Aws
                                 new CreateVolumeRequest()
                                 {
                                     AvailabilityZone   = availabilityZone,
-                                    VolumeType         = openEbsVolumeType,
-                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEbsVolumeSize) / ByteUnits.GibiBytes),
+                                    VolumeType         = mayastorVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(openEbsHostingOptions.MayastorVolumeSize) / ByteUnits.GibiBytes),
                                     MultiAttachEnabled = false,
                                     TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
                                 });
@@ -1462,7 +1460,7 @@ namespace Neon.Kube.Hosting.Aws
                                 {
                                     VolumeId   = volume.VolumeId,
                                     InstanceId = awsInstance.InstanceId,
-                                    Device     = openEbsDeviceName,
+                                    Device     = mayastorDeviceName,
                                 });
                         }
 
@@ -1478,7 +1476,7 @@ namespace Neon.Kube.Hosting.Aws
                                 {
                                     new InstanceBlockDeviceMappingSpecification()
                                     {
-                                        DeviceName = openEbsDeviceName,
+                                        DeviceName = mayastorDeviceName,
                                         Ebs        = new EbsInstanceBlockDeviceSpecification()
                                         {
                                             DeleteOnTermination = true,
@@ -2280,11 +2278,11 @@ namespace Neon.Kube.Hosting.Aws
 
                 // Update the node labels to match the actual VM capabilities.
 
-                node.Metadata.Labels.StorageOSDiskSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
-                node.Metadata.Labels.StorageOSDiskHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
-                node.Metadata.Labels.StorageOSDiskEphemeral = false;
-                node.Metadata.Labels.StorageOSDiskLocal     = false;
-                node.Metadata.Labels.StorageOSDiskRedundant = true;
+                node.Metadata.Labels.StorageBootDiskSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.BootVolumeSize))} GiB";
+                node.Metadata.Labels.StorageBootDiskHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
+                node.Metadata.Labels.StorageBootDiskEphemeral = false;
+                node.Metadata.Labels.StorageBootDiskLocal     = false;
+                node.Metadata.Labels.StorageBootDiskRedundant = true;
             }
         }
 
@@ -3375,6 +3373,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         break;
                 }
 
+                var awsHostingOptions = cluster.SetupState.ClusterDefinition.Hosting.Aws;
+
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
@@ -3397,21 +3397,21 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         {
                             new BlockDeviceMapping()
                             {
-                                DeviceName = osDeviceName,
+                                DeviceName = bootDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
                                     VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
-                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.VolumeSize) / ByteUnits.GibiBytes),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.BootVolumeSize) / ByteUnits.GibiBytes),
                                     DeleteOnTermination = true
                                 }
                             },
                             new BlockDeviceMapping()
                             {
-                                DeviceName = dataDeviceName,
+                                DeviceName = mayastorDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
-                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.OpenEbsVolumeType),
-                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.OpenEbsVolumeSize) / ByteUnits.GibiBytes),
+                                    VolumeType          = ToEc2VolumeType(awsHostingOptions.MayastorVolumeType),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsHostingOptions.MayastorVolumeSize) / ByteUnits.GibiBytes),
                                     DeleteOnTermination = true
                                 }
                             }
@@ -3546,9 +3546,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // name.  The node may (always?) also have the boot volume.  I believe
             // that this might not be present in some situations but I'm not sure.
             // 
-            // We'll assume that any second volume will be the OS disk.
+            // We'll assume that any second volume will be the boot disk.
 
-            var dataVolumeMapping = awsInstance.Instance.BlockDeviceMappings.Single(mapping => mapping.DeviceName == dataDeviceName);
+            var dataVolumeMapping = awsInstance.Instance.BlockDeviceMappings.Single(mapping => mapping.DeviceName == mayastorDeviceName);
 
             await ec2Client.CreateTagsAsync(
                 new CreateTagsRequest()
@@ -3557,14 +3557,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                      Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.data"), new ResourceTag(neonNodeNameTagKey, node.Name))
                 });
 
-            var osVolumeMapping = awsInstance.Instance.BlockDeviceMappings.SingleOrDefault(mapping => mapping.DeviceName == osDeviceName);
+            var bootVolumeMapping = awsInstance.Instance.BlockDeviceMappings.SingleOrDefault(mapping => mapping.DeviceName == bootDeviceName);
 
-            if (osVolumeMapping != null)
+            if (bootVolumeMapping != null)
             {
                 await ec2Client.CreateTagsAsync(
                     new CreateTagsRequest()
                     {
-                        Resources = new List<string> { osVolumeMapping.Ebs.VolumeId },
+                        Resources = new List<string> { bootVolumeMapping.Ebs.VolumeId },
                         Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.os"), new ResourceTag(neonNodeNameTagKey, node.Name))
                     });
             }

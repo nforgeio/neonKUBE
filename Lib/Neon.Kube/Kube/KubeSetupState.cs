@@ -226,14 +226,6 @@ namespace Neon.Kube
         public string ClusterId { get; set; }
 
         /// <summary>
-        /// The cluster name.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClusterName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clusterName", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ClusterName { get; set; }
-
-        /// <summary>
         /// <para>
         /// Specifies the cluster DNS domain.  NeonKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
@@ -434,7 +426,6 @@ namespace Neon.Kube
             return new KubeClusterInfo()
             {
                 ClusterId      = this.ClusterId,
-                ClusterName    = this.ClusterName,
                 ClusterDomain  = this.ClusterDomain,
                 ClusterVersion = this.ClusterVersion,
                 SshUsername    = this.SshUsername,

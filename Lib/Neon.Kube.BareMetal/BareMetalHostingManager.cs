@@ -232,7 +232,7 @@ namespace Neon.Kube.Hosting.BareMetal
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageOSDiskSize = ByteUnits.ToGiB(deviceSize);
+                        node.Metadata.Labels.StorageBootDiskSize = ByteUnits.ToGiB(deviceSize);
                         break;
                     }
                 }

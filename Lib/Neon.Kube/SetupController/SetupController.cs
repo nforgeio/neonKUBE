@@ -1076,7 +1076,7 @@ namespace Neon.Kube.Setup
 
                 // While the setup step is executing above in a thread, we're going to loop here
                 // and raise [StatusChangedEvent] when we detect a status change giving any UI
-                // a chance to update.
+                // a chance to update itself.
                 //
                 // Note that we're going to loop here until the step execution thread above
                 // terminates.

@@ -3749,5 +3749,20 @@ TCPKeepAlive yes
 
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
         }
+
+        /// <summary>
+        /// Converts a <c>long</c> value into a nice byte units string.
+        /// </summary>
+        /// <param name="value">The input value (or <c>null</c>).</param>
+        /// <returns>The formatted output (or <c>null</c>).</returns>
+        public static string ToSiString(long? value)
+        {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
+            return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+        }
     }
 }

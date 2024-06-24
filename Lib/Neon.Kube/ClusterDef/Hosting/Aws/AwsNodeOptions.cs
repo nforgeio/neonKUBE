@@ -148,46 +148,20 @@ namespace Neon.Kube.ClusterDef
         public AwsVolumeType VolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
-        /// Optionally specifies the size of the AWS volume to be used as the node's primary operating system disk.
-        /// This defaults to <c>null</c> which indicates that <see cref="AwsHostingOptions.DefaultVolumeSize"/>
+        /// Optionally specifies the size of the AWS volume to be used as the node's boot volume.
+        /// This defaults to <c>null</c> which indicates that <see cref="AwsHostingOptions.DefaultBootVolumeSize"/>
         /// will be used.
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 64 GiB are not supported by NeonKUBE.  We'll automatically
+        /// Node disks smaller than <see cref="KubeConst.MinNodeBootDiskSizeGiB"/> are not supported by NeonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "VolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "volumeSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "BootVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "bootVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string VolumeSize { get; set; } = null;
-
-        /// <summary>
-        /// Optionally specifies the AWS volume type to be used for the node's OpenEBS Mayastor disk (if any).  This defaults
-        /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEbsVolumeType"/>
-        /// will specify the volume type for the node.
-        /// </summary>
-        [JsonProperty(PropertyName = "OpenEbsVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbsVolumeType", ApplyNamingConventions = false)]
-        [DefaultValue(AwsVolumeType.Default)]
-        public AwsVolumeType OpenEbsVolumeType { get; set; } = AwsVolumeType.Default;
-
-        /// <summary>
-        /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS Maystor disk (if any).
-        /// This defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
-        /// will be used for the node.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// Node disks smaller than 64 GiB are not supported by NeonKUBE.  We'll automatically
-        /// upgrade the disk size when necessary.
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "OpenEbsVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbsVolumeSize", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string OpenEbsVolumeSize { get; set; } = null;
+        public string BootVolumeSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -213,16 +187,6 @@ namespace Neon.Kube.ClusterDef
                 if (VolumeType == AwsVolumeType.Default)
                 {
                     VolumeType = AwsHostingOptions.defaultVolumeType;
-                }
-            }
-
-            if (OpenEbsVolumeType == AwsVolumeType.Default)
-            {
-                OpenEbsVolumeType = clusterDefinition.Hosting.Aws.DefaultOpenEbsVolumeType;
-
-                if (OpenEbsVolumeType == AwsVolumeType.Default)
-                {
-                    VolumeType = AwsHostingOptions.defaultOpenEbsVolumeType;
                 }
             }
 
@@ -281,35 +245,19 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the volume size, setting the cluster default if necessary.
 
-            if (string.IsNullOrEmpty(this.VolumeSize))
+            if (string.IsNullOrEmpty(this.BootVolumeSize))
             {
-                this.VolumeSize = clusterDefinition.Hosting.Aws.DefaultVolumeSize;
+                this.BootVolumeSize = clusterDefinition.Hosting.Aws.DefaultBootVolumeSize;
             }
 
-            if (!ByteUnits.TryParse(this.VolumeSize, out var volumeSizeBytes) || volumeSizeBytes <= 1)
+            if (!ByteUnits.TryParse(this.BootVolumeSize, out var volumeSizeBytes) || volumeSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{optionsPrefix}.{nameof(VolumeSize)}={VolumeSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{optionsPrefix}.{nameof(BootVolumeSize)}={BootVolumeSize}] which is not valid.");
             }
 
             var driveSizeGiB = AwsHelper.GetVolumeSizeGiB(VolumeType, volumeSizeBytes);
 
-            this.VolumeSize = $"{driveSizeGiB} GiB";
-
-            // Validate the OpenEBS volume size too.
-
-            if (string.IsNullOrEmpty(this.OpenEbsVolumeSize))
-            {
-                this.OpenEbsVolumeSize = clusterDefinition.Hosting.Aws.DefaultOpenEbsVolumeSize;
-            }
-
-            if (!ByteUnits.TryParse(this.VolumeSize, out var openEbsVolumeSizeBytes) || openEbsVolumeSizeBytes <= 1)
-            {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{optionsPrefix}.{nameof(OpenEbsVolumeSize)}={OpenEbsVolumeSize}] which is not valid.");
-            }
-
-            var openEbsVolumeSizeGiB = AwsHelper.GetVolumeSizeGiB(OpenEbsVolumeType, openEbsVolumeSizeBytes);
-
-            this.VolumeSize = $"{openEbsVolumeSizeGiB} GiB";
+            this.BootVolumeSize = $"{driveSizeGiB} GiB";
         }
     }
 }

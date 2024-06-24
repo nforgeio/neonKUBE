@@ -145,7 +145,7 @@ hosting:
     namePrefix: {namePrefix}
     vcpus: 4
     memory: 16 GiB
-    osDisk: 64 GiB
+    bootDisk: 64 GiB
     diskLocation: $<profile:hyperv.diskfolder>
 network:
   premiseSubnet: $<profile:lan.subnet>
@@ -178,7 +178,7 @@ hosting:
     namePrefix: {namePrefix}
     vcpus: 4
     memory: 16 GiB
-    osDisk: 64 GiB
+    bootDisk: 64 GiB
     hosts:
     - name: XENHOST
       address: $<profile:xen-test.host>

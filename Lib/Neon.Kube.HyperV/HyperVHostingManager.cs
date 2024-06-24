@@ -281,8 +281,8 @@ namespace Neon.Kube.Hosting.HyperV
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine   = Environment.MachineName;
-                node.Labels.StorageOSDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine     = Environment.MachineName;
+                node.Labels.StorageBootDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
             }
 
             // Add the provisioning steps to the controller.
@@ -426,9 +426,10 @@ namespace Neon.Kube.Hosting.HyperV
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
-            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
+            if (clusterDefinition.Storage.OpenEbs.Mayastor)
             {
                 // We need to add any required OpenEBS Mayastor disk after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -439,38 +440,38 @@ namespace Neon.Kube.Hosting.HyperV
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
                 controller.AddNodeStep("openebs",
-                (controller, node) =>
-                {
-                    using (var hyperv = new HyperVProxy())
+                    (controller, node) =>
                     {
-                        var vmName   = GetVmName(node.Metadata);
-                        var diskSize = node.Metadata.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
-                        var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
-
-                        node.Status = "openebs: checking";
-
-                        if (hyperv.ListVmDrives(vmName).Count() < 2)
+                        using (var hyperv = new HyperVProxy())
                         {
-                            // The Mayastor disk doesn't already exist.
+                            var vmName   = GetVmName(node.Metadata);
+                            var diskSize = ByteUnits.Parse(clusterDefinition.Hosting.Hypervisor.MayastorDiskSize);
+                            var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
 
-                            node.Status = "openebs: stop VM";
-                            hyperv.StopVm(vmName);
+                            node.Status = "openebs: checking";
 
-                            node.Status = "openebs: create data disk";
-                            hyperv.AddVmDrive(vmName,
-                                new VirtualDrive()
-                                {
-                                    Path      = diskPath,
-                                    Size      = diskSize,
-                                    IsDynamic = false
-                                });
+                            if (hyperv.ListVmDrives(vmName).Count() < 2)
+                            {
+                                // The Mayastor disk doesn't already exist.
 
-                            node.Status = "openebs: restart VM";
-                            hyperv.StartVm(vmName);
+                                node.Status = "openebs: stop VM";
+                                hyperv.StopVm(vmName);
+
+                                node.Status = "openebs: create data disk";
+                                hyperv.AddVmDrive(vmName,
+                                    new VirtualDrive()
+                                    {
+                                        Path      = diskPath,
+                                        Size      = diskSize,
+                                        IsDynamic = false
+                                    });
+
+                                node.Status = "openebs: restart VM";
+                                hyperv.StartVm(vmName);
+                            }
                         }
-                    }
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
             }
         }
 
@@ -521,16 +522,17 @@ namespace Neon.Kube.Hosting.HyperV
                 reservedMemory = (long)ByteUnits.Parse("500 MiB");
             }
 
-            var hostMachineName = Environment.MachineName;
-            var allNodeNames    = cluster.SetupState.ClusterDefinition.NodeDefinitions.Keys.ToList();
-            var deploymentCheck = new HostingResourceAvailability();
+            var hostMachineName   = Environment.MachineName;
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            var allNodeNames      = clusterDefinition.NodeDefinitions.Keys.ToList();
+            var deploymentCheck   = new HostingResourceAvailability();
 
             // Verify that no VMs are already running that will conflict with VMs
             // that we'd be creating for the cluster.
 
             var clusterVmNames = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
+            foreach (var node in clusterDefinition.Nodes)
             {
                 clusterVmNames.Add(GetVmName(node), node);
             }
@@ -573,13 +575,13 @@ namespace Neon.Kube.Hosting.HyperV
 
             var requiredDisk = 0L;
 
-            foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+            foreach (var node in clusterDefinition.NodeDefinitions.Values)
             {
-                requiredDisk += node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                requiredDisk += node.Hypervisor.GetBootDiskSizeBytes(clusterDefinition);
 
-                if (node.OpenEbsStorage && cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Mayastor)
+                if (node.OpenEbsStorage && clusterDefinition.Storage.OpenEbs.Mayastor)
                 {
-                    requiredDisk += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
+                    requiredDisk += (long)ByteUnits.Parse(clusterDefinition.Hosting.Hypervisor.MayastorDiskSize);
                 }
             }
 
@@ -951,15 +953,15 @@ namespace Neon.Kube.Hosting.HyperV
                 sbNotes.AppendLineLinux($"{nodeNameTag}: {node.Name}");
                 sbNotes.AppendLineLinux(tagMarkerLine);
 
-                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
-                var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
-                var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var vcpus         = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
+                var memoryBytes   = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
+                var bootDiskBytes = node.Metadata.Hypervisor.GetBootDiskSizeBytes(cluster.SetupState.ClusterDefinition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
                     vmName,
                     processorCount: vcpus,
-                    driveSize:      osDiskBytes.ToString(),
+                    driveSize:      bootDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
                     switchName:     switchName,
@@ -1018,14 +1020,14 @@ namespace Neon.Kube.Hosting.HyperV
                     // the virtual drive.
                     //
                     // Note that there should only be one partitioned disk at
-                    // this point: the OS disk.
+                    // this point: the boot disk.
 
                     var partitionedDisks = node.ListPartitionedDisks();
-                    var osDisk           = partitionedDisks.Single();
+                    var bootDisk         = partitionedDisks.Single();
 
-                    node.Status = $"resize: OS disk";
+                    node.Status = $"resize: boot disk";
 
-                    var response = node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
+                    var response = node.SudoCommand($"growpart {bootDisk} 2", RunOptions.None);
 
                     // Ignore errors reported when the partition is already at its
                     // maximum size and cannot be grown:
@@ -1037,7 +1039,7 @@ namespace Neon.Kube.Hosting.HyperV
                         response.EnsureSuccess();
                     }
 
-                    node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
+                    node.SudoCommand($"resize2fs {bootDisk}2", RunOptions.FaultOnError);
                 }
                 finally
                 {

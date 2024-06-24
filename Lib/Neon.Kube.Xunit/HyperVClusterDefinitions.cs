@@ -69,8 +69,8 @@ hosting:
     namePrefix: test-tiny
     vcpus: 4
     memory: 16 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     diskLocation: $<profile:hyperv.diskfolder>
 network:
   premiseSubnet: $<profile:lan.subnet>
@@ -109,8 +109,8 @@ hosting:
     namePrefix: test-small
     vcpus: 4
     memory: 8 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     diskLocation: $<profile:hyperv.diskfolder>
 network:
   premiseSubnet: $<profile:lan.subnet>
@@ -158,8 +158,8 @@ hosting:
     namePrefix: test-large
     vcpus: 4
     memory: 8 GiB
-    osDisk: 64 GiB
-    openEbsDisk: 32 GiB
+    bootDisk: 64 GiB
+    mayastorDisk: 10 GiB
     diskLocation: $<profile:hyperv.diskfolder>
 network:
   premiseSubnet: $<profile:lan.subnet>

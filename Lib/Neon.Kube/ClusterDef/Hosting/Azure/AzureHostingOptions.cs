@@ -42,11 +42,9 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string                defaultVmSize             = "Standard_D4as_v4";
-        internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
-        private const string                defaultDiskSize           = "128 GiB";
-        internal const AzureStorageType     defaultOpenEbsStorageType = defaultStorageType;
-        private const string                defaultOpenEbsDiskSize    = "128 GiB";
+        private const string                defaultVmSize       = "Standard_D4as_v4";
+        internal const AzureStorageType     defaultStorageType  = AzureStorageType.StandardSSD;
+        private const string                defaultBootDiskSize = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -305,8 +303,8 @@ namespace Neon.Kube.ClusterDef
         /// for more information.
         /// </para>
         /// <para>
-        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
-        /// NeonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// Note also that Azure does not support boot disks with <see cref="AzureStorageType.UltraSSD"/>.
+        /// NeonKUBE automatically provisions boot disks with <see cref="AzureStorageType.PremiumSSD"/> when
         /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
         /// <see cref="AzureStorageType.UltraSSD"/>.
         /// </para>
@@ -318,9 +316,8 @@ namespace Neon.Kube.ClusterDef
         public AzureStorageType DefaultStorageType { get; set; } = defaultStorageType;
 
         /// <summary>
-        /// Specifies the default Azure disk size to be used when cluster node primary disks.
-        /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes.
-        /// via <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
+        /// Specifies the default Azure disk size to be used for cluster node boot disks.
+        /// This defaults to <see cref="KubeConst.MinNodeBootDiskSizeGiB"/>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -334,12 +331,10 @@ namespace Neon.Kube.ClusterDef
         /// <b>4 GiB</b>, <b>8 GiB</b>, <b>16 GiB</b>, <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>, <b>512 GiB</b>,
         /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
         /// </para>
-        /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
+        /// Node boot disks smaller than <see cref="KubeConst.MinNodeBootDiskSizeGiB"/> GiB are not supported by NeonKUBE.  We'll automatically
         /// upgrade the disk size when necessary.
         /// </note>
-        /// </remarks>
         /// <note>
         /// This size will be rounded up to the next valid disk size for the given storage type
         /// and set to the maximum allowed size, when necessary.
@@ -350,36 +345,28 @@ namespace Neon.Kube.ClusterDef
         /// currently supported.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultDiskSize", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDiskSize)]
-        public string DefaultDiskSize { get; set; } = defaultDiskSize;
+        [JsonProperty(PropertyName = "DefaultBootDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultBootDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultBootDiskSize)]
+        public string DefaultBootDiskSize { get; set; } = defaultBootDiskSize;
 
         /// <summary>
-        /// Optionally specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
-        /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
-        /// nodes via <see cref="AzureNodeOptions.OpenEbsStorageType"/>.
+        /// Optionally specifies the Azure storage type to be used for OpenEBS Mayastor disks.  This defaults
+        /// to <see cref="AzureStorageType.StandardSSD"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "DefaultOpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultOpenEbstorageType", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEbsStorageType)]
-        public AzureStorageType DefaultOpenEbsStorageType { get; set; } = defaultOpenEbsStorageType;
+        [JsonProperty(PropertyName = "MayastorStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mayastorStorageType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultStorageType)]
+        public AzureStorageType MayastorStorageType { get; set; } = defaultStorageType;
 
         /// <summary>
-        /// Optionally specifies the default size for cluster node secondary data disks used for OpenEBS storage.
-        /// This defaults to <b>128 GiB</b> but can be overridden for specific cluster nodes via
-        /// <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
+        /// Optionally specifies the size for cluster node secondary data disks used for OpenEBS
+        /// Mayastor storage. This defaults to <b>10 GiB</b>.
         /// </summary>
-        /// <remarks>
-        /// <note>
-        /// Node disks smaller than 32 GiB are not supported by NeonKUBE.  We'll automatically
-        /// round up the disk size when necessary.
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "DefaultOpenEbsDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultOpenEbsDiskSize", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEbsDiskSize)]
-        public string DefaultOpenEbsDiskSize { get; set; } = defaultOpenEbsDiskSize;
+        [JsonProperty(PropertyName = "MayastorDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mayastorDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.DefaultMayastorDiskSize)]
+        public string MayastorDiskSize { get; set; } = KubeConst.DefaultMayastorDiskSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -485,26 +472,23 @@ namespace Neon.Kube.ClusterDef
 
             // Verify [DefaultDiskSize].
 
-            if (string.IsNullOrEmpty(DefaultDiskSize))
+            if (string.IsNullOrEmpty(DefaultBootDiskSize))
             {
-                DefaultDiskSize = defaultDiskSize;
+                DefaultBootDiskSize = defaultBootDiskSize;
             }
 
-            if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
+            if (!ByteUnits.TryParse(DefaultBootDiskSize, out var diskSize) || diskSize <= 0)
             {
-                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(DefaultBootDiskSize)}={DefaultBootDiskSize}] must be >= {KubeConst.MinNodeBootDiskSizeGiB} GiB.");
             }
 
-            // Verify [DefaultOpenEBSDiskSize].
+            // Verify [MayastorDiskSize].
 
-            if (string.IsNullOrEmpty(DefaultOpenEbsDiskSize))
-            {
-                DefaultOpenEbsDiskSize = defaultOpenEbsDiskSize;
-            }
+            MayastorDiskSize ??= KubeConst.DefaultMayastorDiskSize;
 
-            if (!ByteUnits.TryParse(DefaultOpenEbsDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
+            if (!ByteUnits.TryParse(MayastorDiskSize, out var mayastorDiskSize) || mayastorDiskSize <= KubeConst.MinMayastorDiskSizeGib)
             {
-                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(DefaultOpenEbsDiskSize)}={DefaultOpenEbsDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{optionsPrefix}.{nameof(MayastorDiskSize)}={MayastorDiskSize}] must be >= {KubeConst.MinMayastorDiskSizeGib} GiB.");
             }
 
             // Check Azure cluster limits.

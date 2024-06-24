@@ -278,7 +278,7 @@ namespace Neon.Kube.ClusterDef
             foreach (var node in definition.Nodes)
             {
                 node.Ingress                        = true;
-                node.Labels.StorageOSDiskSize       = null;
+                node.Labels.StorageBootDiskSize     = null;
                 node.Labels.PhysicalLocation        = null;
                 node.Labels.PhysicalMachine         = null;
                 node.Labels.PhysicalAvailabilitySet = null;

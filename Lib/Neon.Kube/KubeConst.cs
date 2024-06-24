@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -217,25 +218,40 @@ namespace Neon.Kube
         public const string NeonKubeImageTag = "neonkube-" + KubeVersion.NeonKube;
 
         /// <summary>
-        /// Specifies the size of the OS disk used for base images.
+        /// Specifies the size of the boot disk used for base images.
         /// </summary>
-        public const int BaseDiskSizeGiB = 10;
+        public const int BaseBootDiskSizeGiB = 10;
 
         /// <summary>
         /// <para>
-        /// Specifies the minimum supported cluster node disk size in GiB.
+        /// Specifies the minimum supported cluster node boot disk size in GiB.
         /// </para>
         /// <note>
         /// This size should match the size of the virtual disks created the base
         /// Hyper-V and XenServer Ubuntu images.
         /// </note>
         /// </summary>
-        public const int MinNodeDiskSizeGiB = 48;
+        public const int MinNodeBootDiskSizeGiB = 48;
 
         /// <summary>
-        /// Specifies the maximum support cluster node disk size in GiB.
+        /// Specifies the minimum OPenEBS Mayastor disk size in GiB.
         /// </summary>
-        public const int MaxNodeDiskSizeGiB = 16 * 1024;
+        public const int MinMayastorDiskSizeGib = 10;
+
+        /// <summary>
+        /// Specifies the default OpenEBS Mayastor disk size in GiB.
+        /// </summary>
+        public const int DefaultMayastorDiskSizeGib = MinMayastorDiskSizeGib;
+
+        /// <summary>
+        /// Returns default OpenEBS Mayastor disk size as a humanized string.
+        /// </summary>
+        public const string DefaultMayastorDiskSize = $"10 GiB";        // $note(jefflill): Be sure to update this if [MinMayastorDiskGib] changes.
+
+        /// <summary>
+        /// Specifies the maximum supported cluster node boot disk size in GiB.
+        /// </summary>
+        public const int MaxNodeBootDiskSizeGiB = 16 * 1024;
 
         /// <summary>
         /// Returns the URL to the NeonKUBE GitHub repository.
@@ -465,9 +481,9 @@ namespace Neon.Kube
         public const string NeonKubeResourceGroup = "neonkube.io";
 
         /// <summary>
-        /// Specifies the minimum amount of OS disk on a cluster node after accounting for Minio volumes.
+        /// Specifies the minimum amount of boot disk on a cluster node after accounting for Minio volumes.
         /// </summary>
-        public const string MinimumOsDiskAfterMinio = "40 GiB";
+        public const string MinimumBootSizeDiskAfterMinio = "40 GiB";
 
         /// <summary>
         /// Specifies the CIR-O socket path.
