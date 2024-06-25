@@ -804,7 +804,7 @@ done
 echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
-                            controller.LogProgress(firstControlNode, verb: "init", message: "kubernetes");
+                            controller.LogProgress(firstControlNode, verb: "setup", message: "kubernetes");
 
                             var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
@@ -1129,10 +1129,10 @@ exit 1
                     // Deploy a [dnsutils] container and then verify DNS is actually working.
 
                     controller.ThrowIfCancelledOrFaulted();
-                    await controlNode.InvokeIdempotentAsync("setup/coredns-utils",
+                    await controlNode.InvokeIdempotentAsync("setup/check-dns",
                         async () =>
                         {
-                            controller.LogProgress(controlNode, verb: "install", message: "dnsutils");
+                            controller.LogProgress(controlNode, verb: "check", message: "dns");
 
                             var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
                                 new V1Pod()

@@ -36,7 +36,7 @@ helm pull openebs/openebs --version $version --destination $env:TEMP --untar
 
 # Copy the upgrade instructions and a copy of this script to the temporary folder.
 
-cp $helmFolder\NeonKUBE-README.md $tempFolder
+cp $helmFolder\NEONKUBE-README.md $tempFolder
 cp $helmFolder\upgrade.ps1 $tempFolder
 
 # Remove all of the [dependency.repository] properties recusively from all

@@ -303,7 +303,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>Cilium</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Cilium = "v1.15.0";
+        public const string Cilium = "v1.15.6";
 
         /// <summary>
         /// Specifies the version of Cilium-Certgen to be used for
@@ -316,7 +316,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [KubeValue]
-        public const string CiliumCertGen = "v0.1.10";
+        public const string CiliumCertGen = "v0.1.13";
 
         /// <summary>
         /// Specifies the version of <b>Cilium CLI</b> to be installed.
@@ -328,7 +328,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [KubeValue]
-        public const string CiliumCli = "v0.15.22";
+        public const string CiliumCli = "v0.15.23";
 
         /// <summary>
         /// Specifies the version of <b>Etcd</b> to be installed for Cilium (when enabled).
@@ -339,7 +339,7 @@ namespace Neon.Kube
         /// Cilium: https://github.com/etcd-io/etcd/releases
         /// </note>
         /// </remarks>
-        public const string CiliumEtcd = "v3.5.12";
+        public const string CiliumEtcd = "v3.4.33";
 
         /// <summary>
         /// Specifies the version of <b>Cilium Envoy</b> to be installed.
@@ -351,7 +351,7 @@ namespace Neon.Kube
         /// and https://quay.io/repository/cilium/cilium-envoy?tab=tags
         /// </note>
         /// </remarks>
-        public const string CiliumEnvoy = "v1.28.0-f96925bcd0f2c80efe9d38a3a6346eff852189c3";
+        public const string CiliumEnvoy = "v1.29.5-6e60574aac77c9db6412e0db264bab0593fbe5f7";
 
         /// <summary>
         /// Specifies the version of <b>Cilium Etcd Operator</b> to be installed.
@@ -374,7 +374,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [KubeValue]
-        public const string CiliumStartupScript = "d4a928681364ea87634b79c11e4dff5d9ef61b05";
+        public const string CiliumStartupScript = "19fb149fb3d5c7a37d3edfaf10a2be3ab7386661";
 
         /// <summary>
         /// Specifies the version of <b>dnsutils</b> to be installed.
@@ -386,25 +386,19 @@ namespace Neon.Kube
         /// Specifies the version of <b>Istio</b> to be install installed.
         /// </summary>
         [KubeValue]
-        public const string Istio = "1.20.2";
+        public const string Istio = "1.22.1";
 
         /// <summary>
         /// Specifies the version of <b>Helm</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Helm = "3.14.2";
+        public const string Helm = "3.15.2";
 
         /// <summary>
         /// Specifies the version of <b>CoreDNS</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string CoreDNS = "v1.11.1";
-
-        /// <summary>
-        /// Specifies the version of <b>CoreDNS</b> plugin to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string CoreDNSPlugin = "0.2-istio-1.1";
+        public const string CoreDNS = "v1.11.3";
 
         /// <summary>
         /// Specifies the version of <b>Prometheus</b> to be installed.

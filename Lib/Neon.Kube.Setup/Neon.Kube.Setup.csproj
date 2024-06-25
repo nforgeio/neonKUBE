@@ -43,6 +43,10 @@
         <EmbeddedResource Remove="Resources\Helm\README.md" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Resources\Helm\cilium\upgrade.ps1" />
+    </ItemGroup>
+
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>

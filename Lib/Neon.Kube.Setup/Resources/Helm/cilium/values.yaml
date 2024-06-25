@@ -146,11 +146,11 @@ rollOutCiliumPods: false
 image:
   override: ~
   repository: "quay.io/cilium/cilium"
-  tag: "v1.15.0"
+  tag: "v1.15.6"
   pullPolicy: "IfNotPresent"
   # cilium-digest
-  digest: ""
-  useDigest: false
+  digest: "sha256:6aa840986a3a9722cd967ef63248d675a87add7e1704740902d5d3162f0c0def"
+  useDigest: true
 
 # -- Affinity for cilium-agent.
 affinity:
@@ -218,8 +218,10 @@ extraConfig: {}
 annotations: {}
 
 # -- Security Context for cilium-agent pods.
-podSecurityContext: {}
-
+podSecurityContext:
+  # -- AppArmorProfile options for the `cilium-agent` and init containers
+  appArmorProfile:
+    type: "Unconfined"
 # -- Annotations to be added to agent pods
 podAnnotations: {}
 
@@ -468,7 +470,17 @@ bpf:
   # @default -- `524288`
   neighMax: ~
 
+  # @schema
+  # type: [null, integer]
+  # @schema
+  # @default -- `16384`
+  # -- (int) Configures the maximum number of entries for the node table.
+  nodeMapMax: ~
+
   # -- Configure the maximum number of entries in endpoint policy map (per endpoint).
+  # @schema
+  # type: [null, integer]
+  # @schema
   policyMapMax: 16384
 
   # -- (float64) Configure auto-sizing for all BPF maps based on available memory.
@@ -965,8 +977,8 @@ certgen:
   image:
     override: ~
     repository: "quay.io/cilium/certgen"
-    tag: "v0.1.9"
-    digest: "sha256:89a0847753686444daabde9474b48340993bd19c7bea66a46e45b2974b82041f"
+    tag: "v0.1.12"
+    digest: "sha256:bbc5e65e9dc65bc6b58967fe536b7f3b54e12332908aeb0a96a36866b4372b4e"
     useDigest: true
     pullPolicy: "IfNotPresent"
   # -- Seconds after which the completed job pod will be deleted
@@ -1224,10 +1236,10 @@ hubble:
     image:
       override: ~
       repository: "quay.io/cilium/hubble-relay"
-      tag: "v1.15.0"
+      tag: "v1.15.6"
        # hubble-relay-digest
-      digest: ""
-      useDigest: false
+      digest: "sha256:a0863dd70d081b273b87b9b7ce7e2d3f99171c2f5e202cd57bc6691e51283e0c"
+      useDigest: true
       pullPolicy: "IfNotPresent"
 
     # -- Specifies the resources for the hubble-relay pods
@@ -1461,8 +1473,8 @@ hubble:
       image:
         override: ~
         repository: "quay.io/cilium/hubble-ui-backend"
-        tag: "v0.12.3"
-        digest: "sha256:1cd84251cec46e20f9e839ee0afba9b51c8de59d35681234f701d7f42062f138"
+        tag: "v0.13.0"
+        digest: "sha256:1e7657d997c5a48253bb8dc91ecee75b63018d16ff5e5797e5af367336bc8803"
         useDigest: true
         pullPolicy: "IfNotPresent"
 
@@ -1500,8 +1512,8 @@ hubble:
       image:
         override: ~
         repository: "quay.io/cilium/hubble-ui"
-        tag: "v0.12.3"
-        digest: "sha256:e6b825302fc1e406b1305363fe0bcd1fdf95730b32c2b99a2b36dfa37bdaeec2"
+        tag: "v0.13.0"
+        digest: "sha256:7d663dc16538dd6e29061abd1047013a645e6e69c115e008bee9ea9fef9a6666"
         useDigest: true
         pullPolicy: "IfNotPresent"
 
@@ -2059,14 +2071,18 @@ envoy:
   # -- Set Envoy upstream HTTP idle connection timeout seconds.
   # Does not apply to connections with pending requests. Default 60s
   idleTimeoutDurationSeconds: 60
+  # -- Number of trusted hops regarding the x-forwarded-for and related HTTP headers for the ingress L7 policy enforcement Envoy listeners.
+  xffNumTrustedHopsL7PolicyIngress: 0
+  # -- Number of trusted hops regarding the x-forwarded-for and related HTTP headers for the egress L7 policy enforcement Envoy listeners.
+  xffNumTrustedHopsL7PolicyEgress: 0
 
   # -- Envoy container image.
   image:
     override: ~
     repository: "quay.io/cilium/cilium-envoy"
-    tag: "v1.27.2-13f6142b9c02268b10d547c8b093ef16724538e3"
+    tag: "v1.28.4-b35188ffa1bbe54d1720d2e392779f7a48e58f6b"
     pullPolicy: "IfNotPresent"
-    digest: "sha256:bf37c46d3d6bd5f51ff11d09de81671ced070e27912e080083c58a6d3fbb740f"
+    digest: "sha256:b528b291561e459024f66414ac3325b88cdd8f9f4854828a155a11e5b10b78a3"
     useDigest: true
 
   # -- Additional containers added to the cilium Envoy DaemonSet.
@@ -2112,8 +2128,10 @@ envoy:
   annotations: {}
 
   # -- Security Context for cilium-envoy pods.
-  podSecurityContext: {}
-
+  podSecurityContext:
+    # -- AppArmorProfile options for the `cilium-agent` and init containers
+    appArmorProfile:
+      type: "Unconfined"
   # -- Annotations to be added to envoy pods
   podAnnotations: {}
 
@@ -2182,7 +2200,20 @@ envoy:
         labelSelector:
           matchLabels:
             k8s-app: cilium-envoy
-
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            k8s-app: cilium
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: cilium.io/no-schedule
+              operator: NotIn
+              values:
+              - "true"
   # -- Node selector for cilium-envoy.
   nodeSelector:
     kubernetes.io/os: linux
@@ -2472,16 +2503,16 @@ operator:
   image:
     override: ~
     repository: "quay.io/cilium/operator"
-    tag: "v1.15.0"
+    tag: "v1.15.6"
     # operator-generic-digest
-    genericDigest: ""
+    genericDigest: "sha256:5789f0935eef96ad571e4f5565a8800d3a8fbb05265cf6909300cd82fd513c3d"
     # operator-azure-digest
-    azureDigest: ""
+    azureDigest: "sha256:386456c055c5d1380daf966d565fcafaed68467a4fe692679530764e3b56f170"
     # operator-aws-digest
-    awsDigest: ""
+    awsDigest: "sha256:9656d44ee69817d156cc7d3797f92de2e534dfb991610c79c00e097b4dedd620"
     # operator-alibabacloud-digest
-    alibabacloudDigest: ""
-    useDigest: false
+    alibabacloudDigest: "sha256:7e1664bd18645b38fd41dc1c2decd334abeefe63d4d69bfbc65765806eb4a31f"
+    useDigest: true
     pullPolicy: "IfNotPresent"
     suffix: ""
 
@@ -2675,7 +2706,9 @@ nodeinit:
   image:
     override: ~
     repository: "quay.io/cilium/startup-script"
-    tag: "62093c5c233ea914bfa26a10ba41f8780d9b737f"
+    tag: "19fb149fb3d5c7a37d3edfaf10a2be3ab7386661"
+    digest: "sha256:820155cb3b7f00c8d61c1cffa68c44440906cb046bdbad8ff544f5deb1103456"
+    useDigest: true
     pullPolicy: "IfNotPresent"
 
   # -- The priority class to use for the nodeinit pod.
@@ -2719,7 +2752,11 @@ nodeinit:
 
   # -- Labels to be added to node-init pods.
   podLabels: {}
-
+  # -- Security Context for cilium-node-init pods.
+  podSecurityContext:
+    # -- AppArmorProfile options for the `cilium-node-init` and init containers
+    appArmorProfile:
+      type: "Unconfined"
   # -- nodeinit resource limits & requests
   # ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
   resources:
@@ -2767,10 +2804,10 @@ preflight:
   image:
     override: ~
     repository: "quay.io/cilium/cilium"
-    tag: "v1.15.0"
+    tag: "v1.15.6"
     # cilium-digest
-    digest: ""
-    useDigest: false
+    digest: "sha256:6aa840986a3a9722cd967ef63248d675a87add7e1704740902d5d3162f0c0def"
+    useDigest: true
     pullPolicy: "IfNotPresent"
 
   # -- The priority class to use for the preflight pod.
@@ -2929,10 +2966,10 @@ clustermesh:
     image:
       override: ~
       repository: "quay.io/cilium/clustermesh-apiserver"
-      tag: "v1.15.0"
+      tag: "v1.15.6"
       # clustermesh-apiserver-digest
-      digest: ""
-      useDigest: false
+      digest: "sha256:6365c2fe8a038fc7adcdeb7ffb8d7a8a2cd3ee524687f35fff9df76fafeeb029"
+      useDigest: true
       pullPolicy: "IfNotPresent"
 
     etcd:

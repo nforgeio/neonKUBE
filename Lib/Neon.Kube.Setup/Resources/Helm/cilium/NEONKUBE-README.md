@@ -1,18 +1,18 @@
 # Upgrade Instructions
 
 The basic idea here is to download the Helm chart for the version of
-OpenEBS being installed, replace all of the existing chart files (except
+Cilium being installed, replace all of the existing chart files (except
 for these instructions and the upgrade script), and then edit the
 **values.yaml** file as required.
 
 Here's how this is accomplished:
 
-1. Set **KubeVersion.OpenEbs** to the desired version.
+1. Set **KubeVersion.Cilium** to the desired version.
 
-2. Execute this script to download the OpenEBS Helm chart defined by **KubeVersion.OpenEbs**.
+2. Execute this script to download the Cilium Helm chart defined by **KubeVersion.Cilium**.
    
    ```
-   pwsh -f "%NK_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\openebs\upgrade.ps1"
+   pwsh -f "%NK_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\cilium\upgrade.ps1"
    ```
 
    **NOTE:** This replaces all existing chart files with the assumption that
@@ -36,7 +36,7 @@ Here's how this is accomplished:
    **Limits/Requests:** Add any required limits/requests to the values override string.
 
 5. Deploy clusters with various configuration options, breaking into the 
-   debugger after the OpenEBS Helm chart has been installed.
+   debugger after the Cilium Helm chart has been installed.
 
    a. Fix any container image reference failures
    b. Run `neon cluster check --container-images`, looking for container
