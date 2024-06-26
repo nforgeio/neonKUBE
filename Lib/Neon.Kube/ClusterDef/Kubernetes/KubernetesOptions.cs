@@ -48,10 +48,6 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     public class KubernetesOptions
     {
-        private const string minVersion              = "1.13.0";
-        private const string defaultVersion          = "default";
-        private const string defaultDashboardVersion = "default";
-
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -92,7 +88,6 @@ namespace Neon.Kube.ClusterDef
         [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
-
 
         /// <summary>
         /// Enable pods to be scheduled on cluster control-plane nodes.  This defaults to <c>null</c>

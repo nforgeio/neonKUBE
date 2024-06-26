@@ -1485,6 +1485,8 @@ exit 1
                            },
                            cancellationToken: controller.CancellationToken);
 
+                        Covenant.Assert(nodes != null && nodes.Items.Count > 0);
+
                         foreach (var controlNode in nodes.Items)
                         {
                             controller.ThrowIfCancelledOrFaulted();
