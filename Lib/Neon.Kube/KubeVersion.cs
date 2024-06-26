@@ -398,7 +398,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>CoreDNS</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string CoreDNS = "v1.11.3";
+        public const string CoreDNS = "v1.11.1";
 
         /// <summary>
         /// Specifies the version of <b>Prometheus</b> to be installed.
