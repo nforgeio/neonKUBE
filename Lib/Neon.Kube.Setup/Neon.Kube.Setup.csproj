@@ -45,6 +45,9 @@
 
     <ItemGroup>
       <None Remove="Resources\Helm\cilium\upgrade.ps1" />
+      <None Remove="Resources\Helm\istio\.helmignore" />
+      <None Remove="Resources\Helm\istio\NEONKUBE-README.md" />
+      <None Remove="Resources\Helm\istio\upgrade.ps1" />
     </ItemGroup>
 
     <!-- Non-NEONFORGE package references -->

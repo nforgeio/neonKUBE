@@ -600,7 +600,7 @@ set -euo pipefail
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true) && !cluster.DebugMode;
 
-            controller.LogProgress(this, verb: "install", message: "cri-o");
+            controller.LogProgress(this, verb: "setup", message: "cri-o");
 
             // $note(jefflill):
             //

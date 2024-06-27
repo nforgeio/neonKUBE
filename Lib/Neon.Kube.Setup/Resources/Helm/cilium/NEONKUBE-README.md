@@ -2,14 +2,13 @@
 
 The basic idea here is to download the Helm chart for the version of
 Cilium being installed, replace all of the existing chart files (except
-for these instructions and the upgrade script), and then edit the
-**values.yaml** file as required.
+for these instructions and the upgrade script).
 
 Here's how this is accomplished:
 
 1. Set **KubeVersion.Cilium** to the desired version.
 
-2. Execute this script to download the Cilium Helm chart defined by **KubeVersion.Cilium**.
+2. Execute this script to download the Cilium Helm chart.
    
    ```
    pwsh -f "%NK_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\cilium\upgrade.ps1"
@@ -17,7 +16,7 @@ Here's how this is accomplished:
 
    **NOTE:** This replaces all existing chart files with the assumption that
    most, if not all, customization is performed by by customizing the values
-   in code when installing the Helm chart.
+   in code when installing the chart.
 
 3. Open the NeonCLOUD solution in Visual Studio and review/edit the **Git Changes**.
 
@@ -31,7 +30,7 @@ Here's how this is accomplished:
    We may also need to add custom templates for some services.  We're going to
    add the **# NeonKUBE CUSTOM TEMPLATE** comment at the top of these files.
 
-4. Review the Helm chart template and other files for changes we need to apply.
+4. Review the Helm chart templates and other files for changes we need to apply.
 
    **Limits/Requests:** Add any required limits/requests to the values override string.
 

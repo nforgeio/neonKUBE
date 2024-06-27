@@ -21,7 +21,6 @@
 *.tmproj
 # OWNERS file for Kubernetes
 OWNERS
-
-# NeonKUBE files
+# Other files
 NEONKUBE-README.md
 upgrade.ps1

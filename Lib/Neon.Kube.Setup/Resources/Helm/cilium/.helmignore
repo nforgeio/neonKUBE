@@ -22,3 +22,6 @@
 .idea/
 *.tmproj
 .vscode/
+# Other files
+NEONKUBE-README.md
+upgrade.ps1
