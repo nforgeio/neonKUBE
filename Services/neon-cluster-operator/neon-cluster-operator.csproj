@@ -39,8 +39,13 @@
         </None>
     </ItemGroup>
 
-    <Target Name="NSwag" BeforeTargets="CoreCompile">
+    <!-- Generate the Harbor client class before we build the service. -->
+
+    <Target Name="NSwag" BeforeTargets="GenerateAdditionalSources">
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
+        <ItemGroup>
+            <Compile Include="HarborClient.mg.cs" KeepDuplicates="false" />
+        </ItemGroup>
     </Target>
 
     <!-- Non-NEONFORGE package references -->
