@@ -65,7 +65,7 @@ if not exist "%NK_TEMP%" mkdir "%NK_TEMP%"
 if not exist "%NK_TOOLBIN%" mkdir "%NK_TOOLBIN%"
 if not exist "%NK_BUILD%" mkdir "%NK_BUILD%"
 if not exist "%NK_BUILD%\neon" mkdir "%NK_BUILD%\neon"
-if not exist "%NK_CACHE%" mkdir "%NK_CACHE"
+if not exist "%NK_CACHE%" mkdir "%NK_CACHE%"
 if not exist "%NK_CACHE%\windows" mkdir "%NK_CACHE%\windows"
 
 REM Configure the PATH.
