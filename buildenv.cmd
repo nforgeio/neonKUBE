@@ -71,7 +71,6 @@ REM Configure the PATH.
 pathtool -dedup -system -add "%NK_BUILD%"
 pathtool -dedup -system -add "%NK_BUILD%\neon"
 pathtool -dedup -system -add "%NK_TOOLBIN%"
-pathtool -dedup -system -add "%NK_ROOT%\External\OpenSSL"
 
 REM Configure the NeonKUBE program folder and add it to the PATH.
 
@@ -80,7 +79,8 @@ pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
 
 REM Remove obsolete paths if they exist.
 
-pathtool --dedup -del "%NK_TOOLBIN%\OpenSSL"
+pathtool -dedup -del "%NK_TOOLBIN%\OpenSSL"
+pathtool -dedup -del "%NK_ROOT%\External\OpenSSL"
 
 REM Configure the NeonKUBE kubeconfig path (as a USER environment variable).
 
