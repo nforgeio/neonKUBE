@@ -118,6 +118,12 @@ OPTIONS:
     --quiet                     - Only print the currently executing step rather than
                                   displaying detailed setup status.
 
+    --test                      - MAINTAINER ONLY: Optionally specifies that additional
+                                  tests should be performed during cluster prepare to
+                                  verify various cluster functions.  This is typically
+                                  used only by maintainers during development and unit
+                                  testing.
+
     --unredacted                - Runs commands with potential secrets without 
                                   redacting logs.  This is useful for debugging 
                                   cluster setup issues.  Do not use for production
@@ -189,13 +195,14 @@ stage process is typically used only by NeonKUBE maintainers.
             // perform the lookups.
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-           
-            var debug             = commandLine.HasOption("--debug");
+
+            var debugMode         = commandLine.HasOption("--debug");
+            var testMode          = commandLine.HasOption("--test");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var insecure          = commandLine.HasOption("--insecure");
-            var nodeImagePath     = debug ? null : commandLine.GetOption("--node-image-path");
-            var nodeImageUri      = debug ? null : commandLine.GetOption("--node-image-uri");
+            var nodeImagePath     = debugMode ? null : commandLine.GetOption("--node-image-path");
+            var nodeImageUri      = debugMode ? null : commandLine.GetOption("--node-image-uri");
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
@@ -273,7 +280,7 @@ stage process is typically used only by NeonKUBE maintainers.
                 }
             }
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment) && !debug)
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment) && !debugMode)
             {
                 // Use the default node image for the hosting environment unless [--node-image-uri]
                 // or [--node-image-path] was specified.
@@ -317,12 +324,13 @@ stage process is typically used only by NeonKUBE maintainers.
             var prepareOptions = new PrepareClusterOptions()
             {
                 DisableConsoleOutput  = quiet,
-                DebugMode             = debug,
+                DebugMode             = debugMode,
                 Insecure              = insecure,
                 MaxParallel           = maxParallel,
                 NodeImagePath         = nodeImagePath,
                 NodeImageUri          = nodeImageUri,
                 PackageCacheEndpoints = packageCacheEndpoints,
+                TestMode              = testMode,
                 Unredacted            = unredacted
             };
 

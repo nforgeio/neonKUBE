@@ -55,7 +55,7 @@ namespace Neon.Kube.Setup
     public static partial class KubeSetup
     {
         //---------------------------------------------------------------------
-        // Private constants
+        // Private members.
 
         private const string                    joinCommandMarker       = "kubeadm join";
         private const int                       defaultMaxParallelNodes = 10;
@@ -69,10 +69,11 @@ namespace Neon.Kube.Setup
         private static IStaticDirectory         cachedResources;
         private static ClusterManifest          cachedClusterManifest;
         private static ClusterAdvisor           clusterAdvisor;
+        private static bool                     debugMode;
+        private static bool                     testMode;
 
         //---------------------------------------------------------------------
         // Implementation
-
 
         /// <summary>
         /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.

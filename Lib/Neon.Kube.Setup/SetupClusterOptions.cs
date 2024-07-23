@@ -72,9 +72,14 @@ namespace Neon.Kube.Setup
         public bool Unredacted { get; set; } = false;
 
         /// <summary>
-        /// Optionally indicates that the cluster will be prepared in debug mode.
+        /// Optionally indicates that the cluster will be setup in debug mode.
         /// </summary>
         public bool DebugMode { get; set; } = false;
+
+        /// <summary>
+        /// Optionally indicates that the cluster will be setup in test mode.
+        /// </summary>
+        public bool TestMode { get; set; } = false;
 
         /// <summary>
         /// <para>

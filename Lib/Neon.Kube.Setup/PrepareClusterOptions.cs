@@ -95,6 +95,11 @@ namespace Neon.Kube.Setup
         public bool DebugMode { get; set; } = false;
 
         /// <summary>
+        /// Optionally indicates that the cluster will be setup in test mode.
+        /// </summary>
+        public bool TestMode { get; set; } = false;
+
+        /// <summary>
         /// Optionally remove any existing cluster with the same name in the target environment.
         /// </summary>
         public bool RemoveExisting { get; set; } = false;

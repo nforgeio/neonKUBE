@@ -187,6 +187,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.Preparing, false);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
             controller.Add(KubeSetupProperty.DebugMode, options.DebugMode);
+            controller.Add(KubeSetupProperty.TestMode, options.TestMode);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
@@ -196,6 +197,12 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
             controller.Add(KubeSetupProperty.ClusterAdvisor, clusterAdvisor);
+
+            // Save some options to fields so they'll be easier to access when
+            // performing cluster deployment operations.
+
+            debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
+            testMode  = controller.Get<bool>(KubeSetupProperty.TestMode);
 
             // Configure the setup steps.
 

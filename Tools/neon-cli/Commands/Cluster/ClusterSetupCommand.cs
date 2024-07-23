@@ -113,6 +113,12 @@ OPTIONS:
     --quiet             - Only print the currently executing step rather than
                           displaying detailed setup status.
 
+    --test              - MAINTAINER ONLY: Optionally specifies that additional
+                          tests should be performed during cluster setup to
+                          verify various cluster functions.  This is typically
+                          used only by maintainers during development and unit
+                          testing.
+
     --unredacted        - Runs commands with potential secrets without redacting
                           logs.  This is useful  for debugging cluster setup  issues.
                           Do not use for production clusters.
@@ -145,6 +151,7 @@ stage process is typically used only by NeonKUBE maintainers.
             "--max-parallel",
             "--no-telemetry",
             "--quiet",
+            "--test",
             "--unredacted",
             "--upload-charts",
             "--use-staged",
@@ -180,11 +187,12 @@ stage process is typically used only by NeonKUBE maintainers.
             var context           = KubeHelper.KubeConfig.GetCluster(contextName.Cluster);
             var setupState        = KubeSetupState.Load((string)contextName, nullIfMissing: true);
             var unredacted        = commandLine.HasOption("--unredacted");
-            var debug             = commandLine.HasOption("--debug");
+            var debugMode             = commandLine.HasOption("--debug");
+            var testMode              = commandLine.HasOption("--test");
             var quiet             = commandLine.HasOption("--quiet");
             var check             = commandLine.HasOption("--check");
             var force             = commandLine.HasOption("--force");
-            var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
+            var uploadCharts      = commandLine.HasOption("--upload-charts") || debugMode;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
@@ -269,7 +277,8 @@ stage process is typically used only by NeonKUBE maintainers.
             {
                 MaxParallel          = maxParallel,
                 Unredacted           = unredacted,
-                DebugMode            = debug,
+                DebugMode            = debugMode,
+                TestMode             = testMode,
                 UploadCharts         = uploadCharts,
                 DisableConsoleOutput = quiet
             };
@@ -331,7 +340,7 @@ stage process is typically used only by NeonKUBE maintainers.
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
                     Console.WriteLine();
 
-                    if (check && !debug)
+                    if (check && !debugMode)
                     {
                         var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler());
 

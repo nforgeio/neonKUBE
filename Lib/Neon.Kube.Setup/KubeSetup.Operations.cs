@@ -274,7 +274,6 @@ spec:
 
             var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var controlNode = cluster.DeploymentControlNode;
-            var debugMode   = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
             // We're still seeing occasional transient failures here so we're going to
             // wait for a while and then retry a few times after failures.  Hopefully,
@@ -383,9 +382,11 @@ spec:
                     controller.ThrowIfCancelledOrFaulted();
                     InstallCilium(controller, controlNode);
 
-                    controller.ClearStatus();
-                    controller.ThrowIfCancelledOrFaulted();
-                    InstallIstio(controller, controlNode);
+                    // $debug(jefflill): RESTORE THIS!
+
+                    //controller.ClearStatus();
+                    //controller.ThrowIfCancelledOrFaulted();
+                    //InstallIstio(controller, controlNode);
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelledOrFaulted();
@@ -1440,8 +1441,6 @@ exit 1
             node.InvokeIdempotent("cluster-manifest",
                 () =>
                 {
-                    var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
-
                     node.UploadText(LinuxPath.Combine(KubeNodeFolder.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest(debugMode), Formatting.Indented));
                 });
 
@@ -4678,8 +4677,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var k8s       = GetK8sClient(controller);
-            var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
+            var k8s = GetK8sClient(controller);
 
             controller.ThrowIfCancelledOrFaulted();
             await controlNode.InvokeIdempotentAsync("setup/cluster-manifest",

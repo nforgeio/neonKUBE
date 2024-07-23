@@ -47,10 +47,22 @@ namespace Neon.Kube
         /// configured the node from that, rather than starting with the node image with assets already prepositioned.
         /// </para>
         /// <para>
-        /// This mode is useful when debugging cluster setup or adding new features.
+        /// This mode is typically used only by maintainers to verify debugging cluster setup or adding new features.
         /// </para>
         /// </summary>
         public const string DebugMode = "debug-mode";
+
+        /// <summary>
+        /// <para>
+        /// Property name for a <c>bool</c> value indicating that additional tests should
+        /// be performed during cluster setup.
+        /// </para>
+        /// <note>
+        /// This mode is typically used only by maintainers to verify that various
+        /// cluster functions actually work.
+        /// </note>
+        /// </summary>
+        public const string TestMode = "test-mode";
 
         /// <summary>
         /// <para>
