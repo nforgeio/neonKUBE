@@ -33,6 +33,13 @@ pushd "%NK_ROOT%\.."
 set NK_REPOS=%cd%
 popd 
 
+REM Temporarily add [%NF_ROOT%\neonSDK\ToolBin] to the PATH so
+REM we'll be able to use things like [pathtool].
+REM
+REM NOTE: This assumes that NeonSDK is configured first.
+
+set PATH=%PATH%;%NF_ROOT%\neonSDK\ToolBin
+
 REM Configure the environment variables.
 
 set NK_TOOLBIN=%NK_ROOT%\ToolBin
