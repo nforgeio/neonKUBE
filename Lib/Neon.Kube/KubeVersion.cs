@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [KubeValue]
-        public const string NeonKube = "0.12.0-alpha.0";
+        public const string NeonKube = "0.13.0-alpha.0";
 
         /// <summary>
         /// Returns the branch part of the NeonKUBE version.  This will be blank for release

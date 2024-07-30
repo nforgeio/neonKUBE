@@ -1682,7 +1682,7 @@ exit 0
 
             var orgTempPath = Path.GetTempPath();
 
-            using (var tempFolder = new TempFolder(folder: orgTempPath))
+            using (var tempFolder = new TempFolder(rootFolder: orgTempPath))
             {
                 File.WriteAllText(Path.Combine(tempFolder.Path, "neon-init.sh"), nodePrepScript);
 
