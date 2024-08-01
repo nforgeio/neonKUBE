@@ -206,19 +206,19 @@ namespace Neon.Kube
         /// Specifies the version of Kubernetes to be installed.
         /// </summary>
         [KubeValue]
-        public const string Kubernetes = "1.29.0";
+        public const string Kubernetes = "1.30.0";
 
         /// <summary>
         /// Specifies the version of <b>Kubernetes</b> to be installed, <b>without the patch component</b>.
         /// </summary>
         [KubeValue]
-        public const string KubernetesNoPatch = "1.29";
+        public const string KubernetesNoPatch = "1.30";
 
         /// <summary>
         /// Specifies the version of Kubernetes related container images to be installed.
         /// </summary>
         [KubeValue]
-        public const string KubernetesImage = "v1.29.0";
+        public const string KubernetesImage = "v1.30.0";
 
         /// <summary>
         /// Specifies the package version for Kubernetes admin service.
