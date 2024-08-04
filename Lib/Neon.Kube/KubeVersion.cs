@@ -254,7 +254,7 @@ namespace Neon.Kube
         /// Returns the apt package version for the Kubernetes <b>metrics-server</b> service to be installed.
         /// </summary>
         [KubeValue]
-        public const string MetricsServer = "v0.6.4";
+        public const string MetricsServer = "v0.7.0";
 
         /// <summary>
         /// Returns the package version for the Kubernetes <b>kube-state-metrics</b> service to be installed.
@@ -297,7 +297,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>Etcd</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Etcd = "3.5.10-0";
+        public const string Etcd = "3.5.12-0";
 
         /// <summary>
         /// Specifies the version of <b>Cilium</b> to be installed.
