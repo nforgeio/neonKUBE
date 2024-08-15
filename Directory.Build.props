@@ -52,6 +52,13 @@
 
     </PropertyGroup>
 
+	<PropertyGroup Label="Dotnet versions">
+		<DotNet6Version>6.0.*</DotNet6Version>
+		<DotNet7Version>7.0.*</DotNet7Version>
+		<DotNet8Version>8.0.*</DotNet8Version>
+		<DotNet9Version>9.0.0-*</DotNet9Version>
+	</PropertyGroup>
+
     <!--
     Set this to version of the NeonSDK nuget packages to be referenced by solutuon projects,
     or to 0 to disable NEONFORGE related package references.
