@@ -54,7 +54,7 @@
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.4" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(DotNet8Version)" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="prometheus-net" Version="8.2.1" />
         <PackageReference Include="SharpCompress" Version="0.37.2" />

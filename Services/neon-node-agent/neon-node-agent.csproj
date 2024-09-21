@@ -48,7 +48,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNet8Version)" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Tomlyn" Version="0.17.0" />
     </ItemGroup>

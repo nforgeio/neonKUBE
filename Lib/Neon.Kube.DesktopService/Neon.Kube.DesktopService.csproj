@@ -32,8 +32,8 @@
 
     <ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.3.8" />
-        <PackageReference Include="OpenTelemetry.Api" Version="1.8.1" />
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.1" />
+        <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
         <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
     </ItemGroup>
