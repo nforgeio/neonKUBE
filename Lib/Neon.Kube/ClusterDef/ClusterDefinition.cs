@@ -628,7 +628,7 @@ namespace Neon.Kube.ClusterDef
         /// <note>
         /// The NeonDESKTOP SSO cluster's SSO password is always set to <see cref="KubeConst.SysAdminInsecurePassword"/>
         /// to make the cluster easier to use.  This isn't a big security risk, because the desktop cluster is
-        /// not accessable from the LAN.
+        /// not access1ble from the LAN.
         /// </note>>
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default)]
