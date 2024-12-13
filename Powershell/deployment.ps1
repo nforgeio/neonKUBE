@@ -77,7 +77,7 @@ function Get-MaintainerProfile
 #   $signinPeriod   - Optionally specifies a sign-in period that overrides 
 #                     the profile server default interval
 
-function EnsureAuthenticated-Profile
+function Ensure-ProfileAuthenticated
 {
     [CmdletBinding()]
     param (
