@@ -21,4 +21,5 @@
 
 set -e
 
+export DEBIAN_FRONTEND=noninteractive
 apt-get -o DPkg::Lock::Timeout=-1 "$@"
