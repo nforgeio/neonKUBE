@@ -37,8 +37,7 @@ Push-Location $scriptFolder | Out-Null
 
 Pop-Location | Out-Null
 
-# Load these assemblies from the [neon-assistant] installation folder
-# to ensure we'll be compatible.
+# Load these assemblies from the [neon-assistant] installation folder.
 
 if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
 {
