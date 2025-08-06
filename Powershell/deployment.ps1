@@ -84,9 +84,9 @@ function Ensure-ProfileAuthenticated
         [System.Timespan]$signinPeriod = [System.TimeSpan]::Zero 
     )
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    $profile.EnsureAuthenticated($signinPeriod)
+    $profileClient.EnsureAuthenticated($signinPeriod)
 }
 
 #------------------------------------------------------------------------------
@@ -94,9 +94,9 @@ function Ensure-ProfileAuthenticated
 
 function Signout-Profile
 {
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    $profile.Signout()
+    $profileClient.Signout()
 }
 
 #------------------------------------------------------------------------------
@@ -119,9 +119,34 @@ function Get-ProfileValue
         [bool]$nullOnNotFound = $false
     )
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    return $profile.GetProfileValue($name, $nullOnNotFound)
+    return $profileClient.GetProfileValue($name, $nullOnNotFound)
+}
+
+#------------------------------------------------------------------------------
+# Returns the named profile value.
+#
+# ARGUMENTS:
+#
+#   name            - Specifies the profile value name
+#   $nullOnNotFound - Optionally specifies that $null should be returned rather 
+#                     than throwing an exception when the profile value does 
+#                     not exist.
+
+function Get-ProfileValue
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$name,
+        [Parameter(Position=1, Mandatory=$false)]
+        [bool]$nullOnNotFound = $false
+    )
+
+    $profileClient = Get-MaintainerProfile
+
+    return $profileClient.GetProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -131,7 +156,6 @@ function Get-ProfileValue
 #
 #   name            - Specifies the secret password name
 #   vault           - Optionally overrides the default vault
-#   masterPassword  - Optionally specifies the master 1Password (for automation)
 #   $nullOnNotFound - Optionally specifies that $null should be returned rather 
 #                     than throwing an exception when the secret does not exist.
 
@@ -144,14 +168,12 @@ function Get-SecretPassword
         [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=$false)]
-        [string]$masterPassword = $null,
-        [Parameter(Position=3, Mandatory=$false)]
         [bool]$nullOnNotFound = $false
     )
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    return $profile.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profileClient.GetSecretPassword($name, $vault, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -161,7 +183,6 @@ function Get-SecretPassword
 #
 #   name            - Specifies the secret value name
 #   vault           - Optionally overrides the default vault
-#   masterPassword  - Optionally specifies the master 1Password (for automation)
 #   $nullOnNotFound - Optionally specifies that $null should be returned rather 
 #                     than throwing an exception when the secret does not exist.
 
@@ -174,14 +195,12 @@ function Get-SecretValue
         [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=$false)]
-        [string]$masterPassword = $null,
-        [Parameter(Position=3, Mandatory=$false)]
         [bool]$nullOnNotFound = $false
     )
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    return $profile.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profileClient.GetSecretValue($name, $vault, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -195,7 +214,6 @@ function Get-SecretValue
 #
 #   secretName          - Optionally overrides the default "AWS_NEONFORGE" secret name
 #   vault               - Optionally overrides the default vault
-#   masterPassword      - Optionally specifies the master 1Password (for automation)
 
 function Import-AwsCliCredentials
 {
@@ -204,20 +222,27 @@ function Import-AwsCliCredentials
         [Parameter(Position=0, Mandatory=$false)]
         [string]$secretName = "AWS_NEONFORGE",
         [Parameter(Position=1, Mandatory=$false)]
-        [string]$vault = $null,
-        [Parameter(Position=2, Mandatory=$false)]
-        [string]$masterPassword = $null
+        [string]$vault = $null
     )
+
+    "############################"
+    "*** Import-AwsCliCredentials"
 
     if (![System.String]::IsNullOrEmpty($env:AWS_ACCESS_KEY_ID) -and ![System.String]::IsNullOrEmpty($env:AWS_SECRET_ACCESS_KEY))
     {
         return  # Already set
     }
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    $env:AWS_ACCESS_KEY_ID     = $profile.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $profile.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $profileClient.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault)
+    $env:AWS_SECRET_ACCESS_KEY = $profileClient.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault)
+
+    "AWS_ACCESS_KEY_ID:     $env:AWS_ACCESS_KEY_ID"
+    "AWS_SECRET_ACCESS_KEY: $env:AWS_SECRET_ACCESS_KEY"
+
+    "*** Import-AwsCliCredentials"
+    "############################"
 }
 
 #------------------------------------------------------------------------------
@@ -260,9 +285,9 @@ function Import-GitHubCredentials
         return  # Already set
     }
 
-    $profile = Get-MaintainerProfile
+    $profileClient = Get-MaintainerProfile
 
-    $env:GITHUB_PAT = $profile.GetSecretPassword("$name[accesstoken]", $vault, $masterPassword)
+    $env:GITHUB_PAT = $profileClient.GetSecretPassword("$name[accesstoken]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -595,7 +620,7 @@ function Sign-IsReady-WithUsbToken
         [string]$password
     )
 
-    $profile = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
+    $profileClient = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
 
     return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $certBase64, $container, $timestampUri, $password)
 }
@@ -639,7 +664,7 @@ function Sign-WithUsbToken
         [string]$password
     )
 
-    $profile = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
+    $profileClient = New-Object -TypeName Neon.Deployment.CodeSigning.UsbTokenProfile -ArgumentList @($provider, $certBase64, $container, $timestampUri, $password)
 
-    [Neon.Deployment.CodeSigner]::Sign($profile, $targetPath)
+    [Neon.Deployment.CodeSigner]::Sign($profileClient, $targetPath)
 }
