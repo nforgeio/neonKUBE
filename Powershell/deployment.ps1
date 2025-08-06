@@ -67,29 +67,6 @@ function Get-MaintainerProfile
 }
 
 #------------------------------------------------------------------------------
-# Ensures that the profile server is signed into the credential source and also
-# extends the sign-in period to the server's default interval Unless [$signinPeriod]
-# passed, in which case that will be used.
-#
-# ARGUMENTS:
-#
-#   $signinPeriod   - Optionally specifies a sign-in period that overrides 
-#                     the profile server default interval
-
-function Ensure-ProfileAuthenticated
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$false)]
-        [System.Timespan]$signinPeriod = [System.TimeSpan]::Zero 
-    )
-
-    $profileClient = Get-MaintainerProfile
-
-    $profileClient.EnsureAuthenticated($signinPeriod)
-}
-
-#------------------------------------------------------------------------------
 # Signs the profile server out of it's credential source.
 
 function Signout-Profile

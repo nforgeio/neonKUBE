@@ -44,10 +44,6 @@ if ($version.StartsWith("v"))
     $version = $version.SubString(1)
 }
 
-# Ensure that 1Password is authenticated.
-
-Ensure-ProfileAuthenticated
-
 # Generate the Bash build script and then execute via WSL.
 
 $buildScript = 
