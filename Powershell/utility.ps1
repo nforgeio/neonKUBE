@@ -657,7 +657,7 @@ function Ensure-VisualStudioNotRunning
 
     if ($?)
     {
-        throw "ERROR: Please close all Visual Studio instances before building."
+        throw "ERROR: Please close all Visual Studio instances."
     }
 }
 
