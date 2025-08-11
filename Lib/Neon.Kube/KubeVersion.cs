@@ -206,13 +206,13 @@ namespace Neon.Kube
         /// Specifies the version of <b>Kubernetes</b> to be installed, <b>without the patch component</b>.
         /// </summary>
         [KubeValue]
-        public const string KubernetesNoPatch = "1.33";
+        public const string KubernetesNoPatch = "1.33";     // IMPORTANT: You must update [Kubernetes] when chenging this! (due to current NeonKUBE build limitation)
 
         /// <summary>
         /// Specifies the version of Kubernetes to be installed.
         /// </summary>
         [KubeValue]
-        public const string Kubernetes = $"{KubernetesNoPatch}.0";
+        public const string Kubernetes = "1.33.0";          // IMPORTANT: You must update [KubernetesNoPatch] when chenging this! (due to current NeonKUBE build limitation)
 
         /// <summary>
         /// Specifies the version of Kubernetes related container images to be installed.
