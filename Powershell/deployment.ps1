@@ -45,6 +45,14 @@ if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
     Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
     Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 }
+else
+{
+    Write-Info "[NEON_ASSISTANT_HOME] environment variable is not defined."
+    Write-Info "Ensure that [neon-assistant] is installed and you may need"
+    Write-Info "to restart your command window."
+
+    throw "Build failed."
+}
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.MaintainerProfile] instance creating one if necessary.
