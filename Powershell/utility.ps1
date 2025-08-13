@@ -302,13 +302,15 @@ function Invoke-CaptureStreams
     # to [%TEMP\dtee-tool-debug] for debugging purposes.  Note that this IS
     # currently somewhat fragile since this means that only one instance of
     # the [dtee.exe] can write to this file at a time.
+    #
+    # DON'T LEAVE THIS ENABLED LONG-TERM!
 
     # $debugOption = "--debug"
 
     $pInfo = [Diagnostics.ProcessStartInfo]::new()
     $pInfo = @{
         FileName        = 'dtee.exe'
-        Arguments       = "$quietOption $debugOptions `"--out=$outPath`" `"--err=$errPath`" `"--both=$bothPath`" `"--`" `"$command`""
+        Arguments       = "$quietOption $debugOption `"--out=$outPath`" `"--err=$errPath`" `"--both=$bothPath`" `"--`" `"$command`""
         UseShellExecute = $false
     }
 
