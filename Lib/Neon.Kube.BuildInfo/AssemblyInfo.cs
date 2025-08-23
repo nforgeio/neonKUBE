@@ -21,12 +21,12 @@ using System.Reflection;
 // $todo(jefflill):
 //
 // We can't use [GenerateAssemblyInfo=TRUE] to generate the assembly info because
-// that can lead to duplicate symbol definitions (see [Directory.Build.props]).
+// that can lead to duplicate symbol definitions (see [Directory.Build.targets]).
 //
 // Instead, we're going to hardcode this here.  In the future, it would be nice
 // to write a build task that generates this for us from the project properties.
 //
-// See [Directory.Build.props] for more information.
+// See [Directory.Build.targets] for more information.
 
 [assembly: AssemblyProduct("NeonKUBE")]
 [assembly: AssemblyCompany("NEONFORGE LLC")]

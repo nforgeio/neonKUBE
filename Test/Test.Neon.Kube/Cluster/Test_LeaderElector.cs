@@ -35,7 +35,6 @@ using Neon.Kube.Xunit;
 using Neon.Xunit;
 
 using Xunit;
-using Xunit.Abstractions;
 
 namespace TestKube
 {

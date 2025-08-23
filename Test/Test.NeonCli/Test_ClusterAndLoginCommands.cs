@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.ClusterMetadata;
 using Neon.Kube.Config;
 using Neon.Deployment;
 using Neon.Kube.Hosting;
@@ -40,9 +41,6 @@ using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
-using System.Dynamic;
-using Xunit.Abstractions;
-using Neon.Kube.ClusterMetadata;
 
 namespace Test.NeonCli
 {

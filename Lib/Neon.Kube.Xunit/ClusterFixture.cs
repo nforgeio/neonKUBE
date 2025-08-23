@@ -39,8 +39,6 @@ using k8s;
 using k8s.Models;
 
 using Xunit;
-using Xunit.Abstractions;
-using System.CodeDom;
 
 // $hack(jeff):
 //
