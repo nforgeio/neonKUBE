@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonNodeAgent</RootNamespace>
+        <DebugType>full</DebugType>
         <IsPackable>false</IsPackable>
         <AssemblyName>neon-node-agent</AssemblyName>
         <Configurations>Debug;Release</Configurations>
