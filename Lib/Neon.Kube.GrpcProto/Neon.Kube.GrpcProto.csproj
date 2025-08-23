@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<IsPackable>true</IsPackable>
@@ -15,7 +15,7 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<Nullable>enable</Nullable>
+		<Nullable>nable</Nullable>
 	</PropertyGroup>
 
     <ItemGroup>

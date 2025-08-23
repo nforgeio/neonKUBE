@@ -350,7 +350,7 @@ sleep 30
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Wait the node task to report completion.
@@ -358,8 +358,7 @@ sleep 30
             var phase    = V1NeonNodeTask.Phase.New;
             var exitCode = int.MaxValue;
 
-            await NeonHelper.WaitForAsync(
-                async () =>
+            await NeonHelper.WaitForAsync(async () =>
                 {
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
@@ -378,8 +377,9 @@ sleep 30
                             return true;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Verify that the node task timed out.
@@ -412,20 +412,20 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Wait the node task to reported as TARDY.
 
-            await NeonHelper.WaitForAsync(
-                async () =>
+            await NeonHelper.WaitForAsync(async () =>
                 {
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     return task.Status.Phase == V1NeonNodeTask.Phase.Tardy;
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -453,15 +453,14 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Wait the node task to reported as SUCCESS.
 
             var actualUtc = DateTime.MinValue;
 
-            await NeonHelper.WaitForAsync(
-                async () =>
+            await NeonHelper.WaitForAsync(async () =>
                 {
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
@@ -475,9 +474,9 @@ sleep 5
                     {
                         return false;
                     }
-                },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                }, timeout:        timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Verify that the task actually started at or after the scheduled time.
@@ -510,13 +509,12 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             //-----------------------------------------------------------------
             // Wait the node task to be deleted.
 
-            await NeonHelper.WaitForAsync(
-                async () =>
+            await NeonHelper.WaitForAsync(async () =>
                 {
                     try
                     {
@@ -529,8 +527,9 @@ sleep 5
                         return e.Response.StatusCode == HttpStatusCode.NotFound;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
         }
     }
 }

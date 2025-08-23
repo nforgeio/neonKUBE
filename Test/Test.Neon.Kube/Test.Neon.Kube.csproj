@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
+        <OutputType>Exe</OutputType>
         <RootNamespace>TestKube</RootNamespace>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <IsPackable>false</IsPackable>
         <AssemblyName>Test.Neon.Kube</AssemblyName>
         <Configurations>Debug;Release</Configurations>
@@ -23,6 +25,15 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
+
+    <PropertyGroup>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    </PropertyGroup>
 
     <!-- Non-NEONFORGE package references -->
 
