@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFramework>net9.0-windows</TargetFramework>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
         <RootNamespace>HelmMunger</RootNamespace>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <AssemblyName>helm-munger</AssemblyName>

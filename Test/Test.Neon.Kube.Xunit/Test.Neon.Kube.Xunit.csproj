@@ -47,7 +47,6 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-        <ProjectReference Include="..\Test.NeonCli\Test.NeonCli.csproj" />
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->
