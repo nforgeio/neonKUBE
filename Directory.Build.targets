@@ -4,7 +4,7 @@
         <Product>NeonSDK</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
-        <NeonSdkVersion>4.0.0</NeonSdkVersion>
+        <NeonSdkVersion>5.0.0</NeonSdkVersion>
         <Copyright>Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.</Copyright>
         <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
