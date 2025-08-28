@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  NEONFORGE Team
-# COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.
 
 # Add the root directory to the PATH.
 

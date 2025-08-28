@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  NEONFORGE Team
-# COPYRIGHT:    Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.
 
 # Builds the container image.
 
