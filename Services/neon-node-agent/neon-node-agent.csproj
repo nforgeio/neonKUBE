@@ -11,6 +11,10 @@
         <NoWarn>$(NoWarn);CS8034</NoWarn>
     </PropertyGroup>
 
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
 
     <PropertyGroup>
@@ -49,7 +53,6 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.1" />
         <PackageReference Include="Tomlyn" Version="0.19.0" />
     </ItemGroup>

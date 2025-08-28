@@ -13,6 +13,10 @@
         <NoWarn>$(NoWarn);CS2002;CS8034</NoWarn>
     </PropertyGroup>
 
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
 
     <ItemGroup>
@@ -72,7 +76,6 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
         <PackageReference Include="Npgsql.OpenTelemetry" Version="9.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.1" />
         <PackageReference Include="Quartz" Version="3.15.0" />
     </ItemGroup>
