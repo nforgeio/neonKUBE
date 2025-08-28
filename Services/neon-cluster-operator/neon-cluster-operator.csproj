@@ -13,10 +13,6 @@
         <NoWarn>$(NoWarn);CS2002;CS8034</NoWarn>
     </PropertyGroup>
 
-    <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
 
     <ItemGroup>
