@@ -20,15 +20,10 @@
     <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
-    
-    <ItemGroup>
-        <None Remove="xunit.runner.json" />
-    </ItemGroup>
 
     <ItemGroup>
-        <Content Include="xunit.runner.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <None Remove="xunit.runner.json" />
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <PropertyGroup>
