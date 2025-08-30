@@ -30,6 +30,7 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 
 using Minio;
+using Minio.DataModel.Args;
 
 using Neon.Common;
 using Neon.Diagnostics;
