@@ -34,6 +34,7 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.K8s;
 using Neon.Kube.ClusterDef;
 using Neon.Net;
 

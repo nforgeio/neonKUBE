@@ -38,7 +38,7 @@ using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Kube.Resources.Minio;
 using Neon.Net;
-using Neon.Operator.Finalizers;
+using Neon.Operator;
 using Neon.Tasks;
 
 namespace NeonClusterOperator

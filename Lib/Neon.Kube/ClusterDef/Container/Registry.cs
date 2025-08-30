@@ -35,6 +35,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.K8s;
 
 namespace Neon.Kube.ClusterDef
 {

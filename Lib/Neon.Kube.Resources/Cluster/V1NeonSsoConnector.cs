@@ -23,9 +23,9 @@ using System.Text.Json.Serialization;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
 using Neon.Kube.Resources.Dex;
 using Neon.Kube.Resources.JsonConverters;
+using Neon.Operator;
 
 namespace Neon.Kube.Resources.Cluster
 {

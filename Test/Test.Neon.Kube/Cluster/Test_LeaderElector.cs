@@ -28,15 +28,14 @@ using Prometheus;
 
 using Neon.Common;
 using Neon.Deployment;
-using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.K8s;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 
 using Xunit;
 
-namespace TestKube
+namespace Test8s
 {
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Trait(TestTrait.Category, TestTrait.RequiresProfile)]

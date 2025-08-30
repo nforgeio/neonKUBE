@@ -27,9 +27,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 using Neon.Kube.Resources.Cluster;
-using Neon.Operator.Attributes;
-using Neon.Operator.Controllers;
-using Neon.Operator.Rbac;
+using Neon.Operator;
 using Neon.Tasks;
 
 using OpenTelemetry.Trace;

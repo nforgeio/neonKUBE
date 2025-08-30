@@ -42,6 +42,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Config;
 using Neon.Kube.Setup;

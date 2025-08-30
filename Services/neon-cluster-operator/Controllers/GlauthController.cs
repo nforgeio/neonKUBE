@@ -35,9 +35,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Glauth;
 using Neon.Net;
-using Neon.Operator.Attributes;
-using Neon.Operator.Controllers;
-using Neon.Operator.Rbac;
+using Neon.Operator;
 using Neon.Tasks;
 
 using Npgsql;

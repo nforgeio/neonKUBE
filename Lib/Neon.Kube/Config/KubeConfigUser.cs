@@ -21,7 +21,7 @@ using System.Diagnostics.Contracts;
 
 using k8s.KubeConfigModels;
 
-using Neon.Kube.K8s;
+using Neon.K8s;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;

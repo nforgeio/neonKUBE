@@ -38,8 +38,8 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
-using Neon.Operator.Finalizers;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator;
 using Neon.Tasks;
 
 namespace NeonClusterOperator

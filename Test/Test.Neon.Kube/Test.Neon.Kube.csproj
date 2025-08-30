@@ -12,7 +12,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+      <Compile Remove="MIsc\**" />
+      <EmbeddedResource Remove="MIsc\**" />
+      <None Remove="MIsc\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     
@@ -60,10 +65,6 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="MIsc\" />
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->

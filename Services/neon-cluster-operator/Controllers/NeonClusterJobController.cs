@@ -33,10 +33,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Resources.Cluster;
-using Neon.Operator.Attributes;
-using Neon.Operator.Controllers;
-using Neon.Operator.Rbac;
-using Neon.Operator.Util;
+using Neon.Operator;
 using Neon.Tasks;
 
 using NeonClusterOperator.CronJobs;

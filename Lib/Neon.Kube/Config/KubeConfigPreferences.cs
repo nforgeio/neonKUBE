@@ -25,10 +25,11 @@ using System.Threading.Tasks;
 
 using k8s.KubeConfigModels;
 
+using Neon.K8s;
+
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
-using Neon.Kube.K8s;
 
 namespace Neon.Kube.Config
 {

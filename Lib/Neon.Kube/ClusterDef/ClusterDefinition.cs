@@ -36,8 +36,10 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
+using Neon.Kubernetes;
 using Neon.Net;
 
 using YamlDotNet.Serialization;

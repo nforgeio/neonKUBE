@@ -19,7 +19,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
@@ -36,7 +35,6 @@
     <!-- Local solution project references -->
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\operator-sdk\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />

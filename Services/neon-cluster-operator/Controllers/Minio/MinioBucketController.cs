@@ -37,10 +37,7 @@ using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Resources.Minio;
 using Neon.Net;
-using Neon.Operator.Attributes;
-using Neon.Operator.Controllers;
-using Neon.Operator.Rbac;
-using Neon.Operator.Util;
+using Neon.Operator;
 using Neon.Tasks;
 
 using OpenTelemetry.Trace;

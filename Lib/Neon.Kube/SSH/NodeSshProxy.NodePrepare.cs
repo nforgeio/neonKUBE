@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;

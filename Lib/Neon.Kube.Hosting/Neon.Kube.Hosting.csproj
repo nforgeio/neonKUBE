@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -17,7 +17,6 @@
 	</PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
@@ -45,11 +44,15 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s\Neon.K8s.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
             </ItemGroup>
         </Otherwise>
     </Choose>

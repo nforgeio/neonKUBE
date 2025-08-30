@@ -25,12 +25,12 @@ using System.Threading.Tasks;
 using k8s;
 
 using Neon.Common;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Deployment;
 using Neon.Kube.Glauth;
-using Neon.Kube.K8s;
 
 using Newtonsoft.Json;
 

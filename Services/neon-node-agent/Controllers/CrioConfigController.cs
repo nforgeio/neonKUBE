@@ -35,20 +35,19 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator.Attributes;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Controllers;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator;
 using Neon.Retry;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
 
+using Neon.Operator;
+
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
-using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {

@@ -59,9 +59,6 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.Rbac;
-
 using KubeHelper = Neon.Kube.KubeHelper;
 
 namespace NeonNodeAgent

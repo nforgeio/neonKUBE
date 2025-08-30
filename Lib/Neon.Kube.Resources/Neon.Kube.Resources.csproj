@@ -22,7 +22,6 @@
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" Condition="'$(NeonBuildUseNugets)' != 'true'" />
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
@@ -62,7 +61,6 @@
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
-                <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />

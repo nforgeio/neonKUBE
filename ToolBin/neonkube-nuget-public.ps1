@@ -207,6 +207,8 @@ try
         SetVersion Neon.Kube.GrpcProto            $neonkubeVersion
         SetVersion Neon.Kube.Hosting              $neonkubeVersion
         SetVersion Neon.Kube.HyperV               $neonkubeVersion
+        SetVersion Neon.Kube.K8s                  $neonkubeVersion
+        SetVersion Neon.Kube.K8s.Core             $neonkubeVersion
         SetVersion Neon.Kube.Models               $neonkubeVersion
         SetVersion Neon.Kube.Resources            $neonkubeVersion
         SetVersion Neon.Kube.Setup                $neonkubeVersion
@@ -226,6 +228,8 @@ try
         Publish Neon.Kube.GrpcProto               $neonkubeVersion
         Publish Neon.Kube.Hosting                 $neonkubeVersion
         Publish Neon.Kube.HyperV                  $neonkubeVersion
+        Publish Neon.Kube.K8s                     $neonkubeVersion
+        Publish Neon.Kube.K8s.Core                $neonkubeVersion
         Publish Neon.Kube.Models                  $neonkubeVersion
         Publish Neon.Kube.Setup                   $neonkubeVersion
         Publish Neon.Kube.XenServer               $neonkubeVersion

@@ -20,8 +20,8 @@ using System.ComponentModel.DataAnnotations;
 using k8s;
 using k8s.Models;
 
+using Neon.Operator;
 using Neon.JsonConverters;
-using Neon.Operator.Attributes;
 
 using Newtonsoft.Json;
 

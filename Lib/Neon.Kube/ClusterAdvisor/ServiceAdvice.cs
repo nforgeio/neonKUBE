@@ -33,6 +33,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube.SSH;
 using Neon.Retry;
 using Neon.SSH;

@@ -63,10 +63,10 @@ namespace NeonNodeAgent
                 .AddSingleton(Service)
                 .AddKubernetesOperator()
                 .AddController<NodeTaskController>(
-                    options: new Neon.Operator.ResourceManager.ResourceManagerOptions()
+                    options: new Neon.Operator.ResourceManagerOptions()
                     {
                         AutoRegisterFinalizers  = true,
-                        Scope                   = Neon.Operator.Attributes.EntityScope.Cluster,
+                        Scope                   = Neon.Operator.EntityScope.Cluster,
                         MaxConcurrentReconciles = 1,
                     },
                     leaderConfig: new Neon.K8s.LeaderElectionConfig(

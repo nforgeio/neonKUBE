@@ -35,8 +35,8 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.K8s;
 using Neon.Kube;
-using Neon.Kube.K8s;
 using Namotion.Reflection;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Deployment;

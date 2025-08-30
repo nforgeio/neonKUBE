@@ -31,9 +31,9 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.Config;
-using Neon.Kube.K8s;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 

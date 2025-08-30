@@ -27,9 +27,9 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 using Neon.Kube;
 using Neon.Operator;
-using Neon.Operator.Webhooks;
 using Neon.Tasks;
 
 using k8s;

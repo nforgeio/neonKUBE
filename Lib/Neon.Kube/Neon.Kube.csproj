@@ -19,7 +19,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
@@ -37,6 +36,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Remove="C:\src\neonKUBE\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <None Remove="Resources\Tools\net-interface.sh" />
     </ItemGroup>
 
@@ -51,6 +54,7 @@
         <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
         <PackageReference Include="DNS" Version="7.0.0" />
         <PackageReference Include="KubernetesClient" Version="12.0.16" />
+        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetVersion)" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
@@ -87,6 +91,8 @@
                 <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true">
                     <PrivateAssets>all</PrivateAssets>
                     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -102,6 +108,8 @@
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s\Neon.K8s.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
             </ItemGroup>

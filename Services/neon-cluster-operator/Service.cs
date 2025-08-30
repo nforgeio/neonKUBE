@@ -38,15 +38,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
+using Neon.K8s.PortForward;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
-using Neon.Kube.PortForward;
 using Neon.Net;
 using Neon.Operator;
-using Neon.Operator.Attributes;
-using Neon.Operator.Rbac;
-using Neon.Retry;
 using Neon.Service;
 using Neon.Tasks;
 
@@ -63,7 +60,7 @@ using OpenTelemetry.Trace;
 
 using Quartz.Logging;
 
-using KubeHelper = Neon.Kube.KubeHelper;
+using KubeHelper = Neon.K8s.KubernetesHelper;
 using Task       = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator

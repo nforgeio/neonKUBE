@@ -11,7 +11,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
@@ -58,6 +57,8 @@
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
@@ -65,6 +66,8 @@
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s\Neon.K8s.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
             </ItemGroup>
         </Otherwise>
