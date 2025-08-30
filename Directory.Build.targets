@@ -44,6 +44,14 @@
         <CopyRetryCount>200</CopyRetryCount>
         <CopyRetryDelayMilliseconds>10</CopyRetryDelayMilliseconds>
 
+        <!--
+        Set NeonSDK and OperatorSDK nuget package version variables for
+        standalone solution builds.
+        -->
+
+        <NeonSdkPackageVersion>5.0.0</NeonSdkPackageVersion>
+        <NeonOperatorPackageVersion>3.0.0</NeonOperatorPackageVersion>
+
     </PropertyGroup>
 
     <!--

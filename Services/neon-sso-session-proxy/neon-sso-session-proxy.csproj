@@ -46,6 +46,7 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
@@ -53,6 +54,7 @@
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" />
             </ItemGroup>
