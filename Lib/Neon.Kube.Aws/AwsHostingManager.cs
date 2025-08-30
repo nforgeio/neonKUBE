@@ -1285,7 +1285,7 @@ namespace Neon.Kube.Hosting.Aws
                     readiness.AddProblem(type: "cluster-definition", details: $"Node [{nodeDefinition.Name}] specifies [instanceType={nodeDefinition.Aws.InstanceType}] which does not exist.");
                 }
 
-                hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, instanceTypeInfo.VCpuInfo.DefaultVCpus, (long)(instanceTypeInfo.MemoryInfo.SizeInMiB * ByteUnits.MebiBytes)));
+                hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, (int)instanceTypeInfo.VCpuInfo.DefaultVCpus, (long)(instanceTypeInfo.MemoryInfo.SizeInMiB * ByteUnits.MebiBytes)));
             }
 
             ValidateCluster(clusterDefinition, hostedNodes, readiness);
@@ -2168,7 +2168,7 @@ namespace Neon.Kube.Hosting.Aws
 
             await foreach (var association in associationPaginator.NetworkAcls)
             {
-                if (association.VpcId == vpc.VpcId && association.IsDefault)
+                if (association.VpcId == vpc.VpcId && (bool)association.IsDefault)
                 {
                     var networkAclPaginator = ec2Client.Paginators.DescribeNetworkAcls(
                         new DescribeNetworkAclsRequest()
@@ -3472,16 +3472,16 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                     var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                    if (invalidStates.Contains(state))
+                    if (invalidStates.Contains((int)state))
                     {
                         throw new NeonKubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                     }
 
-                    if (InstanceStateCode.IsRunning(status.InstanceState.Code))
+                    if (InstanceStateCode.IsRunning((int)status.InstanceState.Code))
                     {
                         node.Status = "starting (slow)...";
                     }
-                    else if (InstanceStateCode.IsStopped(status.InstanceState.Code))
+                    else if (InstanceStateCode.IsStopped((int)status.InstanceState.Code))
                     {
                         node.Status = "restarting (slow)...";
 
@@ -3984,7 +3984,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             await foreach (var listener in listenerPagenator.Listeners)
             {
-                portToListener.Add(listener.Port, listener);
+                portToListener.Add((int)listener.Port, listener);
             }
 
             foreach (var ingressRule in ingressRules)
@@ -4040,9 +4040,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 ingressRulePorts.Add(ingressRule.ExternalPort);
             }
 
-            foreach (var listener in portToListener.Values.Where(listener => !networkOptions.IsExternalSshPort(listener.Port)))
+            foreach (var listener in portToListener.Values.Where(listener => !networkOptions.IsExternalSshPort((int)listener.Port)))
             {
-                if (!ingressRulePorts.Contains(listener.Port))
+                if (!ingressRulePorts.Contains((int)listener.Port))
                 {
                     await elbClient.DeleteListenerAsync(
                         new DeleteListenerRequest()
@@ -4111,7 +4111,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 listeners.Add(listener);
             }
 
-            foreach (var listener in listeners.Where(listener => networkOptions.IsExternalSshPort(listener.Port)))
+            foreach (var listener in listeners.Where(listener => networkOptions.IsExternalSshPort((int)listener.Port)))
             {
                 await elbClient.DeleteListenerAsync(
                     new DeleteListenerRequest()
@@ -4344,7 +4344,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 {
                     if (nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
                     {
-                        var stateCode = InstanceStateCode.GetCode(awsInstance.Instance.State.Code);
+                        var stateCode = InstanceStateCode.GetCode((int)awsInstance.Instance.State.Code);
 
                         switch (stateCode)
                         {
