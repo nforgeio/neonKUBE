@@ -37,10 +37,14 @@ param
     [switch]$publish
 )
 
+# Allow the version to including a leading "v"
+
 if ($version.StartsWith("v"))
 {
     $version = $version.SubString(1)
 }
+
+# Generate the Bash build script and then execute via WSL.
 
 $buildScript = 
 @"
@@ -58,7 +62,6 @@ export GO_VERSION=1.20
 apt-get update
 apt-get update -qq && apt-get install -y \
   libbtrfs-dev \
-  containers-common \
   git \
   golang-go \
   libassuan-dev \

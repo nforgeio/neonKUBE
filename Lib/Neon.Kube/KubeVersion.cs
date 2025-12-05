@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [KubeValue]
-        public const string NeonKube = "0.13.0-alpha.0";
+        public const string NeonKube = "0.14.0-alpha.0";
 
         /// <summary>
         /// Returns the branch part of the NeonKUBE version.  This will be blank for release
@@ -203,22 +203,22 @@ namespace Neon.Kube
         public const string Kiali = "v1.79.0";
 
         /// <summary>
-        /// Specifies the version of Kubernetes to be installed.
-        /// </summary>
-        [KubeValue]
-        public const string Kubernetes = "1.30.0";
-
-        /// <summary>
         /// Specifies the version of <b>Kubernetes</b> to be installed, <b>without the patch component</b>.
         /// </summary>
         [KubeValue]
-        public const string KubernetesNoPatch = "1.30";
+        public const string KubernetesNoPatch = "1.33";         // IMPORTANT: [KubernetesNoPatch, Kubernetes, and KubernetesImage] must all be updated manually! (due to current NeonKUBE build limitations)
+
+        /// <summary>
+        /// Specifies the version of Kubernetes to be installed.
+        /// </summary>
+        [KubeValue]
+        public const string Kubernetes = "1.33.0";              // IMPORTANT: [KubernetesNoPatch, Kubernetes, and KubernetesImage] must all be updated manually! (due to current NeonKUBE build limitations)
 
         /// <summary>
         /// Specifies the version of Kubernetes related container images to be installed.
         /// </summary>
         [KubeValue]
-        public const string KubernetesImage = "v1.30.0";
+        public const string KubernetesImage = "v1.33.0";        // IMPORTANT: [KubernetesNoPatch, Kubernetes, and KubernetesImage] must all be updated manually! (due to current NeonKUBE build limitations)
 
         /// <summary>
         /// Specifies the package version for Kubernetes admin service.
@@ -291,7 +291,7 @@ namespace Neon.Kube
         /// Specifies the version of <b>Podman</b> to be installed.
         /// </summary>
         [KubeValue]
-        public const string Podman = "3.4.4+ds1-1ubuntu1.22.04.2";
+        public const string Podman = "5.3.1+ds1-1ubuntu1.22.04.2";
 
         /// <summary>
         /// Specifies the version of <b>Etcd</b> to be installed.
@@ -742,7 +742,7 @@ namespace Neon.Kube
         /// related components like <b>CRI-O</b>.
         /// </summary>
         [KubeValue]
-        public const string GoLang = "1.21.3";
+        public const string GoLang = "1.23.3";
 
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.

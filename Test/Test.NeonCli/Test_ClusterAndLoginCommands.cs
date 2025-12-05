@@ -1028,7 +1028,7 @@ nodes:
                         .EnsureSuccess();
 
                     KubeHelper.KubeConfig.Reload();
-                    Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
+                    Assert.DoesNotContain(KubeHelper.KubeConfig.Clusters, cluster => cluster.Name == clusterName);
                 }
                 finally
                 {

@@ -87,10 +87,15 @@ namespace Neon.Kube
         public const string NeonKubeStageBucketUri = $"https://{NeonKubeStageBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
+        /// Specifies the S3 key for the cluster manifest within the <see cref="NeonKubeStageBucketName"/> bucket.
+        /// </summary>
+        public static readonly string ClusterManifestKey = $"manifests/neonkube-{KubeVersion.NeonKubeWithBranchPart}.json";
+
+        /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// NeonKUBE cluster version.
         /// </summary>
-        public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersion.NeonKubeWithBranchPart}.json";
+        public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/{ClusterManifestKey}";
 
         /// <summary>
         /// Returns the URI of the download for NEONUBE base images.
