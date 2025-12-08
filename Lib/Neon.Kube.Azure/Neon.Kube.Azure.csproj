@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.Hosting.Azure</RootNamespace>
         <Version>0.9.2-alpha</Version>
@@ -29,12 +29,12 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.12.0" />
-        <PackageReference Include="Azure.ResourceManager" Version="1.12.0" />
-        <PackageReference Include="Azure.ResourceManager.Compute" Version="1.5.0" />
-        <PackageReference Include="Azure.ResourceManager.MarketplaceOrdering" Version="1.1.0" />
-        <PackageReference Include="Azure.ResourceManager.Network" Version="1.7.0" />
-        <PackageReference Include="Azure.ResourceManager.Storage" Version="1.2.3" />
+        <PackageReference Include="Azure.Identity" />
+        <PackageReference Include="Azure.ResourceManager" />
+        <PackageReference Include="Azure.ResourceManager.Compute" />
+        <PackageReference Include="Azure.ResourceManager.MarketplaceOrdering" />
+        <PackageReference Include="Azure.ResourceManager.Network" />
+        <PackageReference Include="Azure.ResourceManager.Storage" />
     </ItemGroup>
 
     <!-- Local solution project references -->

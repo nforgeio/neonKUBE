@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<IsPackable>true</IsPackable>
@@ -31,11 +31,11 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.3.8" />
-        <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
-        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
+        <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" />
+        <PackageReference Include="OpenTelemetry.Api" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" />
+        <PackageReference Include="protobuf-net.Grpc.AspNetCore" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -51,9 +51,9 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.Common.Extensions" />
+                <PackageReference Include="Neon.HyperV" />
             </ItemGroup>
         </When>
         <Otherwise>

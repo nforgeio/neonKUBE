@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonAcme</RootNamespace>
         <IsPackable>false</IsPackable>
@@ -25,10 +25,10 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="prometheus-net" Version="8.2.1" />
-        <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
-        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
+        <PackageReference Include="prometheus-net" />
+        <PackageReference Include="prometheus-net.AspNetCore" />
+        <PackageReference Include="prometheus-net.DotNetRuntime" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -43,8 +43,8 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Service" />
+                <PackageReference Include="Neon.Web" />
             </ItemGroup>
         </When>
         <Otherwise>

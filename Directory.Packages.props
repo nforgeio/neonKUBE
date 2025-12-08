@@ -1,0 +1,119 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+        <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+        <NoWarn>NU1507;$(NoWarn)</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <NeonSdkVersion>4.0.19-preview.2</NeonSdkVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.*,)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.*,10.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.*,9.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net7.0'">[7.*,8.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net6.0'">[6.*,7.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(DotNetVersion)' == ''">[10.*,)</DotNetVersion>
+        <EfCoreVersion>[8.*,9.0)</EfCoreVersion>
+        <NpgsqlVersion>[8.*,9.0)</NpgsqlVersion>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageVersion Include="AWSSDK.Core" Version="3.7.303.28" />
+        <PackageVersion Include="AWSSDK.EC2" Version="3.7.327.1" />
+        <PackageVersion Include="AWSSDK.ElasticLoadBalancingV2" Version="3.7.302.44" />
+        <PackageVersion Include="AWSSDK.ResourceGroups" Version="3.7.301.18" />
+        <PackageVersion Include="Azure.Identity" Version="1.12.0" />
+        <PackageVersion Include="Azure.ResourceManager" Version="1.12.0" />
+        <PackageVersion Include="Azure.ResourceManager.Compute" Version="1.5.0" />
+        <PackageVersion Include="Azure.ResourceManager.MarketplaceOrdering" Version="1.1.0" />
+        <PackageVersion Include="Azure.ResourceManager.Network" Version="1.7.0" />
+        <PackageVersion Include="Azure.ResourceManager.Storage" Version="1.2.3" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+        <PackageVersion Include="DiscUtils.Iso9660" Version="0.16.13" />
+        <PackageVersion Include="DNS" Version="7.0.0" />
+        <PackageVersion Include="DnsClient" Version="1.7.0" />
+        <PackageVersion Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.3.8" />
+        <PackageVersion Include="GitInfo" Version="3.3.5" />
+        <PackageVersion Include="Google.Protobuf" Version="3.26.1" />
+        <PackageVersion Include="Grpc.Net.Client" Version="2.62.0" />
+        <PackageVersion Include="Grpc.Tools" Version="2.63.0" />
+        <PackageVersion Include="IdentityModel.OidcClient" Version="6.0.0" />
+        <PackageVersion Include="JsonDiffPatch" Version="2.0.61" />
+        <PackageVersion Include="KubernetesClient" Version="12.0.16" />
+        <PackageVersion Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageVersion Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
+        <PackageVersion Include="Macross.Json.Extensions" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.10.0" />
+        <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
+        <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Net.Http.Server" Version="1.1.4" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.12.0" />
+        <PackageVersion Include="Microsoft.Windows.Compatibility" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Minio" Version="5.0.0" />
+        <PackageVersion Include="Moq" Version="4.20.70" />
+        <PackageVersion Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Docker" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Nats" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Operator" Version="$(NeonOperatorPackageVersion)" />
+        <PackageVersion Include="Neon.Operator.Analyzers" Version="$(NeonOperatorPackageVersion)" />
+        <PackageVersion Include="Neon.Operator.Xunit" Version="$(NeonOperatorPackageVersion)" />
+        <PackageVersion Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="NJsonSchema" Version="10.9.0" />
+        <PackageVersion Include="Npgsql.OpenTelemetry" Version="$(NpgsqlVersion)" />
+        <PackageVersion Include="NSwag.MSBuild" Version="14.0.7" />
+        <PackageVersion Include="OpenTelemetry" Version="1.9.0" />
+        <PackageVersion Include="OpenTelemetry.Api" Version="1.9.0" />
+        <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+        <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
+        <PackageVersion Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
+        <PackageVersion Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
+        <PackageVersion Include="prometheus-net" Version="8.2.1" />
+        <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
+        <PackageVersion Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+        <PackageVersion Include="protobuf-net.Grpc" Version="1.1.1" />
+        <PackageVersion Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
+        <PackageVersion Include="Quartz" Version="3.13.0" />
+        <PackageVersion Include="Samboy063.Tomlet" Version="5.3.1" />
+        <PackageVersion Include="SharpCompress" Version="0.37.2" />
+        <PackageVersion Include="SharpZipLib.NETStandard" Version="1.0.7" />
+        <PackageVersion Include="SSH.NET" Version="2020.0.2" />
+        <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.7.0" />
+        <PackageVersion Include="System.Diagnostics.Contracts" Version="4.3.0" />
+        <PackageVersion Include="System.Diagnostics.StackTrace" Version="4.3.0" />
+        <PackageVersion Include="System.IO.Compression" Version="4.3.0" />
+        <PackageVersion Include="System.Net.Http" Version="4.3.4" />
+        <PackageVersion Include="System.Net.NetworkInformation" Version="4.3.0" />
+        <PackageVersion Include="System.Net.Ping" Version="4.3.0" />
+        <PackageVersion Include="System.Runtime" Version="4.3.1" />
+        <PackageVersion Include="System.Runtime.Loader" Version="4.3.0" />
+        <PackageVersion Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+        <PackageVersion Include="System.Security.Principal.Windows" Version="5.0.0" />
+        <PackageVersion Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+        <PackageVersion Include="System.ValueTuple" Version="4.6.1" />
+        <PackageVersion Include="Tomlyn" Version="0.17.0" />
+        <PackageVersion Include="xunit" Version="2.9.0" />
+        <PackageVersion Include="xunit.extensibility.core" Version="2.9.0" />
+        <PackageVersion Include="xunit.extensibility.execution" Version="2.9.0" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageVersion Include="YamlDotNet" Version="15.1.2" />
+        <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
+    </ItemGroup>
+</Project>

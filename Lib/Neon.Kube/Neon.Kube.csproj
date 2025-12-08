@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube</RootNamespace>
         <Version>0.9.2-alpha</Version>
@@ -48,26 +48,26 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
-        <PackageReference Include="DNS" Version="7.0.0" />
-        <PackageReference Include="KubernetesClient" Version="12.0.16" />
-        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(DotNet8Version)" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="prometheus-net" Version="8.2.1" />
-        <PackageReference Include="SharpCompress" Version="0.37.2" />
-        <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
-        <PackageReference Include="SSH.NET" Version="2020.0.2" />
-        <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-        <PackageReference Include="System.Net.Http" Version="4.3.4" />
-        <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-        <PackageReference Include="System.Net.Ping" Version="4.3.0" />
-        <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-        <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-        <PackageReference Include="YamlDotNet" Version="15.1.2" />
+        <PackageReference Include="DiscUtils.Iso9660" />
+        <PackageReference Include="DNS" />
+        <PackageReference Include="KubernetesClient" />
+        <PackageReference Include="Macross.Json.Extensions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.Net.Http.Server" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="prometheus-net" />
+        <PackageReference Include="SharpCompress" />
+        <PackageReference Include="SharpZipLib.NETStandard" />
+        <PackageReference Include="SSH.NET" />
+        <PackageReference Include="System.Diagnostics.Contracts" />
+        <PackageReference Include="System.IO.Compression" />
+        <PackageReference Include="System.Net.Http" />
+        <PackageReference Include="System.Net.NetworkInformation" />
+        <PackageReference Include="System.Net.Ping" />
+        <PackageReference Include="System.Security.Cryptography.Algorithms" />
+        <PackageReference Include="System.Threading.Tasks.Parallel" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -82,17 +82,17 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true">
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.Common.Extensions" />
+                <PackageReference Include="Neon.Cryptography" />
+                <PackageReference Include="Neon.Deployment" />
+                <PackageReference Include="Neon.JsonConverters" />
+                <PackageReference Include="Neon.ModelGenerator" GeneratePathProperty="true">
                     <PrivateAssets>all</PrivateAssets>
                     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
                 </PackageReference>
-                <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Postgres" />
+                <PackageReference Include="Neon.SSH" />
             </ItemGroup>
         </When>
         <Otherwise>

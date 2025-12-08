@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>TestDeployment</RootNamespace>
         <IsPackable>false</IsPackable>
         <AssemblyName>Test.Neon.Grpc</AssemblyName>
@@ -27,14 +27,14 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.9.0" />
-        <PackageReference Include="xunit" Version="2.9.0" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Microsoft.TestPlatform.TestHost" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="coverlet.collector" Version="6.0.2">
+        <PackageReference Include="coverlet.collector">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -54,9 +54,9 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.HyperV" />
+                <PackageReference Include="Neon.Xunit" />
             </ItemGroup>
         </When>
         <Otherwise>

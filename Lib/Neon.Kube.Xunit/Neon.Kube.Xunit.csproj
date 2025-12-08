@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.Xunit</RootNamespace>
         <PackageId>Neon.Kube.Xunit</PackageId>
@@ -32,11 +32,11 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient" Version="12.0.16" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(DotNet8Version)" />
-        <PackageReference Include="xunit.extensibility.core" Version="2.9.0" />
-        <PackageReference Include="xunit.extensibility.execution" Version="2.9.0" />
-        <PackageReference Include="YamlDotNet" Version="15.1.2" />
+        <PackageReference Include="KubernetesClient" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+        <PackageReference Include="xunit.extensibility.core" />
+        <PackageReference Include="xunit.extensibility.execution" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -53,10 +53,10 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.Deployment" />
+                <PackageReference Include="Neon.SSH" />
+                <PackageReference Include="Neon.Xunit" />
             </ItemGroup>
         </When>
         <Otherwise>

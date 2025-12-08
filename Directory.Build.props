@@ -52,13 +52,6 @@
 
     </PropertyGroup>
 
-	<PropertyGroup Label="Dotnet versions">
-		<DotNet6Version>6.0.*</DotNet6Version>
-		<DotNet7Version>7.0.*</DotNet7Version>
-		<DotNet8Version>8.0.*</DotNet8Version>
-		<DotNet9Version>9.0.0-*</DotNet9Version>
-	</PropertyGroup>
-
     <!--
     Set this to version of the NeonSDK nuget packages to be referenced by solutuon projects,
     or to 0 to disable NEONFORGE related package references.
@@ -116,7 +109,7 @@
     <Choose>
         <When Condition="'$(NEON_BUILD_USE_NUGETS)' == 'true'">
             <PropertyGroup>
-                <NeonBuildUseNugets>true</NeonBuildUseNugets>
+                <NeonBuildUseNugets>false</NeonBuildUseNugets>
             </PropertyGroup>
         </When>
         <Otherwise>
@@ -212,19 +205,9 @@
         </When>
         <Otherwise>
             <PropertyGroup>
-                <ModelGeneratorPath>$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\net8.0\win-x64\neon-modelgen</ModelGeneratorPath>
+                <ModelGeneratorPath>$(NF_ROOT)\Tools\neon-modelgen\bin\$(Configuration)\net10.0\win-x64\neon-modelgen</ModelGeneratorPath>
             </PropertyGroup>
         </Otherwise>
     </Choose>
-
-    <!-- Build breaks for some reason without this, since the .NET 8.0 upgrade -->
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-    </ItemGroup>
 
 </Project>

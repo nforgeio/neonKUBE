@@ -34,18 +34,18 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
-        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="NJsonSchema" Version="10.9.0" />
-        <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-        <PackageReference Include="System.Net.Http" Version="4.3.4" />
-        <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-        <PackageReference Include="System.Net.Ping" Version="4.3.0" />
-        <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-        <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-        <PackageReference Include="YamlDotNet" Version="15.1.2" />
+        <PackageReference Include="KubernetesClient.Models" />
+        <PackageReference Include="Macross.Json.Extensions" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="NJsonSchema" />
+        <PackageReference Include="System.Diagnostics.Contracts" />
+        <PackageReference Include="System.IO.Compression" />
+        <PackageReference Include="System.Net.Http" />
+        <PackageReference Include="System.Net.NetworkInformation" />
+        <PackageReference Include="System.Net.Ping" />
+        <PackageReference Include="System.Security.Cryptography.Algorithms" />
+        <PackageReference Include="System.Threading.Tasks.Parallel" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->
@@ -53,9 +53,9 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Operator.Analyzers" Version="$(NeonOperatorPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.JsonConverters" />
+                <PackageReference Include="Neon.Operator.Analyzers" />
             </ItemGroup>
         </When>
         <Otherwise>

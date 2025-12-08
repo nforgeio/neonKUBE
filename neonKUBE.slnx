@@ -1,0 +1,123 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="arm64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Doc/">
+    <File Path="Doc/AWS Notes.docx" />
+    <File Path="Doc/Azure Notes.docx" />
+    <File Path="Doc/DEVELOPER.md" />
+    <File Path="Doc/SUDO and WinSCP.docx" />
+    <File Path="Doc/TECHNIQUES.md" />
+    <Project Path="Doc/Release/Release.csproj" />
+  </Folder>
+  <Folder Name="/Doc/Images/" />
+  <Folder Name="/Doc/Images/Developer/">
+    <File Path="Doc/Images/Developer/DockerLogo.png" />
+    <File Path="Doc/Images/Developer/DockerNetwork.png" />
+    <File Path="Doc/Images/Developer/DockerSysTray.png" />
+    <File Path="Doc/Images/Developer/hyper-v.png" />
+    <File Path="Doc/Images/Developer/PythonImports.png" />
+    <File Path="Doc/Images/Developer/SkypeConnections.png" />
+    <File Path="Doc/Images/Developer/virtualization.png" />
+    <File Path="Doc/Images/Developer/VisualStudioClone.png" />
+    <File Path="Doc/Images/Developer/WinSCPHiddenFiles.png" />
+  </Folder>
+  <Folder Name="/External/">
+    <File Path="External/innosetup-qsp-5.6.1-unicode.exe" />
+    <File Path="External/XCP-ng-Center-20.04.01.33.msi" />
+    <File Path="External/zenburn-ligh-putty.reg" />
+  </Folder>
+  <Folder Name="/Github/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path=".password-name" />
+    <File Path="buildenv.cmd" />
+    <File Path="buildenv.ps1" />
+    <File Path="Directory.Build.props" />
+    <File Path="docfx.json" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Github/.github/" />
+  <Folder Name="/Github/.github/actions/" />
+  <Folder Name="/Github/.github/workflows/">
+    <File Path=".github/workflows/new-issues.yaml" />
+  </Folder>
+  <Folder Name="/Lib/">
+    <File Path="Lib/nuget-icon.png" />
+    <Project Path="Lib/Neon.Kube.Aws/Neon.Kube.Aws.csproj" />
+    <Project Path="Lib/Neon.Kube.Azure/Neon.Kube.Azure.csproj" />
+    <Project Path="Lib/Neon.Kube.BareMetal/Neon.Kube.BareMetal.csproj" />
+    <Project Path="Lib/Neon.Kube.BuildInfo/Neon.Kube.BuildInfo.csproj">
+      <BuildType Project="Debug" />
+    </Project>
+    <Project Path="Lib/Neon.Kube.DesktopService/Neon.Kube.DesktopService.csproj" />
+    <Project Path="Lib/Neon.Kube.Google/Neon.Kube.Google.csproj" />
+    <Project Path="Lib/Neon.Kube.GrpcProto/Neon.Kube.GrpcProto.csproj" />
+    <Project Path="Lib/Neon.Kube.Hosting/Neon.Kube.Hosting.csproj" />
+    <Project Path="Lib/Neon.Kube.HyperV/Neon.Kube.HyperV.csproj" />
+    <Project Path="Lib/Neon.Kube.Models/Neon.Kube.Models.csproj" />
+    <Project Path="Lib/Neon.Kube.Resources/Neon.Kube.Resources.csproj" />
+    <Project Path="Lib/Neon.Kube.Setup/Neon.Kube.Setup.csproj">
+      <BuildDependency Project="Services/neon-cluster-operator/neon-cluster-operator.csproj" />
+      <BuildDependency Project="Services/neon-node-agent/neon-node-agent.csproj" />
+    </Project>
+    <Project Path="Lib/Neon.Kube.XenServer/Neon.Kube.XenServer.csproj" />
+    <Project Path="Lib/Neon.Kube.Xunit/Neon.Kube.Xunit.csproj" />
+    <Project Path="Lib/Neon.Kube/Neon.Kube.csproj">
+      <BuildDependency Project="Lib/Neon.Kube.Models/Neon.Kube.Models.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/Powershell/">
+    <File Path="Powershell/deployment.ps1" />
+    <File Path="Powershell/error-handling.ps1" />
+    <File Path="Powershell/files.ps1" />
+    <File Path="Powershell/git.ps1" />
+    <File Path="Powershell/github.ps1" />
+    <File Path="Powershell/includes.ps1" />
+    <File Path="Powershell/README.md" />
+    <File Path="Powershell/utility.ps1" />
+  </Folder>
+  <Folder Name="/Services/">
+    <Project Path="services/neon-acme/neon-acme.csproj" />
+    <Project Path="Services/neon-cluster-operator/neon-cluster-operator.csproj">
+      <BuildDependency Project="Lib/Neon.Kube.Models/Neon.Kube.Models.csproj" />
+      <BuildDependency Project="Services/neon-node-agent/neon-node-agent.csproj" />
+    </Project>
+    <Project Path="Services/neon-node-agent/neon-node-agent.csproj" />
+    <Project Path="Services/neon-sso-session-proxy/neon-sso-session-proxy.csproj" />
+  </Folder>
+  <Folder Name="/Test/">
+    <File Path="Test/README.md" />
+    <File Path="Test/secrets.yaml" />
+    <Project Path="Test/Test.neon-node-agent/Test.neon-node-agent.csproj" />
+    <Project Path="Test/Test.Neon.Grpc/Test.Neon.Grpc.csproj" />
+    <Project Path="Test/Test.Neon.Kube.Xunit/Test.Neon.Kube.Xunit.csproj" />
+    <Project Path="Test/Test.Neon.Kube/Test.Neon.Kube.csproj">
+      <BuildDependency Project="Tools/neon-cli/neon-cli.csproj" />
+    </Project>
+    <Project Path="Test/Test.NeonCli/Test.NeonCli.csproj" />
+  </Folder>
+  <Folder Name="/ToolBin/">
+    <File Path="ToolBin/neonkube-archive.cmd" />
+    <File Path="ToolBin/neonkube-archive.ps1" />
+    <File Path="ToolBin/neonkube-builder.cmd" />
+    <File Path="ToolBin/neonkube-builder.ps1" />
+    <File Path="ToolBin/neonkube-nuget-dev.cmd" />
+    <File Path="ToolBin/neonkube-nuget-dev.ps1" />
+    <File Path="ToolBin/neonkube-nuget-public.cmd" />
+    <File Path="ToolBin/neonkube-nuget-public.ps1" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <File Path="Tools/helm-munger/helm-munger.csproj" />
+    <Project Path="Tools/neon-cli/neon-cli.csproj" />
+  </Folder>
+  <Project Path="Images/Images.csproj" />
+</Solution>
