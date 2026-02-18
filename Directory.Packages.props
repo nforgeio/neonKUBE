@@ -43,7 +43,6 @@
         <PackageVersion Include="KubernetesClient" Version="12.0.16" />
         <PackageVersion Include="KubernetesClient.Models" Version="12.0.16" />
         <PackageVersion Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
-        <PackageVersion Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
         <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(DotNetVersion)" />
         <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetVersion)" />

@@ -51,7 +51,6 @@
         <PackageReference Include="DiscUtils.Iso9660" />
         <PackageReference Include="DNS" />
         <PackageReference Include="KubernetesClient" />
-        <PackageReference Include="Macross.Json.Extensions" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="Microsoft.Net.Http.Server" />
         <PackageReference Include="Microsoft.Windows.Compatibility" />

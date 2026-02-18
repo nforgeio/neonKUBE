@@ -9,8 +9,8 @@ spec:
   issuerRef:
     name: neon-acme-selfsign
   secretName: neon-acme-ca
-  duration: {{ .Values.certficateDuration }}
-  renewBefore: {{ .Values.certficateRenewBefore }}
+  duration: 8760h0m0s
+  renewBefore: 4320h0m0s
   commonName: "ca.neon-acme.$<KubeVersion.Istio>"
   isCA: true
 ---
