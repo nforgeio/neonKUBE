@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        ThisAssembly.cs
+// FILE:        AssemblyInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.
 //

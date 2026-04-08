@@ -53,8 +53,7 @@
     <ItemGroup>
         <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
         <PackageReference Include="DNS" Version="7.0.0" />
-        <PackageReference Include="KubernetesClient" Version="12.0.16" />
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageReference Include="KubernetesClient.Classic" Version="17.0.14" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetVersion)" />
         <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />

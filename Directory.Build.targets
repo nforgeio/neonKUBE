@@ -4,7 +4,6 @@
         <Product>NeonSDK</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
-        <NeonSdkVersion>5.0.0</NeonSdkVersion>
         <Copyright>Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.</Copyright>
         <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -52,6 +51,17 @@
         <NeonSdkPackageVersion>5.0.0</NeonSdkPackageVersion>
         <NeonOperatorPackageVersion>3.0.0</NeonOperatorPackageVersion>
 
+    </PropertyGroup>
+
+    <!--
+    These variables are used to specify the NeonSDK and Neon.KubernetesClient.* package
+    versions to use when building the NeonOPERATOR and NeonKUBE solutions by themselves
+    (not in the combined NeonCLOUD solution.
+    -->
+
+    <PropertyGroup>
+        <NeonSdkVersion>5.0.0</NeonSdkVersion>
+        <NeonKubernetesClientVersion>17.0.14</NeonKubernetesClientVersion>
     </PropertyGroup>
 
     <!--
