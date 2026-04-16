@@ -103,7 +103,7 @@ function Get-DotnetBaseImage
 	$lines    = $response.stdout -split '\r?\n'
 	$runtime  = $lines[0].Trim()
 
-	return "mcr.microsoft.com/dotnet/aspnet:$runtime-jammy-amd64"
+	return "mcr.microsoft.com/dotnet/aspnet:$runtime-noble-amd64"
 }
 
 #------------------------------------------------------------------------------
