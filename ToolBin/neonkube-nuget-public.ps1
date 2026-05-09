@@ -134,10 +134,10 @@ try
     }
 
     $msbuild         = $env:MSBUILDPATH
-    $neonBuild       = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
+    $neonBuild       = "$env:NF_ROOT\ToolBin\neon-build.exe"
     $config          = "Release"
     $nkRoot          = "$env:NK_ROOT"
-    $nkSolution      = "$nkRoot\neonKUBE.sln"
+    $nkSolution      = "$nkRoot\neonKUBE.slnx"
     $nkBuild         = "$env:NK_BUILD"
     $nkLib           = "$nkRoot\Lib"
     $nkTools         = "$nkRoot\Tools"

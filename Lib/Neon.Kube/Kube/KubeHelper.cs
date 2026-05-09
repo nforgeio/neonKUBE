@@ -2981,7 +2981,7 @@ TCPKeepAlive yes
                 throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not exist.");
             }
 
-            if (!File.Exists(Path.Combine(nkRoot, "neonKUBE.sln")))
+            if (!File.Exists(Path.Combine(nkRoot, "neonKUBE.slnx")))
             {
                 throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not include the [neonKUBE.sln] file.");
             }
