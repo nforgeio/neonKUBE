@@ -78,11 +78,20 @@
     setting <UseNeonAnalyzers>false</UseNeonAnalyzers>.
     -->
 
-    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Neon.Analyzers' and '$(UseNeonAnalyzers)' != 'false'">
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Analyzers\Neon.Analyzers.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false" />
-    </ItemGroup>
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup Condition="'$(MSBuildProjectName)' != 'Neon.Analyzers' and '$(UseNeonAnalyzers)' != 'false'">
+                <PackageReference Include="Neon.Analyzers" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup Condition="'$(MSBuildProjectName)' != 'Neon.Analyzers' and '$(UseNeonAnalyzers)' != 'false'">
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Analyzers\Neon.Analyzers.csproj"
+                                  OutputItemType="Analyzer"
+                                  ReferenceOutputAssembly="false" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
     <!-- 
     We have a somewhat complex build environment.  The NeonCLOUD repo is private and

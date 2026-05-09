@@ -57,6 +57,7 @@
         <PackageVersion Include="Microsoft.Windows.Compatibility" Version="$(DotNetVersion)" />
         <PackageVersion Include="Minio" Version="5.0.0" />
         <PackageVersion Include="Moq" Version="4.20.70" />
+        <PackageVersion Include="Neon.Analyzers" Version="$(NeonSdkPackageVersion)" />
         <PackageVersion Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
         <PackageVersion Include="Neon.Common.Extensions" Version="$(NeonSdkPackageVersion)" />
         <PackageVersion Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
