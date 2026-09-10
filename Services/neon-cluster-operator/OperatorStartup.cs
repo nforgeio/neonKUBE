@@ -22,20 +22,20 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Minio;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Minio;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Operator;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Minio;
+using Neon.Operator;
 using Neon.Operator.ResourceManager;
 
 using NeonClusterOperator.Harbor;
@@ -45,8 +45,8 @@ using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {

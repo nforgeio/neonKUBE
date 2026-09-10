@@ -29,10 +29,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.Models;
+
 using Neon.Common;
 using Neon.Net;
-
-using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -374,7 +374,8 @@ or decrease:   [{optionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes
                     foreach (var node in clusterDefinition.Nodes)
                     {
                         node.Labels.SystemIstioServices = true;
-                    };
+                    }
+                    ;
                 }
                 else
                 {
@@ -392,7 +393,8 @@ or decrease:   [{optionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes
                     foreach (var node in clusterDefinition.Nodes)
                     {
                         node.Labels.SystemOpenEbsStorage = true;
-                    };
+                    }
+                    ;
                 }
                 else
                 {

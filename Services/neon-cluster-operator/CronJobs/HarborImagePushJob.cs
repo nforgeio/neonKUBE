@@ -32,8 +32,8 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Util;
 using Neon.Tasks;
 
 using NeonClusterOperator.Harbor;
@@ -43,10 +43,11 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+
 using Quartz;
 
-using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -192,6 +193,8 @@ rm -rf {tempDir}
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CheckProjectAsync(string projectName)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(projectName), nameof(projectName));
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
@@ -225,6 +228,8 @@ rm -rf {tempDir}
         /// <returns><c>true</c> when the container image exists in Harbor.</returns>
         private async Task<bool> HarborHoldsContainerImageAsync(string projectName, string imageName, string tag)
         {
+            await SyncContext.Clear;
+
             var exists = false;
 
             try
@@ -262,6 +267,8 @@ rm -rf {tempDir}
         /// <returns><c>true</c> when any matching tasks are pending.</returns>
         private async Task<bool> IsAnyNodeTaskPendingAsync(Dictionary<string, string> labels)
         {
+            await SyncContext.Clear;
+
             var selector       = labels.Keys.Select(key => $"{key}={labels[key]}");
             var selectorString = string.Join(",", selector.ToArray());
 

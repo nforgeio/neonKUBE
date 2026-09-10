@@ -285,6 +285,8 @@ namespace Neon.Net
                 var task = Task.Run(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         try
                         {
                             var addresses = await client.Lookup(addressOrFQDN);

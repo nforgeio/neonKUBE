@@ -16,13 +16,13 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Http;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 using k8s;
 using k8s.Models;
@@ -30,9 +30,9 @@ using k8s.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -46,11 +46,11 @@ using Neon.Net;
 using Neon.Service;
 using Neon.Tasks;
 
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+
 using Prometheus;
 using Prometheus.DotNetRuntime;
-
-using OpenTelemetry.Trace;
-using OpenTelemetry;
 
 namespace NeonSsoSessionProxy
 {
@@ -124,6 +124,8 @@ namespace NeonSsoSessionProxy
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            await SyncContext.Clear;
+
             Neon.Kube.KubeHelper.InitializeJson(); 
             
             k8s = Neon.Kube.KubeHelper.CreateKubernetesClient();
@@ -167,6 +169,8 @@ namespace NeonSsoSessionProxy
             _ = k8s.WatchAsync<V1NeonSsoClient>(
                 async (@event) =>
                 {
+                    await SyncContext.Clear;
+
                     switch (@event.Type)
                     {
                         case WatchEventType.Added:

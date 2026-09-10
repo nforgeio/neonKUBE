@@ -49,6 +49,7 @@ using Newtonsoft.Json.Linq;
 
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using Neon.Tasks;
 
 namespace Neon.Kube.SSH
 {
@@ -73,6 +74,8 @@ namespace Neon.Kube.SSH
         /// </remarks>
         public static async Task NodeInstallHelmArchiveAsync(this ILinuxSshProxy node, ISetupController controller)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             using (var ms = new MemoryStream())
@@ -83,6 +86,8 @@ namespace Neon.Kube.SSH
                 var preprocessor = new ZipPreprocessor(
                     async (path, input) =>
                     {
+                        await SyncContext.Clear;
+
                         try
                         {
                             // Preprocess value references like: $<KubeVersion.VERSION>

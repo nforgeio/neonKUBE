@@ -48,6 +48,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 // $todo(jefflill): We need to check for failed pods here too.
 
@@ -109,6 +110,10 @@ This command returns a non-zero exit code when one or more checks fail.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.Arguments.Length > 0)
             {
                 Console.Error.WriteLine("*** ERROR: Unexpected argument.");

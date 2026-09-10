@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -116,6 +117,10 @@ namespace NeonCli
 
         public async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
 
             await Task.CompletedTask;

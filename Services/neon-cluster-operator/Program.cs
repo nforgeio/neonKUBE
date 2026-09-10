@@ -31,15 +31,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using Neon.Diagnostics;
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Operator;
 using Neon.Net;
+using Neon.Operator;
 using Neon.Service;
 
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonClusterOperator
 {
@@ -65,6 +66,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
+            await SyncContext.Clear;
+
             try
             {
                 // Initialize the static resource file system.

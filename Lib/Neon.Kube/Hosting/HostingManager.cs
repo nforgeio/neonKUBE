@@ -234,7 +234,12 @@ namespace Neon.Kube.Hosting
         }
 
         /// <inheritdoc/>
-        public virtual async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition) => await Task.FromResult((string)null);
+        public virtual async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+
+            await Task.FromResult((string)null);
+        }
 
         /// <summary>
         /// Used by on-premise hosting managers to detect IP address related conflicts.
@@ -246,6 +251,8 @@ namespace Neon.Kube.Hosting
         /// </returns>
         protected async Task<string> CheckForIPConflictsAsync(ClusterDefinition clusterDefinition)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // $todo(jefflill):
@@ -333,6 +340,8 @@ namespace Neon.Kube.Hosting
                 await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
                     async (nodeDefinition, cancellationToken) =>
                     {
+                        await SyncContext.Clear;
+
                         var reply = await pinger.SendPingAsync(nodeDefinition.Address);
 
                         if (reply.Status == IPStatus.Success)

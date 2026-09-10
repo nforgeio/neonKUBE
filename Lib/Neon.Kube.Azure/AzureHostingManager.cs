@@ -1162,6 +1162,8 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("listing virtual machines",
                 async state =>
                 {
+                    await SyncContext.Clear;
+
                     controller.SetGlobalStepStatus("list: virtual machines");
 
                     // Update [azureNodes] with any existing Azure nodes and their NICs.
@@ -1235,6 +1237,8 @@ namespace Neon.Kube.Hosting.Azure
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
+                        await SyncContext.Clear;
+
                         var azureVm             = nodeNameToVm[node.Name];
                         var vm                  = azureVm.Vm;
                         var mayastorStorageType = ToAzureStorageType(openEbsHostingOptions.MayastorStorageType);
@@ -1283,12 +1287,16 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("connect azure",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await ConnectAzureAsync();
                 });
 
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await cluster.HostingManager.EnableInternetSshAsync();
 
                     // We need to update the cluster node addresses and SSH ports
@@ -1316,6 +1324,8 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("node topology",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(verb: "label", message: "nodes (cloud)");
 
                     var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
@@ -1381,6 +1391,8 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await cluster.HostingManager.DisableInternetSshAsync();
                 });
         }
@@ -1777,6 +1789,8 @@ namespace Neon.Kube.Hosting.Azure
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     if (azureVm.Vm == null)
                     {
                         // The virtual machine doesn't actually exist.
@@ -2756,6 +2770,8 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     var ipConfiguration        = azureVm.Nic.Data.IPConfigurations.First();
                     var nicBackendAddressPools = ipConfiguration.LoadBalancerBackendAddressPools;
                     var changed                = false;
@@ -3039,6 +3055,8 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
                     var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
                     var rule = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
@@ -3442,6 +3460,8 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     if (azureVm.State == ClusterNodeState.Off)
                     {
                         await azureVm.Vm.PowerOnAsync(WaitUntil.Started);
@@ -3461,6 +3481,8 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     await azureVm.Vm.PowerOffAsync(WaitUntil.Completed, skipShutdown: stopMode != StopMode.Graceful);
                 });
         }

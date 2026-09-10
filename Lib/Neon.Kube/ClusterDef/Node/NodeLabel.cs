@@ -20,8 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Net;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -29,15 +29,15 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.Net;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using YamlDotNet.Serialization;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.Net;
 
 namespace Neon.Kube.ClusterDef
 {

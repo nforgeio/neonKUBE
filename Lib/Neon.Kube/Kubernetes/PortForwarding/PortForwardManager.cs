@@ -31,6 +31,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Kube.PortForward
 {
@@ -90,6 +91,8 @@ namespace Neon.Kube.PortForward
             var forwardingTask = Task.Run(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     using (var portListener = new PortListener(localPort, localAddress, loggerFactory, cancellationToken))
                     {
                         try
@@ -99,6 +102,8 @@ namespace Neon.Kube.PortForward
                             RemoteConnectionFactory remoteConnectionFactory = 
                                 async () =>
                                 {
+                                    await SyncContext.Clear;
+
                                     logger?.LogDebugEx(() => $"Creating socket forwarding: {localPort} --> {remotePort}");
 
                                     var retry = new LinearRetryPolicy(typeof(WebSocketException), maxAttempts: 3, retryInterval: TimeSpan.FromMilliseconds(100));

@@ -25,12 +25,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -82,6 +84,10 @@ This command removes the current login when CONTEXT-NAME is not specified.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             KubeConfigContext   context     = null;
             KubeContextName     contextName = null;
 

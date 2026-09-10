@@ -25,13 +25,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+
+<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
+=======
+using Neon.Tasks;
+>>>>>>> After
 
 namespace NeonCli
 {
@@ -87,6 +93,10 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             commandLine.DefineOption("--namespace", "-n");
             commandLine.DefineOption("--output", "-o");
 

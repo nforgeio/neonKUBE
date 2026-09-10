@@ -49,6 +49,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -150,6 +151,10 @@ definition or by executing this command on your cluster:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Help();

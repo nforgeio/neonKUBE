@@ -208,6 +208,8 @@ spec:
             await controlNode.InvokeIdempotentAsync("setup/label-nodes",
                 (Func<Task>)(async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "label", message: "nodes");
 
                     try
@@ -315,6 +317,8 @@ spec:
             await globalRetry.InvokeAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.ClearStatus();
                     controller.SetGlobalStepStatus();
 
@@ -1076,6 +1080,8 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/coredns",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "coredns");
 
                     // Wait for CoreDNS deployment to report that it's deployed.
@@ -1094,6 +1100,8 @@ exit 1
                     await controlNode.InvokeIdempotentAsync("setup/coredns-configure",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
 
                             // We're going to schedule this only on control-plane nodes (note that
@@ -1133,6 +1141,8 @@ exit 1
                     await controlNode.InvokeIdempotentAsync("setup/check-dns",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "check", message: "dns");
 
                             var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
@@ -1181,6 +1191,8 @@ exit 1
                     await controlNode.InvokeIdempotentAsync("setup/coredns-verify",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "verify", message: "dns");
 
                             // Verify that [coredns] is actually working.
@@ -1196,6 +1208,8 @@ exit 1
                             await operationRetry.InvokeAsync(
                                 async () =>
                                 {
+                                    await SyncContext.Clear;
+
                                     try
                                     {
                                         var result = await k8s.NamespacedPodExecWithRetryAsync(
@@ -1233,6 +1247,8 @@ exit 1
                 await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         var serviceMonitor = new V1ServiceMonitor()
                         {
                             Metadata = new V1ObjectMeta()
@@ -1404,6 +1420,8 @@ exit 1
             controlNode.InvokeIdempotent("setup/priorityclass",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "priority classes");
 
                     foreach (var priorityClassDef in PriorityClass.Values.Where(priorityClass => !priorityClass.IsSystem))
@@ -1466,6 +1484,8 @@ exit 1
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-control-plane-taints",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
                     if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
@@ -1475,6 +1495,8 @@ exit 1
                         await operationRetry.InvokeAsync(
                            async () =>
                            {
+                               await SyncContext.Clear;
+
                                nodes = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                                if (!(nodes.Items.All(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True"))))
@@ -1823,11 +1845,15 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/namespace-trace-sampling",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "namespace trace sampling");
 
                     Func<string, double, Task> ConfigureNamespaceTracing =
                         async (@namespace, samplePercentage) =>
                         {
+                            await SyncContext.Clear;
+
                             var telemetry = new V1Telemetry()
                             {
                                 Metadata = new V1ObjectMeta()
@@ -1857,14 +1883,54 @@ istioctl install --verify -y -f manifest.yaml
                             await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
                         };
 
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.Default}", async () => await ConfigureNamespaceTracing(KubeNamespace.Default, cluster.SetupState.ClusterDefinition.Monitor.Trace.DefaultNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.IstioSystem}", async () => await ConfigureNamespaceTracing(KubeNamespace.IstioSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubeIstioSystemNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.KubePublic}", async () => await ConfigureNamespaceTracing(KubeNamespace.KubePublic, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubePublicNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.KubeSystem}", async () => await ConfigureNamespaceTracing(KubeNamespace.KubeSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubeSystemNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonMonitor}", async () => await ConfigureNamespaceTracing(KubeNamespace.NeonMonitor, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonMonitorNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonStatus}", async () => await ConfigureNamespaceTracing(KubeNamespace.NeonStatus, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonStatusNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonStorage}", async () => await ConfigureNamespaceTracing(KubeNamespace.NeonStorage, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonStorageNamespaceSamplingPercentage));
-                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonSystem}", async () => await ConfigureNamespaceTracing(KubeNamespace.NeonSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonSystemNamespaceSamplingPercentage));
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.Default}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.Default, cluster.SetupState.ClusterDefinition.Monitor.Trace.DefaultNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.IstioSystem}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.IstioSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubeIstioSystemNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.KubePublic}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.KubePublic, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubePublicNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.KubeSystem}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.KubeSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.KubeSystemNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonMonitor}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.NeonMonitor, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonMonitorNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonStatus}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.NeonStatus, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonStatusNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonStorage}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.NeonStorage, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonStorageNamespaceSamplingPercentage);
+                    });
+                    await controlNode.InvokeIdempotentAsync($"setup/telemetry-{KubeNamespace.NeonSystem}", async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ConfigureNamespaceTracing(KubeNamespace.NeonSystem, cluster.SetupState.ClusterDefinition.Monitor.Trace.NeonSystemNamespaceSamplingPercentage);
+                    });
                 });
         }
 
@@ -1888,6 +1954,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "metrics-server");
 
                     var values = new Dictionary<string, object>();
@@ -1915,6 +1983,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "metrics-server");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "metrics-server",
@@ -1948,6 +2018,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "cert-manager");
 
                     var values = new Dictionary<string, object>();
@@ -1976,6 +2048,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/cert-manager-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "cert-manager");
 
                     await NeonHelper.WaitAllAsync(
@@ -1993,6 +2067,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/neon-acme",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "neon-acme");
 
                     var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -2086,6 +2162,8 @@ istioctl install --verify -y -f manifest.yaml
                     await controlNode.InvokeIdempotentAsync("setup/neon-acme-issuer",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             await k8s.CustomObjects.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
                         });
 
@@ -2134,6 +2212,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureDesktopClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            await SyncContext.Clear;
+
             ConnectCluster(controller);
             await ConfigureCertificatesInternalAsync(controller, controlNode, "desktop");
         }
@@ -2146,6 +2226,8 @@ istioctl install --verify -y -f manifest.yaml
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureClusterCertificatesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            await SyncContext.Clear;
+
             await ConfigureCertificatesInternalAsync(controller, controlNode);
         }
 
@@ -2161,6 +2243,8 @@ istioctl install --verify -y -f manifest.yaml
             NodeSshProxy<NodeDefinition> controlNode,
             string                       idempotencySuffix = null)
         {
+            await SyncContext.Clear;
+
             controller.LogProgress(controlNode, verb: "setup", message: "cluster-tls-certificate");
 
             var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -2177,6 +2261,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync(idempotencyKey,
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "cluster-tls-certificate");
 
                     var retry = new LinearRetryPolicy(
@@ -2189,6 +2275,8 @@ istioctl install --verify -y -f manifest.yaml
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             if (cluster.SetupState.ClusterDefinition.IsDesktop)
                             {
                                 cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
@@ -2236,6 +2324,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-service",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress service");
 
                     var service                        = new V1Service().Initialize();
@@ -2266,6 +2356,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-destination-rule",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress destination rule");
 
                     var destinationRule = new V1DestinationRule().Initialize();
@@ -2297,6 +2389,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-virtual-service",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "apiserver ingress virtual service");
 
                     var virtualService                        = new V1VirtualService().Initialize();
@@ -2365,6 +2459,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "neoncloud token");
 
                     var secret = new V1Secret()
@@ -2404,6 +2500,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "create", message: "root user");
 
                     var serviceAccount = new V1ServiceAccount()
@@ -2470,6 +2568,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kube-dashboard",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "kubernetes dashboard");
 
                     var values = new Dictionary<string, object>();
@@ -2511,6 +2611,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/taint-nodes",
                 (Func<Task>)(async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "taint", message: "nodes");
 
                     var nodes = await k8s.CoreV1.ListNodeAsync();
@@ -2560,6 +2662,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/cluster-crds",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "Install", message: "Cluster CRDs");
 
                     await controlNode.InstallHelmChartAsync(controller, "cluster-crds",
@@ -2587,6 +2691,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "setup", message: "kiali");
 
                     var values        = new Dictionary<string, object>();
@@ -2641,6 +2747,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "kiali");
 
                     await NeonHelper.WaitAllAsync(
@@ -2681,6 +2789,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/node-problem-detector",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     await controlNode.InstallHelmChartAsync(controller, "node-problem-detector",
                         prioritySpec: PriorityClass.NeonOperator.Name,
                         @namespace:   KubeNamespace.NeonSystem);
@@ -2690,6 +2800,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/node-problem-detector-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "node-problem-detector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
@@ -2718,6 +2830,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync($"setup/namespace-{name}",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     await k8s.CoreV1.CreateNamespaceAsync(
                         new V1Namespace()
                         {
@@ -2770,10 +2884,14 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.ThrowIfCancelledOrFaulted();
                     await controlNode.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "configure", message: "openebs");
 
                             var values = new Dictionary<string, object>();
@@ -2857,6 +2975,8 @@ istioctl install --verify -y -f manifest.yaml
                     await controlNode.InvokeIdempotentAsync("setup/openebs-wait",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.ThrowIfCancelledOrFaulted();
                             controller.LogProgress(controlNode, verb: "wait", message: "for openebs services");
 
@@ -2907,6 +3027,8 @@ istioctl install --verify -y -f manifest.yaml
                     await controlNode.InvokeIdempotentAsync("setup/openebs-wait",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.ThrowIfCancelledOrFaulted();
                             controller.LogProgress(controlNode, verb: "create", message: "openebs storage classes");
 
@@ -2996,6 +3118,8 @@ istioctl install --verify -y -f manifest.yaml
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var storageClass = new V1StorageClass()
                     {
                         Metadata = new V1ObjectMeta()
@@ -3058,6 +3182,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     if (controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicaCount)
                     {
                         replicaCount = controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
@@ -3149,6 +3275,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "prometheus");
 
                     var values        = new Dictionary<string, object>();
@@ -3211,6 +3339,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-prometheus-blackbox-exporter",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
@@ -3255,6 +3385,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-agent-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "grafana agent");
 
                     await NeonHelper.WaitAllAsync(
@@ -3290,6 +3422,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/memcached",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "memcached");
 
                     values.Add($"replicas", serviceAdvice.Replicas);
@@ -3323,6 +3457,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/memcached-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "memcached");
 
                     await k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-memcached", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3347,6 +3483,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-all",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s                 = GetK8sClient(controller);
                     var mimirAdvice         = clusterAdvisor.GetServiceAdvice(ClusterAdvisor.Mimir);
@@ -3434,6 +3572,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             var dbSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                             var citusSecret = new V1Secret()
@@ -3486,6 +3626,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-ready",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "wait for", message: "mimir");
 
                             await k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "mimir-alertmanager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3531,6 +3673,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "loki");
 
                     var values        = new Dictionary<string, object>();
@@ -3646,6 +3790,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-loki-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "loki");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-compactor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3685,6 +3831,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "tempo");
 
                     var values        = new Dictionary<string, object>();
@@ -3767,6 +3915,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-tempo-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "tempo");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "tempo-compactor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3797,6 +3947,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "deploy", message: "kube-state-metrics");
 
                     var values        = new Dictionary<string, object>();
@@ -3838,6 +3990,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "kube-state-metrics");
 
                     await k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "kube-state-metrics", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3864,6 +4018,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/reloader",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "reloader");
 
                     var values        = new Dictionary<string, object>();
@@ -3905,6 +4061,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/reloader-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "reloader");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "reloader", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -3931,6 +4089,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "grafana");
 
                     var values        = new Dictionary<string, object>();
@@ -3956,6 +4116,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             var secret    = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
                             var dexSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
@@ -4016,6 +4178,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "grafana");
 
                     controller.ThrowIfCancelledOrFaulted();
@@ -4064,6 +4228,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-config",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "grafana");
 
                     var grafanaSecret   = await k8s.CoreV1.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
@@ -4083,6 +4249,8 @@ $@"- name: StorageType
                     await operationRetry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             var grafanaPod      = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
                             var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
@@ -4132,6 +4300,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.ThrowIfCancelledOrFaulted();
                     await CreateHostPathStorageClass(controller, controlNode, "neon-internal-minio");
 
@@ -4139,6 +4309,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "install", message: "minio");
 
                             var values        = new Dictionary<string, object>();
@@ -4226,6 +4398,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("configure/minio-secrets",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "configure", message: "minio secret");
 
                             var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
@@ -4251,6 +4425,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/minio-ready",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
                             await NeonHelper.WaitAllAsync(
@@ -4268,11 +4444,15 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/minio-policy",
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
                             await operationRetry.InvokeAsync(
                                 async () =>
                                 {
+                                    await SyncContext.Clear;
+
                                     var minioPod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
                                     (await k8s.NamespacedPodExecWithRetryAsync(
@@ -4352,6 +4532,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/redis",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "redis");
 
                     var values        = new Dictionary<string, object>();
@@ -4403,6 +4585,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/redis-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "redis");
 
                     await k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-redis-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -4429,6 +4613,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("configure/registry-minio-secret",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "minio secret");
 
                     var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
@@ -4457,6 +4643,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-db",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor databases");
 
                     await CreateEngineStorageClass(controller, controlNode, "neon-internal-registry");
@@ -4507,6 +4695,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor minio");
 
                     var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
@@ -4585,6 +4775,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "harbor");
 
                     var tasks = new List<Task>();
@@ -4625,6 +4817,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login {KubeConst.LocalClusterRegistryHostName} --username {user.Name} --password-stdin";
@@ -4645,6 +4839,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/harbor-login-workstation",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.SysAdminUser);
                     var password = user.Password;
 
@@ -4683,6 +4879,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-manifest",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var configmap = new TypedConfigMap<ClusterManifest>(
                         name:       KubeConfigMapName.ClusterManifest, 
                         @namespace: KubeNamespace.NeonSystem, 
@@ -4710,6 +4908,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-lock",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var clusterLockMap = new TypedConfigMap<ClusterLock>(
                         name:       KubeConfigMapName.ClusterLock,
                         @namespace: KubeNamespace.NeonStatus,
@@ -4742,6 +4942,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     // Persist the cluster deployment information.
 
                     var clusterDeployment       = new ClusterDeployment(cluster.SetupState.ClusterDefinition, cluster.SetupState.ClusterId, cluster.SetupState.ClusterDomain);
@@ -4788,6 +4990,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-cluster-operator");
 
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -4808,6 +5012,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/jobs",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "create", message: "jobs");
 
                     var jobOptions  = cluster.SetupState.ClusterDefinition.Jobs;
@@ -4859,6 +5065,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "neon-dashboards");
 
                     var displayOrder = 0;
@@ -4943,6 +5151,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "neon-node-agent");
 
                     var values = new Dictionary<string, object>();
@@ -4976,6 +5186,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-node-agent-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-node-agent");
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
@@ -5004,6 +5216,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/container-registries",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s     = GetK8sClient(controller);
 
@@ -5097,6 +5311,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/db-credentials-admin",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var username = KubeConst.NeonSystemDbAdminUser;
                     var password = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
@@ -5125,6 +5341,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/db-credentials-service",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var username = KubeConst.NeonSystemDbServiceUser;
                     var password = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
@@ -5153,6 +5371,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/system-db-volumes",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var nodes = cluster.SetupState.ClusterDefinition.SortedControlNodes.ToList();
 
                     if (nodes.Count > operatorAdvice.Replicas)
@@ -5203,6 +5423,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "configure", message: "neon-system-db");
 
                     values.Add($"replicas", operatorAdvice.Replicas);
@@ -5237,6 +5459,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-system-db");
 
                     await NeonHelper.WaitAllAsync(
@@ -5330,6 +5554,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/dex-install",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     await controlNode.InstallHelmChartAsync(controller, "dex",
                         @namespace:      KubeNamespace.NeonSystem,
                         prioritySpec:    PriorityClass.NeonApi.Name,
@@ -5341,6 +5567,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/dex-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-dex");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -5350,6 +5578,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/dex-sso-clients",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-clients");
 
                     var publicClient = new V1NeonSsoClient().Initialize();
@@ -5405,6 +5635,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, "install", "neon-sso-proxy");
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-sso-session-proxy",
@@ -5417,6 +5649,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-session-proxy");
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
@@ -5465,6 +5699,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/glauth-install",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, "install", "neon-sso-glauth");
 
                     await controlNode.InstallHelmChartAsync(controller, "glauth",
@@ -5477,6 +5713,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/glauth-db",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "create", message: "glauth users");
 
                     // Wait for [Glauth] to create the [users] and [groups] Postgres tables.
@@ -5484,6 +5722,8 @@ $@"- name: StorageType
                     await operationRetry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             try
                             {
                                 var response = await cluster.ExecSystemDbCommandAsync("glauth",
@@ -5569,6 +5809,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/glauth-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "glauth");
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
@@ -5584,6 +5826,8 @@ $@"- name: StorageType
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             // Verify [groups] table.
 
                             var result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM groups;", noSuccessCheck: true);
@@ -5639,6 +5883,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "install", message: "neon-sso-oauth2-proxy");
 
                     var values = new Dictionary<string, object>();
@@ -5663,6 +5909,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-oauth2-proxy-ready",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-oauth2-proxy");
 
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-oauth2-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -5751,6 +5999,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync($"setup/neon-dashboard-{name}",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonDashboard>(dashboard, dashboard.Name());
                 });
         }
@@ -5774,6 +6024,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-info",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var clusterManifestMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
@@ -5805,6 +6057,8 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-health" + (ready ? "-ready" : "-not-provisioning"),
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
                         name:       KubeConfigMapName.ClusterHealth,
                         @namespace: KubeNamespace.NeonStatus,
@@ -5848,6 +6102,8 @@ $@"- name: StorageType
             await retry.InvokeAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     controller.CancellationToken.ThrowIfCancellationRequested();
 
                     // Remove all terminated pods here so we don't consider these

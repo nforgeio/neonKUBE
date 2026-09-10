@@ -24,22 +24,24 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Operator.Xunit;
-using Neon.Kube.Resources.Cluster;
 using Neon.Kube;
 using Neon.Kube.K8s;
-using NeonNodeAgent;
+using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Xunit;
 
-using k8s;
-using k8s.Models;
+using NeonNodeAgent;
 
 using Telerik.JustMock;
 
 using Tomlyn;
+using Neon.Tasks;
 
 namespace TestNeonNodeAgent
 {
@@ -58,6 +60,8 @@ namespace TestNeonNodeAgent
         [Fact]
         public async void TestCrioConfigurationSingleRegistry()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
             fixture.RegisterType<V1CrioConfiguration>();
 

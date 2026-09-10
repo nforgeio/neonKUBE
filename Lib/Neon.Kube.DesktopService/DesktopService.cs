@@ -21,16 +21,16 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Kube;
-using Neon.Kube.GrpcProto;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-using OpenTelemetry.Exporter;
+using Neon.Common;
+using Neon.Kube;
+using Neon.Kube.GrpcProto;
+
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 
 using ProtoBuf.Grpc.Server;
 

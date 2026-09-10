@@ -22,6 +22,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -31,9 +34,6 @@ using Neon.Kube;
 using Neon.Operator;
 using Neon.Operator.Webhooks;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 using Quartz.Logging;
 

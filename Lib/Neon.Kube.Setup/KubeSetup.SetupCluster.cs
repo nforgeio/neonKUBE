@@ -43,8 +43,8 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
-using Neon.Kube.K8s;
 using Neon.Kube.Hosting;
+using Neon.Kube.K8s;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Kube.SSH;
@@ -79,6 +79,8 @@ namespace Neon.Kube.Setup
             bool                cloudMarketplace,
             SetupClusterOptions options)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentException>(options.MaxParallel > 0, nameof(options.MaxParallel));
@@ -281,6 +283,8 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("load container images",
                     async (controller, node) =>
                     {
+                        await SyncContext.Clear;
+
                         await node.NodeDebugLoadImagesAsync(controller, downloadParallelization: 5, loadParallelization: 3);
                     });
 
@@ -305,6 +309,8 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("upload helm charts",
                     async (controller, node) =>
                     {
+                        await SyncContext.Clear;
+
                         cluster.DeploymentControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
                         await node.NodeInstallHelmArchiveAsync(controller);
 

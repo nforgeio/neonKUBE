@@ -38,6 +38,7 @@ using Neon.XenServer;
 using Neon.Xunit;
 
 using Xunit;
+using Neon.Tasks;
 
 namespace TestKube
 {
@@ -62,6 +63,8 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task XenServer_Tiny(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployXenServerCluster(XenServerClustersDefinitions.Tiny, runCount);
         }
 
@@ -69,6 +72,8 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task XenServer_Small(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployXenServerCluster(XenServerClustersDefinitions.Small, runCount);
         }
 

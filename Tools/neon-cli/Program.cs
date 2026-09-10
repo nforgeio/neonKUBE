@@ -54,10 +54,11 @@ using Neon.SSH;
 using Neon.Windows;
 
 using OpenTelemetry;
-using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 using ProtoBuf.Grpc.Client;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -167,6 +168,10 @@ namespace NeonCli
         /// <returns>The exit code.</returns>
         public static async Task<int> Main(string[] args)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             var usage = $@"
 {Program.Name} [v{Program.Version}]
 {Build.Copyright}

@@ -1396,6 +1396,8 @@ namespace Neon.Kube.Proxy
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var status = await GetClusterHealthAsync();
@@ -1434,6 +1436,8 @@ namespace Neon.Kube.Proxy
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var status = await GetClusterHealthAsync();
@@ -1511,6 +1515,8 @@ namespace Neon.Kube.Proxy
                 Parallel.ForEach(resetNamespaces, parallelOptions,
                     async @namespace =>
                     {
+                        await SyncContext.Clear;
+
                         await KubeHelper.NeonCliExecuteAsync(new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
                     });
 
@@ -1519,6 +1525,8 @@ namespace Neon.Kube.Proxy
                 Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
                     async @namespace =>
                     {
+                        await SyncContext.Clear;
+
                         await KubeHelper.NeonCliExecuteAsync(new object[] { "delete", "namespace", @namespace });
                     });
 
@@ -1588,6 +1596,8 @@ namespace Neon.Kube.Proxy
                 await Parallel.ForEachAsync((await K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items,
                     async (item, cancellationToken) =>
                     {
+                        await SyncContext.Clear;
+
                         // Don't remove the container registry reference to the
                         // local Harbor registry.
 

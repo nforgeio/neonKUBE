@@ -25,12 +25,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -81,6 +83,10 @@ to disable this behavior and just import the context.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: PATH is required.");

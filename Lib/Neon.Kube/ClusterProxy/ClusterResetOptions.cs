@@ -29,16 +29,17 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
-using Neon.Time;
 using Neon.Tasks;
+using Neon.Time;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube.Proxy
 {

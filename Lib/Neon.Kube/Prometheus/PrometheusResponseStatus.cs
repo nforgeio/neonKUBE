@@ -23,19 +23,20 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Common;
+using Neon.IO;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
 
-using Neon.Common;
-using Neon.IO;
-using System.Runtime.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {

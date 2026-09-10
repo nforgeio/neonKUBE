@@ -20,14 +20,19 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+
+using k8s;
+using k8s.Autorest;
+using k8s.KubeConfigModels;
+using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
@@ -39,11 +44,6 @@ using Neon.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using k8s;
-using k8s.Autorest;
-using k8s.KubeConfigModels;
-using k8s.Models;
 
 namespace Neon.Kube.K8s
 {

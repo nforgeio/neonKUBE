@@ -39,6 +39,7 @@ using Neon.Operator.Attributes;
 using Neon.Operator.Controllers;
 using Neon.Operator.Rbac;
 using Neon.Operator.Util;
+using Neon.Tasks;
 
 namespace NeonNodeAgent
 {
@@ -132,6 +133,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/node-tasks] folder exists on the node.
@@ -175,6 +178,8 @@ rm $0
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var name = resource.Name();
 
             logger.LogInformationEx(() => $"RECONCILING: {name}");

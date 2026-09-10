@@ -25,14 +25,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Data;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.SSH;
 using Neon.SSH;
 using Neon.XenServer;
-using Neon.Kube.SSH;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube.Setup
 {

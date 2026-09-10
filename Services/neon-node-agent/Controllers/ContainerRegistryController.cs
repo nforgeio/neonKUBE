@@ -325,6 +325,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
@@ -466,6 +468,8 @@ rm $0
         /// </summary>
         private async Task UpdateContainerRegistriesAsync()
         {
+            await SyncContext.Clear;
+
             var registries = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
 
             // NOTE: Here's the documentation for the config file we're generating:
@@ -604,6 +608,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             // Note that we're not ensuring success here because we may not be
                             // logged-in which is OK: we don't want to see that error.
 
@@ -635,6 +641,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                             if (NeonHelper.IsLinux)
@@ -691,6 +699,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         await retry.InvokeAsync(
                             async () =>
                             {
+                                await SyncContext.Clear;
+
                                 logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                                 if (NeonHelper.IsLinux)

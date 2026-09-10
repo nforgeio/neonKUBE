@@ -74,6 +74,8 @@ namespace NeonSsoSessionProxy
             DistributedCacheEntryOptions    cacheOptions,
             ILogger                         logger)
         {
+            await SyncContext.Clear;
+
             try
             {
                 context.Request.EnableBuffering();

@@ -29,14 +29,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
-using Neon.Kube;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
+
+using Newtonsoft;
+using Newtonsoft.Json;
 
 namespace Neon.Kube
 {

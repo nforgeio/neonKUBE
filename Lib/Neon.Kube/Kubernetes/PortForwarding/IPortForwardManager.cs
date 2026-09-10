@@ -16,19 +16,19 @@
 // limitations under the License.
 
 using System;
-using System.Buffers.Binary;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
-using System.Net;
 
 namespace Neon.Kube.PortForward
 {

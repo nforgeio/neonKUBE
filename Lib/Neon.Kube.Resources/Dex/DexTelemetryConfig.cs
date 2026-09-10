@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
+
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Resources.Dex

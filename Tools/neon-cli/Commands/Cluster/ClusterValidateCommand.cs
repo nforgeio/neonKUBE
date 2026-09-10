@@ -25,12 +25,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -67,6 +69,10 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             Console.WriteLine();
             
             if (commandLine.Arguments.Length < 1)

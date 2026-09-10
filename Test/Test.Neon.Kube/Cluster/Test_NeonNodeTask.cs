@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using k8s.Autorest;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
@@ -39,6 +40,7 @@ using Neon.Xunit;
 
 using Xunit;
 using Xunit.Abstractions;
+using Neon.Tasks;
 
 namespace TestKube
 {
@@ -111,6 +113,8 @@ namespace TestKube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task DeleteExistingTasksAsync()
         {
+            await SyncContext.Clear;
+
             var existingTasks = (await fixture.K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
 
             foreach (var resource in existingTasks)
@@ -131,6 +135,8 @@ namespace TestKube
         [ClusterFact]
         public async Task NodeTask_Basic()
         {
+            await SyncContext.Clear;
+
             try
             {
                 //-----------------------------------------------------------------

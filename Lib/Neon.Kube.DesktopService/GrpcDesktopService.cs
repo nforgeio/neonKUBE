@@ -27,9 +27,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-using ProtoBuf.Grpc;
-using ProtoBuf.Grpc.Server;
-
 using Neon.Common;
 using Neon.HyperV;
 using Neon.Kube.GrpcProto.Desktop;
@@ -41,6 +38,9 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+using ProtoBuf.Grpc;
+using ProtoBuf.Grpc.Server;
 
 namespace Neon.Kube.DesktopService
 {

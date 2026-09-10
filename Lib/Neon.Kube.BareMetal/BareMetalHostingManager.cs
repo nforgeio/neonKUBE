@@ -32,12 +32,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Renci.SshNet.Common;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -48,8 +42,14 @@ using Neon.Kube.Setup;
 using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
-using Neon.Time;
 using Neon.Tasks;
+using Neon.Time;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using Renci.SshNet.Common;
 
 namespace Neon.Kube.Hosting.BareMetal
 {

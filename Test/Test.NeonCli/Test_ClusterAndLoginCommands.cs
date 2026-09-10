@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -29,20 +30,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Deployment;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.ClusterMetadata;
 using Neon.Kube.Config;
-using Neon.Deployment;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Xunit;
-using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
-using System.Dynamic;
 using Xunit.Abstractions;
-using Neon.Kube.ClusterMetadata;
+using Neon.Tasks;
 
 namespace Test.NeonCli
 {
@@ -237,6 +238,8 @@ nodes:
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
         public async Task Aws(int runCount)
         {
+            await SyncContext.Clear;
+
             _ = runCount;
 
             await Test(HostingEnvironment.Aws);
@@ -247,6 +250,8 @@ nodes:
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
         public async Task Azure(int runCount)
         {
+            await SyncContext.Clear;
+
             _ = runCount;
 
             await Test(HostingEnvironment.Azure);

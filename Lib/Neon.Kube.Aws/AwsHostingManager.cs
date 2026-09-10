@@ -45,11 +45,11 @@ using k8s.Models;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
-using Neon.Kube.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Kube.SSH;
@@ -1359,7 +1359,12 @@ namespace Neon.Kube.Hosting.Aws
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            controller.AddGlobalStep("internet access", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet access", async controller =>
+            {
+                await SyncContext.Clear;
+
+                await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
+            });
         }
 
         /// <inheritdoc/>
@@ -1386,6 +1391,8 @@ namespace Neon.Kube.Hosting.Aws
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
+                        await SyncContext.Clear;
+
                         node.Status = "openebs: checking";
 
                         var volumeName         = GetResourceName($"{node.Name}-openebs");
@@ -1432,6 +1439,8 @@ namespace Neon.Kube.Hosting.Aws
                         await NeonHelper.WaitForAsync(
                             async () =>
                             {
+                                await SyncContext.Clear;
+
                                 node.Status = "openebs: waiting for Mayastor volume...";
 
                                 var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
@@ -1501,12 +1510,16 @@ namespace Neon.Kube.Hosting.Aws
             controller.AddGlobalStep("connect aws",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await ConnectAwsAsync(controller);
                 });
 
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await cluster.HostingManager.EnableInternetSshAsync();
 
                     // We need to update the cluster node addresses and SSH ports
@@ -1534,6 +1547,8 @@ namespace Neon.Kube.Hosting.Aws
             controller.AddGlobalStep("node labels (cloud)",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(verb: "label", message: "node topology");
 
                     var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
@@ -1580,6 +1595,8 @@ namespace Neon.Kube.Hosting.Aws
             controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     await cluster.HostingManager.DisableInternetSshAsync();
                 });
         }
@@ -2796,6 +2813,8 @@ namespace Neon.Kube.Hosting.Aws
                 await NeonHelper.WaitForAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
                         await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
@@ -2975,6 +2994,8 @@ namespace Neon.Kube.Hosting.Aws
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     natGateway = await GetNatGatewayAsync();
 
                     if (natGateway.State == NatGatewayState.Pending)
@@ -3076,6 +3097,8 @@ namespace Neon.Kube.Hosting.Aws
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var targetHealthResponse = await elbClient.DescribeTargetHealthAsync(
                         new DescribeTargetHealthRequest()
                         {
@@ -3446,6 +3469,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     // It's possible that the instance created above hasn't gotten far enough
                     // along in the provisioning process for the DescribeInstanceStatusAsync()
                     // call below to see it.  We'll need to use a retry policy to deal with this.
@@ -3455,6 +3480,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     var statusResponse = await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             return await ec2Client.DescribeInstanceStatusAsync(
                                 new DescribeInstanceStatusRequest()
                                 {
@@ -4485,6 +4512,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var status = await GetClusterHealthAsync();
 
                     return status.State == ClusterState.Healthy;
@@ -4514,6 +4543,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var status = await GetClusterHealthAsync();
 
                     return status.State == ClusterState.Off;
@@ -4587,7 +4618,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (instanceIds.Count > 0)
             {
-                await retry.InvokeAsync(async () => await ec2Client.TerminateInstancesAsync(new TerminateInstancesRequest(instanceIds)));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await ec2Client.TerminateInstancesAsync(new TerminateInstancesRequest(instanceIds));
+                });
             }
 
             //-----------------------------------------------------------------
@@ -4595,12 +4631,22 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (controlPlanePlacementGroup != null)
             {
-                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(controlPlanePlacementGroup.GroupName)));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(controlPlanePlacementGroup.GroupName));
+                });
             }
 
             if (workerPlacementGroup != null)
             {
-                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(workerPlacementGroup.GroupName)));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(workerPlacementGroup.GroupName));
+                });
             }
 
             //-----------------------------------------------------------------
@@ -4608,7 +4654,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (loadBalancer != null)
             {
-                await retry.InvokeAsync(async () => await elbClient.DeleteLoadBalancerAsync(new DeleteLoadBalancerRequest() { LoadBalancerArn = loadBalancer.LoadBalancerArn }));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await elbClient.DeleteLoadBalancerAsync(new DeleteLoadBalancerRequest() { LoadBalancerArn = loadBalancer.LoadBalancerArn });
+                });
             }
 
             //-----------------------------------------------------------------
@@ -4617,7 +4668,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await Parallel.ForEachAsync(nameToTargetGroup.Values, parallelOptions,
                 async (targetGroup, cancellationToken) =>
                 {
-                    await retry.InvokeAsync(async () => await elbClient.DeleteTargetGroupAsync(new DeleteTargetGroupRequest() { TargetGroupArn = targetGroup.TargetGroupArn }));
+                    await SyncContext.Clear;
+
+                    await retry.InvokeAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await elbClient.DeleteTargetGroupAsync(new DeleteTargetGroupRequest() { TargetGroupArn = targetGroup.TargetGroupArn });
+                    });
                 });
 
             //-----------------------------------------------------------------
@@ -4628,6 +4686,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         try
                         {
                             await ec2Client.DisassociateAddressAsync(
@@ -4657,9 +4717,13 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await retry.InvokeAsync(
                             async () =>
                             {
+                                await SyncContext.Clear;
+
                                 try
                                 {
                                     await ec2Client.DisassociateAddressAsync(
@@ -4687,7 +4751,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (natGateway != null)
             {
-                await retry.InvokeAsync(async () => await ec2Client.DeleteNatGatewayAsync(new DeleteNatGatewayRequest() { NatGatewayId = natGateway.NatGatewayId }));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await ec2Client.DeleteNatGatewayAsync(new DeleteNatGatewayRequest() { NatGatewayId = natGateway.NatGatewayId });
+                });
             }
 
             //-----------------------------------------------------------------
@@ -4705,6 +4774,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DetachInternetGatewayAsync(
                             new DetachInternetGatewayRequest()
                             {
@@ -4716,6 +4787,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteInternetGatewayAsync(
                             new DeleteInternetGatewayRequest()
                             { 
@@ -4729,6 +4802,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteSubnetAsync(
                             new DeleteSubnetRequest
                             {
@@ -4742,6 +4817,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteSubnetAsync(
                             new DeleteSubnetRequest
                             {
@@ -4755,6 +4832,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteSecurityGroupAsync(
                             new DeleteSecurityGroupRequest
                             {
@@ -4768,6 +4847,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteRouteTableAsync(
                             new DeleteRouteTableRequest()
                             {
@@ -4781,6 +4862,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 await retry.InvokeAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await ec2Client.DeleteRouteTableAsync(
                             new DeleteRouteTableRequest()
                             {
@@ -4794,7 +4877,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (vpc != null)
             {
-                await retry.InvokeAsync(async () => await ec2Client.DeleteVpcAsync(new DeleteVpcRequest(vpc.VpcId)));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await ec2Client.DeleteVpcAsync(new DeleteVpcRequest(vpc.VpcId));
+                });
             }
 
             //-----------------------------------------------------------------
@@ -4804,12 +4892,22 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             {
                 if (ingressAddress != null)
                 {
-                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = ingressAddress.AllocationId }));
+                    await retry.InvokeAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = ingressAddress.AllocationId });
+                    });
                 }
 
                 if (egressAddress != null)
                 {
-                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = egressAddress.AllocationId }));
+                    await retry.InvokeAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = egressAddress.AllocationId });
+                    });
                 }
             }
 
@@ -4818,7 +4916,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (resourceGroup != null)
             {
-                await retry.InvokeAsync(async () => await rgClient.DeleteGroupAsync(new DeleteGroupRequest() { Group = resourceGroup.GroupArn }));
+                await retry.InvokeAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    await rgClient.DeleteGroupAsync(new DeleteGroupRequest() { Group = resourceGroup.GroupArn });
+                });
             }
         }
     }

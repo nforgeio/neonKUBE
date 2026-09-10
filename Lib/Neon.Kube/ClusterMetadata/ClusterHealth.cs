@@ -41,9 +41,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube
 {

@@ -31,6 +31,7 @@ using k8s;
 using k8s.Autorest;
 
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Kube.K8s
 {
@@ -145,9 +146,13 @@ namespace Neon.Kube.K8s
         /// <inheritdoc/>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            await SyncContext.Clear;
+
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var result = await base.SendAsync(request, cancellationToken);

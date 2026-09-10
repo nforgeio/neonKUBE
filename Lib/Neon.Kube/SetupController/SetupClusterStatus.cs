@@ -25,11 +25,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Data;
 using Neon.Kube.Proxy;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube.Setup
 {

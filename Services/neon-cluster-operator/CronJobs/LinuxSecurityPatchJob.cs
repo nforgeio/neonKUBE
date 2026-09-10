@@ -18,8 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Net.Http.Headers;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,9 +34,9 @@ using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
-using Neon.Operator.Util;
-using Neon.Net;
 using Neon.Kube.Resources.Cluster;
+using Neon.Net;
+using Neon.Operator.Util;
 using Neon.Tasks;
 
 using OpenTelemetry;

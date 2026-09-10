@@ -34,6 +34,7 @@ using k8s.Models;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Deployment;
@@ -41,11 +42,10 @@ using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Kube.SSH;
 using Neon.Net;
-using Neon.XenServer;
-using Neon.IO;
+using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Retry;
+using Neon.XenServer;
 
 using Newtonsoft.Json;
 
@@ -564,6 +564,8 @@ namespace Neon.Kube.Hosting.XenServer
             controller.AddGlobalStep("node topology",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     controller.LogProgress(verb: "label", message: "node topology");
 
                     var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
@@ -1114,6 +1116,8 @@ namespace Neon.Kube.Hosting.XenServer
         /// <inheritdoc/>
         public override async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             return await CheckForIPConflictsAsync(clusterDefinition);

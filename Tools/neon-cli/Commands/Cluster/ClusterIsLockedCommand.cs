@@ -52,6 +52,7 @@ using Neon.SSH;
 using Neon.Time;
 
 using Newtonsoft.Json;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -101,6 +102,8 @@ EXITCODE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Help();

@@ -25,15 +25,16 @@ using System.Threading.Tasks;
 
 using Neon;
 using Neon.Common;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.Xunit;
-using Neon.IO;
 using Neon.Xunit;
 
-using Xunit;
-
 using NeonCli;
+
+using Xunit;
+using Neon.Tasks;
 
 namespace Test.NeonCli
 {
@@ -45,6 +46,8 @@ namespace Test.NeonCli
         [Fact]
         public async Task Base()
         {
+            await SyncContext.Clear;
+
             using (var runner = new ProgramRunner())
             {
                 // Verify that base command returns some help.
@@ -65,6 +68,8 @@ namespace Test.NeonCli
         [Fact]
         public async Task Version()
         {
+            await SyncContext.Clear;
+
             using (var runner = new ProgramRunner())
             {
                 var result = await runner.ExecuteAsync(Program.Main, "version");

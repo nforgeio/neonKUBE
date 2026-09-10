@@ -34,6 +34,7 @@ using Neon.Diagnostics;
 
 using Yarp.ReverseProxy.Forwarder;
 using Yarp.ReverseProxy.Transforms;
+using Neon.Tasks;
 
 namespace NeonSsoSessionProxy
 {
@@ -86,6 +87,8 @@ namespace NeonSsoSessionProxy
             string              destinationPrefix,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             logger.LogDebugEx(() => $"Transform request");
 
             await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
@@ -114,6 +117,8 @@ namespace NeonSsoSessionProxy
             HttpResponseMessage proxyResponse,
             CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             logger.LogDebugEx(() => $"Transform response");
 
             await base.TransformResponseAsync(httpContext, proxyResponse, cancellationToken);

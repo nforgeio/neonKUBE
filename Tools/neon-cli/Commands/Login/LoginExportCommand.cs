@@ -25,12 +25,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.Config;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -92,6 +94,10 @@ Use the [neon login import] command to import an exported context.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             KubeContextName contextName = null;
 
             var path    = commandLine.Arguments.FirstOrDefault();

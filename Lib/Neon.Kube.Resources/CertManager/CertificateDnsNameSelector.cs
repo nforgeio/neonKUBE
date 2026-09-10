@@ -21,10 +21,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
-using Neon.JsonConverters;
-
 using k8s;
 using k8s.Models;
+
+using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 

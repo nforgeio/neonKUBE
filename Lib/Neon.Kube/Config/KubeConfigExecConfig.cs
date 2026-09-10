@@ -26,15 +26,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Config
 {

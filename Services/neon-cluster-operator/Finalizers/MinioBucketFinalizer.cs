@@ -111,6 +111,8 @@ namespace NeonClusterOperator
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
+            await SyncContext.Clear;
+
             var minioClient = new MinioClient();
 
             var tenant = await k8s.CustomObjects.GetNamespacedCustomObjectAsync<V1MinioTenant>(

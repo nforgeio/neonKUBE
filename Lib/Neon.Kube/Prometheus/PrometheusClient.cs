@@ -29,15 +29,17 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.IO;
 using Neon.Net;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Serialization;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -89,6 +91,8 @@ namespace Neon.Kube
         /// <returns>The <typeparamref name="T"/> value fechted.</returns>
         private async Task<T> GetAsync<T>(string path, ArgDictionary args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -103,6 +107,8 @@ namespace Neon.Kube
         /// <returns>The <see cref="PrometheusResponse{T}"/>.</returns>
         public async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(string query, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
 
             var args = new ArgDictionary();

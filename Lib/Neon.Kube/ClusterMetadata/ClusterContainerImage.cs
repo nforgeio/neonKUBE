@@ -29,15 +29,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
-using Neon.Kube;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Net;
 using Neon.SSH;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {

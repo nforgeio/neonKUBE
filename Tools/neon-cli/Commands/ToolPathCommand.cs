@@ -25,11 +25,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -71,6 +72,10 @@ and cache the tool and return its path from the cache folder.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.Items.Length == 0)
             {
                 Help();

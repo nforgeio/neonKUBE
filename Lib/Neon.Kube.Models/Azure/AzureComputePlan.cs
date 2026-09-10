@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 using Neon.Kube;
 using Neon.ModelGen;
+
 using Newtonsoft.Json;
 
 namespace Neon.Kube.Models

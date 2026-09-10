@@ -1386,6 +1386,8 @@ rm -rf linux-amd64
             await InvokeIdempotentAsync("setup/debug-load-images",
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")))
                     {
                         await Task.CompletedTask;

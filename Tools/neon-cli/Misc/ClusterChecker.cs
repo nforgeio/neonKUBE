@@ -49,6 +49,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -144,6 +145,10 @@ namespace NeonCli
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         public static async Task<bool> CheckAsync(IKubernetes k8s)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             var error = false;
@@ -191,6 +196,10 @@ namespace NeonCli
         /// </remarks>
         public static async Task<bool> CheckContainerImagesAsync(IKubernetes k8s, bool details = false)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();

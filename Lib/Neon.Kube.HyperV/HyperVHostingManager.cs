@@ -35,11 +35,11 @@ using System.Threading.Tasks;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
-using Neon.Kube.Deployment;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Kube.SSH;
@@ -339,6 +339,8 @@ namespace Neon.Kube.Hosting.HyperV
                 controller.AddGlobalStep($"hyper-v node image",
                     async state =>
                     {
+                        await SyncContext.Clear;
+
                         // Download the GZIPed base image VHDX template if it's not already present and
                         // has a valid MD5 hash file.
                         //
@@ -370,6 +372,8 @@ namespace Neon.Kube.Hosting.HyperV
                     controller.AddGlobalStep($"hyper-v node image",
                         async state =>
                         {
+                            await SyncContext.Clear;
+
                             // Download the GZIPed VHDX node image template if it's not already present and has a valid
                             // MD5 hash file.
                             //
@@ -419,7 +423,12 @@ namespace Neon.Kube.Hosting.HyperV
                 createVmLabel += "(s)";
             }
 
-            controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync(typedController));
+            controller.AddGlobalStep("configure hyper-v", async controller =>
+            {
+                await SyncContext.Clear;
+
+                await PrepareHyperVAsync(typedController);
+            });
             controller.AddNodeStep(createVmLabel, (controller, node) => ProvisionVM(typedController, node));
         }
 
@@ -494,6 +503,8 @@ namespace Neon.Kube.Hosting.HyperV
         /// <inheritdoc/>
         public override async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             return await CheckForIPConflictsAsync(clusterDefinition);

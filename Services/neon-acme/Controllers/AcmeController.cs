@@ -24,25 +24,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
-using Neon.Service;
 using Neon.Kube;
-using Neon.Kube.Resources.CertManager;
-using Neon.Tasks;
-using Neon.Net;
-using Neon.Web;
-
-using k8s;
-using k8s.Models;
 using Neon.Kube.Resources;
-using Neon.Collections;
+using Neon.Kube.Resources.CertManager;
+using Neon.Net;
+using Neon.Service;
+using Neon.Tasks;
+using Neon.Web;
 
 namespace NeonAcme.Controllers
 {
@@ -93,6 +93,8 @@ namespace NeonAcme.Controllers
         [Produces("application/json")]
         public async Task<ActionResult> PresentNeonClusterChallengeAsync([FromBody] ChallengePayload challenge)
         {
+            await SyncContext.Clear;
+
             Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
             Logger.LogDebugEx(() => NeonHelper.JsonSerialize(challenge));

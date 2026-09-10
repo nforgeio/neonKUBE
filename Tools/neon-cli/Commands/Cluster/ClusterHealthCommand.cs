@@ -38,8 +38,6 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
@@ -51,6 +49,14 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+
+<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
+=======
+using Neon.Tasks;
+>>>>>>> After
+
+using Newtonsoft.Json;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -93,6 +99,10 @@ OPTIONS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Help();

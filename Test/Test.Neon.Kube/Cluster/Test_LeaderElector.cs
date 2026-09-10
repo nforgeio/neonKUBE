@@ -24,7 +24,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
-using Prometheus;
 
 using Neon.Common;
 using Neon.Deployment;
@@ -34,8 +33,11 @@ using Neon.Kube.K8s;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 
+using Prometheus;
+
 using Xunit;
 using Xunit.Abstractions;
+using Neon.Tasks;
 
 namespace TestKube
 {
@@ -90,6 +92,8 @@ namespace TestKube
         [ClusterFact]
         public async Task Single_WithoutActionsOrCounters()
         {
+            await SyncContext.Clear;
+
             // Verify that the elector works without callback actions.
 
             var  leaseName = $"test-{NeonHelper.CreateBase36Uuid()}";
@@ -122,6 +126,8 @@ namespace TestKube
         [ClusterFact]
         public async Task Single_WithoutCounters()
         {
+            await SyncContext.Clear;
+
             // Verify that we can create a single [LeaderElector] instance and that:
             //
             //      1. The [OnNewLeader] action is called

@@ -15,14 +15,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -30,6 +31,7 @@ using Neon.Kube;
 using Neon.Service;
 
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonSsoSessionProxy
 {
@@ -49,6 +51,8 @@ namespace NeonSsoSessionProxy
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
+            await SyncContext.Clear;
+
             try
             {
                 Service = new Service(KubeService.NeonSsoSessionProxy);

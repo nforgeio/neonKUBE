@@ -28,16 +28,17 @@ using System.Threading.Tasks;
 
 using k8s.KubeConfigModels;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Kube.K8s;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Config
 {

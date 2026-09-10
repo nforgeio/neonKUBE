@@ -79,6 +79,8 @@ namespace Neon.Kube.Setup
             bool                        cloudMarketplace,
             PrepareClusterOptions       options)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
 
@@ -280,6 +282,8 @@ namespace Neon.Kube.Setup
             controller.AddGlobalStep("check IP conflicts",
                 async controller =>
                 {
+                    await SyncContext.Clear;
+
                     var conflicts = await cluster.HostingManager.CheckForConflictsAsync(clusterDefinition);
 
                     if (conflicts != null)
@@ -295,6 +299,8 @@ namespace Neon.Kube.Setup
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
                     {
+                        await SyncContext.Clear;
+
                         await hostingManager.DeleteClusterAsync();
                     });
             }
@@ -410,7 +416,12 @@ namespace Neon.Kube.Setup
 
             if (KubeHelper.IsOnPremiseEnvironment(cluster.Hosting.Environment))
             {
-                controller.AddGlobalStep("neoncluster.io domain", async controller => await RegisterClusterDomainAsync(controller, cluster, options));
+                controller.AddGlobalStep("neoncluster.io domain", async controller =>
+                {
+                    await SyncContext.Clear;
+
+                    await RegisterClusterDomainAsync(controller, cluster, options);
+                });
             }
 
             // Give the hosting manager a chance to add any additional provisioning steps.
@@ -643,6 +654,8 @@ echo vm.nr_hugepages = {nodeAdvice.TotalHugePages} >> /etc/sysctl.conf
                 controller.AddGlobalStep("stabilize: cluster",
                     async controller =>
                     {
+                        await SyncContext.Clear;
+
                         setupState.Save();
                         await StabilizeClusterAsync(controller);
                     });
@@ -653,7 +666,12 @@ echo vm.nr_hugepages = {nodeAdvice.TotalHugePages} >> /etc/sysctl.conf
 
             if (KubeHelper.IsCloudEnvironment(cluster.Hosting.Environment))
             {
-                controller.AddGlobalStep("neoncluster.io domain", async controller => await RegisterClusterDomainAsync(controller, cluster, options));
+                controller.AddGlobalStep("neoncluster.io domain", async controller =>
+                {
+                    await SyncContext.Clear;
+
+                    await RegisterClusterDomainAsync(controller, cluster, options);
+                });
             }
 
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup

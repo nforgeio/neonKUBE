@@ -24,19 +24,20 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
 using Neon.Net;
 using Neon.Time;
-using System.Text.Json.Serialization;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Resources.CertManager
 {

@@ -51,6 +51,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -169,6 +170,10 @@ stage process is typically used only by NeonKUBE maintainers.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: [sysadmin@CLUSTER-NAME] argument is required.");
@@ -260,6 +265,12 @@ stage process is typically used only by NeonKUBE maintainers.
                 }
 
                 if (KubeHelper.CurrentContext != null &&
+
+<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
+                    KubeHelper.CurrentCluster.ClusterInfo != null && 
+=======
+                    KubeHelper.CurrentCluster.ClusterInfo != null &&
+>>>>>>> After
                     KubeHelper.CurrentCluster.ClusterInfo != null && 
                     KubeHelper.CurrentContext.Name == context.Name)
                 {

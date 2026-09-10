@@ -25,6 +25,7 @@ using Neon.Kube.Resources;
 using Neon.Kube.Resources.JsonConverters;
 
 using Newtonsoft.Json;
+
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Resources.Dex

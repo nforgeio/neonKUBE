@@ -934,6 +934,8 @@ namespace Neon.Kube.Setup
                                         var runTask = Task.Run(
                                             async () =>
                                             {
+                                                await SyncContext.Clear;
+
                                                 await step.AsyncNodeAction(this, node);
                                             });
 
@@ -1005,6 +1007,8 @@ namespace Neon.Kube.Setup
                                 var runTask = Task.Run(
                                     async () =>
                                     {
+                                        await SyncContext.Clear;
+
                                         await step.AsyncGlobalAction(this);
                                     });
 

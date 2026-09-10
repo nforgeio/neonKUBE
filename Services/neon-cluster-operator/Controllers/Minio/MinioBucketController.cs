@@ -189,6 +189,8 @@ namespace NeonClusterOperator
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
+            await SyncContext.Clear;
+
             var minioClient = new MinioClient();
 
             var tenant = await k8s.CustomObjects.GetNamespacedCustomObjectAsync<V1MinioTenant>(
@@ -240,6 +242,8 @@ namespace NeonClusterOperator
 
         private async Task SetQuotaAsync(V1MinioBucket resource)
         {
+            await SyncContext.Clear;
+
             if (resource.Spec.Quota == null)
             {
                 await ExecuteMcCommandAsync(
@@ -266,6 +270,8 @@ namespace NeonClusterOperator
 
         private async Task ExecuteMcCommandAsync(string[] args)
         {
+            await SyncContext.Clear;
+
             try
             {
                 logger?.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
@@ -283,6 +289,8 @@ namespace NeonClusterOperator
 
         private async Task SetVersioningAsync(V1MinioBucket resource)
         {
+            await SyncContext.Clear;
+
             var versioning = await minioClient.GetVersioningAsync(new GetVersioningArgs().WithBucket(resource.Name()));
 
             if (versioning.Status != resource.Spec.Versioning.ToMemberString())

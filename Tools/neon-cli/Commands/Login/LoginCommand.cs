@@ -33,6 +33,7 @@ using Neon.Kube.Glauth;
 using Neon.Kube.K8s;
 
 using Newtonsoft.Json;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -136,6 +137,10 @@ or when switching contexts to set the current namespace afterwards.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Console.WriteLine(usage);
@@ -247,6 +252,10 @@ or when switching contexts to set the current namespace afterwards.
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task SsoLoginAsync(string clusterDomain)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDomain), nameof(clusterDomain));
 
             var ssoHost = $"{ClusterHost.Sso}.{clusterDomain}";

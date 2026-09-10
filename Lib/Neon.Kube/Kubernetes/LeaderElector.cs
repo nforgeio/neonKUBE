@@ -30,8 +30,8 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Tasks;
 
-using StockLeaderElector        = k8s.LeaderElection.LeaderElector;
 using StockLeaderElectionConfig = k8s.LeaderElection.LeaderElectionConfig;
+using StockLeaderElector = k8s.LeaderElection.LeaderElector;
 using StockLeaseLock            = k8s.LeaderElection.ResourceLock.LeaseLock;
 
 namespace Neon.Kube.K8s

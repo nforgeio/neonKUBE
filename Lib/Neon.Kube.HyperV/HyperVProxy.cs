@@ -32,12 +32,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Grpc.Net.Client;
-using ProtoBuf.Grpc.Client;
-
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.Serialization;
 
 using Neon.Collections;
 using Neon.Common;
@@ -49,6 +43,14 @@ using Neon.Kube.GrpcProto.Desktop;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using ProtoBuf.Grpc.Client;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting.HyperV
 {

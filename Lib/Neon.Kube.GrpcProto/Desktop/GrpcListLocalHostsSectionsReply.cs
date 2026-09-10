@@ -25,7 +25,9 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Net;
+
 using Octokit;
+
 using ProtoBuf.Grpc;
 
 namespace Neon.Kube.GrpcProto.Desktop

@@ -33,13 +33,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Win32;
-
 using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json;
 
 using k8s;
 using k8s.Models;
+
+using Microsoft.Win32;
 
 using Neon.Collections;
 using Neon.Common;
@@ -54,6 +53,8 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Windows;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube
 {

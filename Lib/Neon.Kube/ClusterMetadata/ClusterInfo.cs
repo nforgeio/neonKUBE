@@ -21,12 +21,12 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Runtime.Serialization;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube
 {

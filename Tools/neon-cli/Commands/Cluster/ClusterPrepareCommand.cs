@@ -41,6 +41,7 @@ using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -182,6 +183,10 @@ stage process is typically used only by NeonKUBE maintainers.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Help();
@@ -242,6 +247,12 @@ stage process is typically used only by NeonKUBE maintainers.
             // Load the cluster definition.
 
             var clusterDefPath    = commandLine.Arguments[0];
+
+<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
+            var clusterDefinition = (ClusterDefinition)null;            
+=======
+            var clusterDefinition = (ClusterDefinition)null;
+>>>>>>> After
             var clusterDefinition = (ClusterDefinition)null;            
 
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);

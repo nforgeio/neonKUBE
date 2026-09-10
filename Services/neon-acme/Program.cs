@@ -26,6 +26,7 @@ using Neon.Diagnostics;
 using Neon.Service;
 
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonAcme
 {
@@ -45,6 +46,8 @@ namespace NeonAcme
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
+            await SyncContext.Clear;
+
             try
             {
                 Service = new Service(Service.ServiceName);

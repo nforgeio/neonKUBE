@@ -88,6 +88,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1Secret)));
@@ -169,6 +171,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateGlauthUsersAsync(V1Secret secret)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var connection = new NpgsqlConnection(connectionString);
@@ -238,6 +242,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateGlauthGroupsAsync(V1Secret secret)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var conection = new NpgsqlConnection(connectionString);

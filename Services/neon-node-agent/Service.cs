@@ -20,47 +20,46 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net;
 using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Net.Sockets;
+using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.CertManager;
 using Neon.Net;
+using Neon.Operator;
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
 using Neon.Retry;
 using Neon.Service;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Neon.Operator.Attributes;
-using Neon.Operator.Rbac;
 
 using KubeHelper = Neon.Kube.KubeHelper;
 
@@ -198,6 +197,8 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            await SyncContext.Clear;
+
             K8s = KubeHelper.CreateKubernetesClient();
 
             await WatchClusterInfoAsync();
@@ -301,6 +302,8 @@ namespace NeonNodeAgent
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
                 {
+                    await SyncContext.Clear;
+
                     ClusterInfo = Neon.K8s.TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");

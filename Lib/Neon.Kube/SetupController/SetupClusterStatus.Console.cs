@@ -24,8 +24,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -36,6 +34,8 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+
+using Newtonsoft.Json;
 
 namespace Neon.Kube.Setup
 {

@@ -184,6 +184,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            await SyncContext.Clear;
+
             K8s = KubeHelper.CreateKubernetesClient();
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);

@@ -20,31 +20,31 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
 using k8s.KubeConfigModels;
 
-using Newtonsoft.Json.Linq;
-
-using Xunit;
-using Xunit.Abstractions;
-
 using Neon.Common;
 using Neon.Data;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube.Proxy;
-using Neon.Retry;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
-using Neon.Xunit;
 using Neon.Tasks;
+using Neon.Xunit;
+
+using Newtonsoft.Json.Linq;
+
+using Xunit;
+using Xunit.Abstractions;
 
 namespace Neon.Kube.Xunit
 {

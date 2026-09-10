@@ -48,22 +48,22 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.K8s;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Glauth;
+using Neon.Kube.K8s;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
+
+using Newtonsoft.Json;
 
 using SharpCompress.Readers;
 
@@ -2497,7 +2497,7 @@ TCPKeepAlive yes
                 {
                     using (var download = File.OpenRead(archivePath))
                     {
-                        using (var reader = ReaderFactory.Open(download))
+                        using (var reader = ReaderFactory.OpenReader(download))
                         {
                             while (reader.MoveToNextEntry())
                             {
@@ -2947,6 +2947,8 @@ TCPKeepAlive yes
         /// <returns>The current namespacee.</returns>
         public static async Task<string> GetCurrentNamespaceAsync()
         {
+            await SyncContext.Clear;
+
             if (NeonHelper.IsDevWorkstation)
             {
                 return KubeNamespace.NeonSystem;
@@ -3065,6 +3067,8 @@ TCPKeepAlive yes
             string      clientId,
             string[]    scopes = null)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(authority), nameof(authority));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clientId), nameof(clientId));
 
@@ -3428,6 +3432,8 @@ TCPKeepAlive yes
         /// </remarks>
         public static async Task<int> NeonCliExecuteAsync(object[] args)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             EnsureNeonKubectl();
@@ -3448,6 +3454,8 @@ TCPKeepAlive yes
         /// </remarks>
         public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(params object[] args)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             EnsureNeonKubectl();

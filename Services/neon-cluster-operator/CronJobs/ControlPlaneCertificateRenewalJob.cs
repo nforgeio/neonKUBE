@@ -32,8 +32,8 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Util;
 using Neon.Tasks;
 
 using OpenTelemetry;

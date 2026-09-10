@@ -40,6 +40,7 @@ using Neon.XenServer;
 using Neon.Xunit;
 
 using Xunit;
+using Neon.Tasks;
 
 namespace TestKube
 {
@@ -49,6 +50,8 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task HyperV_Tiny(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployHyperVCluster(HyperVClusterDefinitions.Tiny, runCount);
         }
 
@@ -56,6 +59,8 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task HyperV_Small(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployHyperVCluster(HyperVClusterDefinitions.Small, runCount);
         }
 

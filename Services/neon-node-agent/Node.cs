@@ -24,6 +24,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,9 +38,6 @@ using Neon.Kube;
 using Neon.Operator;
 using Neon.Retry;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 namespace NeonNodeAgent
 {
@@ -92,6 +92,8 @@ namespace NeonNodeAgent
         /// </returns>
         public static async Task<V1OwnerReference> GetOwnerReferenceAsync(IKubernetes k8s)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             if (NeonHelper.IsLinux)
@@ -153,6 +155,8 @@ namespace NeonNodeAgent
             TimeSpan?       timeout         = null,
             Action<Process> processCallback = null)
         {
+            await SyncContext.Clear;
+
             if (host)
             {
                 return await NeonHelper.ExecuteCaptureAsync(

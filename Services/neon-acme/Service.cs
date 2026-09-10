@@ -31,19 +31,20 @@ using k8s.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Kube;
 using Neon.Net;
 using Neon.Service;
-using Neon.Kube;
 
-using OpenTelemetry.Trace;
 using OpenTelemetry;
+using OpenTelemetry.Trace;
+using Neon.Tasks;
 
 namespace NeonAcme
 {
@@ -101,6 +102,8 @@ namespace NeonAcme
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            await SyncContext.Clear;
+
             KubeHelper.InitializeJson();
 
             HeadendClient = new JsonClient()
@@ -149,7 +152,8 @@ namespace NeonAcme
                         config.Sources.Clear();
                     })
                 .UseStartup<Startup>()
-                .UseKestrel(options => {
+                .UseKestrel(options =>
+                {
                     options.Listen(IPAddress.Any, port, listenOptions =>
                     {
                         if (!NeonHelper.IsDevWorkstation)

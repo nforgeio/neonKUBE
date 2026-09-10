@@ -19,15 +19,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using System.Net.Http;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -35,9 +35,9 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
 
-using StackExchange.Redis;
-
 using Prometheus;
+
+using StackExchange.Redis;
 
 using Yarp;
 using Yarp.ReverseProxy.Forwarder;

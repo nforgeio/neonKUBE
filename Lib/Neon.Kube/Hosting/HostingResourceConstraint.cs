@@ -22,10 +22,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
 using Neon.Common;
+
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting
 {

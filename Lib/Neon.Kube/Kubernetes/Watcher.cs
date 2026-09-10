@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -26,16 +27,15 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
-using k8s.Autorest;
-using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.K8s
 {

@@ -50,6 +50,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace NeonCli.Commands.Cluster
 {
@@ -148,6 +149,8 @@ stage process is typically used only by NeonKUBE maintainers.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: CLUSTERDEF argument is required.");

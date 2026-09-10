@@ -29,16 +29,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
 using Neon.Net;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 using YamlDotNet.Serialization;
 

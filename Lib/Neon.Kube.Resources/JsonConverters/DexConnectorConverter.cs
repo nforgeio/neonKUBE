@@ -17,18 +17,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Kube.Resources.Dex;
-
 using k8s;
 using k8s.Models;
-using System.Diagnostics.Contracts;
+
+using Neon.Common;
+using Neon.Kube.Resources.Dex;
 
 namespace Neon.Kube.Resources.JsonConverters
 {

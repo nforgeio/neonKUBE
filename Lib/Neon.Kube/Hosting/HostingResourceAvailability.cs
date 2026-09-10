@@ -26,17 +26,18 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
+using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
-using Neon.Net;
-using Neon.XenServer;
 using Neon.IO;
+using Neon.Net;
 using Neon.SSH;
+using Neon.XenServer;
 
-using k8s.Models;
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting
 {

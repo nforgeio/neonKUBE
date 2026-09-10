@@ -25,13 +25,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
-using Neon.Kube.Proxy;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Neon.Tasks;
+
+<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
+=======
+using Neon.Tasks;
+>>>>>>> After
 
 namespace NeonCli
 {
@@ -78,6 +84,10 @@ OPTIONS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
+            await SyncContext.Clear;
+
             var currentContext = KubeHelper.CurrentContext;
 
             if (currentContext == null)

@@ -35,6 +35,7 @@ using Neon.Xunit;
 
 using Xunit;
 using Xunit.Abstractions;
+using Neon.Tasks;
 
 namespace TestKube
 {
@@ -90,6 +91,8 @@ namespace TestKube
         [ClusterFact]
         public async Task NeonCli()
         {
+            await SyncContext.Clear;
+
             // Verify that we can execute a NeonCLIENT command.
 
             var response = (await fixture.NeonExecuteCaptureAsync("get", "namespaces"))
@@ -113,6 +116,8 @@ namespace TestKube
         [ClusterFact]
         public async Task Helm()
         {
+            await SyncContext.Clear;
+
             // Verify that we can deploy a simple test pod via the Helm method.
 
             using (var tempFolder = new TempFolder())

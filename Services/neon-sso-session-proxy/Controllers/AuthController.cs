@@ -103,6 +103,8 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("{**catchAll}")]
         public async Task CatchAllAsync()
         {
+            await SyncContext.Clear;
+
             Logger.LogDebugEx(() => $"Processing catch-all request");
 
             var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, forwarderRequestConfig, transformer);
@@ -124,6 +126,8 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("/token")]
         public async Task TokenAsync([FromForm] string code, [FromForm] string grant_type)
         {
+            await SyncContext.Clear;
+
             Logger.LogDebugEx(() => $"Processing request for code: [{code}]");
 
             if (grant_type == "refresh_token")

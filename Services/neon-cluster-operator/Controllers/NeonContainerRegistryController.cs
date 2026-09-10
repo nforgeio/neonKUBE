@@ -185,6 +185,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNeonLocalRegistryAsync()
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 logger?.LogInformationEx(() => $"Upserting registry: [{KubeConst.LocalClusterRegistryHostName}]");

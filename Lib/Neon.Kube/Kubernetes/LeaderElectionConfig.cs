@@ -31,10 +31,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using k8s;
-using Prometheus;
 
 using Neon.Common;
 using Neon.Retry;
+
+using Prometheus;
 
 namespace Neon.Kube.K8s
 {

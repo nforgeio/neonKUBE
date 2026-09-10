@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Kube.Helm;
+using Neon.Tasks;
 
 namespace HelmMunger
 {
@@ -52,6 +53,8 @@ helm-munger dependency remove CHART-FOLDER DEPENDENCY
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
             var chartFolder    = commandLine.Arguments.ElementAtOrDefault<string>(0);
             var dependencyName = commandLine.Arguments.ElementAtOrDefault<string>(1);
 

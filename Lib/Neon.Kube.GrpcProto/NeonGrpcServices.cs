@@ -25,13 +25,15 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Threading.Tasks;
 
+using Grpc.Net.Client;
+
 using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.GrpcProto.Desktop;
 using Neon.Net;
 
-using Grpc.Net.Client;
 using ProtoBuf.Grpc;
+using Neon.Tasks;
 
 namespace Neon.Kube.GrpcProto
 {
@@ -75,6 +77,8 @@ namespace Neon.Kube.GrpcProto
                 ConnectCallback = 
                     async (context, cancellationToken) =>
                     {
+                        await SyncContext.Clear;
+
                         var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
 
                         try

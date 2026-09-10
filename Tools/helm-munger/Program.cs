@@ -20,6 +20,7 @@ using Neon.Common;
 using Neon.Kube.Helm;
 
 using YamlDotNet.Serialization;
+using Neon.Tasks;
 
 namespace HelmMunger
 {
@@ -49,6 +50,8 @@ namespace HelmMunger
         /// <param name="args">Specifies the command line arguments.</param>
         public static async Task<int> Main(string[] args)
         {
+            await SyncContext.Clear;
+
             var usage = $@"
 {Program.Name} v{Program.Version}
 {Build.Copyright}

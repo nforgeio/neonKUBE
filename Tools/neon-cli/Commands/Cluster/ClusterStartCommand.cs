@@ -49,6 +49,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace NeonCli
 {
@@ -81,6 +82,8 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            await SyncContext.Clear;
+
             if (commandLine.HasHelpOption)
             {
                 Help();

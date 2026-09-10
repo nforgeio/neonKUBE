@@ -27,6 +27,7 @@ using Neon.Net;
 using Neon.Service;
 
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonNodeAgent
 {
@@ -47,6 +48,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
+            await SyncContext.Clear;
+
             try
             {
                 Service = new Service(KubeService.NeonNodeAgent);

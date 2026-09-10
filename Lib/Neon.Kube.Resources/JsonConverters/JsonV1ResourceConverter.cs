@@ -23,10 +23,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-using Neon.Common;
-
 using k8s;
 using k8s.Models;
+
+using Neon.Common;
 
 namespace Neon.Kube.Resources.JsonConverters
 {

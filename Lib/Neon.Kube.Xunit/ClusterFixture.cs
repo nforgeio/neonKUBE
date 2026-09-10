@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -23,6 +24,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Neon.Common;
 using Neon.Deployment;
@@ -35,12 +39,9 @@ using Neon.Kube.Setup;
 using Neon.SSH;
 using Neon.Xunit;
 
-using k8s;
-using k8s.Models;
-
 using Xunit;
 using Xunit.Abstractions;
-using System.CodeDom;
+using Neon.Tasks;
 
 // $hack(jeff):
 //
@@ -1030,6 +1031,8 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public async Task<ExecuteResponse> NeonExecuteCaptureAsync(params string[] args)
         {
+            await SyncContext.Clear;
+
             return await KubeHelper.NeonCliExecuteCaptureAsync(args);
         }
 

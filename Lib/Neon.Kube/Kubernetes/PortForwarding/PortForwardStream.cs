@@ -16,8 +16,8 @@
 // limitations under the License.
 
 using System;
-using System.Buffers.Binary;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -35,6 +35,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Kube.PortForward
 {
@@ -101,6 +102,8 @@ namespace Neon.Kube.PortForward
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task SendLoop()
         {
+            await SyncContext.Clear;
+
             var buffer = new byte[BUFFER_SIZE];
 
             while (true)
@@ -145,6 +148,8 @@ namespace Neon.Kube.PortForward
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ReceiveLoop()
         {
+            await SyncContext.Clear;
+
             var buffer        = new byte[BUFFER_SIZE];
             var stream        = this.GetRemoteStream(remoteStreams, forRead: true);
             var bytesReceived = 0;

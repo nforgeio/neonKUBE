@@ -25,6 +25,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,20 +38,19 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.K8s;
 using Neon.Kube;
-using Neon.Operator.Attributes;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Controllers;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.ResourceManager;
 using Neon.Retry;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using Newtonsoft.Json;
+
 using Prometheus;
+
 using Tomlyn;
-using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -324,6 +326,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public override async Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
@@ -517,6 +521,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             // Note that we're not ensuring success here because we may not be
                             // logged-in which is OK: we don't want to see that error.
 
@@ -548,6 +554,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                             if (NeonHelper.IsLinux)
@@ -604,6 +612,8 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                         await retry.InvokeAsync(
                             async () =>
                             {
+                                await SyncContext.Clear;
+
                                 logger.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                                 if (NeonHelper.IsLinux)

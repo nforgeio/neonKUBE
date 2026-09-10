@@ -20,10 +20,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using Neon.Kube.Resources.JsonConverters;
-
 using k8s;
 using k8s.Models;
+
+using Neon.Kube.Resources.JsonConverters;
 
 namespace Neon.Kube.Resources.OpenEBS
 {

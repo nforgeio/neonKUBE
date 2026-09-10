@@ -30,10 +30,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -43,8 +39,12 @@ using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
-using Neon.Time;
 using Neon.Tasks;
+using Neon.Time;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube.Hosting.Google
 {

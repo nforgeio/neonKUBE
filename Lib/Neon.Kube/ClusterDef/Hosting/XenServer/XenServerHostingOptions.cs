@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube.ClusterDef

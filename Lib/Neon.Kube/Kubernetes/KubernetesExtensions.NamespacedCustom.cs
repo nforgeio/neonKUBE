@@ -15,17 +15,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-using Neon.Common;
-using Neon.Tasks;
 using System;
 using System.Diagnostics.Contracts;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
+using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Kube.K8s
 {
