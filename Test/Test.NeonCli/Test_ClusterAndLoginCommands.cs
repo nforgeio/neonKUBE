@@ -261,6 +261,8 @@ nodes:
         [Repeat(repeatCount)]
         public async Task HyperV(int runCount)
         {
+            await SyncContext.Clear;
+
             _ = runCount;
 
             await Test(HostingEnvironment.HyperV);
@@ -270,6 +272,8 @@ nodes:
         [Repeat(repeatCount)]
         public async Task XenServer(int runCount)
         {
+            await SyncContext.Clear;
+
             _ = runCount;
 
             await Test(HostingEnvironment.XenServer);
@@ -277,6 +281,8 @@ nodes:
 
         private async Task Test(HostingEnvironment environment)
         {
+            await SyncContext.Clear;
+
             // Use [NeonCLIENT] to deploy a single-node Hyper-V test cluster and the verify that
             // common [NeonCLIENT] cluster commands work as expected.  We're doing this all in a
             // single test method instead of using [ClusterFixture] because we want to test
@@ -1057,6 +1063,8 @@ nodes:
         /// <returns>The command response.</returns>
         private async Task<ExecuteResponse> NeonCliAsync(params string[] args)
         {
+            await SyncContext.Clear;
+
             return await NeonHelper.ExecuteCaptureAsync(neonCliPath, args);
         }
 

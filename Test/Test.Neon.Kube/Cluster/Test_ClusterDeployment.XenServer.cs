@@ -81,11 +81,15 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task XenServer_Large(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployXenServerCluster(XenServerClustersDefinitions.Large, runCount);
         }
 
         private async Task DeployXenServerCluster(string clusterDefinitionYaml, int runCount)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
             KubeTestHelper.ResetDeploymentTest(typeof(Test_ClusterDeployment), nameof(DeployXenServerCluster));

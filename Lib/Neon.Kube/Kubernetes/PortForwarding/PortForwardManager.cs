@@ -111,6 +111,8 @@ namespace Neon.Kube.PortForward
                                     return await retry.InvokeAsync(
                                         async () =>
                                         {
+                                            await SyncContext.Clear;
+
                                             return await k8s.WebSocketNamespacedPodPortForwardAsync(
                                                 name:                 name,
                                                 @namespace:           @namespace,

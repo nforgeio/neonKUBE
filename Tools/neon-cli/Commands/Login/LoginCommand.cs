@@ -442,6 +442,8 @@ or when switching contexts to set the current namespace afterwards.
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task SetContextAsync(string contextName, string @namespace = null)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName) || !string.IsNullOrEmpty(@namespace), nameof(contextName));
 
             var config = KubeHelper.KubeConfig;

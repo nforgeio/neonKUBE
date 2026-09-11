@@ -238,7 +238,7 @@ namespace Neon.Kube.Hosting
         {
             await SyncContext.Clear;
 
-            await Task.FromResult((string)null);
+            return await Task.FromResult((string)null);
         }
 
         /// <summary>

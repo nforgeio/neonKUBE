@@ -324,6 +324,8 @@ namespace NeonCli
         /// </remarks>
         public static async Task<bool> CheckPodPrioritiesAsync(IKubernetes k8s, bool details = false)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
@@ -449,6 +451,8 @@ namespace NeonCli
         /// <returns>The owner ID.</returns>
         private static async Task<string> GetOwnerIdAsync(IKubernetes k8s, V1Pod pod)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(pod != null, nameof(pod));
 
@@ -525,6 +529,8 @@ namespace NeonCli
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         public static async Task<bool> CheckResourcesAsync(IKubernetes k8s, bool details = false)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();

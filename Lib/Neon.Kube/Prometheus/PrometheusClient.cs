@@ -134,6 +134,8 @@ namespace Neon.Kube
             TimeSpan            stepSize          = default,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
             Covenant.Requires<ArgumentException>(start < end, nameof(end));
 

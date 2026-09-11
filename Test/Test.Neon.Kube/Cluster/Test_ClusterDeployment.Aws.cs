@@ -69,11 +69,15 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Aws_Large(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployAwsCluster(AwsClusterDefinitions.Large, runCount);
         }
 
         private async Task DeployAwsCluster(string clusterDefinitionYaml, int runCount)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
             KubeTestHelper.ResetDeploymentTest(typeof(Test_ClusterDeployment), nameof(DeployAwsCluster));

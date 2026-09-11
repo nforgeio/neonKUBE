@@ -203,6 +203,8 @@ touch $NODE_ROOT{filePath}
                 await NeonHelper.WaitForAsync(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         foreach (var task in (await fixture.K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                         {
                             switch (task.Status.Phase)
@@ -270,6 +272,8 @@ touch $NODE_ROOT{filePath}
         [ClusterFact]
         public async Task NodeTask_ExitCodeAndStreams()
         {
+            await SyncContext.Clear;
+
             //-----------------------------------------------------------------
             // Submit a task to the first control-plane node that returns a non-zero
             // exit code as well as writes to the standard output and error
@@ -304,6 +308,8 @@ exit 123
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
@@ -338,6 +344,8 @@ exit 123
         [Fact]
         public async Task NeonTask_Timeout()
         {
+            await SyncContext.Clear;
+
             //-----------------------------------------------------------------
             // Verify that task timeouts are honored.  
 
@@ -368,6 +376,8 @@ sleep 30
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
@@ -398,6 +408,8 @@ sleep 30
         [Fact]
         public async Task NeonTask_StartBefore()
         {
+            await SyncContext.Clear;
+
             //-----------------------------------------------------------------
             // Verify that a task scheduled with a StartBeforeTimestamp that is
             // already too late is detected and its status is set to TARDY.
@@ -427,6 +439,8 @@ sleep 5
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     return task.Status.Phase == V1NeonNodeTask.Phase.Tardy;
@@ -438,6 +452,8 @@ sleep 5
         [Fact]
         public async Task NeonTask_StartAfter()
         {
+            await SyncContext.Clear;
+
             //-----------------------------------------------------------------
             // Verify that a task scheduled in the future with a StartAfterTimestamp
             // is actually executed in the future.
@@ -470,6 +486,8 @@ sleep 5
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     if (task.Status.Phase == V1NeonNodeTask.Phase.Success)
@@ -495,6 +513,8 @@ sleep 5
         [Fact]
         public async Task NeonTask_MissingNode()
         {
+            await SyncContext.Clear;
+
             //-----------------------------------------------------------------
             // Verify that the [V1NodeTask] controller in [neon-cluster-operator] deletes
             // tasks assigned to nodes that don't exist.
@@ -525,6 +545,8 @@ sleep 5
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);

@@ -68,11 +68,15 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task HyperV_Large(int runCount)
         {
+            await SyncContext.Clear;
+
             await DeployHyperVCluster(HyperVClusterDefinitions.Large, runCount);
         }
 
         private async Task DeployHyperVCluster(string clusterDefinitionYaml, int runCount)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
             KubeTestHelper.ResetDeploymentTest(typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster));

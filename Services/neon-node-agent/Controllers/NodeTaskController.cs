@@ -346,6 +346,8 @@ rm $0
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CleanupTasksAsync()
         {
+            await SyncContext.Clear;
+
             var utcNow    = DateTime.UtcNow;
             var nodeTasks = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
                 .Where(tasks => NodeTaskFilter(tasks))
@@ -480,6 +482,8 @@ rm $0
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task KillTaskAsync(V1NeonNodeTask nodeTask)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(nodeTask != null, nameof(nodeTask));
 
             if (!NeonHelper.IsLinux)
@@ -534,6 +538,8 @@ rm $0
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NeonNodeTask nodeTask)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(nodeTask != null, nameof(nodeTask));
 
             var taskName = nodeTask.Name();
@@ -589,6 +595,8 @@ export SCRIPT_DIR={hostTaskFolder}
                 task = Task.Run<ExecuteResponse>(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         await Task.Delay(TimeSpan.FromSeconds(1));
 
                         return new ExecuteResponse(0);

@@ -199,6 +199,8 @@ namespace Neon.Kube.PortForward
 
         private async Task EnsureRemoteStartAsync()
         {
+            await SyncContext.Clear;
+
             if (remote != null)
             {
                 return;
