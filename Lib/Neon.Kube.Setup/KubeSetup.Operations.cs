@@ -3106,6 +3106,7 @@ istioctl install --verify -y -f manifest.yaml
             bool                            isDefault = false)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));

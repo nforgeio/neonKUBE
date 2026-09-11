@@ -248,11 +248,6 @@ stage process is typically used only by NeonKUBE maintainers.
 
             var clusterDefPath    = commandLine.Arguments[0];
 
-<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
-            var clusterDefinition = (ClusterDefinition)null;            
-=======
-            var clusterDefinition = (ClusterDefinition)null;
->>>>>>> After
             var clusterDefinition = (ClusterDefinition)null;            
 
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);

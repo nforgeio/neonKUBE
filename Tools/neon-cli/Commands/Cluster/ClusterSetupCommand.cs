@@ -265,12 +265,6 @@ stage process is typically used only by NeonKUBE maintainers.
                 }
 
                 if (KubeHelper.CurrentContext != null &&
-
-<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
-                    KubeHelper.CurrentCluster.ClusterInfo != null && 
-=======
-                    KubeHelper.CurrentCluster.ClusterInfo != null &&
->>>>>>> After
                     KubeHelper.CurrentCluster.ClusterInfo != null && 
                     KubeHelper.CurrentContext.Name == context.Name)
                 {

@@ -58,7 +58,7 @@ namespace TestNeonNodeAgent
         }
 
         [Fact]
-        public async void TestCrioConfigurationSingleRegistry()
+        public async Task TestCrioConfigurationSingleRegistry()
         {
             await SyncContext.Clear;
 

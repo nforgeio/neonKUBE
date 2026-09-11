@@ -16,28 +16,14 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Kube;
-using Neon.Kube.Config;
-using Neon.Kube.Hosting;
+using Neon.Tasks;
 
-using Newtonsoft;
 using Newtonsoft.Json;
-using Neon.Tasks;
-
-<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
-=======
-using Neon.Tasks;
->>>>>>> After
 
 namespace NeonCli
 {

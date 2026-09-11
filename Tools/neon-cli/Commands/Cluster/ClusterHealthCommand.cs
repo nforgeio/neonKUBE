@@ -16,47 +16,16 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
-using k8s;
-using k8s.Models;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using Neon.Common;
-using Neon.Cryptography;
-using Neon.Deployment;
-using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
-using Neon.Net;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Time;
 
-<<<<<<< TODO: Unmerged change from project 'neon-cli', Before:
-=======
 using Neon.Tasks;
->>>>>>> After
 
 using Newtonsoft.Json;
-using Neon.Tasks;
 
 namespace NeonCli
 {
